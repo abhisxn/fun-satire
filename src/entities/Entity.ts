@@ -1,10 +1,18 @@
 export type Vec2 = { x: number; y: number };
 
+export type SubjectColorPalette = Readonly<{
+  sclera: string;
+  iris: string;
+  pupil: string;
+  highlight: string | null;
+  outline: string;
+}>;
+
 export type ContentRef = {
   readonly manifestId: string;
   readonly rig: string;
   readonly renderType: string;
-  readonly palette?: Readonly<Record<string, string>>;
+  readonly palette?: SubjectColorPalette;
 };
 
 export type PhysicsState = {
