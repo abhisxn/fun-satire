@@ -82,7 +82,9 @@ const samplePos = (
 export function spawnEyes(opts: EntityFactoryOptions): FactoryResult {
   const { rng, width, height, manifest } = opts;
   if (width <= 0 || height <= 0) return { entities: [], rejected: 0 };
-  const target = Math.min(opts.count ?? manifest.length, manifest.length);
+  const requested = opts.count ?? manifest.length;
+  if (!Number.isFinite(requested) || requested <= 0) return { entities: [], rejected: 0 };
+  const target = Math.min(requested, manifest.length);
   const placed: Entity[] = [];
   let rejected = 0;
   let nextId = 1;

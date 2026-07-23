@@ -14,13 +14,13 @@ export type EyeStateEvents = {
 
 export class EyeBlinkTimer {
   blink: EyeBlink = "open";
-  private nextBlinkAtMs = 0;
-  private closeEndsAtMs = 0;
-  private openEndsAtMs = 0;
+  private blinkEndsAt = 0;
+  private nextBlinkAt = 0;
   private blinkScale = 1;
+  private readonly halfMs: number;
+  private readonly fullMs: number;
   private readonly blinkIntervalMinMs: number;
   private readonly blinkIntervalMaxMs: number;
-  private readonly blinkDurationMs: number;
 
   constructor(
     rng: Rng,
@@ -29,39 +29,36 @@ export class EyeBlinkTimer {
   ) {
     this.blinkIntervalMinMs = cfg.blinkIntervalMinMs;
     this.blinkIntervalMaxMs = cfg.blinkIntervalMaxMs;
-    this.blinkDurationMs = cfg.blinkDurationMs;
+    this.halfMs = cfg.blinkDurationMs * 0.5;
+    this.fullMs = cfg.blinkDurationMs;
     this.scheduleNextBlink(rng, nowMs);
   }
 
   private scheduleNextBlink(rng: Rng, nowMs: number): void {
     const span = this.blinkIntervalMaxMs - this.blinkIntervalMinMs;
     const offset = span > 0 ? rng.range(0, span) : 0;
-    this.nextBlinkAtMs = nowMs + this.blinkIntervalMinMs + offset;
+    this.nextBlinkAt = nowMs + this.blinkIntervalMinMs + offset;
   }
 
   tick(rng: Rng, nowMs: number): void {
-    if (this.blink === "open" && nowMs >= this.nextBlinkAtMs) {
+    if (this.blink === "open" && nowMs >= this.nextBlinkAt) {
       this.blink = "closing";
-      this.openEndsAtMs = nowMs + this.blinkDurationMs * 0.5;
-      this.closeEndsAtMs = nowMs + this.blinkDurationMs;
-    } else if (this.blink === "closing" && nowMs >= this.openEndsAtMs) {
+      this.blinkEndsAt = nowMs + this.fullMs;
+    } else if (this.blink === "closing" && nowMs >= this.nextBlinkAt + this.halfMs) {
       this.blink = "closed";
-    } else if (this.blink === "closed" && nowMs >= this.closeEndsAtMs) {
+    } else if (this.blink === "closed" && nowMs >= this.blinkEndsAt) {
       this.blink = "opening";
-      this.openEndsAtMs = nowMs + this.blinkDurationMs * 0.5;
-    } else if (this.blink === "opening" && nowMs >= this.openEndsAtMs) {
+    } else if (this.blink === "opening" && nowMs >= this.blinkEndsAt - this.halfMs) {
       this.blink = "open";
       this.scheduleNextBlink(rng, nowMs);
     }
 
-    const half = this.blinkDurationMs * 0.5;
-    const t = nowMs;
     switch (this.blink) {
       case "open":
         this.blinkScale = 1;
         break;
       case "closing": {
-        const p = Math.min(1, (t - (this.nextBlinkAtMs)) / half);
+        const p = Math.min(1, (nowMs - this.nextBlinkAt) / this.halfMs);
         this.blinkScale = 1 - p;
         break;
       }
@@ -69,7 +66,7 @@ export class EyeBlinkTimer {
         this.blinkScale = 0;
         break;
       case "opening": {
-        const p = Math.min(1, (t - (this.closeEndsAtMs)) / half);
+        const p = Math.min(1, (nowMs - (this.blinkEndsAt - this.halfMs)) / this.halfMs);
         this.blinkScale = p;
         break;
       }
@@ -108,19 +105,13 @@ export class EyeBehavior {
 
   setDragged(dragging: boolean): void {
     const cur = this.locomotionState.current();
-    if (dragging && cur !== "dragged") {
-      try {
-        this.locomotionState.send("drag");
-      } catch {
-        return;
-      }
-    } else if (!dragging && cur === "dragged") {
-      this.locomotionState.send("release");
-    }
+    if (dragging && cur === "idle") this.locomotionState.send("drag");
+    else if (!dragging && cur === "dragged") this.locomotionState.send("release");
   }
 
   setDying(dying: boolean): void {
-    if (dying) this.lifecycleState.send("die");
-    else this.lifecycleState.send("respawn");
+    const cur = this.lifecycleState.current();
+    if (dying && cur === "alive") this.lifecycleState.send("die");
+    else if (!dying && cur === "dying") this.lifecycleState.send("respawn");
   }
 }

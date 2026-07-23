@@ -1,5 +1,5 @@
 import type { EntityStore } from "../entities/EntityStore";
-import type { Entity, EntityId } from "../entities/Entity";
+import type { EntityId } from "../entities/Entity";
 
 export const DRAG = Object.freeze({
   defaultReleaseDtSeconds: 1 / 60,
@@ -13,8 +13,11 @@ export class DragController {
   private lastDeltaX = 0;
   private lastDeltaY = 0;
   private lastMoveMs: number | null = null;
+  private readonly store: EntityStore;
 
-  constructor(private readonly store: EntityStore) {}
+  constructor(store: EntityStore) {
+    this.store = store;
+  }
 
   attach(): void {}
 
@@ -23,14 +26,12 @@ export class DragController {
   }
 
   tryStart(id: EntityId, x: number, y: number): boolean {
-    const live = this.store.get(id, { live: true });
-    if (!live) return false;
-    if (!live.lifecycle.alive || live.lifecycle.dying) return false;
-    this.store.get(id, { live: true })!;
-    const e = this.store.get(id, { live: true })! as Entity;
-    e.lifecycle.dragged = true;
-    e.physics.vel.x = 0;
-    e.physics.vel.y = 0;
+    const entity = this.store.get(id, { live: true });
+    if (!entity) return false;
+    if (!entity.lifecycle.alive || entity.lifecycle.dying) return false;
+    entity.lifecycle.dragged = true;
+    entity.physics.vel.x = 0;
+    entity.physics.vel.y = 0;
     this.dragged = id;
     this.lastX = x;
     this.lastY = y;
@@ -42,12 +43,12 @@ export class DragController {
 
   move(x: number, y: number, nowMs?: number): void {
     if (this.dragged === null) return;
-    const e = this.store.get(this.dragged, { live: true });
-    if (!e) return;
+    const entity = this.store.get(this.dragged, { live: true });
+    if (!entity) return;
     const dx = x - this.lastX;
     const dy = y - this.lastY;
-    e.physics.pos.x = x;
-    e.physics.pos.y = y;
+    entity.physics.pos.x = x;
+    entity.physics.pos.y = y;
     this.lastDeltaX = dx;
     this.lastDeltaY = dy;
     this.lastX = x;
@@ -57,25 +58,27 @@ export class DragController {
 
   release(nowMs?: number): void {
     if (this.dragged === null) return;
-    const e = this.store.get(this.dragged, { live: true });
-    if (e) {
-      const dt = this.lastMoveMs !== null && nowMs !== undefined
-        ? Math.max(1e-3, (nowMs - this.lastMoveMs) / 1000)
-        : DRAG.defaultReleaseDtSeconds;
-      let vx = this.lastDeltaX / dt;
-      let vy = this.lastDeltaY / dt;
-      const m = Math.sqrt(vx * vx + vy * vy);
-      if (m > DRAG.maxResidualSpeed) {
-        const k = DRAG.maxResidualSpeed / m;
-        vx *= k;
-        vy *= k;
-      }
-      e.physics.vel.x = vx;
-      e.physics.vel.y = vy;
-      e.physics.home.x = e.physics.pos.x;
-      e.physics.home.y = e.physics.pos.y;
-      e.lifecycle.dragged = false;
+    const entity = this.store.get(this.dragged, { live: true });
+    if (!entity) {
+      this.dragged = null;
+      return;
     }
+    const dt = this.lastMoveMs !== null && nowMs !== undefined
+      ? Math.max(1e-3, (nowMs - this.lastMoveMs) / 1000)
+      : DRAG.defaultReleaseDtSeconds;
+    let vx = this.lastDeltaX / dt;
+    let vy = this.lastDeltaY / dt;
+    const m = Math.sqrt(vx * vx + vy * vy);
+    if (m > DRAG.maxResidualSpeed) {
+      const k = DRAG.maxResidualSpeed / m;
+      vx *= k;
+      vy *= k;
+    }
+    entity.physics.vel.x = vx;
+    entity.physics.vel.y = vy;
+    entity.physics.home.x = entity.physics.pos.x;
+    entity.physics.home.y = entity.physics.pos.y;
+    entity.lifecycle.dragged = false;
     this.dragged = null;
     this.lastDeltaX = 0;
     this.lastDeltaY = 0;
@@ -84,11 +87,11 @@ export class DragController {
 
   cancel(): void {
     if (this.dragged === null) return;
-    const e = this.store.get(this.dragged, { live: true });
-    if (e) {
-      e.physics.vel.x = 0;
-      e.physics.vel.y = 0;
-      e.lifecycle.dragged = false;
+    const entity = this.store.get(this.dragged, { live: true });
+    if (entity) {
+      entity.physics.vel.x = 0;
+      entity.physics.vel.y = 0;
+      entity.lifecycle.dragged = false;
     }
     this.dragged = null;
   }
