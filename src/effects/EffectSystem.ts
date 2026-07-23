@@ -102,33 +102,39 @@ export class EffectSystem {
         effect.done = true;
         continue;
       }
-      const stage = def.stages[effect.stageIndex]!;
-      const elapsed = nowMs - effect.stageStartedAtMs;
-      const tRaw = stage.durationMs === 0 ? 1 : Math.min(1, elapsed / stage.durationMs);
-      const t = stage.easing(tRaw);
-      const entity = this.world.getEntity(effect.entityId);
-      if (!entity) {
-        effect.done = true;
-        continue;
-      }
-      const ctx: EffectCtx = {
-        entity,
-        target: effect.target,
-        particles: this.particles,
-        rng: this.rng,
-        world: this.world,
-        stageIndex: effect.stageIndex,
-        effect,
-      };
-      stage.update(ctx, t);
-      if (tRaw >= 1) {
-        effect.stageIndex++;
-        effect.stageStartedAtMs = nowMs;
-        if (effect.stageIndex >= def.stages.length) {
+      let safety = def.stages.length * 2 + 4;
+      while (!effect.done && safety-- > 0) {
+        const stage = def.stages[effect.stageIndex]!;
+        const elapsed = nowMs - effect.stageStartedAtMs;
+        const tRaw = stage.durationMs <= 0 ? 1 : Math.min(1, elapsed / stage.durationMs);
+        const t = stage.easing(tRaw);
+        const entity = this.world.getEntity(effect.entityId);
+        if (!entity) {
           effect.done = true;
+          break;
+        }
+        const ctx: EffectCtx = {
+          entity,
+          target: effect.target,
+          particles: this.particles,
+          rng: this.rng,
+          world: this.world,
+          stageIndex: effect.stageIndex,
+          effect,
+        };
+        stage.update(ctx, t);
+        if (tRaw >= 1) {
+          const nextStart = effect.stageStartedAtMs + stage.durationMs;
+          effect.stageIndex++;
+          effect.stageStartedAtMs = nextStart;
+          if (effect.stageIndex >= def.stages.length) {
+            effect.done = true;
+          } else {
+            const next = def.stages[effect.stageIndex]!;
+            next.onStart?.(ctx);
+          }
         } else {
-          const next = def.stages[effect.stageIndex]!;
-          next.onStart?.(ctx);
+          break;
         }
       }
     }
