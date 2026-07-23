@@ -30,8 +30,9 @@ describe("input/PowerController (T20)", () => {
     ps = new ParticleSystem(new Rng(1), 8);
     const worldAPI = {
       getEntity: (id: number) => store.get(id, { live: true }),
+      markDying: (id: number) => store.markDying(id),
       startRespawn: (id: number, delayMs: number) => {
-        const e = store.get(id, { live: true });
+        const e = store.get(id, { live: false });
         if (e) e.lifecycle.respawnAt = 1000 + delayMs;
       },
     };

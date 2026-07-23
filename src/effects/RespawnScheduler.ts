@@ -15,8 +15,8 @@ export type RespawnScheduleEntry = {
 export class RespawnScheduler {
   private queue: RespawnScheduleEntry[] = [];
   private readonly rng: Rng;
-  private readonly width: number;
-  private readonly height: number;
+  private width: number;
+  private height: number;
   private readonly minDelayMs: number;
   private readonly maxDelayMs: number;
 
@@ -34,10 +34,14 @@ export class RespawnScheduler {
     this.maxDelayMs = opts.maxDelayMs ?? RESPAWN.maxDelayMs;
   }
 
-  schedule(entity: Entity, nowMs: number): void {
+  schedule(entity: Entity, nowMs: number, overrideDelayMs?: number): void {
+    const delay =
+      typeof overrideDelayMs === "number" && Number.isFinite(overrideDelayMs) && overrideDelayMs > 0
+        ? overrideDelayMs
+        : this.rng.range(this.minDelayMs, this.maxDelayMs);
     const target: RespawnScheduleEntry = {
       entityId: entity.id,
-      fireAtMs: nowMs + this.rng.range(this.minDelayMs, this.maxDelayMs),
+      fireAtMs: nowMs + delay,
     };
     entity.lifecycle.respawnAt = target.fireAtMs;
     this.queue.push(target);
@@ -67,6 +71,11 @@ export class RespawnScheduler {
     }
     this.queue = remaining;
     return ready;
+  }
+
+  setSize(width: number, height: number): void {
+    this.width = Math.max(1, Math.floor(width));
+    this.height = Math.max(1, Math.floor(height));
   }
 
   reset(): void {

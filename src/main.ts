@@ -85,9 +85,17 @@ engine.events.on("tick", ({ phase, dt }) => {
   if (phase === "render") {
     const cursor = engine.cursor();
     const ringT = Math.max(0, Math.min(1, powerCtrl.chargeT()));
+    const inCooldown = effects.liveCount() > 0;
     hud.setCharge(ringT, powerCtrl.isCharging());
     const cursorRingRadius = 12 + ringT * 14;
     const cursorRingOpacity = cursor.active ? 1 - ringT * 0.85 : 0;
+    const hoverEntity = cursor.active
+      ? store.queryNearest({ x: cursor.x, y: cursor.y }, 70)
+      : null;
+    const reducedMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     renderFrame({
       ctx,
       store,
@@ -102,7 +110,12 @@ engine.events.on("tick", ({ phase, dt }) => {
       pupilOffsets,
       cursorRingRadius,
       cursorRingOpacity,
+      chargeTargetId: powerCtrl.chargeTargetId(),
+      hoverEntityId: hoverEntity?.id ?? null,
+      reducedMotion,
+      nowMs: engine.getNow(),
     });
+    void inCooldown;
   }
 });
 
@@ -112,9 +125,12 @@ const pupilOffsets = new Map<EntityId, { x: number; y: number }>();
 
 const worldAPI = {
   getEntity: (id: EntityId) => store.get(id, { live: true }),
-  startRespawn: (id: EntityId, _delayMs: number) => {
-    const e = store.get(id, { live: true });
-    if (e) respawn.schedule(e, engine.getNow());
+  markDying: (id: EntityId) => {
+    store.markDying(id);
+  },
+  startRespawn: (id: EntityId, delayMs: number) => {
+    const e = store.get(id, { live: false });
+    if (e) respawn.schedule(e, engine.getNow(), delayMs);
   },
 };
 
@@ -190,15 +206,26 @@ const pointer: PointerTracker = new PointerTracker(stage, {
     engine.clearCursor();
   },
   press() {
-    if (engine.cursor().active) {
-      const cur = engine.cursor();
-      const e = store.queryNearest({ x: cur.x, y: cur.y }, 70);
-      if (e) dragCtrl.tryStart(e.id, cur.x, cur.y);
+    const cur = engine.cursor();
+    if (!cur.active) return;
+    const target = store.queryNearest({ x: cur.x, y: cur.y }, 70);
+    if (target) {
+      powerCtrl.tryPress(target.id, cur.x, cur.y, engine.getNow());
+      dragCtrl.tryStart(target.id, cur.x, cur.y);
     }
   },
   release() {
-    dragCtrl.release(engine.getNow());
+    const now = engine.getNow();
+    powerCtrl.release(now);
+    dragCtrl.release(now);
   },
+});
+
+engine.onTick("pre-physics", () => {
+  const cur = engine.cursor();
+  if (dragCtrl.draggedId() !== null) {
+    dragCtrl.move(cur.x, cur.y, engine.getNow());
+  }
 });
 
 engine.onTick("pre-physics", (dt) => {
@@ -229,8 +256,8 @@ engine.onTick("pre-physics", (dt) => {
   });
 });
 
-viewport.onChange(() => {
-  respawn.clearQueue();
+viewport.onChange((s) => {
+  respawn.setSize(s.width, s.height);
 });
 
 spawnInitialEyes();

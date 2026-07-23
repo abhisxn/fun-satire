@@ -2,6 +2,7 @@ import { EntityStore } from "../entities/EntityStore";
 import { ParticleSystem } from "../effects/ParticleSystem";
 import { EffectSystem } from "../effects/EffectSystem";
 import { drawEye } from "./drawers/drawEye";
+import { drawCursor, computeCursorState } from "./drawers/drawCursor";
 import { computeFieldLines, drawFieldLines } from "./drawers/drawFieldLines";
 import { computePupilOffset } from "./pupilTrack";
 import type { EyeBehavior, EyeBlinkTimer } from "../entities/behaviors/EyeBehavior";
@@ -25,6 +26,10 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   ctx: CanvasRenderingContext2D;
   cursorRingRadius: number;
   cursorRingOpacity: number;
+  chargeTargetId: number | null;
+  hoverEntityId: number | null;
+  reducedMotion: boolean;
+  nowMs: number;
 };
 
 const FIELD_MAX_LENGTH = 240;
@@ -39,6 +44,8 @@ export function renderFrame(opts: RenderFrameOptions): void {
     origin: { x: opts.width / 2, y: opts.height / 2 },
     maxLength: FIELD_MAX_LENGTH,
     maxLines: 18,
+    target: opts.chargeTargetId,
+    chargeT: opts.cursorRingOpacity > 0 ? (1 - opts.cursorRingOpacity) : 0,
   });
   drawFieldLines(ctx, lines, { stroke: PALETTE.slate, ink: PALETTE.ink });
 
@@ -83,4 +90,17 @@ export function renderFrame(opts: RenderFrameOptions): void {
   }
 
   opts.particles.draw(ctx);
+
+  if (cursor.active) {
+    const chargeT = opts.cursorRingOpacity > 0 ? 1 - opts.cursorRingOpacity : 0;
+    const state = computeCursorState({
+      x: cursor.x,
+      y: cursor.y,
+      chargeT,
+      hover: opts.hoverEntityId !== null,
+      reducedMotion: opts.reducedMotion,
+      timeMs: opts.nowMs,
+    });
+    drawCursor(ctx, state);
+  }
 }

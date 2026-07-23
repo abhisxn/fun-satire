@@ -4,6 +4,8 @@ export type FieldLineInput = {
   maxLength: number;
   angleStep?: number;
   maxLines?: number;
+  target?: number | null;
+  chargeT?: number;
 };
 
 export type FieldLine = {
@@ -24,6 +26,7 @@ export function computeFieldLines(input: FieldLineInput): FieldLine[] {
   const step = input.angleStep ?? (TAU / 16);
   const max = input.maxLines ?? 16;
   const out: FieldLine[] = [];
+  const targetBoost = (input.chargeT ?? 0) * 0.4;
   for (let i = 0; i < max; i++) {
     const angle = i * step;
     const dx = Math.cos(angle);
@@ -41,7 +44,7 @@ export function computeFieldLines(input: FieldLineInput): FieldLine[] {
     }
     const length = Math.min(input.maxLength * Math.max(reach, 0.08), input.maxLength);
     if (totalStrength < 0.02) continue;
-    const opacity = Math.min(1, 0.15 + totalStrength / samples.length);
+    const opacity = Math.min(1, 0.15 + totalStrength / samples.length + targetBoost);
     out.push({
       x1: input.origin.x,
       y1: input.origin.y,

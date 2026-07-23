@@ -39,7 +39,7 @@ export const laserBurnEffect: EffectDef = {
       durationMs: LASER_BURN.shrinkMs,
       easing: LASER_BURN.shrinkEase,
       onStart: (ctx) => {
-        ctx.entity.lifecycle.dying = true;
+        ctx.world.markDying(ctx.entity.id);
       },
       update: (ctx, t) => {
         ctx.entity.physics.scale = (1 - 0.36) * (1 - t);

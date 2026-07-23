@@ -28,6 +28,34 @@ describe("boot/main integration smoke (T23)", () => {
     expect(main).toMatch(/engine\.start\(\)/);
   });
 
+  it("Renderer.draw calls drawCursor and computeCursorState so the custom cursor is visible", () => {
+    const renderer = readFileSync(resolve(ROOT, "src/render/Renderer.ts"), "utf8");
+    expect(renderer).toMatch(/drawCursor/);
+    expect(renderer).toMatch(/computeCursorState/);
+  });
+
+  it("main.ts wires the pointer sink through both power and drag controllers", () => {
+    const main = readFileSync(resolve(ROOT, "src/main.ts"), "utf8");
+    expect(main).toMatch(/powerCtrl\.tryPress/);
+    expect(main).toMatch(/powerCtrl\.release/);
+    expect(main).toMatch(/dragCtrl\.tryStart/);
+    expect(main).toMatch(/dragCtrl\.release/);
+    expect(main).toMatch(/dragCtrl\.move/);
+  });
+
+  it("laserBurn effect routes through WorldAPI for markDying and startRespawn", () => {
+    const eff = readFileSync(resolve(ROOT, "src/effects/effectDefs/laserBurn.ts"), "utf8");
+    expect(eff).toMatch(/world\.markDying/);
+    expect(eff).toMatch(/world\.startRespawn/);
+    expect(eff).not.toMatch(/lifecycle\.dying\s*=\s*true/);
+  });
+
+  it("RespawnScheduler.schedule accepts an explicit delay override", () => {
+    const src = readFileSync(resolve(ROOT, "src/effects/RespawnScheduler.ts"), "utf8");
+    expect(src).toMatch(/overrideDelayMs/);
+    expect(src).toMatch(/setSize/);
+  });
+
   it("main.ts sets document title to Fun Satire", () => {
     const html = readFileSync(resolve(ROOT, "index.html"), "utf8");
     expect(html).toMatch(/<title>Fun Satire<\/title>/);

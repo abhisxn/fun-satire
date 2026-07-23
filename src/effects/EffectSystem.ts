@@ -17,6 +17,7 @@ export type EffectDef = {
 
 export type WorldAPI = {
   getEntity(id: EntityId): Entity | null;
+  markDying(id: EntityId): void;
   startRespawn(id: EntityId, delayMs: number): void;
 };
 
