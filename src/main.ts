@@ -1,4 +1,9 @@
-import './styles/global.css';
+import "@fontsource-variable/fraunces/standard-italic.css";
+import "@fontsource/space-mono/400.css";
+import "@fontsource/space-mono/700.css";
+import "./styles/global.css";
+
+import { PALETTE } from "./config/tokens";
 
 const stage = document.querySelector<HTMLCanvasElement>('#stage');
 const hud = document.querySelector<HTMLElement>('#hud-root');
@@ -12,5 +17,5 @@ if (!ctx) {
   throw new Error('Fun Satire: 2D canvas context unavailable.');
 }
 
-ctx.fillStyle = '#EDE7DD';
+ctx.fillStyle = PALETTE.cream;
 ctx.fillRect(0, 0, stage.width, stage.height);
