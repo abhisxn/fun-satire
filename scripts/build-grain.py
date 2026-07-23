@@ -1,9 +1,4 @@
-"""Deterministic grain texture generator.
-
-Outputs a seamless, low-frequency, low-contrast 192x192 monochrome tile.
-Used by the build (manually invoked) to produce public/textures/grain.png.
-Pure stdlib (zlib + struct) — avoids requiring PIL.
-"""
+"""Deterministic grain texture generator."""
 
 import os
 import struct
@@ -29,8 +24,9 @@ def make_tile(width: int = 192, height: int = 192, seed: int = 0xF5A75C):
     grid_y = 4
     lattice = [[rng() for _ in range(grid_x + 1)] for _ in range(grid_y + 1)]
 
-    pixels = bytearray()
+    rows: list[bytes] = []
     for y in range(height):
+        row = bytearray(b"\x00")  # PNG filter byte = None
         for x in range(width):
             fx = x / width * grid_x
             fy = y / height * grid_y
@@ -56,14 +52,13 @@ def make_tile(width: int = 192, height: int = 192, seed: int = 0xF5A75C):
             amplitude = 18
             value = int(base + offset * amplitude)
             value = max(96, min(168, value))
-            pixels.append(value)
-            pixels.append(value)
-            pixels.append(value)
-            pixels.append(255)
-    return bytes(pixels)
+            row.extend((value, value, value, 255))
+        rows.append(bytes(row))
+    raw = b"".join(rows)
+    return raw
 
 
-def write_png(path: str, width: int, height: int, rgba: bytes) -> None:
+def write_png(path: str, width: int, height: int, raw_rows: bytes) -> None:
     def chunk(tag: bytes, data: bytes) -> bytes:
         return struct.pack(">I", len(data)) + tag + data + struct.pack(
             ">I", zlib.crc32(tag + data) & 0xFFFFFFFF
@@ -71,7 +66,7 @@ def write_png(path: str, width: int, height: int, rgba: bytes) -> None:
 
     signature = b"\x89PNG\r\n\x1a\n"
     ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    idat = zlib.compress(rgba, 9)
+    idat = zlib.compress(raw_rows, 9)
     with open(path, "wb") as f:
         f.write(signature)
         f.write(chunk(b"IHDR", ihdr))
@@ -85,8 +80,8 @@ def main() -> None:
     )
     out = os.path.join(repo_root, "public", "textures", "grain.png")
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    rgba = make_tile()
-    write_png(out, 192, 192, rgba)
+    raw = make_tile()
+    write_png(out, 192, 192, raw)
     size = os.path.getsize(out)
     print(f"wrote {out} ({size} bytes)")
 

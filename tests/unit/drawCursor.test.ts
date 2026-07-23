@@ -38,11 +38,15 @@ describe("custom cursor (T4)", () => {
 
     it("grows the ring and fades it as chargeT increases", async () => {
       const { computeCursorState, CURSOR } = await import("../../src/render/drawers/drawCursor");
-      const low = computeCursorState({ x: 0, y: 0, chargeT: 0.25, hover: true, reducedMotion: false, timeMs: 0 });
-      const high = computeCursorState({ x: 0, y: 0, chargeT: 1.0, hover: true, reducedMotion: false, timeMs: 0 });
-      expect(high.ringRadius).toBeGreaterThan(low.ringRadius);
-      expect(high.ringOpacity).toBeLessThan(low.ringOpacity);
-      expect(high.charging).toBe(true);
+      const samples = [0, 0.2, 0.4, 0.6, 0.8].map((chargeT) =>
+        computeCursorState({ x: 0, y: 0, chargeT, hover: true, reducedMotion: false, timeMs: 0 }),
+      );
+      for (let i = 1; i < samples.length; i++) {
+        expect(samples[i].ringRadius).toBeGreaterThan(samples[i - 1].ringRadius);
+      }
+      expect(samples[samples.length - 1].ringRadius).toBeGreaterThan(CURSOR.baseRingPx + 10);
+      expect(samples[0].ringOpacity).toBeGreaterThan(samples[samples.length - 1].ringOpacity);
+      expect(samples[samples.length - 1].charging).toBe(true);
     });
 
     it("clamps ringRadius to the max during over-charge", async () => {

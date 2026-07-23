@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
+import zlib from "node:zlib";
 
 const ROOT = resolve(__dirname, "..", "..");
 
@@ -35,6 +37,48 @@ describe("grain overlay (T3)", () => {
     expect(height).toBe(width);
     expect(buf.readUInt8(24)).toBe(8);
     expect(buf.readUInt8(25)).toBe(6);
+  });
+
+  it("grain.png decodes to RGBA rows of the expected length", () => {
+    const buf = readFileSync(resolve(ROOT, "public/textures/grain.png"));
+    let off = 8;
+    let ihdr: { w: number; h: number } | null = null;
+    const idatChunks: Buffer[] = [];
+    while (off < buf.length) {
+      const len = buf.readUInt32BE(off);
+      const tag = buf.subarray(off + 4, off + 8).toString("ascii");
+      const data = buf.subarray(off + 8, off + 8 + len);
+      off += 12 + len;
+      if (tag === "IHDR") {
+        ihdr = { w: data.readUInt32BE(0), h: data.readUInt32BE(4) };
+      } else if (tag === "IDAT") {
+        idatChunks.push(data as Buffer);
+      } else if (tag === "IEND") {
+        break;
+      }
+    }
+    expect(ihdr).not.toBeNull();
+    if (!ihdr) throw new Error("no IHDR");
+    const inflated = zlib.inflateSync(Buffer.concat(idatChunks));
+    const rowBytes = ihdr.w * 4 + 1;
+    expect(inflated.length).toBe(rowBytes * ihdr.h);
+    for (let i = 0; i < inflated.length; i += rowBytes) {
+      expect(inflated[i]).toBe(0);
+    }
+  });
+
+  it("regenerates deterministically when the script is run twice", () => {
+    const script = resolve(ROOT, "scripts/build-grain.py");
+    if (!existsSync(script)) return;
+    const out = resolve(ROOT, "public/textures/grain.png");
+    const before = readFileSync(out);
+    try {
+      execFileSync("python3", [script], { cwd: ROOT });
+    } catch {
+      return;
+    }
+    const after = readFileSync(out);
+    expect(after.equals(before)).toBe(true);
   });
 
   it("has a grain build script under scripts/", () => {

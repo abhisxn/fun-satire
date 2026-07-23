@@ -32,7 +32,7 @@ export type CursorState = {
 const clamp = (v: number, lo: number, hi: number): number =>
   v < lo ? lo : v > hi ? hi : v;
 
-const ease = (t: number): number => {
+const easeCharge = (t: number): number => {
   const c = t < 0 ? 0 : t > 1 ? 1 : t;
   return 1 - Math.pow(1 - c, 3);
 };
@@ -45,13 +45,13 @@ const pulseAt = (tMs: number, reducedMotion: boolean): number => {
 export function computeCursorState(input: CursorInput): CursorState {
   const { x, y, chargeT, hover, reducedMotion, timeMs } = input;
   const c = clamp(chargeT, 0, 1);
-  const baseEase = ease(c);
+  const baseEase = easeCharge(c);
   const amplitude = CURSOR.maxRingPx - CURSOR.baseRingPx;
   const damp = reducedMotion ? 0.4 : 1;
   const easedRingRadius = CURSOR.baseRingPx + baseEase * amplitude * damp;
-  const pulse = pulseAt(timeMs, reducedMotion) * 1.5 * damp * baseEase;
+  const pulseAmp = baseEase * pulseAt(timeMs, reducedMotion) * 1.5 * damp;
   const ringRadius = clamp(
-    easedRingRadius + pulse,
+    easedRingRadius + pulseAmp,
     CURSOR.baseRingPx,
     CURSOR.maxRingPx
   );
@@ -66,7 +66,7 @@ export function computeCursorState(input: CursorInput): CursorState {
     ringOpacity,
     crosshairOpacity,
     strokeWidth,
-    pulse,
+    pulse: pulseAmp,
   };
 }
 
