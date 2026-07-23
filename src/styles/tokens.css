@@ -16,6 +16,13 @@
   --ease-charge: cubic-bezier(0.32, 0.72, 0, 1);
 
   --motion-multiplier: 1;
+
+  --z-canvas: 20;
+  --z-grain: 40;
+  --z-hud: 60;
+
+  --grain-opacity: 0.04;
+  --grain-tile-url: url("/textures/grain.png");
 }
 
 @media (prefers-reduced-motion: reduce) {
