@@ -1,6 +1,5 @@
 export function mulberry32(seed: number): () => number {
   let s = seed >>> 0;
-  if (s === 0) s = 0x9E3779B9;
   return function randInt(): number {
     s = (s + 0x6D2B79F5) >>> 0;
     let t = s;
@@ -14,11 +13,7 @@ export class Rng {
   private readonly randInt: () => number;
 
   constructor(seed: number) {
-    this.randInt = mulberry32(seed);
-  }
-
-  next(): number {
-    return this.randInt();
+    this.randInt = mulberry32(seed >>> 0);
   }
 
   float(): number {
@@ -47,7 +42,7 @@ export class Rng {
   static fromQueryString(qs: string, fallback: number): Rng {
     const params = new URLSearchParams(qs.startsWith("?") ? qs : `?${qs}`);
     const raw = params.get("seed");
-    const parsed = raw === null ? NaN : Number.parseInt(raw, 10);
+    const parsed = raw === null ? Number.NaN : Number.parseInt(raw, 10);
     const seed = Number.isFinite(parsed) ? parsed : fallback;
     return new Rng(seed);
   }

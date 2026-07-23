@@ -57,18 +57,34 @@ describe("core/Rng (T5)", () => {
 
   it("Rng.fromQueryString parses ?seed=N", async () => {
     const { Rng } = await import("../../src/core/Rng");
-    expect(Rng.fromQueryString("?seed=99", 1).next()).toBe(new Rng(99).next());
+    expect(Rng.fromQueryString("?seed=99", 1).float()).toBe(new Rng(99).float());
+  });
+
+  it("Rng.fromQueryString falls back when seed is missing or invalid", async () => {
+    const { Rng } = await import("../../src/core/Rng");
+    expect(Rng.fromQueryString("", 7).float()).toBe(new Rng(7).float());
+    expect(Rng.fromQueryString("?seed=abc", 9).float()).toBe(new Rng(9).float());
+  });
+
+  it("Rng.pick throws on an empty list", async () => {
+    const { Rng } = await import("../../src/core/Rng");
+    const r = new Rng(0);
+    expect(() => r.pick([])).toThrowError(/empty/);
+  });
+
+  it("Rng.rangeInt returns an integer in [lo, hi)", async () => {
+    const { Rng } = await import("../../src/core/Rng");
+    const r = new Rng(11);
+    for (let i = 0; i < 50; i++) {
+      const v = r.rangeInt(3, 7);
+      expect(v).toBeGreaterThanOrEqual(3);
+      expect(v).toBeLessThan(7);
+      expect(Number.isInteger(v)).toBe(true);
+    }
   });
 });
 
 describe("core/Clock (T5)", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("starts the clock at construction time", async () => {
     const { Clock } = await import("../../src/core/Clock");
     const c = new Clock(1000);
@@ -94,11 +110,113 @@ describe("core/Clock (T5)", () => {
     expect(c.tick(1100)).toBe(100);
   });
 
-  it("can be advanced manually by a fixed step", async () => {
+  it("backwards or NaN timestamps return 0 and do not corrupt state", async () => {
     const { Clock } = await import("../../src/core/Clock");
     const c = new Clock(1000);
-    expect(c.advanceBy(16.6667)).toBeCloseTo(16.6667, 3);
-    expect(c.advanceBy(16.6667)).toBeCloseTo(16.6667, 3);
+    expect(c.tick(900)).toBe(0);
+    expect(c.elapsed()).toBe(0);
+    expect(c.tick(Number.NaN)).toBe(0);
+    expect(c.elapsed()).toBe(0);
+    expect(c.tick(1100)).toBe(100);
+    expect(c.elapsed()).toBe(100);
+  });
+
+  it("advanceBy clamps but does not advance when given non-finite input", async () => {
+    const { Clock, MAX_DT_MS } = await import("../../src/core/Clock");
+    const c = new Clock(1000);
+    expect(c.advanceBy(-5)).toBe(0);
+    expect(c.advanceBy(Number.NaN)).toBe(0);
+    expect(c.advanceBy(MAX_DT_MS + 5000)).toBe(MAX_DT_MS);
+    expect(c.elapsed()).toBe(MAX_DT_MS);
+  });
+
+  it("exposes startMs, now, and elapsed consistently", async () => {
+    const { Clock } = await import("../../src/core/Clock");
+    const c = new Clock(1000);
+    expect(c.startMs).toBe(1000);
+    expect(c.now()).toBe(1000);
+    c.tick(1100);
+    expect(c.now()).toBe(1100);
+    expect(c.elapsed()).toBe(100);
+  });
+});
+
+describe("core/Engine (T5)", () => {
+  it("runs phases in order each frame and reports tick events", async () => {
+    const { Engine } = await import("../../src/core/Engine");
+    const ticks: number[] = [];
+    const phaseHits: string[] = [];
+    const timestamps: number[] = [];
+    const engine = new Engine({
+      now: () => 1000,
+      raf: (cb) => {
+        const h = ticks.length + 1;
+        timestamps.push(h);
+        return h;
+      },
+      caf: () => undefined,
+    });
+    engine.onTick("pre-physics", () => phaseHits.push("pre"));
+    engine.onTick("post-physics", () => phaseHits.push("post"));
+    engine.onTick("render", () => phaseHits.push("render"));
+    let n = 0;
+    const off = engine.events.on("tick", () => n++);
+    const offs = engine.events.on("start", () => ticks.push(0));
+
+    const rafCb: ((t: number) => void)[] = [];
+    const e2 = new Engine({
+      now: () => 1000,
+      raf: (cb) => {
+        rafCb.push(cb);
+        return 0;
+      },
+      caf: () => undefined,
+    });
+    const seen: number[] = [];
+    e2.onTick("pre-physics", (dt) => seen.push(dt));
+    e2.start();
+    expect(rafCb.length).toBe(1);
+    rafCb[0]!(1100);
+    expect(seen[0]).toBeCloseTo(100, 5);
+    expect(phaseHits.length).toBe(0);
+
+    e2.stop();
+    rafCb[0]!(1200);
+    expect(seen.length).toBe(1);
+
+    expect(off).toBeTypeOf("function");
+    expect(offs).toBeTypeOf("function");
+  });
+
+  it("setCursor / clearCursor / cursor reflect pointer state", async () => {
+    const { Engine } = await import("../../src/core/Engine");
+    const e = new Engine({ now: () => 0, raf: () => 0, caf: () => undefined });
+    expect(e.cursor()).toEqual({ x: 0, y: 0, active: false });
+    e.setCursor(120, 80);
+    expect(e.cursor()).toEqual({ x: 120, y: 80, active: true });
+    e.clearCursor();
+    expect(e.cursor().active).toBe(false);
+  });
+
+  it("getNow returns the clock's current time", async () => {
+    const { Engine } = await import("../../src/core/Engine");
+    const e = new Engine({ now: () => 4242, raf: () => 0, caf: () => undefined });
+    expect(e.getNow()).toBe(4242);
+  });
+
+  it("EventBus isolates listener exceptions and continues dispatching", async () => {
+    const { EventBus } = await import("../../src/core/EventBus");
+    const bus = new EventBus<{ x: number }>();
+    const seen: number[] = [];
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    bus.on("x", () => {
+      throw new Error("boom");
+    });
+    bus.on("x", (p) => seen.push(p));
+    bus.emit("x", 7);
+    expect(seen).toEqual([7]);
+    expect(errSpy).toHaveBeenCalled();
+    errSpy.mockRestore();
   });
 });
 

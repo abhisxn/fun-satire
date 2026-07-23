@@ -1,29 +1,33 @@
 export const MAX_DT_MS = 250;
-export const DEFAULT_DT_MS = 16.6667;
+const sanitize = (v: number, fallback: number): number => {
+  if (!Number.isFinite(v)) return fallback;
+  return v < 0 ? fallback : v;
+};
 
 export class Clock {
   readonly startMs: number;
-  readonly prevMs: number;
-  readonly totalElapsed: number;
+  private prevMs: number;
+  private totalElapsed = 0;
 
   constructor(startMs: number = performance.now()) {
-    this.startMs = startMs;
-    this.prevMs = startMs;
-    this.totalElapsed = 0;
+    this.startMs = sanitize(startMs, 0);
+    this.prevMs = this.startMs;
   }
 
   tick(nowMs: number = performance.now()): number {
-    const raw = nowMs - this.prevMs;
-    const dt = raw < 0 ? 0 : raw > MAX_DT_MS ? MAX_DT_MS : raw;
-    (this as { prevMs: number }).prevMs = nowMs;
-    (this as { totalElapsed: number }).totalElapsed += dt;
+    const safeNow = sanitize(nowMs, this.prevMs);
+    const raw = safeNow - this.prevMs;
+    const dt = raw > MAX_DT_MS ? MAX_DT_MS : raw < 0 ? 0 : raw;
+    if (safeNow > this.prevMs) this.prevMs = safeNow;
+    this.totalElapsed += dt;
     return dt;
   }
 
   advanceBy(dt: number): number {
-    const clamped = dt < 0 ? 0 : dt > MAX_DT_MS ? MAX_DT_MS : dt;
-    (this as { prevMs: number }).prevMs += clamped;
-    (this as { totalElapsed: number }).totalElapsed += clamped;
+    if (!Number.isFinite(dt) || dt <= 0) return 0;
+    const clamped = dt > MAX_DT_MS ? MAX_DT_MS : dt;
+    this.prevMs += clamped;
+    this.totalElapsed += clamped;
     return clamped;
   }
 
