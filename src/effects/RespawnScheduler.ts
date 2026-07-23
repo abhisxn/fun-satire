@@ -72,4 +72,8 @@ export class RespawnScheduler {
   reset(): void {
     this.queue = [];
   }
+
+  clearQueue(): void {
+    this.reset();
+  }
 }

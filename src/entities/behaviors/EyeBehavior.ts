@@ -5,12 +5,8 @@ export type EyeLifecycle = "alive" | "dying";
 export type EyeLocomotion = "idle" | "flee" | "dragged";
 export type EyeBlink = "open" | "closing" | "closed" | "opening";
 
-export type EyeStateEvents = {
-  die: void;
-  respawn: void;
-  drag: void;
-  release: void;
-};
+export type LifecycleEvent = "die" | "respawn";
+export type LocomotionEvent = "drag" | "release";
 
 export class EyeBlinkTimer {
   blink: EyeBlink = "open";
@@ -80,14 +76,14 @@ export class EyeBlinkTimer {
 
 export class EyeBehavior {
   private readonly blinkTimer: EyeBlinkTimer;
-  private readonly locomotionState: StateMachine<EyeLocomotion, keyof EyeStateEvents>;
-  private readonly lifecycleState: StateMachine<EyeLifecycle, keyof EyeStateEvents>;
+  private readonly locomotionState: StateMachine<EyeLocomotion, LocomotionEvent>;
+  private readonly lifecycleState: StateMachine<EyeLifecycle, LifecycleEvent>;
 
   constructor(
     rng: Rng,
     cfg: { blinkIntervalMinMs: number; blinkIntervalMaxMs: number; blinkDurationMs: number },
-    lifecycleState: StateMachine<EyeLifecycle, keyof EyeStateEvents>,
-    locomotionState: StateMachine<EyeLocomotion, keyof EyeStateEvents>,
+    lifecycleState: StateMachine<EyeLifecycle, LifecycleEvent>,
+    locomotionState: StateMachine<EyeLocomotion, LocomotionEvent>,
     nowMs: number,
   ) {
     this.blinkTimer = new EyeBlinkTimer(rng, cfg, nowMs);
