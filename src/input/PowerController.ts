@@ -1,13 +1,10 @@
 import { type Rng } from "../core/Rng";
-import type { EffectSystem } from "../effects/EffectSystem";
+import type { EffectSystem, WorldAPI } from "../effects/EffectSystem";
 import { LASER_BURN } from "../effects/effectDefs/laserBurn";
 
 export type PowerControllerArgs = {
   rng: Rng;
-  worldAPI: {
-    getEntity: (id: number) => import("../entities/Entity").Entity | null;
-    startRespawn: (id: number, delayMs: number) => void;
-  };
+  worldAPI: WorldAPI;
   effectSystem: EffectSystem;
   targetRadius: number;
   cooldownMs: number;

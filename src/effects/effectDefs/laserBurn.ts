@@ -1,3 +1,4 @@
+import { PALETTE, type PaletteKey } from "../../config/tokens";
 import type { EffectDef } from "../EffectSystem";
 import { EASE_PROTEST, EASE_OUT, EASE_IN } from "../EffectSystem";
 
@@ -23,9 +24,6 @@ export const laserBurnEffect: EffectDef = {
     {
       durationMs: LASER_BURN.glowMs,
       easing: LASER_BURN.glowEase,
-      onStart: (ctx) => {
-        ctx.entity.physics.scale = ctx.entity.physics.scale || 1;
-      },
       update: (ctx, t) => {
         ctx.entity.physics.scale = (1 - t * 0.18);
       },
@@ -51,11 +49,10 @@ export const laserBurnEffect: EffectDef = {
       durationMs: LASER_BURN.dissolveMs,
       easing: LASER_BURN.dissolveEase,
       onStart: (ctx) => {
-        const c = ctx.entity.content;
-        const iris =
-          c.palette && "iris" in c.palette && typeof c.palette.iris === "string"
-            ? ctx.rng.pick(["#5B7A8C", "#6D7A5E"])
-            : "#5B7A8C";
+        const palette = ctx.entity.content.palette;
+        const irisKey = palette?.iris as PaletteKey | undefined;
+        const iris = irisKey && irisKey in PALETTE ? PALETTE[irisKey] : PALETTE.slate;
+        const ink = PALETTE.ink;
         for (let i = 0; i < LASER_BURN.ashCount; i++) {
           const angle = ctx.rng.float() * Math.PI * 2;
           const speed = ctx.rng.range(LASER_BURN.ashMinR, LASER_BURN.ashMaxR);
@@ -67,7 +64,7 @@ export const laserBurnEffect: EffectDef = {
             lifeMs: ctx.rng.range(380, 700),
             startSize: ctx.rng.range(2, 6),
             endSize: 0,
-            color: i % 3 === 0 ? "#2A2420" : iris,
+            color: i % 3 === 0 ? ink : iris,
             rotation: ctx.rng.float() * Math.PI,
             rotationSpeed: ctx.rng.range(-2, 2),
             spin: 0,

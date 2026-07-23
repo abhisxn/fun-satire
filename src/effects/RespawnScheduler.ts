@@ -10,8 +10,6 @@ export const RESPAWN = Object.freeze({
 export type RespawnScheduleEntry = {
   entityId: EntityId;
   fireAtMs: number;
-  baseSize: number;
-  paletteSummary: string;
 };
 
 export class RespawnScheduler {
@@ -37,11 +35,9 @@ export class RespawnScheduler {
   }
 
   schedule(entity: Entity, nowMs: number): void {
-    const target = {
+    const target: RespawnScheduleEntry = {
       entityId: entity.id,
       fireAtMs: nowMs + this.rng.range(this.minDelayMs, this.maxDelayMs),
-      baseSize: 56,
-      paletteSummary: (entity.content.palette?.iris ?? "") as string,
     };
     entity.lifecycle.respawnAt = target.fireAtMs;
     this.queue.push(target);
