@@ -38,7 +38,7 @@ export type EntityId = number;
 
 export type Entity = {
   id: EntityId;
-  content: ContentRef;
+  readonly content: ContentRef;
   physics: PhysicsState;
   behavior: BehaviorBag;
   lifecycle: LifecycleState;
