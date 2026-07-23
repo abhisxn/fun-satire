@@ -1,0 +1,28 @@
+:root {
+  --color-cream: #EDE7DD;
+  --color-slate: #5B7A8C;
+  --color-sage: #6D7A5E;
+  --color-ink: #2A2420;
+  --color-coral: #E8A9A0;
+
+  --font-display: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+
+  --ease-protest: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-charge: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --motion-multiplier: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+    --motion-multiplier: 0.4;
+  }
+}
