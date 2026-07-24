@@ -276,8 +276,58 @@
     subject.x = W * 0.5; subject.y = H * 0.46;
     eyes = [];
     setEyeCount(targetCount);
+    spawnBugs();
   }
   addEventListener('resize', resize);
+
+  const bugs = [];
+  function spawnBugs() {
+    bugs.length = 0;
+    const n = Math.max(3, Math.round(W / 560));
+    for (let i = 0; i < n; i++) {
+      bugs.push({
+        x: rand(40, W - 40), y: rand(60, H - 60),
+        a: rand(0, Math.PI * 2), sp: rand(18, 42),
+        turn: 0, turnT: rand(0.4, 1.6), s: rand(0.8, 1.15), legT: rand(0, 10),
+      });
+    }
+  }
+
+  function stepBugs(dt) {
+    for (const b of bugs) {
+      b.turnT -= dt;
+      if (b.turnT <= 0) { b.turn = rand(-2.2, 2.2); b.turnT = rand(0.3, 1.4); }
+      const dx = b.x - pointer.x, dy = b.y - pointer.y, d2 = dx * dx + dy * dy;
+      if (d2 < 120 * 120) b.turn += (Math.atan2(dy, dx) - b.a > 0) ? 0.12 : -0.12;
+      b.a += b.turn * dt;
+      b.x += Math.cos(b.a) * b.sp * dt;
+      b.y += Math.sin(b.a) * b.sp * dt;
+      b.legT += dt;
+      if (b.x < 12) { b.x = 12; b.a = Math.PI - b.a; }
+      if (b.x > W - 12) { b.x = W - 12; b.a = Math.PI - b.a; }
+      if (b.y < 12) { b.y = 12; b.a = -b.a; }
+      if (b.y > H - 12) { b.y = H - 12; b.a = -b.a; }
+    }
+  }
+
+  function drawBug(b) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.a + Math.PI / 2);
+    ctx.scale(b.s, b.s);
+    ctx.strokeStyle = INK; ctx.fillStyle = INK; ctx.lineWidth = 1.1;
+    const wiggle = Math.sin(b.legT * 18) * 1.6;
+    for (let i = -1; i <= 1; i++) {
+      const ly = i * 3;
+      ctx.beginPath(); ctx.moveTo(-2, ly); ctx.lineTo(-6, ly + wiggle * (i || 1)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2, ly); ctx.lineTo(6, ly - wiggle * (i || 1)); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-1.4, -5); ctx.quadraticCurveTo(-4, -9, -5.5, -10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(1.4, -5); ctx.quadraticCurveTo(4, -9, 5.5, -10); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, 3.1, 5.2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -5.4, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
 
   function drawEye(e) {
     ctx.save();
@@ -412,6 +462,8 @@
     ctx.clearRect(0, 0, W, H);
     stepEyes(dt, now);
     for (const e of eyes) drawEye(e);
+    stepBugs(dt);
+    for (const b of bugs) drawBug(b);
     drawSubject(now);
     requestAnimationFrame(tick);
   }
