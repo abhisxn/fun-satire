@@ -271,6 +271,18 @@
     ctx.fillStyle = 'rgba(251,248,242,0.85)';
     ctx.fill();
     ctx.restore();
+    if (e.blink < 1) {
+      ctx.save();
+      eyeShapePath(e.w, e.h);
+      ctx.clip();
+      const h2 = e.h / 2, w2 = e.w / 2;
+      const lidY = -h2 * 1.8 + (1 - e.blink) * (h2 * 3.6);
+      ctx.beginPath();
+      ctx.rect(-w2 - 2, -h2 * 1.9, w2 * 2 + 4, lidY + h2 * 1.9);
+      ctx.fillStyle = '#FBF8F2';
+      ctx.fill();
+      ctx.restore();
+    }
     ctx.restore();
   }
 
@@ -342,6 +354,16 @@
       e.px = lerp(e.px, (cdx / cdist) * maxX, pk);
       e.py = lerp(e.py, (cdy / cdist) * maxY, pk);
       e.dilate = lerp(e.dilate, clamp(1 - cdist / 220, 0, 1), 1 - Math.pow(0.02, dt));
+
+      e.blinkT -= dt;
+      if (e.blinkT <= 0 && e.blinkPhase === 0) e.blinkPhase = 1;
+      if (e.blinkPhase === 1) {
+        e.blink = Math.max(0, e.blink - dt * 9);
+        if (e.blink === 0) e.blinkPhase = 2;
+      } else if (e.blinkPhase === 2) {
+        e.blink = Math.min(1, e.blink + dt * 7);
+        if (e.blink === 1) { e.blinkPhase = 0; e.blinkT = rand(2.5, 8); }
+      }
     }
   }
 
