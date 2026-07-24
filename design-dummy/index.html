@@ -225,7 +225,9 @@
   function setEyeCount(n) {
     targetCount = clamp(n, 6, 220);
     document.getElementById('count').textContent = targetCount;
-    while (eyes.length < targetCount) placeEye();
+    let attempts = 0;
+    const maxAttempts = targetCount * 50;
+    while (eyes.length < targetCount && attempts++ < maxAttempts) placeEye();
     if (eyes.length > targetCount) eyes.length = targetCount;
   }
 
