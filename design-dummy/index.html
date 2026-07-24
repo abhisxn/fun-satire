@@ -419,6 +419,16 @@
   resize();
   requestAnimationFrame(tick);
 
+  document.getElementById('inc').addEventListener('click', () => {
+    setEyeCount(targetCount + 1);
+  });
+  document.getElementById('dec').addEventListener('click', () => {
+    setEyeCount(targetCount - 1);
+  });
+  document.getElementById('repel').addEventListener('input', e => {
+    repelStrength = Number(e.target.value) / 100;
+  });
+
   requestAnimationFrame(() => {
     document.getElementById('caption').classList.add('in');
     document.getElementById('hud').classList.add('in');
