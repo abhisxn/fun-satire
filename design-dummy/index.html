@@ -170,6 +170,15 @@
 
   const subject = { x: 0, y: 0, r: 44 };
 
+  const pointer = { x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2 };
+  let lastMove = performance.now();
+
+  addEventListener('pointermove', e => {
+    pointer.tx = e.clientX;
+    pointer.ty = e.clientY;
+    lastMove = performance.now();
+  });
+
   let eyes = [];
   let targetCount = 60;
   let repelStrength = 0.55;
@@ -252,9 +261,14 @@
     ctx.fill();
     ctx.save();
     ctx.clip();
+    const pr = e.pupilR * (1 + e.dilate * 0.4);
     ctx.beginPath();
-    ctx.arc(e.px, e.py, e.pupilR, 0, Math.PI * 2);
+    ctx.arc(e.px, e.py, pr, 0, Math.PI * 2);
     ctx.fillStyle = e.pupilColor;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(e.px - pr * 0.32, e.py - pr * 0.36, pr * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(251,248,242,0.85)';
     ctx.fill();
     ctx.restore();
     ctx.restore();
@@ -277,7 +291,7 @@
     return a + d * t;
   }
 
-  function stepEyes(dt) {
+  function stepEyes(dt, now) {
     const R = Math.min(W, H);
     const fieldR = R * 0.55;
     for (const e of eyes) {
@@ -304,6 +318,26 @@
       const fieldAng = Math.atan2(dy, dx);
       const tilt = Math.sin(fieldAng) * 0.35 * influence;
       e.rotCur = angleLerp(e.rotCur, e.rot + tilt, 1 - Math.pow(0.01, dt));
+
+      const idle = now - lastMove > 1400;
+      let tx, ty;
+      if (idle) {
+        const a = e.ph + now * e.sp;
+        tx = subject.x + Math.cos(a) * 26;
+        ty = subject.y + Math.sin(a) * 22;
+      } else {
+        tx = pointer.x;
+        ty = pointer.y;
+      }
+      const cdx = tx - e.x, cdy = ty - e.y;
+      const cdist = Math.hypot(cdx, cdy) || 1;
+      const reach = clamp(cdist / 240, 0, 1);
+      const maxX = Math.max(0, (e.w / 2 - e.pupilR) * 0.7) * reach;
+      const maxY = Math.max(0, (e.h * 0.85 - e.pupilR) * 0.45) * reach;
+      const pk = 1 - Math.pow(0.001, dt);
+      e.px = lerp(e.px, (cdx / cdist) * maxX, pk);
+      e.py = lerp(e.py, (cdy / cdist) * maxY, pk);
+      e.dilate = lerp(e.dilate, clamp(1 - cdist / 220, 0, 1), 1 - Math.pow(0.02, dt));
     }
   }
 
@@ -314,7 +348,7 @@
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
     ctx.clearRect(0, 0, W, H);
-    stepEyes(dt);
+    stepEyes(dt, now);
     for (const e of eyes) drawEye(e);
     drawSubject();
     requestAnimationFrame(tick);
