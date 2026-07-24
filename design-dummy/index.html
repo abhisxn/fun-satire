@@ -292,6 +292,10 @@
   }
 
   function stepEyes(dt, now) {
+    const pointerK = 1 - Math.pow(0.001, dt);
+    pointer.x = lerp(pointer.x, pointer.tx, pointerK);
+    pointer.y = lerp(pointer.y, pointer.ty, pointerK);
+
     const R = Math.min(W, H);
     const fieldR = R * 0.55;
     for (const e of eyes) {
