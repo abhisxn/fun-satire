@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Fun Satire — Eyes Field (Merged Dummy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #EBE9E0;
+    --ink: #2A2723;
+    --slate: #5B737E;
+    --sage: #586452;
+    --brown: #5F5046;
+    --taupe: #907E72;
+    --line: rgba(42,39,35,.12);
+    --ease: cubic-bezier(.32,.72,0,1);
+    --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--cream);
+    overflow: hidden;
+    font-family: var(--sans);
+    cursor: default;
+    -webkit-font-smoothing: antialiased;
+  }
+  body.grab-hover { cursor: grab; }
+  body.grabbing, body.grabbing * { cursor: grabbing !important; }
+
+  #stage { position: fixed; inset: 0; display: block; touch-action: none; }
+
+  .grain {
+    position: fixed;
+    inset: -10%;
+    z-index: 40;
+    pointer-events: none;
+    opacity: .035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 260px 260px;
+  }
+
+  .caption {
+    position: fixed;
+    top: 1.75rem;
+    left: 1.75rem;
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(.6rem);
+    transition: opacity 1s var(--ease) .2s, transform 1s var(--ease) .2s;
+  }
+  .caption.in { opacity: 1; transform: translateY(0); }
+  .caption h1 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: var(--ink);
+    line-height: 1.15;
+  }
+  .caption p {
+    margin-top: .35rem;
+    font-size: .65rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: rgba(42,39,35,.5);
+  }
+
+  .hud {
+    position: fixed;
+    left: 50%;
+    bottom: 1.75rem;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .6rem .6rem .6rem 1.1rem;
+    border-radius: 999px;
+    background: rgba(42,39,35,.055);
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 1px rgba(255,255,255,.5) inset, 0 24px 50px -30px rgba(42,39,35,.45);
+    opacity: 0;
+    translate: 0 1rem;
+    transition: opacity .8s var(--ease), translate .8s var(--ease);
+  }
+  .hud.in { opacity: 1; translate: 0 0; }
+  .badge-mode { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: .85rem; color: var(--ink); }
+  .sep { width: 1px; height: 1.1rem; background: var(--line); }
+  .ctrl { display: flex; align-items: center; gap: .6rem; }
+  .lab { font-size: .6rem; letter-spacing: .18em; text-transform: uppercase; color: rgba(42,39,35,.55); }
+  .stepper { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.4); }
+  .stepper button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    width: 1.7rem; height: 1.7rem; display: grid; place-items: center;
+    font-family: var(--sans); font-size: .95rem; color: var(--ink);
+    transition: background .3s var(--ease);
+  }
+  .stepper button:hover { background: rgba(42,39,35,.08); }
+  .stepper .val {
+    min-width: 2.4rem; text-align: center; font-size: .72rem; color: var(--ink);
+    border-left: 1px solid var(--line); border-right: 1px solid var(--line); padding: .3rem .2rem;
+  }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 6.5rem; height: 2px;
+    background: var(--line); border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: .85rem; height: .85rem; border-radius: 50%;
+    background: var(--slate); border: 2px solid var(--cream); box-shadow: 0 0 0 1px var(--line); cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: .85rem; height: .85rem; border-radius: 50%;
+    background: var(--slate); border: 2px solid var(--cream); box-shadow: 0 0 0 1px var(--line); cursor: pointer;
+  }
+
+  @media (max-width: 640px) {
+    .hud { gap: .6rem; padding: .5rem; }
+    .lab { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="caption" id="caption">
+  <h1>The establishment<br>is always watching.</h1>
+  <p>Merged design dummy · drag the subject</p>
+</div>
+
+<div class="hud" id="hud">
+  <span class="badge-mode">Eyes mode</span>
+  <span class="sep"></span>
+  <div class="ctrl">
+    <span class="lab">Eyes</span>
+    <div class="stepper">
+      <button id="dec" type="button" aria-label="fewer eyes">−</button>
+      <span class="val" id="count">60</span>
+      <button id="inc" type="button" aria-label="more eyes">+</button>
+    </div>
+  </div>
+  <span class="sep"></span>
+  <div class="ctrl">
+    <span class="lab">Repel</span>
+    <input type="range" id="repel" min="0" max="100" value="55" />
+  </div>
+</div>
+
+<script>
+  requestAnimationFrame(() => {
+    document.getElementById('caption').classList.add('in');
+    document.getElementById('hud').classList.add('in');
+  });
+</script>
+</body>
+</html>
