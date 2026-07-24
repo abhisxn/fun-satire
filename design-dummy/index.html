@@ -343,10 +343,6 @@
     ctx.arc(e.px, e.py, pr, 0, Math.PI * 2);
     ctx.fillStyle = e.pupilColor;
     ctx.fill();
-    ctx.beginPath();
-    ctx.arc(e.px - pr * 0.32, e.py - pr * 0.36, pr * 0.22, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(251,248,242,0.85)';
-    ctx.fill();
     ctx.restore();
     if (e.blink < 1) {
       ctx.save();
