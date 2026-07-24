@@ -172,11 +172,38 @@
 
   const pointer = { x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2 };
   let lastMove = performance.now();
+  let dragging = false, dragDX = 0, dragDY = 0;
+
+  function updateCursor() {
+    if (dragging) {
+      document.body.classList.add('grabbing');
+      document.body.classList.remove('grab-hover');
+      return;
+    }
+    document.body.classList.remove('grabbing');
+    const dx = pointer.x - subject.x, dy = pointer.y - subject.y;
+    const hovering = Math.hypot(dx, dy) < subject.r + 16;
+    document.body.classList.toggle('grab-hover', hovering);
+  }
 
   addEventListener('pointermove', e => {
     pointer.tx = e.clientX;
     pointer.ty = e.clientY;
     lastMove = performance.now();
+    updateCursor();
+  });
+  addEventListener('pointerdown', e => {
+    const dx = e.clientX - subject.x, dy = e.clientY - subject.y;
+    if (dx * dx + dy * dy < (subject.r + 16) * (subject.r + 16)) {
+      dragging = true;
+      dragDX = dx;
+      dragDY = dy;
+    }
+    updateCursor();
+  });
+  addEventListener('pointerup', () => {
+    dragging = false;
+    updateCursor();
   });
 
   let eyes = [];
@@ -286,9 +313,15 @@
     ctx.restore();
   }
 
-  function drawSubject() {
+  function drawSubject(now) {
+    const breathe = 1 + Math.sin(now * 0.0016) * 0.035;
     ctx.save();
     ctx.translate(subject.x, subject.y);
+    ctx.scale(breathe, breathe);
+    ctx.beginPath();
+    ctx.ellipse(0, subject.r * 1.05, subject.r * 0.85, subject.r * 0.2, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(42,39,35,${dragging ? 0.12 : 0.06})`;
+    ctx.fill();
     ctx.beginPath();
     ctx.arc(0, 0, subject.r, 0, Math.PI * 2);
     ctx.fillStyle = SUBJECT_COLOR;
@@ -304,10 +337,6 @@
   }
 
   function stepEyes(dt, now) {
-    const pointerK = 1 - Math.pow(0.001, dt);
-    pointer.x = lerp(pointer.x, pointer.tx, pointerK);
-    pointer.y = lerp(pointer.y, pointer.ty, pointerK);
-
     const R = Math.min(W, H);
     const fieldR = R * 0.55;
     for (const e of eyes) {
@@ -367,16 +396,23 @@
     }
   }
 
-  let dragging = false;
   let last = performance.now();
 
   function tick(now) {
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
+    pointer.x = lerp(pointer.x, pointer.tx, 1 - Math.pow(0.0001, dt));
+    pointer.y = lerp(pointer.y, pointer.ty, 1 - Math.pow(0.0001, dt));
+    if (dragging) {
+      subject.x = lerp(subject.x, pointer.x - dragDX, 1 - Math.pow(0.00001, dt));
+      subject.y = lerp(subject.y, pointer.y - dragDY, 1 - Math.pow(0.00001, dt));
+      subject.x = clamp(subject.x, 50, W - 50);
+      subject.y = clamp(subject.y, 60, H - 50);
+    }
     ctx.clearRect(0, 0, W, H);
     stepEyes(dt, now);
     for (const e of eyes) drawEye(e);
-    drawSubject();
+    drawSubject(now);
     requestAnimationFrame(tick);
   }
 
