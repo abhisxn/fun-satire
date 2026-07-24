@@ -270,14 +270,58 @@
     ctx.restore();
   }
 
-  function render() {
+  function angleLerp(a, b, t) {
+    let d = b - a;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return a + d * t;
+  }
+
+  function stepEyes(dt) {
+    const R = Math.min(W, H);
+    const fieldR = R * 0.55;
+    for (const e of eyes) {
+      const dx = e.x - subject.x, dy = e.y - subject.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const nx = dx / dist, ny = dy / dist;
+
+      const influence = clamp(1 - dist / fieldR, 0, 1);
+      const dragBoost = dragging ? 2.2 : 1.0;
+      const repel = influence * influence * repelStrength * 2600 * dragBoost;
+      e.vx += nx * repel * dt;
+      e.vy += ny * repel * dt;
+
+      const hx = e.hx - e.x, hy = e.hy - e.y;
+      e.vx += hx * 2.2 * dt;
+      e.vy += hy * 2.2 * dt;
+
+      const damp = Math.pow(0.12, dt);
+      e.vx *= damp; e.vy *= damp;
+
+      e.x += e.vx * dt;
+      e.y += e.vy * dt;
+
+      const fieldAng = Math.atan2(dy, dx);
+      const tilt = Math.sin(fieldAng) * 0.35 * influence;
+      e.rotCur = angleLerp(e.rotCur, e.rot + tilt, 1 - Math.pow(0.01, dt));
+    }
+  }
+
+  let dragging = false;
+  let last = performance.now();
+
+  function tick(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
     ctx.clearRect(0, 0, W, H);
+    stepEyes(dt);
     for (const e of eyes) drawEye(e);
     drawSubject();
+    requestAnimationFrame(tick);
   }
 
   resize();
-  render();
+  requestAnimationFrame(tick);
 
   requestAnimationFrame(() => {
     document.getElementById('caption').classList.add('in');
