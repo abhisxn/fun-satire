@@ -57,7 +57,7 @@ const buildEntity = (
   lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
 });
 
-const overlapsAny = (pos: Vec2, list: Entity[], sepSq: number): boolean => {
+const overlapsAny = (pos: Vec2, list: readonly Entity[], sepSq: number): boolean => {
   for (const e of list) {
     const dx = e.physics.pos.x - pos.x;
     const dy = e.physics.pos.y - pos.y;
@@ -142,4 +142,33 @@ export function spawnSubject(opts: SpawnSubjectOpts): Entity | null {
     },
     lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
   };
+}
+
+export type SpawnOneCrowdMemberOptions = {
+  rng: Rng;
+  width: number;
+  height: number;
+  manifest: readonly EyeManifestEntry[];
+  existing: readonly Entity[];
+  nextId: EntityId;
+};
+
+export function spawnOneCrowdMember(opts: SpawnOneCrowdMemberOptions): Entity | null {
+  const { rng, width, height, manifest, existing, nextId } = opts;
+  if (manifest.length === 0) return null;
+  const entry = manifest[existing.length % manifest.length]! as EyeManifestEntry;
+  const sepSq = ENTITY_FACTORY.minSeparationPx * ENTITY_FACTORY.minSeparationPx;
+  let pos = samplePos(rng, entry, width, height);
+  for (let attempt = 0; attempt < ENTITY_FACTORY.maxAttempts && overlapsAny(pos, existing, sepSq); attempt++) {
+    pos = samplePos(rng, entry, width, height);
+  }
+  const scale = jitterScale(entry, rng);
+  return buildEntity(nextId, entry, pos, scale);
+}
+
+export function pickCrowdMemberToDespawn(existing: readonly Entity[]): Entity | null {
+  if (existing.length === 0) return null;
+  let maxEntity = existing[0]!;
+  for (const e of existing) if (e.id > maxEntity.id) maxEntity = e;
+  return maxEntity;
 }
