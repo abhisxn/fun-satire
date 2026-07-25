@@ -9,6 +9,7 @@ export type DrawSubjectLotusInput = {
   colors: SubjectColors;
   scale: number;
   rotation: number;
+  shadowIntensity?: number;
 };
 
 function colorByName(k: string): string {
@@ -30,6 +31,7 @@ function colorByName(k: string): string {
 
 export function drawSubjectLotus(ctx: CanvasRenderingContext2D, input: DrawSubjectLotusInput): void {
   const { pos, sizePx, colors, scale, rotation } = input;
+  const shadowIntensity = input.shadowIntensity ?? 1;
   if (scale <= 0.02) return;
   const s = sizePx * scale;
   const petalCount = 5;
@@ -48,7 +50,7 @@ export function drawSubjectLotus(ctx: CanvasRenderingContext2D, input: DrawSubje
       paperCutEdgePath(ctx, { cx: 0, cy: -petalLen * 0.55, rx: petalW * 0.55, ry: petalLen * 0.55, seed: i + 1 });
       ctx.fillStyle = colorByName(colors.outline);
       ctx.fill();
-    });
+    }, shadowIntensity);
     paperCutEdgePath(ctx, { cx: 0, cy: -petalLen * 0.55, rx: petalW * 0.45, ry: petalLen * 0.48, seed: i + 1 });
     ctx.fillStyle = colorByName(i % 2 === 0 ? colors.suit : colors.shirt);
     ctx.fill();
@@ -59,7 +61,7 @@ export function drawSubjectLotus(ctx: CanvasRenderingContext2D, input: DrawSubje
     paperCutEdgePath(ctx, { cx: 0, cy: 0, rx: s * 0.16, ry: s * 0.16, seed: 21 });
     ctx.fillStyle = colorByName(colors.outline);
     ctx.fill();
-  });
+  }, shadowIntensity);
   paperCutEdgePath(ctx, { cx: 0, cy: 0, rx: s * 0.12, ry: s * 0.12, seed: 21 });
   ctx.fillStyle = colorByName(colors.outline);
   ctx.fill();

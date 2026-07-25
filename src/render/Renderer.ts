@@ -95,7 +95,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
   });
   drawFieldLines(ctx, lines, { stroke: PALETTE.slate, ink: PALETTE.ink });
 
-  const drawnIds = new Set<number>();
+  const shadowIntensity = computeShadowIntensity({ quantity: opts.quantity, repelMultiplier: opts.repelMultiplier });
   const eyePositions: Array<{ id: number; pos: { x: number; y: number } }> = [];
   const crowdMembers: Entity[] = [];
   store.forEachAlive((e) => {
@@ -108,7 +108,6 @@ export function renderFrame(opts: RenderFrameOptions): void {
   );
 
   for (const { entity: e } of sortedCrowd) {
-    drawnIds.add(e.id);
     eyePositions.push({ id: e.id, pos: e.physics.pos });
     const data = e.behavior.data as Record<string, unknown>;
     const shapeVariant = (data.shapeVariant ?? "almond") as Parameters<typeof drawEye>[1]["shapeVariant"];
@@ -155,6 +154,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
           timeMs: opts.nowMs,
           id: e.id,
           rotation,
+          shadowIntensity,
         });
         break;
       case "pointedFinger": {
@@ -170,6 +170,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
           timeMs: opts.nowMs,
           id: e.id,
           rotation,
+          shadowIntensity,
         });
         break;
       }
@@ -191,6 +192,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
       sizePx: opts.subject.sizePx,
       colors: opts.subject.colors,
       scale: opts.subject.scale,
+      shadowIntensity,
     });
   }
 

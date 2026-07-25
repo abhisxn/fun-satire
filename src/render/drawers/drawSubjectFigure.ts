@@ -9,6 +9,7 @@ export type DrawSubjectFigureInput = {
   colors: SubjectColors;
   scale: number;
   rotation: number;
+  shadowIntensity?: number;
 };
 
 export const SUBJECT_DRAW = Object.freeze({
@@ -42,6 +43,7 @@ function colorByName(k: string): string {
 
 export function drawSubjectFigure(ctx: CanvasRenderingContext2D, input: DrawSubjectFigureInput): void {
   const { pos, sizePx, colors, scale, rotation } = input;
+  const shadowIntensity = input.shadowIntensity ?? 1;
   if (scale <= SUBJECT_DRAW.minVisibleScale) return;
 
   const headR = sizePx * SUBJECT_DRAW.headRadiusFraction * scale;
@@ -67,7 +69,7 @@ export function drawSubjectFigure(ctx: CanvasRenderingContext2D, input: DrawSubj
     });
     ctx.fillStyle = colorByName(colors.outline);
     ctx.fill();
-  });
+  }, shadowIntensity);
 
   paperCutEdgePath(ctx, {
     cx,

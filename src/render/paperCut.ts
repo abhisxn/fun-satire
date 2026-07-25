@@ -38,11 +38,11 @@ export function paperCutEdgePath(ctx: CanvasRenderingContext2D, opts: PaperCutEd
   ctx.closePath();
 }
 
-export function withPaperCutShadow(ctx: CanvasRenderingContext2D, draw: () => void): void {
+export function withPaperCutShadow(ctx: CanvasRenderingContext2D, draw: () => void, intensity: number = 1): void {
   ctx.save();
   ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 3;
-  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 3 * intensity;
+  ctx.shadowBlur = 6 * intensity;
   ctx.shadowColor = "rgba(42, 36, 32, 0.22)";
   draw();
   ctx.shadowOffsetX = 0;
