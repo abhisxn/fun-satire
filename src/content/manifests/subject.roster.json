@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "name": "subject-roster-v1",
+  "entries": [
+    {
+      "id": "subject-figure-01",
+      "rig": "subject",
+      "renderType": "subject",
+      "visual": { "styleGuardrail": "flat-illustrated" },
+      "colors": { "suit": "slate", "shirt": "cream", "outline": "ink" },
+      "physics": { "baseSizePx": 96 }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+@import "./tokens.css";
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  background: var(--color-cream);
+  display: block;
+  z-index: var(--z-canvas);
+  cursor: none;
+}
+
+@media (pointer: coarse) {
+  #stage {
+    cursor: auto;
+  }
+}
+
+#grain-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-grain);
+  opacity: var(--grain-opacity);
+  background-image: var(--grain-tile-url);
+  background-size: 192px 192px;
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
+}
+
+#hud-root {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: var(--z-hud);
+}

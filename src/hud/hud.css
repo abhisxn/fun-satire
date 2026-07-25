@@ -1,0 +1,132 @@
+#hud-root {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: var(--z-hud);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.hud-placard {
+  position: relative;
+  display: block;
+  margin: 0 auto 18px;
+  width: min(560px, calc(100vw - 32px));
+  height: 64px;
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(18px) scale(0.97);
+  transform-origin: center bottom;
+  transition: transform var(--duration-slow) var(--ease-protest),
+              opacity var(--duration-slow) var(--ease-protest);
+}
+
+.hud-placard--ready {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.hud-placard__tear {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(42, 36, 32, 0.18)) drop-shadow(0 6px 10px rgba(42, 36, 32, 0.14));
+}
+
+.hud-placard__grain {
+  position: absolute;
+  inset: 0;
+  background-image: var(--grain-tile-url);
+  background-size: 192px 192px;
+  background-repeat: repeat;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.hud-placard__inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 28px;
+}
+
+.hud-placard__mode-icon,
+.hud-placard__power-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--color-ink);
+}
+
+.hud-placard__mode-label,
+.hud-placard__power-label {
+  white-space: nowrap;
+  font-weight: 700;
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+.hud-placard__divider {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: var(--color-ink);
+  opacity: 0.45;
+}
+
+.hud-placard__charge {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-coral);
+  background: conic-gradient(var(--color-coral) calc(var(--charge, 0) * 1turn), transparent 0);
+  transform: translateY(-50%) scale(0.7);
+  opacity: 0;
+  transition: transform var(--duration-fast) var(--ease-protest),
+              opacity var(--duration-fast) var(--ease-protest);
+}
+
+.hud-placard__charge[data-visible="true"] {
+  transform: translateY(-50%) scale(1);
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  .hud-placard {
+    width: calc(100vw - 24px);
+    font-size: 13px;
+  }
+  .hud-placard__inner {
+    gap: 8px;
+    padding: 0 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-placard {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+  .hud-placard__charge {
+    transition: none;
+  }
+}
