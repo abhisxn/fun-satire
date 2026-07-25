@@ -4,10 +4,13 @@ import { EffectSystem } from "../effects/EffectSystem";
 import { drawEye } from "./drawers/drawEye";
 import { drawCursor, computeCursorState } from "./drawers/drawCursor";
 import { computeFieldLines, drawFieldLines } from "./drawers/drawFieldLines";
+import { computeGazeLines } from "./drawers/drawGazeLines";
+import { drawSubject } from "./drawers/drawSubject";
 import { computePupilOffset } from "./pupilTrack";
 import type { EyeBehavior, EyeBlinkTimer } from "../entities/behaviors/EyeBehavior";
 import { PALETTE } from "../config/tokens";
 import type { Rng } from "../core/Rng";
+import type { SubjectColors } from "../content/schema";
 
 export type RenderEntitiesOptions = {
   store: EntityStore;
@@ -30,6 +33,15 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   hoverEntityId: number | null;
   reducedMotion: boolean;
   nowMs: number;
+  subject?: {
+    id: number;
+    pos: { x: number; y: number };
+    sizePx: number;
+    colors: SubjectColors;
+    scale: number;
+  } | null;
+  chargeT?: number;
+  assistRadiusPx?: number;
 };
 
 const FIELD_MAX_LENGTH = 240;
@@ -50,8 +62,11 @@ export function renderFrame(opts: RenderFrameOptions): void {
   drawFieldLines(ctx, lines, { stroke: PALETTE.slate, ink: PALETTE.ink });
 
   const drawnIds = new Set<number>();
+  const eyePositions: Array<{ id: number; pos: { x: number; y: number } }> = [];
   store.forEachAlive((e) => {
+    if (e.content.renderType !== "eye") return;
     drawnIds.add(e.id);
+    eyePositions.push({ id: e.id, pos: e.physics.pos });
     const data = e.behavior.data as Record<string, unknown>;
     const shapeVariant = (data.shapeVariant ?? "almond") as Parameters<typeof drawEye>[1]["shapeVariant"];
     const colors = (data.colors ?? {
@@ -78,6 +93,22 @@ export function renderFrame(opts: RenderFrameOptions): void {
       pupilOffset: { x: offset.x, y: offset.y },
     });
   });
+
+  if (opts.subject) {
+    const gazeLines = computeGazeLines({
+      eyes: eyePositions,
+      subjectPos: opts.subject.pos,
+      assistRadiusPx: opts.assistRadiusPx ?? 0,
+      chargeT: opts.chargeT ?? 0,
+    });
+    drawFieldLines(ctx, gazeLines, { stroke: PALETTE.coral, ink: PALETTE.ink });
+    drawSubject(ctx, {
+      pos: opts.subject.pos,
+      sizePx: opts.subject.sizePx,
+      colors: opts.subject.colors,
+      scale: opts.subject.scale,
+    });
+  }
 
   if (cursor.active) {
     ctx.save();
