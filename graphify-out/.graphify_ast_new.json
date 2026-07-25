@@ -1,0 +1,4813 @@
+{
+  "nodes": [
+    {
+      "id": "worktrees_v1_core_loop_src_main_ts",
+      "label": "main.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "main_spawninitialeyes",
+      "label": "spawnInitialEyes()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L142"
+    },
+    {
+      "id": "main_installbehavior",
+      "label": "installBehavior()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L155"
+    },
+    {
+      "id": "main_respawnentity",
+      "label": "respawnEntity()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L182"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_core_eventbus_ts",
+      "label": "EventBus.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "eventbus_eventbus",
+      "label": "EventBus",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L4"
+    },
+    {
+      "id": "eventbus_eventbus_on",
+      "label": ".on()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "eventbus_eventbus_off",
+      "label": ".off()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "eventbus_eventbus_emit",
+      "label": ".emit()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L17"
+    },
+    {
+      "id": "eventbus_eventbus_listenercount",
+      "label": ".listenerCount()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L29"
+    },
+    {
+      "id": "eventbus_eventbus_clear",
+      "label": ".clear()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L33"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_core_engine_ts",
+      "label": "Engine.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "engine_engine",
+      "label": "Engine",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L18"
+    },
+    {
+      "id": "engine_engine_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L35"
+    },
+    {
+      "id": "engine_engine_start",
+      "label": ".start()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "engine_engine_stop",
+      "label": ".stop()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L53"
+    },
+    {
+      "id": "engine_engine_ontick",
+      "label": ".onTick()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L63"
+    },
+    {
+      "id": "engine_engine_setcursor",
+      "label": ".setCursor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L69"
+    },
+    {
+      "id": "engine_engine_clearcursor",
+      "label": ".clearCursor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L75"
+    },
+    {
+      "id": "engine_engine_cursor",
+      "label": ".cursor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L79"
+    },
+    {
+      "id": "engine_engine_getnow",
+      "label": ".getNow()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L83"
+    },
+    {
+      "id": "engine_engine_elapsed",
+      "label": ".elapsed()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L87"
+    },
+    {
+      "id": "engine_engine_scheduleframe",
+      "label": ".scheduleFrame()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L91"
+    },
+    {
+      "id": "engine_engine_frame",
+      "label": ".frame()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L96"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_core_clock_ts",
+      "label": "Clock.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "clock_sanitize",
+      "label": "sanitize()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L2"
+    },
+    {
+      "id": "clock_clock",
+      "label": "Clock",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "clock_clock_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "clock_clock_tick",
+      "label": ".tick()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L17"
+    },
+    {
+      "id": "clock_clock_advanceby",
+      "label": ".advanceBy()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L26"
+    },
+    {
+      "id": "clock_clock_now",
+      "label": ".now()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L34"
+    },
+    {
+      "id": "clock_clock_elapsed",
+      "label": ".elapsed()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L38"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_core_rng_ts",
+      "label": "Rng.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "rng_mulberry32",
+      "label": "mulberry32()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "rng_rng",
+      "label": "Rng",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "rng_rng_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "rng_rng_float",
+      "label": ".float()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "rng_rng_range",
+      "label": ".range()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L23"
+    },
+    {
+      "id": "rng_rng_rangeint",
+      "label": ".rangeInt()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "rng_rng_pick",
+      "label": ".pick()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L31"
+    },
+    {
+      "id": "rng_rng_default",
+      "label": ".default()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L38"
+    },
+    {
+      "id": "rng_rng_fromquerystring",
+      "label": ".fromQueryString()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L42"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_powers_laserburn_ts",
+      "label": "laserBurn.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/powers/laserBurn.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_powers_index_ts",
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/powers/index.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_input_dragcontroller_ts",
+      "label": "DragController.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "dragcontroller_dragcontroller",
+      "label": "DragController",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "dragcontroller_dragcontroller_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L18"
+    },
+    {
+      "id": "dragcontroller_dragcontroller_attach",
+      "label": ".attach()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L22"
+    },
+    {
+      "id": "dragcontroller_dragcontroller_draggedid",
+      "label": ".draggedId()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L24"
+    },
+    {
+      "id": "dragcontroller_dragcontroller_trystart",
+      "label": ".tryStart()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "dragcontroller_dragcontroller_move",
+      "label": ".move()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L44"
+    },
+    {
+      "id": "dragcontroller_dragcontroller_release",
+      "label": ".release()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L59"
+    },
+    {
+      "id": "dragcontroller_dragcontroller_cancel",
+      "label": ".cancel()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L88"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_input_pointertracker_ts",
+      "label": "PointerTracker.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "pointertracker_tocanvas",
+      "label": "toCanvas()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "pointertracker_pointertracker",
+      "label": "PointerTracker",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "pointertracker_pointertracker_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L41"
+    },
+    {
+      "id": "pointertracker_pointertracker_attach",
+      "label": ".attach()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "pointertracker_pointertracker_detach",
+      "label": ".detach()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L60"
+    },
+    {
+      "id": "pointertracker_pointertracker_state",
+      "label": ".state()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L68"
+    },
+    {
+      "id": "pointertracker_pointertracker_add",
+      "label": ".add()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L72"
+    },
+    {
+      "id": "pointertracker_pointertracker_onmove",
+      "label": ".onMove()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L82"
+    },
+    {
+      "id": "pointertracker_pointertracker_ondown",
+      "label": ".onDown()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L94"
+    },
+    {
+      "id": "pointertracker_pointertracker_onup",
+      "label": ".onUp()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L107"
+    },
+    {
+      "id": "pointertracker_pointertracker_oncancel",
+      "label": ".onCancel()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L113"
+    },
+    {
+      "id": "pointertracker_pointertracker_ontouchstart",
+      "label": ".onTouchStart()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L119"
+    },
+    {
+      "id": "pointertracker_pointertracker_ontouchmove",
+      "label": ".onTouchMove()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L128"
+    },
+    {
+      "id": "pointertracker_pointertracker_ontouchend",
+      "label": ".onTouchEnd()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L136"
+    },
+    {
+      "id": "pointertracker_pointertracker_onblur",
+      "label": ".onBlur()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L141"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_input_powercontroller_ts",
+      "label": "PowerController.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "powercontroller_powercontroller",
+      "label": "PowerController",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "powercontroller_powercontroller_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "powercontroller_powercontroller_ischarging",
+      "label": ".isCharging()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L35"
+    },
+    {
+      "id": "powercontroller_powercontroller_chargetargetid",
+      "label": ".chargeTargetId()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L39"
+    },
+    {
+      "id": "powercontroller_powercontroller_charget",
+      "label": ".chargeT()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L43"
+    },
+    {
+      "id": "powercontroller_powercontroller_trypress",
+      "label": ".tryPress()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L47"
+    },
+    {
+      "id": "powercontroller_powercontroller_tick",
+      "label": ".tick()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L60"
+    },
+    {
+      "id": "powercontroller_powercontroller_release",
+      "label": ".release()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L85"
+    },
+    {
+      "id": "powercontroller_powercontroller_cancel",
+      "label": ".cancel()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L96"
+    },
+    {
+      "id": "powercontroller_powercontroller_fire",
+      "label": ".fire()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L101"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_render_pupiltrack_ts",
+      "label": "pupilTrack.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "pupiltrack_easetoward",
+      "label": "easeToward()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L21"
+    },
+    {
+      "id": "pupiltrack_clampinellipse",
+      "label": "clampInEllipse()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "pupiltrack_computepupiloffset",
+      "label": "computePupilOffset()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L40"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_render_canvasutils_ts",
+      "label": "CanvasUtils.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "canvasutils_applydpr",
+      "label": "applyDpr()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "canvasutils_clampviewportsize",
+      "label": "clampViewportSize()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "canvasutils_createviewport",
+      "label": "createViewport()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "label": "Renderer.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "renderer_renderframe",
+      "label": "renderFrame()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L37"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "label": "drawEye.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "draweye_colorbyname",
+      "label": "colorByName()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L20"
+    },
+    {
+      "id": "draweye_almondpath",
+      "label": "almondPath()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L37"
+    },
+    {
+      "id": "draweye_shapery",
+      "label": "shapeRy()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L54"
+    },
+    {
+      "id": "draweye_shaperx",
+      "label": "shapeRx()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L70"
+    },
+    {
+      "id": "draweye_irisradius",
+      "label": "irisRadius()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L86"
+    },
+    {
+      "id": "draweye_draweye",
+      "label": "drawEye()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L102"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_render_drawers_drawfieldlines_ts",
+      "label": "drawFieldLines.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawFieldLines.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "drawfieldlines_computefieldlines",
+      "label": "computeFieldLines()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawFieldLines.ts",
+      "source_location": "L24"
+    },
+    {
+      "id": "drawfieldlines_drawfieldlines",
+      "label": "drawFieldLines()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawFieldLines.ts",
+      "source_location": "L60"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_render_drawers_index_ts",
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/index.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_render_drawers_drawcursor_ts",
+      "label": "drawCursor.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "drawcursor_clamp",
+      "label": "clamp()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L32"
+    },
+    {
+      "id": "drawcursor_easecharge",
+      "label": "easeCharge()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L35"
+    },
+    {
+      "id": "drawcursor_pulseat",
+      "label": "pulseAt()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L40"
+    },
+    {
+      "id": "drawcursor_computecursorstate",
+      "label": "computeCursorState()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L45"
+    },
+    {
+      "id": "drawcursor_drawcursor",
+      "label": "drawCursor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L76"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_content_schema_ts",
+      "label": "schema.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/schema.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "schema_manifestloaderror",
+      "label": "ManifestLoadError",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/schema.ts",
+      "source_location": "L58"
+    },
+    {
+      "id": "schema_manifestloaderror_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/schema.ts",
+      "source_location": "L60"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_content_manifestloader_ts",
+      "label": "manifestLoader.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "manifestloader_between",
+      "label": "between()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L23"
+    },
+    {
+      "id": "manifestloader_validateentry",
+      "label": "validateEntry()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L33"
+    },
+    {
+      "id": "manifestloader_validatemanifest",
+      "label": "validateManifest()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L105"
+    },
+    {
+      "id": "manifestloader_loadmanifestfromtext",
+      "label": "loadManifestFromText()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L142"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_physics_springhome_ts",
+      "label": "SpringHome.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/SpringHome.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "springhome_clampmag",
+      "label": "clampMag()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/SpringHome.ts",
+      "source_location": "L20"
+    },
+    {
+      "id": "springhome_compute",
+      "label": "compute()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/SpringHome.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_physics_forcefield_ts",
+      "label": "ForceField.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "forcefield_clampr",
+      "label": "clampR()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L24"
+    },
+    {
+      "id": "forcefield_falloff",
+      "label": "falloff()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L30"
+    },
+    {
+      "id": "forcefield_compute",
+      "label": "compute()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L38"
+    },
+    {
+      "id": "forcefield_samplealongray",
+      "label": "sampleAlongRay()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L68"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_physics_integrator_ts",
+      "label": "Integrator.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "integrator_clampmag",
+      "label": "clampMag()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "integrator_sanitizedt",
+      "label": "sanitizeDt()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "integrator_integrate",
+      "label": "integrate()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L25"
+    },
+    {
+      "id": "integrator_steertoward",
+      "label": "steerToward()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L43"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_effects_particlesystem_ts",
+      "label": "ParticleSystem.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "particlesystem_particlesystem",
+      "label": "ParticleSystem",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L22"
+    },
+    {
+      "id": "particlesystem_particlesystem_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "particlesystem_particlesystem_capacity",
+      "label": ".capacity()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L42"
+    },
+    {
+      "id": "particlesystem_particlesystem_livecount",
+      "label": ".liveCount()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "particlesystem_particlesystem_spawn",
+      "label": ".spawn()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L52"
+    },
+    {
+      "id": "particlesystem_particlesystem_burst",
+      "label": ".burst()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L72"
+    },
+    {
+      "id": "particlesystem_particlesystem_update",
+      "label": ".update()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L86"
+    },
+    {
+      "id": "particlesystem_particlesystem_cull",
+      "label": ".cull()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L103"
+    },
+    {
+      "id": "particlesystem_particlesystem_draw",
+      "label": ".draw()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L114"
+    },
+    {
+      "id": "particlesystem_particlesystem_reset",
+      "label": ".reset()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L132"
+    },
+    {
+      "id": "particlesystem_particlesystem_rngnow",
+      "label": ".rngNow()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L137"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_effects_respawnscheduler_ts",
+      "label": "RespawnScheduler.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler",
+      "label": "RespawnScheduler",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L23"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_schedule",
+      "label": ".schedule()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L37"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_pending",
+      "label": ".pending()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L50"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_samplepos",
+      "label": ".samplePos()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L54"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_tick",
+      "label": ".tick()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L62"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_setsize",
+      "label": ".setSize()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L76"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_reset",
+      "label": ".reset()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L81"
+    },
+    {
+      "id": "respawnscheduler_respawnscheduler_clearqueue",
+      "label": ".clearQueue()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L85"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "label": "EffectSystem.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "effectsystem_ease_protest",
+      "label": "EASE_PROTEST()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L45"
+    },
+    {
+      "id": "effectsystem_ease_in",
+      "label": "EASE_IN()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "effectsystem_ease_out",
+      "label": "EASE_OUT()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L47"
+    },
+    {
+      "id": "effectsystem_ease_linear",
+      "label": "EASE_LINEAR()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L48"
+    },
+    {
+      "id": "effectsystem_effectsystem",
+      "label": "EffectSystem",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L50"
+    },
+    {
+      "id": "effectsystem_effectsystem_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L58"
+    },
+    {
+      "id": "effectsystem_effectsystem_register",
+      "label": ".register()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L64"
+    },
+    {
+      "id": "effectsystem_effectsystem_start",
+      "label": ".start()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L68"
+    },
+    {
+      "id": "effectsystem_effectsystem_update",
+      "label": ".update()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L98"
+    },
+    {
+      "id": "effectsystem_effectsystem_livecount",
+      "label": ".liveCount()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L145"
+    },
+    {
+      "id": "effectsystem_effectsystem_liveeffects",
+      "label": ".liveEffects()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L149"
+    },
+    {
+      "id": "effectsystem_effectsystem_reset",
+      "label": ".reset()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L153"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_effects_effectdefs_laserburn_ts",
+      "label": "laserBurn.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/effectDefs/laserBurn.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "laserburn_laserburnprogressat",
+      "label": "laserBurnProgressAt()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/effectDefs/laserBurn.ts",
+      "source_location": "L90"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_effects_effectdefs_index_ts",
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/effects/effectDefs/index.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_entities_entity_ts",
+      "label": "Entity.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/Entity.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "label": "EntityFactory.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "entityfactory_paletteref",
+      "label": "paletteRef()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L23"
+    },
+    {
+      "id": "entityfactory_jitterscale",
+      "label": "jitterScale()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L25"
+    },
+    {
+      "id": "entityfactory_buildentity",
+      "label": "buildEntity()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L33"
+    },
+    {
+      "id": "entityfactory_overlapsany",
+      "label": "overlapsAny()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L60"
+    },
+    {
+      "id": "entityfactory_samplepos",
+      "label": "samplePos()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L69"
+    },
+    {
+      "id": "entityfactory_spawneyes",
+      "label": "spawnEyes()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L82"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_entities_entitystore_ts",
+      "label": "EntityStore.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "entitystore_clone",
+      "label": "clone()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "entitystore_distsq",
+      "label": "distSq()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "entitystore_entitystore",
+      "label": "EntityStore",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "entitystore_entitystore_size",
+      "label": ".size()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "entitystore_entitystore_alivecount",
+      "label": ".aliveCount()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L23"
+    },
+    {
+      "id": "entitystore_entitystore_dyingcount",
+      "label": ".dyingCount()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "entitystore_entitystore_insert",
+      "label": ".insert()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L31"
+    },
+    {
+      "id": "entitystore_entitystore_markdying",
+      "label": ".markDying()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L45"
+    },
+    {
+      "id": "entitystore_entitystore_remove",
+      "label": ".remove()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L54"
+    },
+    {
+      "id": "entitystore_entitystore_get",
+      "label": ".get()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L61"
+    },
+    {
+      "id": "entitystore_entitystore_querynearest",
+      "label": ".queryNearest()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L67"
+    },
+    {
+      "id": "entitystore_entitystore_foreachalive",
+      "label": ".forEachAlive()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L97"
+    },
+    {
+      "id": "entitystore_entitystore_foreachdying",
+      "label": ".forEachDying()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L101"
+    },
+    {
+      "id": "entitystore_entitystore_foreach",
+      "label": ".forEach()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L105"
+    },
+    {
+      "id": "entitystore_entitystore_clear",
+      "label": ".clear()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L110"
+    },
+    {
+      "id": "entitystore_entitystore_ids",
+      "label": ".ids()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L117"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_entities_behaviors_statemachine_ts",
+      "label": "StateMachine.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "statemachine_statemachine",
+      "label": "StateMachine",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "statemachine_statemachine_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "statemachine_statemachine_current",
+      "label": ".current()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "statemachine_statemachine_send",
+      "label": ".send()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L20"
+    },
+    {
+      "id": "statemachine_statemachine_ontransition",
+      "label": ".onTransition()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L35"
+    },
+    {
+      "id": "statemachine_statemachine_reset",
+      "label": ".reset()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L40"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_entities_behaviors_eyebehavior_ts",
+      "label": "EyeBehavior.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "eyebehavior_eyeblinktimer",
+      "label": "EyeBlinkTimer",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "eyebehavior_eyeblinktimer_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L21"
+    },
+    {
+      "id": "eyebehavior_eyeblinktimer_schedulenextblink",
+      "label": ".scheduleNextBlink()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L33"
+    },
+    {
+      "id": "eyebehavior_eyeblinktimer_tick",
+      "label": ".tick()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L39"
+    },
+    {
+      "id": "eyebehavior_eyeblinktimer_scaley",
+      "label": ".scaleY()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L72"
+    },
+    {
+      "id": "eyebehavior_eyebehavior",
+      "label": "EyeBehavior",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L77"
+    },
+    {
+      "id": "eyebehavior_eyebehavior_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L82"
+    },
+    {
+      "id": "eyebehavior_eyebehavior_tick",
+      "label": ".tick()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L94"
+    },
+    {
+      "id": "eyebehavior_eyebehavior_blinkscaley",
+      "label": ".blinkScaleY()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L98"
+    },
+    {
+      "id": "eyebehavior_eyebehavior_setdragged",
+      "label": ".setDragged()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L102"
+    },
+    {
+      "id": "eyebehavior_eyebehavior_setdying",
+      "label": ".setDying()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L108"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_entities_behaviors_index_ts",
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/index.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_hud_hud_ts",
+      "label": "Hud.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "hud_hud",
+      "label": "Hud",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L4"
+    },
+    {
+      "id": "hud_hud_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L14"
+    },
+    {
+      "id": "hud_hud_refreshicons",
+      "label": ".refreshIcons()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "hud_hud_setmode",
+      "label": ".setMode()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L51"
+    },
+    {
+      "id": "hud_hud_setpower",
+      "label": ".setPower()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L58"
+    },
+    {
+      "id": "hud_hud_setcharge",
+      "label": ".setCharge()",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L65"
+    },
+    {
+      "id": "worktrees_v1_core_loop_src_hud_hudicons_ts",
+      "label": "hudIcons.ts",
+      "file_type": "code",
+      "source_file": ".worktrees/v1-core-loop/src/hud/hudIcons.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "standard_italic_css",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "400_css",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "700_css",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_styles_global_css",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_hud_hud_css",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_core_engine",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_core_rng",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_entities_entitystore",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_entities_entityfactory",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_entities_behaviors",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_content_manifestloader",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_content_manifests_eyes_roster_json",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_input_pointertracker",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_input_dragcontroller",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_input_powercontroller",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_effects_particlesystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_effects_effectsystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_effects_respawnscheduler",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_effects_effectdefs_laserburn",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_hud_hud",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_render_canvasutils",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_render_renderer",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_physics_forcefield",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_physics_springhome",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_physics_integrator",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "worktrees_v1_core_loop_src_entities_entity",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "main_spawninitialeyes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "main_installbehavior",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L155",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_main_ts",
+      "target": "main_respawnentity",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L182",
+      "weight": 1.0
+    },
+    {
+      "source": "main_spawninitialeyes",
+      "target": "main_installbehavior",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L151",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_eventbus_ts",
+      "target": "eventbus_eventbus",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "eventbus_eventbus",
+      "target": "eventbus_eventbus_on",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "eventbus_eventbus",
+      "target": "eventbus_eventbus_off",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "eventbus_eventbus",
+      "target": "eventbus_eventbus_emit",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "eventbus_eventbus",
+      "target": "eventbus_eventbus_listenercount",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "eventbus_eventbus",
+      "target": "eventbus_eventbus_clear",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_engine_ts",
+      "target": "worktrees_v1_core_loop_src_core_clock",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_engine_ts",
+      "target": "worktrees_v1_core_loop_src_core_eventbus",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_engine_ts",
+      "target": "engine_engine",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_start",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_stop",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_ontick",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_setcursor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_clearcursor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_cursor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_getnow",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_elapsed",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_scheduleframe",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine",
+      "target": "engine_engine_frame",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L96",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_start",
+      "target": "engine_engine_scheduleframe",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_frame",
+      "target": "engine_engine_scheduleframe",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_clock_ts",
+      "target": "clock_sanitize",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_clock_ts",
+      "target": "clock_clock",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "clock_clock",
+      "target": "clock_clock_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "clock_clock",
+      "target": "clock_clock_tick",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "clock_clock",
+      "target": "clock_clock_advanceby",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "clock_clock",
+      "target": "clock_clock_now",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "clock_clock",
+      "target": "clock_clock_elapsed",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "clock_clock_constructor",
+      "target": "clock_sanitize",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "clock_clock_tick",
+      "target": "clock_sanitize",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Clock.ts",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_rng_ts",
+      "target": "rng_mulberry32",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_core_rng_ts",
+      "target": "rng_rng",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng",
+      "target": "rng_rng_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng",
+      "target": "rng_rng_float",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng",
+      "target": "rng_rng_range",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng",
+      "target": "rng_rng_rangeint",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng",
+      "target": "rng_rng_pick",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng",
+      "target": "rng_rng_default",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng",
+      "target": "rng_rng_fromquerystring",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng_constructor",
+      "target": "rng_mulberry32",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng_range",
+      "target": "rng_rng_float",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng_rangeint",
+      "target": "rng_rng_float",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng_pick",
+      "target": "rng_rng_rangeint",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_powers_laserburn_ts",
+      "target": "worktrees_v1_core_loop_src_powers_effects_effectsystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/powers/laserBurn.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_dragcontroller_ts",
+      "target": "worktrees_v1_core_loop_src_input_entities_entitystore",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_dragcontroller_ts",
+      "target": "worktrees_v1_core_loop_src_input_entities_entity",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_dragcontroller_ts",
+      "target": "dragcontroller_dragcontroller",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller",
+      "target": "dragcontroller_dragcontroller_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller",
+      "target": "dragcontroller_dragcontroller_attach",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller",
+      "target": "dragcontroller_dragcontroller_draggedid",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller",
+      "target": "dragcontroller_dragcontroller_trystart",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller",
+      "target": "dragcontroller_dragcontroller_move",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller",
+      "target": "dragcontroller_dragcontroller_release",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller",
+      "target": "dragcontroller_dragcontroller_cancel",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_pointertracker_ts",
+      "target": "pointertracker_tocanvas",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_pointertracker_ts",
+      "target": "pointertracker_pointertracker",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_attach",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_detach",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_state",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_add",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_onmove",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_ondown",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L94",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_onup",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_oncancel",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_ontouchstart",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L119",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_ontouchmove",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L128",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_ontouchend",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker",
+      "target": "pointertracker_pointertracker_onblur",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L141",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_attach",
+      "target": "pointertracker_pointertracker_add",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_onmove",
+      "target": "pointertracker_tocanvas",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_ondown",
+      "target": "pointertracker_tocanvas",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_onup",
+      "target": "pointertracker_tocanvas",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_ontouchstart",
+      "target": "pointertracker_tocanvas",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_ontouchmove",
+      "target": "pointertracker_tocanvas",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L131",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_powercontroller_ts",
+      "target": "worktrees_v1_core_loop_src_input_core_rng",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_powercontroller_ts",
+      "target": "worktrees_v1_core_loop_src_input_effects_effectsystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_powercontroller_ts",
+      "target": "worktrees_v1_core_loop_src_input_effects_effectdefs_laserburn",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_input_powercontroller_ts",
+      "target": "powercontroller_powercontroller",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_ischarging",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_chargetargetid",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_charget",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_trypress",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_tick",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_release",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L85",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_cancel",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L96",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller",
+      "target": "powercontroller_powercontroller_fire",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller_tick",
+      "target": "powercontroller_powercontroller_fire",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller_release",
+      "target": "powercontroller_powercontroller_fire",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_pupiltrack_ts",
+      "target": "pupiltrack_easetoward",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_pupiltrack_ts",
+      "target": "pupiltrack_clampinellipse",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_pupiltrack_ts",
+      "target": "pupiltrack_computepupiloffset",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "pupiltrack_computepupiloffset",
+      "target": "pupiltrack_easetoward",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "pupiltrack_computepupiloffset",
+      "target": "pupiltrack_clampinellipse",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/pupilTrack.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_canvasutils_ts",
+      "target": "canvasutils_applydpr",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_canvasutils_ts",
+      "target": "canvasutils_clampviewportsize",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_canvasutils_ts",
+      "target": "canvasutils_createviewport",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "canvasutils_createviewport",
+      "target": "canvasutils_applydpr",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/CanvasUtils.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_entities_entitystore",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_effects_particlesystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_effects_effectsystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_draweye",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_drawcursor",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_drawfieldlines",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_pupiltrack",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_entities_behaviors_eyebehavior",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_config_tokens",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "worktrees_v1_core_loop_src_render_core_rng",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_renderer_ts",
+      "target": "renderer_renderframe",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_config_tokens",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_content_schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_content_schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "draweye_colorbyname",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "draweye_almondpath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "draweye_shapery",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "draweye_shaperx",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "draweye_irisradius",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_draweye_ts",
+      "target": "draweye_draweye",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "draweye_draweye",
+      "target": "draweye_shaperx",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "draweye_draweye",
+      "target": "draweye_shapery",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "draweye_draweye",
+      "target": "draweye_irisradius",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "draweye_draweye",
+      "target": "draweye_almondpath",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "draweye_draweye",
+      "target": "draweye_colorbyname",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawEye.ts",
+      "source_location": "L115",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawfieldlines_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_physics_forcefield",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawFieldLines.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawfieldlines_ts",
+      "target": "drawfieldlines_computefieldlines",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawFieldLines.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawfieldlines_ts",
+      "target": "drawfieldlines_drawfieldlines",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawFieldLines.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawcursor_ts",
+      "target": "worktrees_v1_core_loop_src_render_drawers_config_tokens",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawcursor_ts",
+      "target": "drawcursor_clamp",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawcursor_ts",
+      "target": "drawcursor_easecharge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawcursor_ts",
+      "target": "drawcursor_pulseat",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawcursor_ts",
+      "target": "drawcursor_computecursorstate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_render_drawers_drawcursor_ts",
+      "target": "drawcursor_drawcursor",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "drawcursor_computecursorstate",
+      "target": "drawcursor_clamp",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "drawcursor_computecursorstate",
+      "target": "drawcursor_easecharge",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "drawcursor_computecursorstate",
+      "target": "drawcursor_pulseat",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawCursor.ts",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_schema_ts",
+      "target": "worktrees_v1_core_loop_src_content_config_tokens",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/schema.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_schema_ts",
+      "target": "schema_manifestloaderror",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/schema.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "schema_manifestloaderror",
+      "target": "schema_manifestloaderror_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/schema.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_manifestloader_ts",
+      "target": "worktrees_v1_core_loop_src_content_schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_manifestloader_ts",
+      "target": "worktrees_v1_core_loop_src_content_schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_manifestloader_ts",
+      "target": "manifestloader_between",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_manifestloader_ts",
+      "target": "manifestloader_validateentry",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_manifestloader_ts",
+      "target": "manifestloader_validatemanifest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_content_manifestloader_ts",
+      "target": "manifestloader_loadmanifestfromtext",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "manifestloader_validateentry",
+      "target": "manifestloader_between",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "manifestloader_loadmanifestfromtext",
+      "target": "manifestloader_validatemanifest",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L154",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_springhome_ts",
+      "target": "springhome_clampmag",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/SpringHome.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_springhome_ts",
+      "target": "springhome_compute",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/SpringHome.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "springhome_compute",
+      "target": "springhome_clampmag",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/SpringHome.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_forcefield_ts",
+      "target": "forcefield_clampr",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_forcefield_ts",
+      "target": "forcefield_falloff",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_forcefield_ts",
+      "target": "forcefield_compute",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_forcefield_ts",
+      "target": "forcefield_samplealongray",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "forcefield_falloff",
+      "target": "forcefield_clampr",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "forcefield_compute",
+      "target": "forcefield_falloff",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "forcefield_samplealongray",
+      "target": "forcefield_falloff",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/ForceField.ts",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_integrator_ts",
+      "target": "integrator_clampmag",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_integrator_ts",
+      "target": "integrator_sanitizedt",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_integrator_ts",
+      "target": "integrator_integrate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_physics_integrator_ts",
+      "target": "integrator_steertoward",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
+      "source": "integrator_integrate",
+      "target": "integrator_sanitizedt",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "integrator_integrate",
+      "target": "integrator_clampmag",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/physics/Integrator.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_particlesystem_ts",
+      "target": "worktrees_v1_core_loop_src_effects_core_rng",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_particlesystem_ts",
+      "target": "particlesystem_particlesystem",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_capacity",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_livecount",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_spawn",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_burst",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_update",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_cull",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_draw",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_reset",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L132",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem",
+      "target": "particlesystem_particlesystem_rngnow",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L137",
+      "weight": 1.0
+    },
+    {
+      "source": "particlesystem_particlesystem_burst",
+      "target": "particlesystem_particlesystem_spawn",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/ParticleSystem.ts",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_respawnscheduler_ts",
+      "target": "worktrees_v1_core_loop_src_effects_core_rng",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_respawnscheduler_ts",
+      "target": "worktrees_v1_core_loop_src_effects_entities_entity",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_respawnscheduler_ts",
+      "target": "respawnscheduler_respawnscheduler",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_schedule",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_pending",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_samplepos",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_tick",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_setsize",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_reset",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler",
+      "target": "respawnscheduler_respawnscheduler_clearqueue",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L85",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler_clearqueue",
+      "target": "respawnscheduler_respawnscheduler_reset",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "target": "worktrees_v1_core_loop_src_effects_particlesystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "target": "worktrees_v1_core_loop_src_effects_entities_entity",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "target": "effectsystem_ease_protest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "target": "effectsystem_ease_in",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "target": "effectsystem_ease_out",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "target": "effectsystem_ease_linear",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectsystem_ts",
+      "target": "effectsystem_effectsystem",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem",
+      "target": "effectsystem_effectsystem_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem",
+      "target": "effectsystem_effectsystem_register",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem",
+      "target": "effectsystem_effectsystem_start",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem",
+      "target": "effectsystem_effectsystem_update",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem",
+      "target": "effectsystem_effectsystem_livecount",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem",
+      "target": "effectsystem_effectsystem_liveeffects",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L149",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem",
+      "target": "effectsystem_effectsystem_reset",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L153",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectdefs_laserburn_ts",
+      "target": "worktrees_v1_core_loop_src_effects_effectdefs_config_tokens",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/effectDefs/laserBurn.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectdefs_laserburn_ts",
+      "target": "worktrees_v1_core_loop_src_effects_effectdefs_effectsystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/effectDefs/laserBurn.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectdefs_laserburn_ts",
+      "target": "worktrees_v1_core_loop_src_effects_effectdefs_effectsystem",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/effectDefs/laserBurn.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_effects_effectdefs_laserburn_ts",
+      "target": "laserburn_laserburnprogressat",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/effects/effectDefs/laserBurn.ts",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "worktrees_v1_core_loop_src_entities_entities_entity",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "worktrees_v1_core_loop_src_entities_core_rng",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "worktrees_v1_core_loop_src_entities_content_schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "entityfactory_paletteref",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "entityfactory_jitterscale",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "entityfactory_buildentity",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "entityfactory_overlapsany",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "entityfactory_samplepos",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entityfactory_ts",
+      "target": "entityfactory_spawneyes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "entityfactory_buildentity",
+      "target": "entityfactory_paletteref",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "entityfactory_spawneyes",
+      "target": "entityfactory_samplepos",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "entityfactory_spawneyes",
+      "target": "entityfactory_overlapsany",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "entityfactory_spawneyes",
+      "target": "entityfactory_buildentity",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "entityfactory_spawneyes",
+      "target": "entityfactory_jitterscale",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entitystore_ts",
+      "target": "worktrees_v1_core_loop_src_entities_entity",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entitystore_ts",
+      "target": "entitystore_clone",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entitystore_ts",
+      "target": "entitystore_distsq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_entitystore_ts",
+      "target": "entitystore_entitystore",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_size",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_alivecount",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_dyingcount",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_insert",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_markdying",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_remove",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_get",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_querynearest",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_foreachalive",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_foreachdying",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_foreach",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_clear",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore",
+      "target": "entitystore_entitystore_ids",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore_markdying",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore_get",
+      "target": "entitystore_clone",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore_querynearest",
+      "target": "entitystore_distsq",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore_querynearest",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore_foreach",
+      "target": "entitystore_entitystore_foreachalive",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "entitystore_entitystore_foreach",
+      "target": "entitystore_entitystore_foreachdying",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityStore.ts",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_behaviors_statemachine_ts",
+      "target": "statemachine_statemachine",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "statemachine_statemachine",
+      "target": "statemachine_statemachine_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "statemachine_statemachine",
+      "target": "statemachine_statemachine_current",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "statemachine_statemachine",
+      "target": "statemachine_statemachine_send",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "statemachine_statemachine",
+      "target": "statemachine_statemachine_ontransition",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "statemachine_statemachine",
+      "target": "statemachine_statemachine_reset",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_behaviors_eyebehavior_ts",
+      "target": "worktrees_v1_core_loop_src_entities_behaviors_core_rng",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_behaviors_eyebehavior_ts",
+      "target": "worktrees_v1_core_loop_src_entities_behaviors_statemachine",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_behaviors_eyebehavior_ts",
+      "target": "eyebehavior_eyeblinktimer",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyeblinktimer",
+      "target": "eyebehavior_eyeblinktimer_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyeblinktimer",
+      "target": "eyebehavior_eyeblinktimer_schedulenextblink",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyeblinktimer",
+      "target": "eyebehavior_eyeblinktimer_tick",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyeblinktimer",
+      "target": "eyebehavior_eyeblinktimer_scaley",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_entities_behaviors_eyebehavior_ts",
+      "target": "eyebehavior_eyebehavior",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L77",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior",
+      "target": "eyebehavior_eyebehavior_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior",
+      "target": "eyebehavior_eyebehavior_tick",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L94",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior",
+      "target": "eyebehavior_eyebehavior_blinkscaley",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior",
+      "target": "eyebehavior_eyebehavior_setdragged",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior",
+      "target": "eyebehavior_eyebehavior_setdying",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyeblinktimer_constructor",
+      "target": "eyebehavior_eyeblinktimer_schedulenextblink",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyeblinktimer_tick",
+      "target": "eyebehavior_eyeblinktimer_schedulenextblink",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior_blinkscaley",
+      "target": "eyebehavior_eyeblinktimer_scaley",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L99",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_hud_hud_ts",
+      "target": "worktrees_v1_core_loop_src_hud_config_tokens",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_hud_hud_ts",
+      "target": "worktrees_v1_core_loop_src_hud_hudicons",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_hud_hud_ts",
+      "target": "hud_hud",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud",
+      "target": "hud_hud_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud",
+      "target": "hud_hud_refreshicons",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud",
+      "target": "hud_hud_setmode",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud",
+      "target": "hud_hud_setpower",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud",
+      "target": "hud_hud_setcharge",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud_constructor",
+      "target": "hud_hud_refreshicons",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud_setmode",
+      "target": "hud_hud_refreshicons",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "hud_hud_setpower",
+      "target": "hud_hud_refreshicons",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/Hud.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "worktrees_v1_core_loop_src_hud_hudicons_ts",
+      "target": "worktrees_v1_core_loop_src_hud_config_tokens",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": ".worktrees/v1-core-loop/src/hud/hudIcons.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "main_spawninitialeyes",
+      "target": "entityfactory_spawneyes",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L143",
+      "weight": 1.0
+    },
+    {
+      "source": "main_spawninitialeyes",
+      "target": "entitystore_entitystore_insert",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L150",
+      "weight": 1.0
+    },
+    {
+      "source": "main_installbehavior",
+      "target": "engine_engine_getnow",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L176",
+      "weight": 1.0
+    },
+    {
+      "source": "main_respawnentity",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L183",
+      "weight": 1.0
+    },
+    {
+      "source": "main_respawnentity",
+      "target": "entityfactory_samplepos",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/main.ts",
+      "source_location": "L185",
+      "weight": 1.0
+    },
+    {
+      "source": "eventbus_eventbus_on",
+      "target": "pointertracker_pointertracker_add",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/EventBus.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_constructor",
+      "target": "clock_clock_now",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_start",
+      "target": "eventbus_eventbus_emit",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_stop",
+      "target": "eventbus_eventbus_emit",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_ontick",
+      "target": "pointertracker_pointertracker_add",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_getnow",
+      "target": "clock_clock_now",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_frame",
+      "target": "eyebehavior_eyebehavior_tick",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "engine_engine_frame",
+      "target": "eventbus_eventbus_emit",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Engine.ts",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng_default",
+      "target": "clock_clock_now",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "rng_rng_fromquerystring",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/core/Rng.ts",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller_trystart",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller_move",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller_release",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "dragcontroller_dragcontroller_cancel",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/DragController.ts",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_onmove",
+      "target": "engine_engine_setcursor",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_ondown",
+      "target": "engine_engine_setcursor",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_onup",
+      "target": "powercontroller_powercontroller_release",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_oncancel",
+      "target": "powercontroller_powercontroller_release",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_oncancel",
+      "target": "engine_engine_clearcursor",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L116",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_ontouchstart",
+      "target": "engine_engine_setcursor",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_ontouchmove",
+      "target": "engine_engine_setcursor",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L133",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_ontouchend",
+      "target": "powercontroller_powercontroller_release",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L137",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_onblur",
+      "target": "powercontroller_powercontroller_release",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "pointertracker_pointertracker_onblur",
+      "target": "engine_engine_clearcursor",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PointerTracker.ts",
+      "source_location": "L144",
+      "weight": 1.0
+    },
+    {
+      "source": "powercontroller_powercontroller_fire",
+      "target": "effectsystem_effectsystem_start",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/input/PowerController.ts",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "renderer_renderframe",
+      "target": "drawfieldlines_computefieldlines",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "renderer_renderframe",
+      "target": "drawfieldlines_drawfieldlines",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "renderer_renderframe",
+      "target": "entitystore_entitystore_foreachalive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "renderer_renderframe",
+      "target": "particlesystem_particlesystem_draw",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "renderer_renderframe",
+      "target": "drawcursor_computecursorstate",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L96",
+      "weight": 1.0
+    },
+    {
+      "source": "renderer_renderframe",
+      "target": "drawcursor_drawcursor",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/render/Renderer.ts",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "drawfieldlines_computefieldlines",
+      "target": "forcefield_samplealongray",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/render/drawers/drawFieldLines.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "manifestloader_validatemanifest",
+      "target": "entitystore_entitystore_foreach",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/content/manifestLoader.ts",
+      "source_location": "L123",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler_schedule",
+      "target": "rng_rng_range",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "respawnscheduler_respawnscheduler_samplepos",
+      "target": "rng_rng_range",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/effects/RespawnScheduler.ts",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem_start",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "effectsystem_effectsystem_update",
+      "target": "entitystore_entitystore_get",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/effects/EffectSystem.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "entityfactory_jitterscale",
+      "target": "rng_rng_range",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "entityfactory_samplepos",
+      "target": "rng_rng_range",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/EntityFactory.ts",
+      "source_location": "L77",
+      "weight": 1.0
+    },
+    {
+      "source": "statemachine_statemachine_ontransition",
+      "target": "pointertracker_pointertracker_add",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/StateMachine.ts",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyeblinktimer_schedulenextblink",
+      "target": "rng_rng_range",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior_setdragged",
+      "target": "statemachine_statemachine_current",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior_setdragged",
+      "target": "statemachine_statemachine_send",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior_setdying",
+      "target": "statemachine_statemachine_current",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "eyebehavior_eyebehavior_setdying",
+      "target": "statemachine_statemachine_send",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": ".worktrees/v1-core-loop/src/entities/behaviors/EyeBehavior.ts",
+      "source_location": "L110",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

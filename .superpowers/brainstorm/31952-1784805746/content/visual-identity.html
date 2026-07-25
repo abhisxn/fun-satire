@@ -1,0 +1,56 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,500&family=Space+Mono:wght@400;700&family=Bricolage+Grotesque:wght@400;600;800&display=swap');
+
+.vi-card { border-radius: 18px; padding: 28px; margin-bottom: 20px; }
+.vi-swatch { display:flex; gap:8px; margin: 14px 0; }
+.vi-swatch div { width: 34px; height: 34px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+.vi-title { font-size: 15px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.6; margin-bottom: 6px; }
+.vi-big { font-size: 40px; margin: 10px 0; line-height: 1.05; }
+.vi-cursor { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; margin-right:14px; vertical-align:middle; }
+</style>
+
+<h2>Which overall visual identity for the toy?</h2>
+<p class="subtitle">Palette, typography, cursor, and HUD language — this is the DNA everything else inherits</p>
+
+<div class="options" data-multiselect="false">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)" style="display:block;">
+    <div class="vi-card" style="background:#EDE7DD; color:#2A2420;">
+      <div class="vi-title">A · Paper-Cut Protest (matches your reference image)</div>
+      <div class="vi-big" style="font-family:'Fraunces',serif; font-style:italic; font-weight:500;">Jantar Mantar, drawn by hand.</div>
+      <p style="font-family:'Space Mono',monospace; font-size:13px; opacity:0.75;">Fraunces (display) + Space Mono (HUD/labels)</p>
+      <div class="vi-swatch">
+        <div style="background:#EDE7DD"></div><div style="background:#5B7A8C"></div><div style="background:#6D7A5E"></div><div style="background:#2A2420"></div><div style="background:#E8A9A0"></div>
+      </div>
+      <div><span class="vi-cursor" style="background:#E8A9A0;">+</span> cursor: soft coral circle with crosshair (as in your reference) &mdash; user IS the protest crowd's gaze</div>
+      <p style="margin-top:10px;">HUD: hand-torn paper placard fixed bottom-center, holding 3 mode icons cut from the same paper-craft style. Warm cream, muted sage/slate, flat gouache texture, subtle grain. Cozy-but-defiant, like protest zine art.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)" style="display:block;">
+    <div class="vi-card" style="background:#151513; color:#F2EFE9;">
+      <div class="vi-title" style="opacity:0.55;">B · Riot Poster / Silkscreen</div>
+      <div class="vi-big" style="font-family:'Bricolage Grotesque',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em;">SATTA NAHI, SAWAAL.</div>
+      <p style="font-family:'Space Mono',monospace; font-size:13px; opacity:0.7;">Bricolage Grotesque (display) + Space Mono (HUD)</p>
+      <div class="vi-swatch">
+        <div style="background:#151513"></div><div style="background:#E23D28"></div><div style="background:#F2EFE9"></div><div style="background:#D8A93A"></div>
+      </div>
+      <div><span class="vi-cursor" style="background:#E23D28; color:#F2EFE9; font-weight:700;">✊</span> cursor: raised-fist glyph, high-contrast red on black</div>
+      <p style="margin-top:10px;">HUD: two-color risograph/silkscreen poster aesthetic — hard ink edges, slight print misregistration, halftone dot shadows. Loud, screen-printed protest-poster energy rather than illustration-book warmth.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)" style="display:block;">
+    <div class="vi-card" style="background:#F5F3EF; color:#1B1B1B;">
+      <div class="vi-title">C · Studio-Toy Minimal</div>
+      <div class="vi-big" style="font-family:'Bricolage Grotesque',sans-serif; font-weight:600;">A quiet room, a loud crowd.</div>
+      <p style="font-family:'Space Mono',monospace; font-size:13px; opacity:0.7;">Bricolage Grotesque (display) + Space Mono (HUD), restrained palette</p>
+      <div class="vi-swatch">
+        <div style="background:#F5F3EF"></div><div style="background:#1B1B1B"></div><div style="background:#8C8577"></div><div style="background:#C4402E"></div>
+      </div>
+      <div><span class="vi-cursor" style="background:#1B1B1B; color:#F5F3EF;">×</span> cursor: minimal thin crosshair, near-invisible until a power is armed (then flashes accent red)</div>
+      <p style="margin-top:10px;">HUD: almost no chrome at all — a single thin corner label and 3 unobtrusive icon-only toggles. Game-studio restraint: let the creatures and the physics be the whole show, UI nearly disappears.</p>
+    </div>
+  </div>
+
+</div>
