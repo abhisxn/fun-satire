@@ -7,4 +7,4 @@ export type {
   LifecycleEvent,
   LocomotionEvent,
 } from "./EyeBehavior";
-export { SubjectBehavior, SUBJECT_BEHAVIOR } from "./SubjectBehavior";
+export { stepSubjectPhysics, homeFor, SUBJECT_BEHAVIOR } from "./SubjectBehavior";
