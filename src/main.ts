@@ -145,7 +145,7 @@ const spawnInitialEyes = (): void => {
     rng,
     width: viewport.state.width,
     height: viewport.state.height,
-    manifest: manifest.entries as EyeManifestEntry[],
+    manifest: manifest.entries.filter((e): e is EyeManifestEntry => e.rig === "eye"),
   });
   for (const e of entities) {
     store.insert(e);

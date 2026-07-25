@@ -108,6 +108,7 @@ const validateEyeEntry = (r: Record<string, unknown>, base: string, issues: Mani
     });
   }
 
+  if (issues.length > 0) return null;
   return r as unknown as EyeManifestEntry;
 };
 

@@ -43,6 +43,16 @@ export type EyeManifestEntry = {
   behavior: EyeBehaviorConfig;
 };
 
+export type SubjectColors = {
+  suit: "slate" | "sage" | "ink";
+  shirt: "cream";
+  outline: "ink";
+};
+
+export type SubjectPhysics = {
+  baseSizePx: number;
+};
+
 export type SubjectManifestEntry = {
   id: string;
   rig: "subject";
@@ -50,14 +60,8 @@ export type SubjectManifestEntry = {
   visual: {
     styleGuardrail: "flat-illustrated";
   };
-  colors: {
-    suit: "slate" | "sage" | "ink";
-    shirt: "cream";
-    outline: "ink";
-  };
-  physics: {
-    baseSizePx: number;
-  };
+  colors: SubjectColors;
+  physics: SubjectPhysics;
 };
 
 export type ManifestEntry = EyeManifestEntry | SubjectManifestEntry;

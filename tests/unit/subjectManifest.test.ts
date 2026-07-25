@@ -1,7 +1,11 @@
 // tests/unit/subjectManifest.test.ts
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { loadManifestFromText } from "../../src/content/manifestLoader";
 import subjectRoster from "../../src/content/manifests/subject.roster.json";
+
+const ROOT = resolve(__dirname, "..", "..");
 
 describe("content/manifestLoader subject rig (T26)", () => {
   it("loads the subject roster with exactly one entry shaped for the subject rig", () => {
@@ -32,9 +36,9 @@ describe("content/manifestLoader subject rig (T26)", () => {
   });
 
   it("still loads the existing eyes roster unchanged (regression)", () => {
-    const eyesRosterText = require("fs").readFileSync(
-      require("path").join(__dirname, "../../src/content/manifests/eyes.roster.json"),
-      "utf-8",
+    const eyesRosterText = readFileSync(
+      resolve(ROOT, "src/content/manifests/eyes.roster.json"),
+      "utf8",
     );
     const manifest = loadManifestFromText(eyesRosterText);
     expect(manifest.entries.length).toBe(18);
