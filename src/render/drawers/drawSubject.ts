@@ -34,7 +34,7 @@ export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInp
     pos: input.pos,
     sizePx: input.sizePx,
     value: subjectSkin.value,
-    scale: subjectSkin.scale,
+    scale: input.scale * subjectSkin.scale,
     colors: input.colors,
     rotation,
   });
