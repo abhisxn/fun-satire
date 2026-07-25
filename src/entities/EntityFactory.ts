@@ -1,6 +1,6 @@
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import { type Rng } from "../core/Rng";
-import type { EyeManifestEntry, EyeColors } from "../content/schema";
+import type { EyeManifestEntry, EyeColors, SubjectManifestEntry } from "../content/schema";
 
 export const ENTITY_FACTORY = Object.freeze({
   minSeparationPx: 64,
@@ -109,4 +109,37 @@ export function spawnEyes(opts: EntityFactoryOptions): FactoryResult {
     if (!placedOk) rejected++;
   }
   return { entities: placed, rejected };
+}
+
+export type SpawnSubjectOpts = {
+  manifest: readonly SubjectManifestEntry[];
+  cursor: Vec2;
+  nextId: number;
+};
+
+export function spawnSubject(opts: SpawnSubjectOpts): Entity | null {
+  const entry = opts.manifest[0];
+  if (!entry) return null;
+  return {
+    id: opts.nextId,
+    content: {
+      manifestId: entry.id,
+      rig: entry.rig,
+      renderType: entry.renderType,
+    },
+    physics: {
+      pos: { x: opts.cursor.x, y: opts.cursor.y },
+      vel: { x: 0, y: 0 },
+      home: { x: opts.cursor.x, y: opts.cursor.y },
+      scale: 0,
+      rotation: 0,
+    },
+    behavior: {
+      data: {
+        baseSizePx: entry.physics.baseSizePx,
+        colors: entry.colors,
+      },
+    },
+    lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
+  };
 }
