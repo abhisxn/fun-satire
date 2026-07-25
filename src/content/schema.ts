@@ -10,7 +10,7 @@ export type PupilColor = "ink";
 
 export type HighlightColor = "coral";
 
-export type SubjectColors = {
+export type EyeColors = {
   sclera: ScleraColor;
   iris: IrisColor;
   pupil: PupilColor;
@@ -18,12 +18,12 @@ export type SubjectColors = {
   outline: "ink";
 };
 
-export type SubjectPhysics = {
+export type EyePhysics = {
   baseSizePx: number;
   jitterScale?: number;
 };
 
-export type SubjectBehavior = {
+export type EyeBehaviorConfig = {
   blinkIntervalMinMs: number;
   blinkIntervalMaxMs: number;
   blinkDurationMs: number;
@@ -38,9 +38,9 @@ export type ManifestEntry = {
     styleGuardrail: "flat-illustrated";
     shapeVariant: ShapeVariant;
   };
-  colors: SubjectColors;
-  physics: SubjectPhysics;
-  behavior: SubjectBehavior;
+  colors: EyeColors;
+  physics: EyePhysics;
+  behavior: EyeBehaviorConfig;
 };
 
 export type Manifest = {

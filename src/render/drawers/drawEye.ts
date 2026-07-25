@@ -1,6 +1,6 @@
 import { PALETTE } from "../../config/tokens";
 import type { ShapeVariant } from "../../content/schema";
-import type { SubjectColors } from "../../content/schema";
+import type { EyeColors } from "../../content/schema";
 
 export const EYE_DRAW = Object.freeze({
   outlineStrokePx: 1.5,
@@ -12,7 +12,7 @@ export type DrawEyeInput = {
   pos: { x: number; y: number };
   sizePx: number;
   shapeVariant: ShapeVariant;
-  colors: SubjectColors;
+  colors: EyeColors;
   blinkScaleY: number;
   pupilOffset: { x: number; y: number };
 };

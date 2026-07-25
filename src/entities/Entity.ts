@@ -1,6 +1,6 @@
 export type Vec2 = { x: number; y: number };
 
-export type SubjectColorPalette = Readonly<{
+export type EntityColorPalette = Readonly<{
   sclera: string;
   iris: string;
   pupil: string;
@@ -12,7 +12,7 @@ export type ContentRef = {
   readonly manifestId: string;
   readonly rig: string;
   readonly renderType: string;
-  readonly palette?: SubjectColorPalette;
+  readonly palette?: EntityColorPalette;
 };
 
 export type PhysicsState = {

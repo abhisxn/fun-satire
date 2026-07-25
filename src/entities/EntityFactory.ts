@@ -1,6 +1,6 @@
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import { type Rng } from "../core/Rng";
-import type { ManifestEntry, SubjectColors } from "../content/schema";
+import type { ManifestEntry, EyeColors } from "../content/schema";
 
 export const ENTITY_FACTORY = Object.freeze({
   minSeparationPx: 64,
@@ -20,7 +20,7 @@ export type FactoryResult = {
   rejected: number;
 };
 
-const paletteRef = (entry: ManifestEntry): SubjectColors => entry.colors;
+const paletteRef = (entry: ManifestEntry): EyeColors => entry.colors;
 
 const jitterScale = (entry: ManifestEntry, rng: Rng): number => {
   if (entry.physics.jitterScale !== undefined) {
