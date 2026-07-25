@@ -6,12 +6,14 @@ import {
 } from "../../src/effects/effectDefs/laserBurn";
 
 describe("effects/effectDefs/laserBurn (T19)", () => {
-  it("has ordered stages glow -> line -> shrink -> dissolve", () => {
+  it("has ordered stages glow -> line -> shrink -> dissolve -> beam -> glow", () => {
     expect(laserBurnEffect.stages.map((s) => s.durationMs)).toEqual([
       LASER_BURN.glowMs,
       LASER_BURN.lineMs,
       LASER_BURN.shrinkMs,
       LASER_BURN.dissolveMs,
+      LASER_BURN.beamMs,
+      LASER_BURN.impactGlowMs,
     ]);
   });
 
@@ -27,6 +29,12 @@ describe("effects/effectDefs/laserBurn (T19)", () => {
     ).stage).toBe("dissolve");
     expect(laserBurnProgressAt(
       LASER_BURN.glowMs + LASER_BURN.lineMs + LASER_BURN.shrinkMs + LASER_BURN.dissolveMs + 1,
+    ).stage).toBe("beam");
+    expect(laserBurnProgressAt(
+      LASER_BURN.glowMs + LASER_BURN.lineMs + LASER_BURN.shrinkMs + LASER_BURN.dissolveMs + LASER_BURN.beamMs + 1,
+    ).stage).toBe("impactGlow");
+    expect(laserBurnProgressAt(
+      LASER_BURN.totalDurationMs + 1,
     ).stage).toBe("done");
   });
 
@@ -50,11 +58,11 @@ describe("effects/effectDefs/laserBurn (T19)", () => {
     expect(LASER_BURN.chargeThresholdMs).toBeLessThanOrEqual(600);
   });
 
-  it("total burn duration matches the spec (~400ms post-fire)", () => {
-    const total = LASER_BURN.glowMs + LASER_BURN.lineMs + LASER_BURN.shrinkMs + LASER_BURN.dissolveMs;
+  it("total burn duration matches the spec (~720ms with beam/glow polish)", () => {
+    const total = LASER_BURN.glowMs + LASER_BURN.lineMs + LASER_BURN.shrinkMs + LASER_BURN.dissolveMs + LASER_BURN.beamMs + LASER_BURN.impactGlowMs;
     expect(total).toBe(LASER_BURN.totalDurationMs);
-    expect(total).toBeGreaterThanOrEqual(380);
-    expect(total).toBeLessThanOrEqual(420);
+    expect(total).toBeGreaterThanOrEqual(700);
+    expect(total).toBeLessThanOrEqual(750);
   });
 
   it("eased values come from cubic-bezier / power-style curves (not linear)", () => {

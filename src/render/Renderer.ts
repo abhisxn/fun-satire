@@ -208,6 +208,44 @@ export function renderFrame(opts: RenderFrameOptions): void {
 
   opts.particles.draw(ctx);
 
+  const effects = opts.effects;
+  if (effects) {
+    for (const effect of effects.liveEffects()) {
+      if (effect.defId !== "laserBurn") continue;
+      const def = effects.getDef(effect.defId);
+      if (!def) continue;
+      const stage = def.stages[effect.stageIndex];
+      if (!stage?.id) continue;
+      const elapsed = opts.nowMs - effect.stageStartedAtMs;
+      const progress = stage.durationMs <= 0 ? 1 : Math.min(1, elapsed / stage.durationMs);
+
+      if (stage.id === "beam" && stage.visual) {
+        const opacity = (stage.visual.beamOpacity as number) * (1 - progress);
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.strokeStyle = stage.visual.beamColor as string;
+        ctx.lineWidth = stage.visual.beamWidth as number;
+        ctx.beginPath();
+        ctx.moveTo(opts.width / 2, 0);
+        ctx.lineTo(effect.target.x, effect.target.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (stage.id === "glow" && stage.visual) {
+        const radius = (stage.visual.glowRadius as number) + progress * 20;
+        const opacity = (stage.visual.glowOpacity as number) * (1 - progress);
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = stage.visual.glowColor as string;
+        ctx.beginPath();
+        ctx.arc(effect.target.x, effect.target.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+
   if (cursor.active) {
     const chargeT = opts.cursorRingOpacity > 0 ? 1 - opts.cursorRingOpacity : 0;
     const state = computeCursorState({

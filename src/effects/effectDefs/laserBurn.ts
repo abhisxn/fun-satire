@@ -4,11 +4,13 @@ import { EASE_PROTEST, EASE_OUT, EASE_IN } from "../EffectSystem";
 
 export const LASER_BURN = Object.freeze({
   chargeThresholdMs: 550,
-  totalDurationMs: 400,
+  totalDurationMs: 720,
   glowMs: 80,
   lineMs: 100,
   shrinkMs: 100,
   dissolveMs: 120,
+  beamMs: 120,
+  impactGlowMs: 200,
   ashCount: 28,
   ashMaxR: 120,
   ashMinR: 50,
@@ -84,15 +86,43 @@ export const laserBurnEffect: EffectDef = {
         ctx.entity.physics.scale = 0;
       },
     },
+    {
+      id: "beam",
+      durationMs: LASER_BURN.beamMs,
+      easing: EASE_OUT,
+      visual: {
+        beamWidth: 8,
+        beamColor: PALETTE.coral,
+        beamOpacity: 0.9,
+      },
+      update: (_ctx, _t) => {
+        // Beam fades out over duration — rendered by Renderer
+      },
+    },
+    {
+      id: "glow",
+      durationMs: LASER_BURN.impactGlowMs,
+      easing: EASE_OUT,
+      visual: {
+        glowRadius: 40,
+        glowColor: PALETTE.coral,
+        glowOpacity: 0.6,
+      },
+      update: (_ctx, _t) => {
+        // Glow expands and fades — rendered by Renderer
+      },
+    },
   ],
 };
 
 export type LaserBurnProgress = {
-  stage: "glow" | "line" | "shrink" | "dissolve" | "done";
+  stage: "glow" | "line" | "shrink" | "dissolve" | "beam" | "impactGlow" | "done";
   glow: number;
   line: number;
   shrink: number;
   dissolve: number;
+  beam: number;
+  glowFade: number;
 };
 
 export function laserBurnProgressAt(elapsedMs: number): LaserBurnProgress {
@@ -105,12 +135,20 @@ export function laserBurnProgressAt(elapsedMs: number): LaserBurnProgress {
   const dissolveT = (elapsedMs - LASER_BURN.glowMs - LASER_BURN.lineMs - LASER_BURN.shrinkMs) /
     LASER_BURN.dissolveMs;
   const dissolve = dissolveT > 0 ? Math.min(1, dissolveT) : 0;
+  const beamT = (elapsedMs - LASER_BURN.glowMs - LASER_BURN.lineMs - LASER_BURN.shrinkMs - LASER_BURN.dissolveMs) /
+    LASER_BURN.beamMs;
+  const beam = beamT > 0 ? Math.min(1, beamT) : 0;
+  const glowFadeT = (elapsedMs - LASER_BURN.glowMs - LASER_BURN.lineMs - LASER_BURN.shrinkMs - LASER_BURN.dissolveMs - LASER_BURN.beamMs) /
+    LASER_BURN.impactGlowMs;
+  const glowFade = glowFadeT > 0 ? Math.min(1, glowFadeT) : 0;
 
   let stage: LaserBurnProgress["stage"];
   if (elapsedMs < LASER_BURN.glowMs) stage = "glow";
   else if (elapsedMs < LASER_BURN.glowMs + LASER_BURN.lineMs) stage = "line";
   else if (elapsedMs < LASER_BURN.glowMs + LASER_BURN.lineMs + LASER_BURN.shrinkMs) stage = "shrink";
-  else if (elapsedMs < LASER_BURN.totalDurationMs) stage = "dissolve";
+  else if (elapsedMs < LASER_BURN.glowMs + LASER_BURN.lineMs + LASER_BURN.shrinkMs + LASER_BURN.dissolveMs) stage = "dissolve";
+  else if (elapsedMs < LASER_BURN.glowMs + LASER_BURN.lineMs + LASER_BURN.shrinkMs + LASER_BURN.dissolveMs + LASER_BURN.beamMs) stage = "beam";
+  else if (elapsedMs < LASER_BURN.totalDurationMs) stage = "impactGlow";
   else stage = "done";
-  return { stage, glow, line, shrink, dissolve };
+  return { stage, glow, line, shrink, dissolve, beam, glowFade };
 }
