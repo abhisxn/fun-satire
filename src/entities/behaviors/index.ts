@@ -1,5 +1,5 @@
 export { StateMachine } from "./StateMachine";
-export { EyeBehavior, EyeBlinkTimer } from "./EyeBehavior";
+export { EyeBehavior, EyeBlinkTimer, isWithinBurnAssistRange } from "./EyeBehavior";
 export type {
   EyeLifecycle,
   EyeLocomotion,
@@ -7,3 +7,4 @@ export type {
   LifecycleEvent,
   LocomotionEvent,
 } from "./EyeBehavior";
+export { SubjectBehavior, SUBJECT_BEHAVIOR } from "./SubjectBehavior";

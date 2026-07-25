@@ -1,4 +1,5 @@
 import { type Rng } from "../../core/Rng";
+import type { Vec2 } from "../Entity";
 import type { StateMachine } from "./StateMachine";
 
 export type EyeLifecycle = "alive" | "dying";
@@ -110,4 +111,14 @@ export class EyeBehavior {
     if (dying && cur === "alive") this.lifecycleState.send("die");
     else if (!dying && cur === "dying") this.lifecycleState.send("respawn");
   }
+}
+
+/**
+ * Pure geometry: is this eye close enough to the Subject to visually
+ * "assist" the burn (e.g. draw a gaze-line to it)? Boundary is inclusive.
+ */
+export function isWithinBurnAssistRange(eyePos: Vec2, subjectPos: Vec2, radiusPx: number): boolean {
+  const dx = eyePos.x - subjectPos.x;
+  const dy = eyePos.y - subjectPos.y;
+  return dx * dx + dy * dy <= radiusPx * radiusPx;
 }

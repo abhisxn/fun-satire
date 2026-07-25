@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Rng } from "../../src/core/Rng";
 import { StateMachine } from "../../src/entities/behaviors/StateMachine";
-import { EyeBehavior, EyeBlinkTimer } from "../../src/entities/behaviors/EyeBehavior";
+import {
+  EyeBehavior,
+  EyeBlinkTimer,
+  isWithinBurnAssistRange,
+} from "../../src/entities/behaviors/EyeBehavior";
 
 describe("entities/behaviors/StateMachine (T15)", () => {
   type S = "idle" | "walk" | "run";
@@ -135,5 +139,26 @@ describe("entities/behaviors/EyeBehavior (T15)", () => {
     const b = make(0);
     b.setDragged(true);
     expect(() => b.setDragged(true)).not.toThrow();
+  });
+});
+
+describe("entities/behaviors/isWithinBurnAssistRange (T27)", () => {
+  it("returns true when the eye is clearly inside the radius", () => {
+    const eyePos = { x: 105, y: 100 };
+    const subjectPos = { x: 100, y: 100 };
+    expect(isWithinBurnAssistRange(eyePos, subjectPos, 50)).toBe(true);
+  });
+
+  it("returns false when the eye is clearly outside the radius", () => {
+    const eyePos = { x: 300, y: 300 };
+    const subjectPos = { x: 100, y: 100 };
+    expect(isWithinBurnAssistRange(eyePos, subjectPos, 50)).toBe(false);
+  });
+
+  it("returns true when the eye is exactly at the boundary (inclusive)", () => {
+    const subjectPos = { x: 100, y: 100 };
+    const radiusPx = 50;
+    const eyePos = { x: subjectPos.x + radiusPx, y: subjectPos.y };
+    expect(isWithinBurnAssistRange(eyePos, subjectPos, radiusPx)).toBe(true);
   });
 });
