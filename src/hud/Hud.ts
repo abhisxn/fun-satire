@@ -24,6 +24,7 @@ export class Hud {
       <svg class="hud-placard__tear" viewBox="0 0 200 64" preserveAspectRatio="none" aria-hidden="true">
         <path d="${HUD_TEAR_PATH}" fill="${PALETTE.cream}" stroke="${PALETTE.ink}" stroke-width="1"/>
       </svg>
+      <div class="hud-placard__grain"></div>
       <div class="hud-placard__inner">
         <span class="hud-placard__mode-icon" aria-hidden="true"></span>
         <span class="hud-placard__mode-label">eyes</span>
