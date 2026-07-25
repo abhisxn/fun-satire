@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { SubjectDrawer } from "../../src/hud/SubjectDrawer";
 
 describe("SubjectDrawer scaffold", () => {
@@ -93,5 +93,37 @@ describe("SubjectDrawer compose row", () => {
     input.value = "Term Limits";
     input.dispatchEvent(new Event("input"));
     expect(drawer.getComposePreviewCard().el.textContent).toContain("Term Limits");
+  });
+});
+
+describe("SubjectDrawer resize-after-placement", () => {
+  it("setActiveSkin(text) pre-populates the compose row and marks resize mode", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    drawer.setActiveSkin({ kind: "text", value: "Step Down", scale: 1.35 });
+    const input = root.querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
+    expect(input.value).toBe("Step Down");
+    expect(root.querySelector('[data-size="large"]')!.classList.contains("subject-drawer__size-btn--active")).toBe(true);
+  });
+
+  it("setActiveSkin(illustrated) clears resize mode", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    drawer.setActiveSkin({ kind: "text", value: "X", scale: 1 });
+    drawer.setActiveSkin({ kind: "illustrated", id: "figure" });
+    const cb = vi.fn();
+    drawer.onResize(cb);
+    root.querySelector<HTMLElement>('[data-size="large"]')!.click();
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it("stepper clicks call onResize with the new scale only while a text skin is active", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    drawer.setActiveSkin({ kind: "text", value: "Step Down", scale: 1 });
+    const cb = vi.fn();
+    drawer.onResize(cb);
+    root.querySelector<HTMLElement>('[data-size="large"]')!.click();
+    expect(cb).toHaveBeenCalledWith(1.35);
   });
 });

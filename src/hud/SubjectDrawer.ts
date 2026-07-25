@@ -19,6 +19,8 @@ export class SubjectDrawer {
   private composeScale = SIZE_SCALE.medium;
   private composePreviewEl!: HTMLElement;
   private composePreviewLabel!: HTMLElement;
+  private activeSkin: SubjectSkin | null = null;
+  private resizeCb: ((scale: number) => void) | null = null;
 
   constructor(root: HTMLElement, opts: SubjectDrawerOptions) {
     this.panel = document.createElement("div");
@@ -82,6 +84,9 @@ export class SubjectDrawer {
           btn.classList.toggle("subject-drawer__size-btn--active", btn.dataset.size === step);
         }
         this.refreshComposePreview();
+        if (this.activeSkin?.kind === "text") {
+          this.resizeCb?.(this.composeScale);
+        }
       });
     }
     this.refreshComposePreview();
@@ -105,6 +110,25 @@ export class SubjectDrawer {
       getSkin: () => ({ kind: "text", value: this.composeText, scale: this.composeScale }),
       el: this.composePreviewEl,
     };
+  }
+
+  setActiveSkin(skin: SubjectSkin | null): void {
+    this.activeSkin = skin;
+    if (skin?.kind === "text") {
+      const input = this.getComposeSlot().querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
+      input.value = skin.value;
+      this.composeText = skin.value;
+      this.composeScale = skin.scale;
+      const step = (Object.entries(SIZE_SCALE).find(([, v]) => v === skin.scale)?.[0] as SizeStep | undefined) ?? "medium";
+      for (const btn of this.getComposeSlot().querySelectorAll<HTMLElement>(".subject-drawer__size-btn")) {
+        btn.classList.toggle("subject-drawer__size-btn--active", btn.dataset.size === step);
+      }
+      this.refreshComposePreview();
+    }
+  }
+
+  onResize(cb: (scale: number) => void): void {
+    this.resizeCb = cb;
   }
 
   open(): void {
