@@ -7,7 +7,7 @@ import "./hud/hud.css";
 import { Engine } from "./core/Engine";
 import { Rng } from "./core/Rng";
 import { EntityStore } from "./entities/EntityStore";
-import { spawnEyes, spawnSubject } from "./entities/EntityFactory";
+import { spawnEyes, spawnSubject, spawnOneCrowdMember, pickCrowdMemberToDespawn } from "./entities/EntityFactory";
 import { StateMachine, EyeBehavior, EyeBlinkTimer } from "./entities/behaviors";
 import { stepSubjectPhysics } from "./entities/behaviors/SubjectBehavior";
 import { loadManifestFromText } from "./content/manifestLoader";
@@ -28,6 +28,9 @@ import * as FF from "./physics/ForceField";
 import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
 import { DURATION } from "./config/tokens";
+import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
+import { computeLookAtRotation } from "./physics/LookAt";
+import { accumulateSeparation } from "./physics/ForceField";
 import type { Entity, EntityId } from "./entities/Entity";
 
 type LifecycleState = "alive" | "dying";
@@ -109,6 +112,62 @@ const hud = new Hud(hudRoot);
 hud.setMode("eyes");
 hud.setPower("laserBurn");
 
+let currentMode: HudMode = "eyes";
+let repelMultiplier = 1;
+
+hud.onModeChange((mode) => {
+  const power = MODE_POWER_MAP[mode];
+  powerCtrl.setPower(power);
+  hud.setPower(power);
+  currentMode = mode;
+});
+
+hud.onSkinChange((skin) => {
+  if (subjectId !== null) {
+    const subj = store.get(subjectId, { live: true });
+    if (subj) {
+      (subj.behavior.data as Record<string, unknown>).subjectSkin = skin;
+    }
+  }
+});
+
+hud.onQuantityChange((quantity) => {
+  const current = store.aliveCount;
+  const delta = quantity - current;
+  if (delta > 0) {
+    for (let i = 0; i < delta; i++) {
+      const entity = spawnOneCrowdMember({
+        rng,
+        width: viewport.state.width,
+        height: viewport.state.height,
+        manifest: manifest.entries.filter((e): e is EyeManifestEntry => e.rig === "eye"),
+        existing: (() => { const out: Entity[] = []; store.forEachAlive((e) => out.push(e)); return out; })(),
+        nextId: nextEntityId++,
+      });
+      if (entity) {
+        store.insert(entity);
+        installBehavior(entity);
+      }
+    }
+  } else if (delta < 0) {
+    for (let i = 0; i < -delta; i++) {
+      const alive: Entity[] = [];
+      store.forEachAlive((e) => { if (e.content.renderType === "eye") alive.push(e); });
+      const toRemove = pickCrowdMemberToDespawn(alive);
+      if (toRemove) {
+        behaviors.delete(toRemove.id);
+        blinkTimers.delete(toRemove.id);
+        pupilOffsets.delete(toRemove.id);
+        store.remove(toRemove.id);
+      }
+    }
+  }
+});
+
+hud.onRepelChange((multiplier) => {
+  repelMultiplier = multiplier;
+});
+
 const engine = new Engine();
 engine.events.on("tick", ({ phase, dt }) => {
   const nowMs = engine.getNow();
@@ -171,9 +230,9 @@ engine.events.on("tick", ({ phase, dt }) => {
       hoverEntityId: hoverEntity?.id ?? null,
       reducedMotion,
       nowMs: engine.getNow(),
-      hudMode: "eyes",
-      quantity: 20,
-      repelMultiplier: 1,
+      hudMode: currentMode,
+      quantity: store.aliveCount,
+      repelMultiplier,
       subject: subjectRenderInfo,
       chargeT: ringT,
       assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
@@ -346,7 +405,7 @@ engine.onTick("pre-physics", (dt) => {
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;
     if (e.lifecycle.dragged) return;
-    const force = FF.compute({ cursor, entityPos: e.physics.pos });
+    const force = FF.compute({ cursor, entityPos: e.physics.pos, repelMultiplier });
     const spring = computeSpring({
       pos: e.physics.pos,
       vel: e.physics.vel,
@@ -379,6 +438,38 @@ engine.onTick("pre-physics", (dt) => {
     if (e.content.renderType !== "eye") return;
     const beh = behaviors.get(e.id);
     if (beh) beh.tick(rng, engine.getNow());
+  });
+
+  // Look-at rotation: eyes rotate toward subject
+  if (subjectId !== null) {
+    const subj = store.get(subjectId, { live: true });
+    if (subj) {
+      store.forEachAlive((e) => {
+        if (e.content.renderType !== "eye") return;
+        e.physics.rotation = computeLookAtRotation(e.physics.pos, subj.physics.pos, currentMode);
+      });
+    }
+  }
+
+  // No-overlap separation
+  const crowdMembers: Array<{ id: number; pos: { x: number; y: number }; radiusPx: number }> = [];
+  store.forEachAlive((e) => {
+    if (e.content.renderType !== "eye") return;
+    const baseSizePx = (e.behavior.data as Record<string, unknown>).baseSizePx as number ?? 56;
+    crowdMembers.push({
+      id: e.id,
+      pos: e.physics.pos,
+      radiusPx: baseSizePx * e.physics.scale * 0.5,
+    });
+  });
+  const separationForces = accumulateSeparation(crowdMembers);
+  store.forEachAlive((e) => {
+    if (e.content.renderType !== "eye") return;
+    const f = separationForces.get(e.id);
+    if (f && (f.fx !== 0 || f.fy !== 0)) {
+      e.physics.vel.x += f.fx * dtSec;
+      e.physics.vel.y += f.fy * dtSec;
+    }
   });
 });
 

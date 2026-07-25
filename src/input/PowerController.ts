@@ -20,6 +20,7 @@ export class PowerController {
   private charging: { entityId: number; startMs: number } | null = null;
   private cooldownUntilMs = 0;
   private chargeProgress = 0;
+  private powerType: string = "laserBurn";
   private readonly worldAPI: PowerControllerArgs["worldAPI"];
   private readonly effectSystem: EffectSystem;
   private readonly targetRadius: number;
@@ -98,6 +99,10 @@ export class PowerController {
     this.chargeProgress = 0;
   }
 
+  setPower(powerType: string): void {
+    this.powerType = powerType;
+  }
+
   private fire(entityId: number, nowMs: number): void {
     const entity = this.worldAPI.getEntity(entityId);
     if (!entity || !entity.lifecycle.alive || entity.lifecycle.dying) {
@@ -106,7 +111,7 @@ export class PowerController {
       return;
     }
     this.effectSystem.start(
-      "laserBurn",
+      this.powerType,
       entityId,
       { x: entity.physics.pos.x, y: entity.physics.pos.y },
       nowMs,
