@@ -25,7 +25,7 @@ function makeCtx(): CanvasRenderingContext2D {
   return {
     save: noop, restore: noop, beginPath: noop, moveTo: noop, lineTo: noop, closePath: noop,
     arc: noop, fill: noop, stroke: noop, clip: noop, bezierCurveTo: noop,
-    fillRect: noop, clearRect: noop,
+    fillRect: noop, clearRect: noop, translate: noop, rotate: noop,
     fillStyle: "", strokeStyle: "", lineWidth: 0, globalAlpha: 1,
   } as unknown as CanvasRenderingContext2D;
 }
@@ -68,6 +68,10 @@ describe("render/Renderer subject branching (T35)", () => {
       cursorRingRadius: 0,
       cursorRingOpacity: 0,
       reducedMotion: false,
+      hudMode: "eyes",
+      quantity: 20,
+      repelMultiplier: 1,
+      nowMs: 0,
       subject: null,
       chargeT: 0,
       assistRadiusPx: 140,
@@ -91,6 +95,10 @@ describe("render/Renderer subject branching (T35)", () => {
       cursorRingRadius: 0,
       cursorRingOpacity: 0,
       reducedMotion: false,
+      hudMode: "eyes",
+      quantity: 20,
+      repelMultiplier: 1,
+      nowMs: 0,
       subject: { id: 2, pos: { x: 50, y: 50 }, sizePx: 96, colors: { suit: "slate", shirt: "cream", outline: "ink" }, scale: 1 },
       chargeT: 0,
       assistRadiusPx: 140,

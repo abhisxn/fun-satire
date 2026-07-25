@@ -1,6 +1,7 @@
 import { type Rng } from "../core/Rng";
 import type { EffectSystem, WorldAPI } from "../effects/EffectSystem";
 import { LASER_BURN } from "../effects/effectDefs/laserBurn";
+import type { HudPower } from "../hud/hudIcons";
 
 export type PowerControllerArgs = {
   rng: Rng;
@@ -20,6 +21,7 @@ export class PowerController {
   private charging: { entityId: number; startMs: number } | null = null;
   private cooldownUntilMs = 0;
   private chargeProgress = 0;
+  private powerType: HudPower = "laserBurn";
   private readonly worldAPI: PowerControllerArgs["worldAPI"];
   private readonly effectSystem: EffectSystem;
   private readonly targetRadius: number;
@@ -98,6 +100,10 @@ export class PowerController {
     this.chargeProgress = 0;
   }
 
+  setPower(powerType: HudPower): void {
+    this.powerType = powerType;
+  }
+
   private fire(entityId: number, nowMs: number): void {
     const entity = this.worldAPI.getEntity(entityId);
     if (!entity || !entity.lifecycle.alive || entity.lifecycle.dying) {
@@ -106,7 +112,7 @@ export class PowerController {
       return;
     }
     this.effectSystem.start(
-      "laserBurn",
+      this.powerType,
       entityId,
       { x: entity.physics.pos.x, y: entity.physics.pos.y },
       nowMs,

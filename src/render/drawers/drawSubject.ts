@@ -11,6 +11,7 @@ export type DrawSubjectInput = {
   scale: number;
   seed?: number;
   rotation?: number;
+  shadowIntensity?: number;
 };
 
 export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInput): void {
@@ -18,10 +19,10 @@ export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInp
   const skin = input.subjectSkin ?? "figure";
   switch (skin) {
     case "figure":
-      drawSubjectFigure(ctx, { pos: input.pos, sizePx: input.sizePx, colors: input.colors, scale: input.scale, rotation });
+      drawSubjectFigure(ctx, { pos: input.pos, sizePx: input.sizePx, colors: input.colors, scale: input.scale, rotation, shadowIntensity: input.shadowIntensity });
       return;
     case "lotus":
-      drawSubjectLotus(ctx, { pos: input.pos, sizePx: input.sizePx, colors: input.colors, scale: input.scale, rotation });
+      drawSubjectLotus(ctx, { pos: input.pos, sizePx: input.sizePx, colors: input.colors, scale: input.scale, rotation, shadowIntensity: input.shadowIntensity });
       return;
     default:
       throw new Error(`drawSubject: unknown subjectSkin "${skin as string}"`);

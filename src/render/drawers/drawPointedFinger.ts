@@ -14,6 +14,7 @@ export type DrawPointedFingerInput = {
   timeMs: number;
   id: number;
   rotation?: number;
+  shadowIntensity?: number;
 };
 
 const colorByName = (k: string): string => {
@@ -36,6 +37,7 @@ export function computePointShake(id: number, timeMs: number): number {
 export function drawPointedFinger(ctx: CanvasRenderingContext2D, input: DrawPointedFingerInput): void {
   const { pos, sizePx, timeMs, id } = input;
   const baseRotation = input.rotation ?? 0;
+  const shadowIntensity = input.shadowIntensity ?? 1;
   const shake = computePointShake(id, timeMs);
 
   ctx.save();
@@ -50,7 +52,7 @@ export function drawPointedFinger(ctx: CanvasRenderingContext2D, input: DrawPoin
     paperCutEdgePath(ctx, { cx: 0, cy: s * 0.22, rx: s * 0.24, ry: s * 0.2, seed: id * 5 + 2 });
     ctx.fillStyle = colorByName(input.colors.outline);
     ctx.fill();
-  });
+  }, shadowIntensity);
   paperCutEdgePath(ctx, { cx: 0, cy: s * 0.22, rx: s * 0.2, ry: s * 0.16, seed: id * 5 + 2 });
   ctx.fillStyle = colorByName(input.colors.shirt);
   ctx.fill();

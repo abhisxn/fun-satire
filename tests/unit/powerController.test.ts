@@ -148,4 +148,13 @@ describe("input/PowerController (T20)", () => {
     const ok = ctrl.tryPress(1, 100, 100, 2100);
     expect(ok).toBe(false);
   });
+
+  it("setPower changes the effect type passed to effectSystem.start", () => {
+    store.insert(makeEntity(1, 100, 100));
+    const spy = vi.spyOn(fx, "start");
+    ctrl.setPower("electricBurn");
+    ctrl.tryPress(1, 100, 100, 1000);
+    ctrl.tick({ cursor: { x: 100, y: 100, active: true }, dtMs: 600, nowMs: 1600 });
+    expect(spy).toHaveBeenCalledWith("electricBurn", 1, { x: 100, y: 100 }, 1600);
+  });
 });

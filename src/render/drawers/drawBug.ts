@@ -16,6 +16,7 @@ export type DrawBugInput = {
   timeMs: number;
   id: number;
   rotation?: number;
+  shadowIntensity?: number;
 };
 
 const colorByName = (k: string): string => {
@@ -50,6 +51,7 @@ function computeAntennaTwitch(id: number, timeMs: number): number {
 export function drawBug(ctx: CanvasRenderingContext2D, input: DrawBugInput): void {
   const { sizePx, timeMs, id } = input;
   const rotation = input.rotation ?? 0;
+  const shadowIntensity = input.shadowIntensity ?? 1;
   const jitter = computeScuttleJitter(id, timeMs);
   const twitch = computeAntennaTwitch(id, timeMs);
   const cx = input.pos.x + jitter.x;
@@ -91,7 +93,7 @@ export function drawBug(ctx: CanvasRenderingContext2D, input: DrawBugInput): voi
     paperCutEdgePath(ctx, { cx: 0, cy: 0, rx: bodyRx, ry: bodyRy, seed: id * 3 + 1 });
     ctx.fillStyle = colorByName(input.colors.outline);
     ctx.fill();
-  });
+  }, shadowIntensity);
   paperCutEdgePath(ctx, { cx: 0, cy: 0, rx: bodyRx * 0.86, ry: bodyRy * 0.82, seed: id * 3 + 1 });
   ctx.fillStyle = colorByName(input.colors.iris);
   ctx.fill();

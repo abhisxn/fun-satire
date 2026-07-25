@@ -2,6 +2,8 @@ import { EntityStore } from "../entities/EntityStore";
 import { ParticleSystem } from "../effects/ParticleSystem";
 import { EffectSystem } from "../effects/EffectSystem";
 import { drawEye } from "./drawers/drawEye";
+import { drawBug } from "./drawers/drawBug";
+import { drawPointedFinger } from "./drawers/drawPointedFinger";
 import { drawCursor, computeCursorState } from "./drawers/drawCursor";
 import { computeFieldLines, drawFieldLines } from "./drawers/drawFieldLines";
 import { computeGazeLines } from "./drawers/drawGazeLines";
@@ -11,6 +13,8 @@ import type { EyeBehavior, EyeBlinkTimer } from "../entities/behaviors/EyeBehavi
 import { PALETTE } from "../config/tokens";
 import type { Rng } from "../core/Rng";
 import type { SubjectColors } from "../content/schema";
+import type { HudMode } from "../hud/hudIcons";
+import type { Entity } from "../entities/Entity";
 
 export type RenderEntitiesOptions = {
   store: EntityStore;
@@ -33,6 +37,9 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   hoverEntityId: number | null;
   reducedMotion: boolean;
   nowMs: number;
+  hudMode: HudMode;
+  quantity: number;
+  repelMultiplier: number;
   subject?: {
     id: number;
     pos: { x: number; y: number };
@@ -44,6 +51,32 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   chargeT?: number;
   assistRadiusPx?: number;
 };
+
+export type CrowdDrawOrderMember = { id: number; pos: { x: number; y: number } };
+
+export function computeCrowdDrawOrder<T extends CrowdDrawOrderMember>(members: readonly T[]): T[] {
+  return [...members].sort((a, b) => a.pos.y - b.pos.y);
+}
+
+export const SHADOW_INTENSITY = Object.freeze({
+  baselineQuantity: 20,
+  baselineRepel: 1,
+  perQuantityUnit: 0.012,
+  perRepelUnit: -0.25,
+  min: 0.4,
+  max: 1.8,
+} as const);
+
+export type ShadowIntensityInput = { quantity: number; repelMultiplier: number };
+
+export function computeShadowIntensity(input: ShadowIntensityInput): number {
+  const { baselineQuantity, baselineRepel, perQuantityUnit, perRepelUnit, min, max } = SHADOW_INTENSITY;
+  const raw =
+    1 +
+    (input.quantity - baselineQuantity) * perQuantityUnit +
+    (input.repelMultiplier - baselineRepel) * perRepelUnit;
+  return Math.max(min, Math.min(max, raw));
+}
 
 const FIELD_MAX_LENGTH = 240;
 
@@ -62,11 +95,19 @@ export function renderFrame(opts: RenderFrameOptions): void {
   });
   drawFieldLines(ctx, lines, { stroke: PALETTE.slate, ink: PALETTE.ink });
 
-  const drawnIds = new Set<number>();
+  const shadowIntensity = computeShadowIntensity({ quantity: opts.quantity, repelMultiplier: opts.repelMultiplier });
   const eyePositions: Array<{ id: number; pos: { x: number; y: number } }> = [];
+  const crowdMembers: Entity[] = [];
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;
-    drawnIds.add(e.id);
+    crowdMembers.push(e);
+  });
+
+  const sortedCrowd = computeCrowdDrawOrder(
+    crowdMembers.map((e) => ({ id: e.id, pos: e.physics.pos, entity: e })),
+  );
+
+  for (const { entity: e } of sortedCrowd) {
     eyePositions.push({ id: e.id, pos: e.physics.pos });
     const data = e.behavior.data as Record<string, unknown>;
     const shapeVariant = (data.shapeVariant ?? "almond") as Parameters<typeof drawEye>[1]["shapeVariant"];
@@ -85,15 +126,58 @@ export function renderFrame(opts: RenderFrameOptions): void {
     });
     opts.pupilOffsets.set(e.id, { x: offset.x, y: offset.y });
 
-    drawEye(ctx, {
-      pos: e.physics.pos,
-      sizePx: ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1),
-      shapeVariant,
-      colors,
-      blinkScaleY,
-      pupilOffset: { x: offset.x, y: offset.y },
-    });
-  });
+    const rotation = e.physics.rotation ?? 0;
+    const sizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
+
+    switch (opts.hudMode) {
+      case "eyes": {
+        ctx.save();
+        ctx.translate(e.physics.pos.x, e.physics.pos.y);
+        ctx.rotate(rotation);
+        ctx.translate(-e.physics.pos.x, -e.physics.pos.y);
+        drawEye(ctx, {
+          pos: e.physics.pos,
+          sizePx,
+          shapeVariant,
+          colors,
+          blinkScaleY,
+          pupilOffset: { x: offset.x, y: offset.y },
+        });
+        ctx.restore();
+        break;
+      }
+      case "bugs":
+        drawBug(ctx, {
+          pos: e.physics.pos,
+          sizePx,
+          colors,
+          timeMs: opts.nowMs,
+          id: e.id,
+          rotation,
+          shadowIntensity,
+        });
+        break;
+      case "pointedFinger": {
+        const fingerColors: SubjectColors = {
+          outline: colors.outline,
+          shirt: colors.sclera,
+          suit: colors.iris === "cream" ? "slate" : colors.iris,
+        };
+        drawPointedFinger(ctx, {
+          pos: e.physics.pos,
+          sizePx,
+          colors: fingerColors,
+          timeMs: opts.nowMs,
+          id: e.id,
+          rotation,
+          shadowIntensity,
+        });
+        break;
+      }
+      default:
+        throw new Error(`renderFrame: unknown hudMode "${opts.hudMode as string}"`);
+    }
+  }
 
   if (opts.subject) {
     const gazeLines = computeGazeLines({
@@ -108,6 +192,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
       sizePx: opts.subject.sizePx,
       colors: opts.subject.colors,
       scale: opts.subject.scale,
+      shadowIntensity,
     });
   }
 
