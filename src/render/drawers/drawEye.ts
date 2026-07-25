@@ -1,6 +1,7 @@
 import { PALETTE } from "../../config/tokens";
 import type { ShapeVariant } from "../../content/schema";
 import type { EyeColors } from "../../content/schema";
+import { withPaperCutShadow } from "../paperCut";
 
 export const EYE_DRAW = Object.freeze({
   outlineStrokePx: 1.5,
@@ -113,7 +114,9 @@ export function drawEye(ctx: CanvasRenderingContext2D, input: DrawEyeInput): voi
   ctx.save();
   almondPath(ctx, cx, cy, rx, ry, blinkScaleY);
   ctx.fillStyle = colorByName(input.colors.outline);
-  ctx.fill();
+  withPaperCutShadow(ctx, () => {
+    ctx.fill();
+  });
   almondPath(ctx, cx, cy, rx - 1.5, ry - 1.5, blinkScaleY);
   ctx.fillStyle = colorByName(input.colors.sclera);
   ctx.fill();
