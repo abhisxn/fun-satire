@@ -72,6 +72,10 @@
   transform: scale(0.96);
 }
 
+.subject-drawer[data-open="true"] .subject-drawer__card:active {
+  transform: scale(0.96);
+}
+
 .subject-drawer__card-thumb {
   width: 32px;
   height: 32px;
