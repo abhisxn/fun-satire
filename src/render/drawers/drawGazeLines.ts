@@ -29,7 +29,7 @@ export function computeGazeLines(input: GazeLineInput): FieldLine[] {
     const distSq = dx * dx + dy * dy;
     if (distSq > radiusSq) continue;
     const dist = Math.sqrt(distSq);
-    const proximity = 1 - dist / assistRadiusPx;
+    const proximity = assistRadiusPx > 0 ? 1 - dist / assistRadiusPx : 1;
     const opacity = Math.min(
       1,
       GAZE_LINE.baseOpacity + proximity * GAZE_LINE.proximityWeight + chargeT * GAZE_LINE.chargeWeight,

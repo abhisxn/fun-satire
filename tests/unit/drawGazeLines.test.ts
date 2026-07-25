@@ -44,4 +44,36 @@ describe("render/drawers/drawGazeLines computeGazeLines (T31)", () => {
     });
     expect(lines[0].opacity).toBeLessThanOrEqual(1);
   });
+
+  it("does not produce NaN opacity when assistRadiusPx is 0 and an eye is exactly at subjectPos", () => {
+    const lines = computeGazeLines({
+      eyes: [{ id: 1, pos: { x: 0, y: 0 } }],
+      subjectPos: { x: 0, y: 0 },
+      assistRadiusPx: 0,
+      chargeT: 0,
+    });
+    expect(lines.length).toBe(1);
+    expect(Number.isFinite(lines[0].opacity)).toBe(true);
+  });
+
+  it("does not produce NaN opacity when an eye is exactly at subjectPos with a positive assistRadiusPx", () => {
+    const lines = computeGazeLines({
+      eyes: [{ id: 1, pos: { x: 0, y: 0 } }],
+      subjectPos: { x: 0, y: 0 },
+      assistRadiusPx: 100,
+      chargeT: 0,
+    });
+    expect(lines.length).toBe(1);
+    expect(Number.isFinite(lines[0].opacity)).toBe(true);
+  });
+
+  it("returns an empty array when there are no eyes", () => {
+    const lines = computeGazeLines({
+      eyes: [],
+      subjectPos: { x: 0, y: 0 },
+      assistRadiusPx: 100,
+      chargeT: 0,
+    });
+    expect(lines).toEqual([]);
+  });
 });
