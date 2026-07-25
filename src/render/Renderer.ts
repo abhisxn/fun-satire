@@ -39,6 +39,7 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
     sizePx: number;
     colors: SubjectColors;
     scale: number;
+    subjectSkin?: import("../content/schema").SubjectSkin;
   } | null;
   chargeT?: number;
   assistRadiusPx?: number;
