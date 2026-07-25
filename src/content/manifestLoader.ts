@@ -4,6 +4,8 @@ import type {
   Manifest,
   ManifestEntry,
   ManifestLoadIssue,
+  EyeManifestEntry,
+  SubjectManifestEntry,
 } from "./schema";
 
 const SHAPE_VARIANTS = new Set([
@@ -41,9 +43,16 @@ const validateEntry = (raw: unknown, index: number, issues: ManifestLoadIssue[])
     issues.push({ path: `${base}/id`, message: "must match /^[a-z0-9-_]{2,32}$/" });
     return null;
   }
-  if (r.rig !== "eye") {
-    issues.push({ path: `${base}/rig`, message: `must equal "eye"` });
+  if (r.rig === "subject") {
+    return validateSubjectEntry(r, base, issues);
   }
+  if (r.rig !== "eye") {
+    issues.push({ path: `${base}/rig`, message: `must equal "eye" or "subject"` });
+  }
+  return validateEyeEntry(r, base, issues);
+};
+
+const validateEyeEntry = (r: Record<string, unknown>, base: string, issues: ManifestLoadIssue[]): EyeManifestEntry | null => {
   if (r.renderType !== "eye") {
     issues.push({ path: `${base}/renderType`, message: `must equal "eye"` });
   }
@@ -99,7 +108,39 @@ const validateEntry = (raw: unknown, index: number, issues: ManifestLoadIssue[])
     });
   }
 
-  return r as unknown as ManifestEntry;
+  return r as unknown as EyeManifestEntry;
+};
+
+const SUIT_COLORS = new Set(["slate", "sage", "ink"]);
+
+const validateSubjectEntry = (
+  r: Record<string, unknown>,
+  base: string,
+  issues: ManifestLoadIssue[],
+): SubjectManifestEntry | null => {
+  if (r.renderType !== "subject") {
+    issues.push({ path: `${base}/renderType`, message: 'renderType must equal "subject"' });
+  }
+  const visual = (r.visual as Record<string, unknown> | undefined) ?? {};
+  if (visual.styleGuardrail !== "flat-illustrated") {
+    issues.push({ path: `${base}/visual/styleGuardrail`, message: 'styleGuardrail must equal "flat-illustrated"' });
+  }
+  const colors = (r.colors as Record<string, unknown> | undefined) ?? {};
+  if (typeof colors.suit !== "string" || !SUIT_COLORS.has(colors.suit)) {
+    issues.push({ path: `${base}/colors/suit`, message: 'suit must be "slate", "sage", or "ink"' });
+  }
+  if (colors.shirt !== "cream") {
+    issues.push({ path: `${base}/colors/shirt`, message: 'shirt must equal "cream"' });
+  }
+  if (colors.outline !== "ink") {
+    issues.push({ path: `${base}/colors/outline`, message: 'outline must equal "ink"' });
+  }
+  const physics = (r.physics as Record<string, unknown> | undefined) ?? {};
+  const baseSizePx = typeof physics.baseSizePx === "number" ? physics.baseSizePx : NaN;
+  between(baseSizePx, 24, 160, `${base}/physics/baseSizePx`, issues);
+
+  if (issues.length > 0) return null;
+  return r as unknown as SubjectManifestEntry;
 };
 
 export function validateManifest(raw: unknown): Manifest {

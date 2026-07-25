@@ -30,7 +30,7 @@ export type EyeBehaviorConfig = {
   pupilTrackMs: number;
 };
 
-export type ManifestEntry = {
+export type EyeManifestEntry = {
   id: string;
   rig: "eye";
   renderType: "eye";
@@ -42,6 +42,25 @@ export type ManifestEntry = {
   physics: EyePhysics;
   behavior: EyeBehaviorConfig;
 };
+
+export type SubjectManifestEntry = {
+  id: string;
+  rig: "subject";
+  renderType: "subject";
+  visual: {
+    styleGuardrail: "flat-illustrated";
+  };
+  colors: {
+    suit: "slate" | "sage" | "ink";
+    shirt: "cream";
+    outline: "ink";
+  };
+  physics: {
+    baseSizePx: number;
+  };
+};
+
+export type ManifestEntry = EyeManifestEntry | SubjectManifestEntry;
 
 export type Manifest = {
   schemaVersion: "1.0.0";

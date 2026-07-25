@@ -1,6 +1,6 @@
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import { type Rng } from "../core/Rng";
-import type { ManifestEntry, EyeColors } from "../content/schema";
+import type { EyeManifestEntry, EyeColors } from "../content/schema";
 
 export const ENTITY_FACTORY = Object.freeze({
   minSeparationPx: 64,
@@ -12,7 +12,7 @@ export type EntityFactoryOptions = {
   width: number;
   height: number;
   count?: number;
-  manifest: readonly ManifestEntry[];
+  manifest: readonly EyeManifestEntry[];
 };
 
 export type FactoryResult = {
@@ -20,9 +20,9 @@ export type FactoryResult = {
   rejected: number;
 };
 
-const paletteRef = (entry: ManifestEntry): EyeColors => entry.colors;
+const paletteRef = (entry: EyeManifestEntry): EyeColors => entry.colors;
 
-const jitterScale = (entry: ManifestEntry, rng: Rng): number => {
+const jitterScale = (entry: EyeManifestEntry, rng: Rng): number => {
   if (entry.physics.jitterScale !== undefined) {
     const j = entry.physics.jitterScale;
     return 1 + rng.range(-1, 1) * (j - 1) * 0.5;
@@ -32,7 +32,7 @@ const jitterScale = (entry: ManifestEntry, rng: Rng): number => {
 
 const buildEntity = (
   id: EntityId,
-  entry: ManifestEntry,
+  entry: EyeManifestEntry,
   pos: Vec2,
   scale: number,
 ): Entity => ({
@@ -68,7 +68,7 @@ const overlapsAny = (pos: Vec2, list: Entity[], sepSq: number): boolean => {
 
 const samplePos = (
   rng: Rng,
-  entry: ManifestEntry,
+  entry: EyeManifestEntry,
   width: number,
   height: number,
 ): Vec2 => {

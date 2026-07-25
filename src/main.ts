@@ -10,6 +10,7 @@ import { EntityStore } from "./entities/EntityStore";
 import { spawnEyes } from "./entities/EntityFactory";
 import { StateMachine, EyeBehavior, EyeBlinkTimer } from "./entities/behaviors";
 import { loadManifestFromText } from "./content/manifestLoader";
+import type { EyeManifestEntry } from "./content/schema";
 import eyesRoster from "./content/manifests/eyes.roster.json";
 import { PointerTracker } from "./input/PointerTracker";
 import { DragController } from "./input/DragController";
@@ -144,7 +145,7 @@ const spawnInitialEyes = (): void => {
     rng,
     width: viewport.state.width,
     height: viewport.state.height,
-    manifest: manifest.entries,
+    manifest: manifest.entries as EyeManifestEntry[],
   });
   for (const e of entities) {
     store.insert(e);
