@@ -130,3 +130,116 @@
     transition: none;
   }
 }
+
+.hud-placard__mode-icon,
+.hud-placard__skin-icon {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 160ms var(--ease-protest);
+}
+
+.hud-placard__mode-icon:hover,
+.hud-placard__skin-icon:hover {
+  transform: scale(1.12);
+}
+
+.hud-placard__skin-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.hud-placard__qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+}
+
+.hud-placard__qty-inc,
+.hud-placard__qty-dec {
+  width: 18px;
+  height: 18px;
+  border: 1.4px solid var(--color-ink);
+  background: var(--color-cream);
+  color: var(--color-ink);
+  border-radius: 2px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: transform 120ms var(--ease-protest), background 120ms var(--ease-protest);
+}
+
+.hud-placard__qty-inc:hover,
+.hud-placard__qty-dec:hover {
+  transform: translateY(-1px);
+  background: var(--color-coral);
+}
+
+.hud-placard__qty-value {
+  min-width: 1.6em;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.hud-placard__repel-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+}
+
+.hud-placard__repel-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.hud-placard__repel-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 64px;
+  height: 3px;
+  background: var(--color-ink);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.hud-placard__repel-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-coral);
+  border: 1.4px solid var(--color-ink);
+  transition: transform 120ms var(--ease-protest);
+}
+
+.hud-placard__repel-input::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.hud-placard__repel-input::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-coral);
+  border: 1.4px solid var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-placard__mode-icon,
+  .hud-placard__skin-icon,
+  .hud-placard__qty-inc,
+  .hud-placard__qty-dec,
+  .hud-placard__repel-input::-webkit-slider-thumb {
+    transition: none;
+  }
+}
