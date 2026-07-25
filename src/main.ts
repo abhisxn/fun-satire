@@ -38,6 +38,7 @@ import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
 import { DURATION } from "./config/tokens";
 import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
+import type { SubjectSkin } from "./hud/subjectSkinRegistry";
 import { computeLookAtRotation } from "./physics/LookAt";
 import { accumulateSeparation } from "./physics/ForceField";
 import type { Entity, EntityId } from "./entities/Entity";
@@ -130,6 +131,7 @@ new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
+let activeSubjectSkin: SubjectSkin = { kind: "illustrated", id: "figure" };
 
 hud.onModeChange((mode) => {
   const power = MODE_POWER_MAP[mode];
@@ -140,11 +142,20 @@ hud.onModeChange((mode) => {
 });
 
 hud.onSubjectSkinChange((skin) => {
-  if (subjectId !== null) {
-    const subj = store.get(subjectId, { live: true });
-    if (subj) {
-      (subj.behavior.data as Record<string, unknown>).subjectSkin = skin;
-    }
+  activeSubjectSkin = skin;
+  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
+  if (subj) {
+    (subj.behavior.data as Record<string, unknown>).subjectSkin = skin;
+  }
+  hud.setActiveSubjectSkin(skin);
+});
+
+hud.onSubjectResize((scale) => {
+  if (activeSubjectSkin.kind !== "text") return;
+  activeSubjectSkin = { ...activeSubjectSkin, scale };
+  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
+  if (subj) {
+    (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
   }
 });
 
@@ -231,6 +242,7 @@ engine.events.on("tick", ({ phase, dt }) => {
           sizePx: (subjEntity.behavior.data as { baseSizePx: number }).baseSizePx,
           colors: (subjEntity.behavior.data as { colors: SubjectColors }).colors,
           scale: subjEntity.physics.scale,
+          subjectSkin: (subjEntity.behavior.data as { subjectSkin?: SubjectSkin }).subjectSkin,
         }
       : null;
     renderFrame({
@@ -283,6 +295,7 @@ const spawnSubjectAt = (pos: { x: number; y: number }, nowMs: number): void => {
   store.insert(entity);
   subjectId = entity.id;
   subjectSpawnedAtMs = nowMs;
+  (entity.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
 };
 
 const worldAPI = {
