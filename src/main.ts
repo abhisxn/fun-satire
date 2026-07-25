@@ -121,7 +121,7 @@ const manifest = loadManifestFromText(JSON.stringify(eyesRoster));
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 
-const hud = new Hud(hudRoot);
+const hud = new Hud(hudRoot, stage);
 hud.setMode("eyes");
 hud.setPower("laserBurn");
 
@@ -139,7 +139,7 @@ hud.onModeChange((mode) => {
   startAmbientForMode(audioEngine, mode);
 });
 
-hud.onSkinChange((skin) => {
+hud.onSubjectSkinChange((skin) => {
   if (subjectId !== null) {
     const subj = store.get(subjectId, { live: true });
     if (subj) {

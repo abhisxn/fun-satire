@@ -1,3 +1,5 @@
+import { PALETTE } from "../config/tokens";
+
 export type HudMode = "eyes" | "bugs" | "pointedFinger";
 export type HudSkin = "figure" | "lotus";
 export type HudPower = "laserBurn" | "electricBurn" | "bugEat";
@@ -9,6 +11,7 @@ export type HudIcons = {
   modeIcon: Record<HudMode, string>;
   skinIcon: Record<HudSkin, string>;
   powerIcon: Record<HudPower, string>;
+  subjectToggleIcon: string;
 };
 
 /**
@@ -47,4 +50,5 @@ export const hudIcons: HudIcons = {
     bugEat:
       '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12 A8 8 0 1 1 12 20 L4 12 Z" fill="#6D7A5E" stroke="#2A2420" stroke-width="1.2"/></svg>',
   },
+  subjectToggleIcon: `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="${PALETTE.ink}" stroke-width="1.4"/><path d="M4 9 H20 M9 9 V20" stroke="${PALETTE.ink}" stroke-width="1.4"/></svg>`,
 };
