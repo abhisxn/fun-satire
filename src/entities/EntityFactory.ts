@@ -1,6 +1,6 @@
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import { type Rng } from "../core/Rng";
-import type { EyeManifestEntry, EyeColors, SubjectManifestEntry, ManifestEntry } from "../content/schema";
+import type { EyeManifestEntry, EyeColors, SubjectManifestEntry } from "../content/schema";
 
 export const ENTITY_FACTORY = Object.freeze({
   minSeparationPx: 64,
@@ -57,7 +57,7 @@ const buildEntity = (
   lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
 });
 
-const overlapsAny = (pos: Vec2, list: Entity[], sepSq: number): boolean => {
+const overlapsAny = (pos: Vec2, list: readonly Entity[], sepSq: number): boolean => {
   for (const e of list) {
     const dx = e.physics.pos.x - pos.x;
     const dy = e.physics.pos.y - pos.y;
@@ -148,7 +148,7 @@ export type SpawnOneCrowdMemberOptions = {
   rng: Rng;
   width: number;
   height: number;
-  manifest: readonly ManifestEntry[];
+  manifest: readonly EyeManifestEntry[];
   existing: readonly Entity[];
   nextId: EntityId;
 };
