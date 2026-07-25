@@ -156,9 +156,7 @@
   transform: scale(1.12);
 }
 
-.hud-placard__mode-icon:active,
-.hud-placard__qty-inc:active,
-.hud-placard__qty-dec:active {
+.hud-placard__mode-icon:active {
   transform: scale(0.9);
 }
 
@@ -194,6 +192,11 @@
 .hud-placard__qty-dec:hover {
   transform: translateY(-1px);
   background: var(--color-coral);
+}
+
+.hud-placard__qty-inc:active,
+.hud-placard__qty-dec:active {
+  transform: scale(0.9);
 }
 
 .hud-placard__qty-value {
