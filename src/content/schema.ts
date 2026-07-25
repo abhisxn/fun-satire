@@ -1,5 +1,7 @@
 import type { PaletteKey } from "../config/tokens";
 
+export type SubjectSkin = "figure" | "lotus";
+
 export type ShapeVariant = "almond" | "round" | "hooded" | "wide" | "narrow";
 
 export type IrisColor = Extract<PaletteKey, "slate" | "sage"> | "cream";
@@ -41,6 +43,7 @@ export type EyeManifestEntry = {
   colors: EyeColors;
   physics: EyePhysics;
   behavior: EyeBehaviorConfig;
+  subjectSkin?: SubjectSkin;
 };
 
 export type SubjectColors = {
@@ -62,6 +65,7 @@ export type SubjectManifestEntry = {
   };
   colors: SubjectColors;
   physics: SubjectPhysics;
+  subjectSkin?: SubjectSkin;
 };
 
 export type ManifestEntry = EyeManifestEntry | SubjectManifestEntry;
