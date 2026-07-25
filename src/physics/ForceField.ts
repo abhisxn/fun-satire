@@ -9,6 +9,7 @@ export type ForceFieldInput = {
   cursor: { x: number; y: number; active: boolean };
   entityPos: { x: number; y: number };
   entityScale?: number;
+  repelMultiplier?: number;
 };
 
 export type ForceFieldResult = {
@@ -45,7 +46,8 @@ export function compute(input: ForceFieldInput): ForceFieldResult {
   if (r < EPS) {
     return { fx: 0, fy: 0, magnitude: 0, dirX: 0, dirY: 0 };
   }
-  const mag = falloff(r);
+  const multiplier = Math.max(0, input.repelMultiplier ?? 1);
+  const mag = falloff(r) * multiplier;
   const inv = 1 / r;
   return {
     fx: mag * dx * inv,
@@ -87,4 +89,51 @@ export function sampleAlongRay(
     out.push({ t, strength: falloff(r) / FORCEFIELD.repulsionPeak });
   }
   return out;
+}
+
+export const SEPARATION = Object.freeze({
+  strength: 900,
+  minStrengthFraction: 0.15,
+} as const);
+
+export type SeparationMember = { pos: { x: number; y: number }; radiusPx: number };
+export type SeparationForce = { fx: number; fy: number };
+
+export function computeSeparation(self: SeparationMember, other: SeparationMember): SeparationForce {
+  const dx = self.pos.x - other.pos.x;
+  const dy = self.pos.y - other.pos.y;
+  const dist = Math.hypot(dx, dy);
+  const minDist = self.radiusPx + other.radiusPx;
+  if (dist < EPS) {
+    return { fx: SEPARATION.strength * SEPARATION.minStrengthFraction, fy: 0 };
+  }
+  if (dist >= minDist) return { fx: 0, fy: 0 };
+  const overlap = minDist - dist;
+  const strengthFrac = Math.max(SEPARATION.minStrengthFraction, overlap / minDist);
+  const mag = SEPARATION.strength * strengthFrac;
+  return { fx: (dx / dist) * mag, fy: (dy / dist) * mag };
+}
+
+export type SeparationEntry = SeparationMember & { id: number };
+export type AccumulateSeparationOptions = { strengthMultiplier?: number };
+
+export function accumulateSeparation(
+  members: readonly SeparationEntry[],
+  opts?: AccumulateSeparationOptions,
+): Map<number, SeparationForce> {
+  const strengthMultiplier = opts?.strengthMultiplier ?? 1;
+  const forces = new Map<number, SeparationForce>();
+  for (const m of members) forces.set(m.id, { fx: 0, fy: 0 });
+  for (let i = 0; i < members.length; i++) {
+    for (let j = i + 1; j < members.length; j++) {
+      const a = members[i]!;
+      const b = members[j]!;
+      const f = computeSeparation(a, b);
+      const fa = forces.get(a.id)!;
+      const fb = forces.get(b.id)!;
+      forces.set(a.id, { fx: fa.fx + f.fx * strengthMultiplier, fy: fa.fy + f.fy * strengthMultiplier });
+      forces.set(b.id, { fx: fb.fx - f.fx * strengthMultiplier, fy: fb.fy - f.fy * strengthMultiplier });
+    }
+  }
+  return forces;
 }
