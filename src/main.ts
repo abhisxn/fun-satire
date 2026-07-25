@@ -3,6 +3,12 @@ import "@fontsource/space-mono/400.css";
 import "@fontsource/space-mono/700.css";
 import "./styles/global.css";
 import "./hud/hud.css";
+import "./hud/audioControl.css";
+import "./audio/cues/hudCues";
+import "./audio/cues/chargeRespawnCues";
+import "./audio/cues/laserBurnCues";
+import "./audio/cues/electricBurnCues";
+import "./audio/cues/bugEatCues";
 
 import { Engine } from "./core/Engine";
 import { Rng } from "./core/Rng";
@@ -21,6 +27,8 @@ import { ParticleSystem } from "./effects/ParticleSystem";
 import { EffectSystem, EASE_PROTEST } from "./effects/EffectSystem";
 import { RespawnScheduler } from "./effects/RespawnScheduler";
 import { laserBurnEffect } from "./effects/effectDefs/laserBurn";
+import { electricBurnEffect } from "./effects/effectDefs/electricBurn";
+import { bugEatEffect } from "./effects/effectDefs/bugEat";
 import { Hud } from "./hud/Hud";
 import { createViewport } from "./render/CanvasUtils";
 import { renderFrame } from "./render/Renderer";
@@ -33,6 +41,9 @@ import { computeLookAtRotation } from "./physics/LookAt";
 import { accumulateSeparation } from "./physics/ForceField";
 import type { Entity, EntityId } from "./entities/Entity";
 import { AudioEngine } from "./audio/AudioEngine";
+import { AudioControl } from "./hud/AudioControl";
+import { startAmbientForMode, startTenseFiller } from "./audio/ambientBeds";
+import { startMusicBed } from "./audio/musicBed";
 
 type LifecycleState = "alive" | "dying";
 type LocomotionState = "idle" | "flee" | "dragged";
@@ -114,6 +125,7 @@ hud.setMode("eyes");
 hud.setPower("laserBurn");
 
 const audioEngine = new AudioEngine(new AudioContext());
+new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
@@ -123,6 +135,7 @@ hud.onModeChange((mode) => {
   powerCtrl.setPower(power);
   hud.setPower(power);
   currentMode = mode;
+  startAmbientForMode(audioEngine, mode);
 });
 
 hud.onSkinChange((skin) => {
@@ -291,6 +304,8 @@ const worldAPI = {
 
 const effects = new EffectSystem(particles, rng, worldAPI, audioEngine);
 effects.register(laserBurnEffect);
+effects.register(electricBurnEffect);
+effects.register(bugEatEffect);
 
 const respawn = new RespawnScheduler({ rng, width: viewport.state.width, height: viewport.state.height });
 
@@ -490,3 +505,11 @@ nextEntityId = Math.max(0, ...store.ids()) + 1;
 subjectRespawnAtMs = engine.getNow();
 pointer.attach();
 engine.start();
+
+const unlockAudio = (): void => {
+  audioEngine.unlock();
+  void startMusicBed(audioEngine, "/audio/music-bed.mp3");
+  startTenseFiller(audioEngine);
+  startAmbientForMode(audioEngine, currentMode);
+};
+document.addEventListener("pointerdown", unlockAudio, { once: true });
