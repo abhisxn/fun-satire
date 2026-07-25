@@ -132,21 +132,25 @@ hud.onSkinChange((skin) => {
 });
 
 hud.onQuantityChange((quantity) => {
-  const current = store.aliveCount;
-  const delta = quantity - current;
+  let eyeCount = 0;
+  store.forEachAlive((e) => { if (e.content.renderType === "eye") eyeCount++; });
+  const delta = quantity - eyeCount;
   if (delta > 0) {
+    const existing: Entity[] = [];
+    store.forEachAlive((e) => { if (e.content.renderType === "eye") existing.push(e); });
     for (let i = 0; i < delta; i++) {
       const entity = spawnOneCrowdMember({
         rng,
         width: viewport.state.width,
         height: viewport.state.height,
         manifest: manifest.entries.filter((e): e is EyeManifestEntry => e.rig === "eye"),
-        existing: (() => { const out: Entity[] = []; store.forEachAlive((e) => out.push(e)); return out; })(),
+        existing,
         nextId: nextEntityId++,
       });
       if (entity) {
         store.insert(entity);
         installBehavior(entity);
+        existing.push(entity);
       }
     }
   } else if (delta < 0) {
@@ -231,7 +235,7 @@ engine.events.on("tick", ({ phase, dt }) => {
       reducedMotion,
       nowMs: engine.getNow(),
       hudMode: currentMode,
-      quantity: store.aliveCount,
+      quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
       repelMultiplier,
       subject: subjectRenderInfo,
       chargeT: ringT,
