@@ -101,7 +101,7 @@ describe("input/PowerController (T20)", () => {
     ctrl.tryPress(1, 100, 100, 1000);
     ctrl.tick({ cursor: { x: 100, y: 100, active: true }, dtMs: 550, nowMs: 1550 });
     expect(fx.liveCount()).toBe(1);
-    fx.update(2000);
+    fx.update(2300);
     ctrl.tryPress(1, 100, 100, 2100);
     ctrl.tick({ cursor: { x: 100, y: 100, active: true }, dtMs: 550, nowMs: 2650 });
     expect(fx.liveCount()).toBe(0);

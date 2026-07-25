@@ -4,8 +4,10 @@ import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 export type EffectEasing = (t: number) => number;
 
 export type EffectStage = {
+  id?: string;
   durationMs: number;
   easing: EffectEasing;
+  visual?: Record<string, number | string>;
   onStart?: (ctx: EffectCtx) => void;
   update: (ctx: EffectCtx, t: number) => void;
 };
@@ -148,6 +150,10 @@ export class EffectSystem {
 
   liveEffects(): readonly ActiveEffect[] {
     return this.effects;
+  }
+
+  getDef(defId: string): EffectDef | undefined {
+    return this.defs.get(defId);
   }
 
   reset(): void {
