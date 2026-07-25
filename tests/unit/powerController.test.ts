@@ -36,7 +36,7 @@ describe("input/PowerController (T20)", () => {
         if (e) e.lifecycle.respawnAt = 1000 + delayMs;
       },
     };
-    fx = new EffectSystem(ps, new Rng(1), worldAPI);
+    fx = new EffectSystem(ps, new Rng(1), worldAPI, { play: () => {} });
     fx.register(laserBurnEffect);
     ctrl = new PowerController({ rng: new Rng(1), worldAPI, effectSystem: fx, targetRadius: 50, cooldownMs: 800 });
   });

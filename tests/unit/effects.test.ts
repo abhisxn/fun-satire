@@ -92,7 +92,7 @@ describe("effects/EffectSystem (T18)", () => {
       getEntity: (id: number) => store.get(id, { live: true }),
       startRespawn: (_id: number, _delayMs: number) => undefined,
     };
-    const sys = new EffectSystem(ps, new Rng(1), world);
+    const sys = new EffectSystem(ps, new Rng(1), world, { play: () => {} });
     const started: string[] = [];
     sys.register({
       id: "test.twoStage",
@@ -130,7 +130,7 @@ describe("effects/EffectSystem (T18)", () => {
     const sys = new EffectSystem(ps, new Rng(0), {
       getEntity: (id) => store.get(id, { live: true }),
       startRespawn: () => undefined,
-    });
+    }, { play: () => {} });
     sys.register({
       id: "noop",
       stages: [
@@ -158,6 +158,7 @@ describe("effects/EffectSystem (T18)", () => {
         getEntity: (id) => store.get(id, { live: true }),
         startRespawn: () => undefined,
       },
+      { play: () => {} },
     );
     expect(sys.start("missing", 1, { x: 0, y: 0 }, 0)).toBeNull();
   });
@@ -169,7 +170,7 @@ describe("effects/EffectSystem (T18)", () => {
     const sys = new EffectSystem(ps, new Rng(1), {
       getEntity: (id) => store.get(id, { live: true }),
       startRespawn: () => undefined,
-    });
+    }, { play: () => {} });
     sys.register({
       id: "burst",
       stages: [

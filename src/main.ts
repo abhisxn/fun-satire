@@ -32,6 +32,7 @@ import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
 import { computeLookAtRotation } from "./physics/LookAt";
 import { accumulateSeparation } from "./physics/ForceField";
 import type { Entity, EntityId } from "./entities/Entity";
+import { AudioEngine } from "./audio/AudioEngine";
 
 type LifecycleState = "alive" | "dying";
 type LocomotionState = "idle" | "flee" | "dragged";
@@ -111,6 +112,8 @@ const viewport = createViewport(stage);
 const hud = new Hud(hudRoot);
 hud.setMode("eyes");
 hud.setPower("laserBurn");
+
+const audioEngine = new AudioEngine(new AudioContext());
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
@@ -286,7 +289,7 @@ const worldAPI = {
   },
 };
 
-const effects = new EffectSystem(particles, rng, worldAPI);
+const effects = new EffectSystem(particles, rng, worldAPI, audioEngine);
 effects.register(laserBurnEffect);
 
 const respawn = new RespawnScheduler({ rng, width: viewport.state.width, height: viewport.state.height });
