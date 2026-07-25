@@ -1,12 +1,12 @@
 // src/render/drawers/drawSubject.ts
-import type { SubjectColors, SubjectSkin } from "../../content/schema";
+import type { SubjectColors, IllustratedSubjectId } from "../../content/schema";
 import { drawSubjectFigure } from "./drawSubjectFigure";
 import { drawSubjectLotus } from "./drawSubjectLotus";
 
 export type DrawSubjectInput = {
   pos: { x: number; y: number };
   sizePx: number;
-  subjectSkin?: SubjectSkin;
+  subjectSkin?: IllustratedSubjectId;
   colors: SubjectColors;
   scale: number;
   seed?: number;
