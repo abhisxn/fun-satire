@@ -1,13 +1,13 @@
 # Fun Satire
 
-An interactive canvas toy: a crowd of cursor-reactive "eyes"/"subjects" that flee, drag, and get burned/zapped/eaten by cursor-armed powers, rendered in a hand-cut paper-cutout style with a DOM HUD.
+An interactive canvas toy: a crowd of cursor-reactive creatures in three modes (eyes, bugs, pointedFinger) that flee, drag, and get burned/zapped/eaten by cursor-armed powers, rendered in a hand-cut paper-cutout style with a DOM HUD.
 
 Built as a physics-driven satire toy — content-as-data (JSON manifests) drives which creatures exist, so new subjects are additive, not engine changes. See [ADR 001](docs/superpowers/system-architecture.md#adr-001-component-as-data-registry-pattern) for why.
 
 ## Status
 
 - **v1 (shipped)**: eyes mode, laser burn power, core physics loop, DOM HUD, cross-browser matrix. Design/plan docs archived in [docs/superpowers/archive/](docs/superpowers/archive/).
-- **v2 (in progress)**: subject browser + premium HUD, audio/effects engineering, mode-locked power pairing, crowd quantity/repel controls. Active docs in [docs/superpowers/specs/](docs/superpowers/specs/) and [docs/superpowers/plans/](docs/superpowers/plans/).
+- **v2 (shipped)**: three crowd modes (eyes/bugs/pointedFinger), mode-locked power pairing (eyes→laserBurn, bugs→bugEat, pointedFinger→electricBurn), no-overlap crowd separation, look-at rotation, subject skins (figure/lotus), quantity/repel HUD controls, laserBurn beam/glow polish, electricBurn and bugEat effect test coverage.
 
 ## Quick start
 

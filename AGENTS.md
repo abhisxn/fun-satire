@@ -1,6 +1,6 @@
 # Fun Satire — Agent Instructions
 
-Interactive canvas app: cursor-driven "eyes"/"subjects" crowd with physics-based force fields, staged burn/destroy effects, and a DOM HUD. Vite + TypeScript, vitest for tests.
+Interactive canvas app: cursor-driven crowd with three modes (eyes, bugs, pointedFinger), physics-based force fields with no-overlap separation, look-at rotation, staged burn/destroy effects, and a DOM HUD with mode/skin/quantity/repel controls. Vite + TypeScript, vitest for tests.
 
 **Full architecture, ADRs, and data-flow diagram**: [docs/superpowers/system-architecture.md](docs/superpowers/system-architecture.md) — read that before making structural changes. This file only covers conventions and pointers.
 
@@ -25,9 +25,9 @@ src/
   effects/    EffectSystem (staged timeline), ParticleSystem, RespawnScheduler, effectDefs/
   powers/     PowerController-triggered effects (laserBurn, ...)
   input/      PointerTracker, DragController, PowerController
-  render/     Renderer, CanvasUtils, paperCut, pupilTrack, drawers/ (per-entity draw fns)
+  render/     Renderer, CanvasUtils, paperCut, pupilTrack, drawers/ (drawEye, drawBug, drawPointedFinger, drawSubject*, drawCursor, drawFieldLines, drawGazeLines)
   content/    manifestLoader, schema, manifests/ (*.roster.json — content-as-data)
-  hud/        Hud (DOM-based, SVG-masked paper-cut edges — ADR 004)
+  hud/        Hud (DOM-based, SVG-masked paper-cut edges — ADR 004), mode/skin/quantity/repel controls, mode/skin/quantity/repel controls, mode/skin/quantity/repel controls
   config/     tokens.ts
 tests/unit/   vitest — one file per module/feature, run via `npm test`
 docs/superpowers/
@@ -54,9 +54,9 @@ No `.md` file in this project should exceed 500 lines. If a doc grows past that,
 ## Docs index
 
 - [system-architecture.md](docs/superpowers/system-architecture.md) — ADRs 001-006, core definitions, data-flow diagram
-- [docs/superpowers/specs/](docs/superpowers/specs/) — active design specs (v2 in progress)
-- [docs/superpowers/plans/](docs/superpowers/plans/) — active implementation/sprint plans matching each spec
-- [docs/superpowers/archive/](docs/superpowers/archive/) — shipped features' specs/plans (v1, merged-eyes, subject mechanic, browser matrix)
+- [docs/superpowers/specs/](docs/superpowers/specs/) — active design specs
+- [docs/superpowers/plans/](docs/superpowers/plans/) — active implementation/sprint plans
+- [docs/superpowers/archive/](docs/superpowers/archive/) — shipped features' specs/plans (v1, v2 expansion, merged-eyes, subject mechanic, browser matrix)
 - [README.md](README.md) — project brief, status, quick start
 - [SECURITY.md](SECURITY.md) — reporting a vulnerability
 - [graphify-out/GRAPH_REPORT.md](graphify-out/GRAPH_REPORT.md) — knowledge graph of the whole corpus (code + docs); useful for finding cross-cutting relationships before a refactor

@@ -2,6 +2,15 @@
 
 Status: ready for implementation planning. Extends `docs/superpowers/specs/2026-07-25-fun-satire-v2-expansion-design.md` ("the v2 expansion spec"), which must be implemented first.
 
+## Design references
+
+Figma file (subject browser / premium HUD exploration): `Untitled` (oPAdd7oWLQVMTP1v6pJOW0)
+
+- [Page 1](https://www.figma.com/design/oPAdd7oWLQVMTP1v6pJOW0/Untitled?node-id=0-1)
+- [Frame 18:113](https://www.figma.com/design/oPAdd7oWLQVMTP1v6pJOW0/Untitled?node-id=18-113)
+- [Frame 44:287](https://www.figma.com/design/oPAdd7oWLQVMTP1v6pJOW0/Untitled?node-id=44-287)
+- [Frame 46:905](https://www.figma.com/design/oPAdd7oWLQVMTP1v6pJOW0/Untitled?node-id=46-905)
+
 ## Context
 
 The v2 expansion spec (§1) introduced `subjectSkin: "figure" | "lotus"`, chosen via a click-to-cycle HUD placard identical in interaction pattern to the existing mode/power selectors. This spec replaces that click-to-cycle skin selector with a browsable, drag-and-drop subject list, widens the subject concept from two fixed skins to an open, named roster plus arbitrary typed-text subjects, and defines a "premium HUD" visual bar applied across all v2 HUD controls (not just the new panel).

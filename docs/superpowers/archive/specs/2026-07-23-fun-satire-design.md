@@ -49,6 +49,7 @@ Inspired by the recent CJP/youth protests at Jantar Mantar, India, against faili
 ## v3 — Real Roster (roadmap-level)
 
 - **Scope**: replace/extend the abstract eye roster with the actual satire subjects — PM, Home Minister, Petroleum Minister, Finance Minister, Road Minister, Education Minister, Railway Minister, Raghav Chadda, Smriti Irani, Sambit Patra; BJP logo; CJI; national agencies (NTA, FSSAI); "Godi Media" hosts (Sushant Sinha, Rubika Liyaquat, Sudhir Chaudhary, Arnab Goswami, Navika Kumar, Anjana Om Kashyap, Amish Devgan, Aman Chopra, Chitra Tripathi) and outlet logos (NDTV, AajTak, ABP, Republic, Zee News, India TV, News18 India, Times Now).
+  - **Staleness caveat**: this is a name/role snapshot from 2026-07-23 (portfolios reshuffle, anchors/shows change). Do not treat it as current at v3 authoring time — re-verify officeholders and lineup via the web-research pass (below) before briefing the illustration pass.
 - **Content pipeline** (agents, not engine work):
   1. **Web-research pass** — general-purpose agents gather protest-art/editorial-cartoon reference and factual grounding per subject (public role, most-recognizable visual signifiers) to brief the illustration pass.
   2. **Asset-capture pass** — agents source official/public logos as legally-usable reference (trademarks referenced descriptively/satirically, not reproduced as brand assets).

@@ -13,6 +13,10 @@ Interactive canvas app: cursor-driven "eyes"/"subjects" crowd with physics-based
 - New creature types are added via registries (`Registry` maps string IDs → Drawer/Behavior factories) — see ADR 001. Adding content should be additive, not require engine changes.
 - `ForceField.ts` is otherwise closed to extension — ADR 006 is the one sanctioned exception (pairwise separation). Any new touch to `ForceField.ts`, `Engine.ts`, `StateMachine.ts`, or `EntityStore.ts` should be treated as a deliberate, reviewed exception, not a routine edit.
 
+## Human testing
+
+After completing any task that touches `physics/`, `render/`, `effects/`, or `hud/`, run `npm run dev` and verify the change in a browser before reporting the task complete. Unit tests don't catch visual/feel regressions in this canvas app. Test at the task level, not deferred to phase/sprint end — catching a regression at the task that introduced it beats debugging it several tasks later.
+
 ## Layout
 
 ```text
