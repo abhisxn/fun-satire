@@ -10,3 +10,5 @@ export type { DrawSubjectLotusInput } from "./drawSubjectLotus";
 export { computeGazeLines } from "./drawGazeLines";
 export { drawBug, computeScuttleJitter, BUG_DRAW } from "./drawBug";
 export type { DrawBugInput } from "./drawBug";
+export { drawPointedFinger, computePointShake, FINGER_DRAW } from "./drawPointedFinger";
+export type { DrawPointedFingerInput } from "./drawPointedFinger";
