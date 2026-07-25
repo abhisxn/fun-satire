@@ -103,9 +103,11 @@ export function renderFrame(opts: RenderFrameOptions): void {
     crowdMembers.push(e);
   });
 
-  const sortedCrowd = [...crowdMembers].sort((a, b) => a.physics.pos.y - b.physics.pos.y);
+  const sortedCrowd = computeCrowdDrawOrder(
+    crowdMembers.map((e) => ({ id: e.id, pos: e.physics.pos, entity: e })),
+  );
 
-  for (const e of sortedCrowd) {
+  for (const { entity: e } of sortedCrowd) {
     drawnIds.add(e.id);
     eyePositions.push({ id: e.id, pos: e.physics.pos });
     const data = e.behavior.data as Record<string, unknown>;
@@ -155,16 +157,22 @@ export function renderFrame(opts: RenderFrameOptions): void {
           rotation,
         });
         break;
-      case "pointedFinger":
+      case "pointedFinger": {
+        const fingerColors: SubjectColors = {
+          outline: colors.outline,
+          shirt: colors.sclera,
+          suit: colors.iris === "cream" ? "slate" : colors.iris,
+        };
         drawPointedFinger(ctx, {
           pos: e.physics.pos,
           sizePx,
-          colors: colors as unknown as Parameters<typeof drawPointedFinger>[1]["colors"],
+          colors: fingerColors,
           timeMs: opts.nowMs,
           id: e.id,
           rotation,
         });
         break;
+      }
       default:
         throw new Error(`renderFrame: unknown hudMode "${opts.hudMode as string}"`);
     }
