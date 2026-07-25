@@ -402,6 +402,20 @@ engine.onTick("pre-physics", (dt) => {
     }
   }
 
+  // No-overlap separation (computed before integration so it feeds into acceleration)
+  const crowdMembers: Array<{ id: number; pos: { x: number; y: number }; radiusPx: number }> = [];
+  store.forEachAlive((e) => {
+    if (e.content.renderType !== "eye") return;
+    if (e.lifecycle.dragged) return;
+    const baseSizePx = (e.behavior.data as Record<string, unknown>).baseSizePx as number ?? 56;
+    crowdMembers.push({
+      id: e.id,
+      pos: e.physics.pos,
+      radiusPx: baseSizePx * e.physics.scale * 0.5,
+    });
+  });
+  const separationForces = accumulateSeparation(crowdMembers);
+
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;
     if (e.lifecycle.dragged) return;
@@ -412,10 +426,13 @@ engine.onTick("pre-physics", (dt) => {
       home: e.physics.home,
       dtSeconds: dtSec,
     });
+    const sep = separationForces.get(e.id);
+    const sepAx = sep ? sep.fx : 0;
+    const sepAy = sep ? sep.fy : 0;
     const next = integrate({
       pos: e.physics.pos,
       vel: e.physics.vel,
-      acc: { x: force.fx + spring.ax, y: force.fy + spring.ay },
+      acc: { x: force.fx + spring.ax + sepAx, y: force.fy + spring.ay + sepAy },
       dtSeconds: dtSec,
       maxSpeed: 600,
     });
@@ -449,28 +466,12 @@ engine.onTick("pre-physics", (dt) => {
         e.physics.rotation = computeLookAtRotation(e.physics.pos, subj.physics.pos, currentMode);
       });
     }
-  }
-
-  // No-overlap separation
-  const crowdMembers: Array<{ id: number; pos: { x: number; y: number }; radiusPx: number }> = [];
-  store.forEachAlive((e) => {
-    if (e.content.renderType !== "eye") return;
-    const baseSizePx = (e.behavior.data as Record<string, unknown>).baseSizePx as number ?? 56;
-    crowdMembers.push({
-      id: e.id,
-      pos: e.physics.pos,
-      radiusPx: baseSizePx * e.physics.scale * 0.5,
+  } else {
+    store.forEachAlive((e) => {
+      if (e.content.renderType !== "eye") return;
+      e.physics.rotation = 0;
     });
-  });
-  const separationForces = accumulateSeparation(crowdMembers);
-  store.forEachAlive((e) => {
-    if (e.content.renderType !== "eye") return;
-    const f = separationForces.get(e.id);
-    if (f && (f.fx !== 0 || f.fy !== 0)) {
-      e.physics.vel.x += f.fx * dtSec;
-      e.physics.vel.y += f.fy * dtSec;
-    }
-  });
+  }
 });
 
 viewport.onChange((s) => {
