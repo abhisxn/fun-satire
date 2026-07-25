@@ -8,3 +8,5 @@ export type { DrawSubjectFigureInput } from "./drawSubjectFigure";
 export { drawSubjectLotus } from "./drawSubjectLotus";
 export type { DrawSubjectLotusInput } from "./drawSubjectLotus";
 export { computeGazeLines } from "./drawGazeLines";
+export { drawBug, computeScuttleJitter, BUG_DRAW } from "./drawBug";
+export type { DrawBugInput } from "./drawBug";
