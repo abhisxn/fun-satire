@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   electricBurnEffect,
   electricBurnProgressAt,
@@ -82,5 +82,55 @@ describe("effects/effectDefs/electricBurn (T12)", () => {
   it("totalDurationMs equals the sum of all stage durations", () => {
     const sum = electricBurnEffect.stages.reduce((acc, s) => acc + s.durationMs, 0);
     expect(sum).toBe(ELECTRIC_BURN.totalDurationMs);
+  });
+
+  it("onStart hooks are callable and don't throw", () => {
+    const mockCtx = {
+      entity: {
+        id: "e1" as const,
+        content: { palette: { iris: "coral" }, renderType: "eye" },
+        behavior: { data: {} },
+        physics: { scale: 1 },
+      },
+      target: { x: 100, y: 200 },
+      particles: { spawn: vi.fn() },
+      audio: { play: vi.fn() },
+      rng: {
+        float: () => 0.5,
+        range: (min: number, max: number) => (min + max) / 2,
+        rangeInt: (min: number, max: number) => Math.floor((min + max) / 2),
+      },
+      world: {
+        markDying: vi.fn(),
+        startRespawn: vi.fn(),
+        getEntity: vi.fn(),
+      },
+      stageIndex: 0,
+      effect: {
+        id: 1,
+        defId: "electricBurn",
+        entityId: "e1" as const,
+        startedAtMs: 0,
+        target: { x: 100, y: 200 },
+        stageIndex: 0,
+        stageStartedAtMs: 0,
+        done: false,
+      },
+    };
+
+    const shrinkStage = electricBurnEffect.stages[2];
+    const sootStage = electricBurnEffect.stages[3];
+
+    expect(shrinkStage.onStart).toBeDefined();
+    expect(() => shrinkStage.onStart!(mockCtx as never)).not.toThrow();
+    expect(mockCtx.particles.spawn).toHaveBeenCalledTimes(ELECTRIC_BURN.sparkCount);
+    expect(mockCtx.world.markDying).toHaveBeenCalledWith("e1");
+
+    expect(sootStage.onStart).toBeDefined();
+    expect(() => sootStage.onStart!(mockCtx as never)).not.toThrow();
+    expect(mockCtx.particles.spawn).toHaveBeenCalledTimes(
+      ELECTRIC_BURN.sparkCount + ELECTRIC_BURN.sootCount,
+    );
+    expect(mockCtx.world.startRespawn).toHaveBeenCalledWith("e1", expect.any(Number));
   });
 });
