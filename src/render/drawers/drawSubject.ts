@@ -1,27 +1,27 @@
 // src/render/drawers/drawSubject.ts
 import { PALETTE } from "../../config/tokens";
+import type { SubjectColors } from "../../content/schema";
 import { paperCutEdgePath, withPaperCutShadow } from "../paperCut";
-
-export type DrawSubjectColors = {
-  suit: "slate" | "sage" | "ink";
-  shirt: "cream";
-  outline: "ink";
-};
 
 export type DrawSubjectInput = {
   pos: { x: number; y: number };
   sizePx: number;
-  colors: DrawSubjectColors;
+  colors: SubjectColors;
   scale: number;
 };
 
-const SUBJECT_DRAW = Object.freeze({
+export const SUBJECT_DRAW = Object.freeze({
   minVisibleScale: 0.02,
   headRadiusFraction: 0.22,
   shoulderWidthFraction: 0.62,
   shoulderHeightFraction: 0.5,
   headOffsetYFraction: 0.32,
   bodyTopOffsetYFraction: 0.08,
+  shoulderInsetPx: 2,
+  headOutlinePadPx: 1.5,
+  collarHalfWidthPx: 3,
+  collarNotchFraction: 0.35,
+  paperCutSeed: 11,
 } as const);
 
 function colorByName(k: string): string {
@@ -34,8 +34,6 @@ function colorByName(k: string): string {
       return PALETTE.sage;
     case "ink":
       return PALETTE.ink;
-    case "coral":
-      return PALETTE.coral;
     default:
       throw new Error(`drawSubject: color "${k}" is not in the locked palette`);
   }
@@ -56,17 +54,29 @@ export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInp
   ctx.save();
 
   withPaperCutShadow(ctx, () => {
-    paperCutEdgePath(ctx, { cx, cy: bodyCy, rx: shoulderW / 2, ry: shoulderH / 2, seed: 11 });
+    paperCutEdgePath(ctx, {
+      cx,
+      cy: bodyCy,
+      rx: shoulderW / 2,
+      ry: shoulderH / 2,
+      seed: SUBJECT_DRAW.paperCutSeed,
+    });
     ctx.fillStyle = colorByName(colors.outline);
     ctx.fill();
   });
 
-  paperCutEdgePath(ctx, { cx, cy: bodyCy, rx: shoulderW / 2 - 2, ry: shoulderH / 2 - 2, seed: 11 });
+  paperCutEdgePath(ctx, {
+    cx,
+    cy: bodyCy,
+    rx: shoulderW / 2 - SUBJECT_DRAW.shoulderInsetPx * scale,
+    ry: shoulderH / 2 - SUBJECT_DRAW.shoulderInsetPx * scale,
+    seed: SUBJECT_DRAW.paperCutSeed,
+  });
   ctx.fillStyle = colorByName(colors.suit);
   ctx.fill();
 
   ctx.beginPath();
-  ctx.arc(cx, headCy, headR + 1.5, 0, Math.PI * 2);
+  ctx.arc(cx, headCy, headR + SUBJECT_DRAW.headOutlinePadPx * scale, 0, Math.PI * 2);
   ctx.fillStyle = colorByName(colors.outline);
   ctx.fill();
 
@@ -76,9 +86,9 @@ export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInp
   ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(cx - 3, bodyTop);
-  ctx.lineTo(cx + 3, bodyTop);
-  ctx.lineTo(cx, bodyTop + shoulderH * 0.35);
+  ctx.moveTo(cx - SUBJECT_DRAW.collarHalfWidthPx * scale, bodyTop);
+  ctx.lineTo(cx + SUBJECT_DRAW.collarHalfWidthPx * scale, bodyTop);
+  ctx.lineTo(cx, bodyTop + shoulderH * SUBJECT_DRAW.collarNotchFraction);
   ctx.closePath();
   ctx.fillStyle = colorByName(colors.outline);
   ctx.fill();
