@@ -17,33 +17,62 @@ const fakeCtx = () =>
 
 const colors = { suit: "slate", shirt: "cream", outline: "ink" } as const;
 
-describe("drawSubject dispatch", () => {
-  it("does not throw for subjectSkin 'figure'", () => {
+describe("drawSubject dispatch on discriminated SubjectSkin", () => {
+  it("does not throw for an illustrated 'figure' skin", () => {
     expect(() =>
-      drawSubject(fakeCtx(), { pos: { x: 10, y: 10 }, sizePx: 80, subjectSkin: "figure", colors, scale: 1, seed: 1 }),
+      drawSubject(fakeCtx(), {
+        pos: { x: 10, y: 10 },
+        sizePx: 80,
+        subjectSkin: { kind: "illustrated", id: "figure" },
+        colors,
+        scale: 1,
+        seed: 1,
+      }),
     ).not.toThrow();
   });
 
-  it("does not throw for subjectSkin 'lotus'", () => {
+  it("does not throw for an illustrated 'jester' skin", () => {
     expect(() =>
-      drawSubject(fakeCtx(), { pos: { x: 10, y: 10 }, sizePx: 80, subjectSkin: "lotus", colors, scale: 1, seed: 1 }),
+      drawSubject(fakeCtx(), {
+        pos: { x: 10, y: 10 },
+        sizePx: 80,
+        subjectSkin: { kind: "illustrated", id: "jester" },
+        colors,
+        scale: 1,
+        seed: 1,
+      }),
     ).not.toThrow();
   });
 
-  it("throws for an unknown subjectSkin", () => {
+  it("does not throw for a text skin", () => {
+    expect(() =>
+      drawSubject(fakeCtx(), {
+        pos: { x: 10, y: 10 },
+        sizePx: 80,
+        subjectSkin: { kind: "text", value: "Recall", scale: 1 },
+        colors,
+        scale: 1,
+        seed: 1,
+      }),
+    ).not.toThrow();
+  });
+
+  it("throws for an unknown illustrated id", () => {
     expect(() =>
       drawSubject(fakeCtx(), {
         pos: { x: 0, y: 0 },
         sizePx: 80,
         // @ts-expect-error intentionally invalid
-        subjectSkin: "not-a-skin",
+        subjectSkin: { kind: "illustrated", id: "not-a-skin" },
         colors,
         scale: 1,
         seed: 1,
       }),
-    ).toThrow(/subjectSkin/);
+    ).toThrow(/unknown illustrated subject id/);
   });
+});
 
+describe("drawSubject drawer direct calls", () => {
   it("drawSubjectFigure and drawSubjectLotus are independently callable", () => {
     expect(() => drawSubjectFigure(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 80, colors, scale: 1, rotation: 0 })).not.toThrow();
     expect(() => drawSubjectLotus(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 80, colors, scale: 1, rotation: 0 })).not.toThrow();

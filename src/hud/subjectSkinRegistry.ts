@@ -17,6 +17,7 @@ export type DrawSubjectSkinFn = (
     colors: SubjectColors;
     scale: number;
     rotation: number;
+    shadowIntensity?: number;
   },
 ) => void;
 
