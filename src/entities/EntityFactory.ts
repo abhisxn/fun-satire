@@ -1,6 +1,6 @@
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import { type Rng } from "../core/Rng";
-import type { EyeManifestEntry, EyeColors, SubjectManifestEntry } from "../content/schema";
+import type { EyeManifestEntry, EyeColors, SubjectManifestEntry, ManifestEntry } from "../content/schema";
 
 export const ENTITY_FACTORY = Object.freeze({
   minSeparationPx: 64,
@@ -142,4 +142,33 @@ export function spawnSubject(opts: SpawnSubjectOpts): Entity | null {
     },
     lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
   };
+}
+
+export type SpawnOneCrowdMemberOptions = {
+  rng: Rng;
+  width: number;
+  height: number;
+  manifest: readonly ManifestEntry[];
+  existing: readonly Entity[];
+  nextId: EntityId;
+};
+
+export function spawnOneCrowdMember(opts: SpawnOneCrowdMemberOptions): Entity | null {
+  const { rng, width, height, manifest, existing, nextId } = opts;
+  if (manifest.length === 0) return null;
+  const entry = manifest[existing.length % manifest.length]! as EyeManifestEntry;
+  const sepSq = ENTITY_FACTORY.minSeparationPx * ENTITY_FACTORY.minSeparationPx;
+  let pos = samplePos(rng, entry, width, height);
+  for (let attempt = 0; attempt < ENTITY_FACTORY.maxAttempts && overlapsAny(pos, existing, sepSq); attempt++) {
+    pos = samplePos(rng, entry, width, height);
+  }
+  const scale = jitterScale(entry, rng);
+  return buildEntity(nextId, entry, pos, scale);
+}
+
+export function pickCrowdMemberToDespawn(existing: readonly Entity[]): EntityId | null {
+  if (existing.length === 0) return null;
+  let maxId = existing[0]!.id;
+  for (const e of existing) if (e.id > maxId) maxId = e.id;
+  return maxId;
 }
