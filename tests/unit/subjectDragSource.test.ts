@@ -119,3 +119,42 @@ describe("SubjectDragSource", () => {
     expect(document.body.children.length).toBe(beforeCount);
   });
 });
+
+describe("SubjectDragSource touch tap-to-select", () => {
+  it("a bare touch pointerup on a card swaps immediately, with no pointerdown/move needed", () => {
+    const dropTarget = document.createElement("canvas");
+    document.body.appendChild(dropTarget);
+    const card = document.createElement("button");
+    document.body.appendChild(card);
+
+    const source = new SubjectDragSource({ dropTarget });
+    const skin: SubjectSkin = { kind: "illustrated", id: "lotus" };
+    source.attachCard(card, () => skin);
+    const cb = vi.fn();
+    source.onSwap(cb);
+
+    card.dispatchEvent(new PointerEvent("pointerup", { clientX: 5, clientY: 5, pointerType: "touch", bubbles: true }));
+
+    expect(cb).toHaveBeenCalledWith(skin);
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it("touch tap position is irrelevant — it never checks the drop-target rect", () => {
+    const dropTarget = document.createElement("canvas");
+    Object.defineProperty(dropTarget, "getBoundingClientRect", {
+      value: () => ({ left: 900, right: 999, top: 900, bottom: 999, width: 99, height: 99, x: 900, y: 900, toJSON() {} }),
+    });
+    document.body.appendChild(dropTarget);
+    const card = document.createElement("button");
+    document.body.appendChild(card);
+
+    const source = new SubjectDragSource({ dropTarget });
+    source.attachCard(card, () => ({ kind: "illustrated", id: "lotus" }));
+    const cb = vi.fn();
+    source.onSwap(cb);
+
+    card.dispatchEvent(new PointerEvent("pointerup", { clientX: 0, clientY: 0, pointerType: "touch", bubbles: true }));
+
+    expect(cb).toHaveBeenCalled();
+  });
+});
