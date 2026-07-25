@@ -1,0 +1,94 @@
+.subject-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: min(320px, 86vw);
+  background: var(--color-cream);
+  border-left: 1.5px solid var(--color-ink);
+  border-right: 1.5px solid var(--color-ink);
+  box-shadow: 0 0 0 3px var(--color-ink) inset, 6px 0 14px rgba(42, 36, 32, 0.22);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--font-mono);
+  color: var(--color-ink);
+  z-index: var(--z-hud);
+  transition: transform var(--duration-slow) var(--ease-spring);
+  overflow-y: auto;
+}
+
+.subject-drawer[data-anchor="right"] {
+  right: 0;
+  transform: translateX(100%);
+}
+
+.subject-drawer[data-anchor="left"] {
+  left: 0;
+  transform: translateX(-100%);
+}
+
+.subject-drawer[data-open="true"] {
+  transform: translateX(0);
+}
+
+.subject-drawer__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subject-drawer__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-cream);
+  border: 1.4px solid var(--color-ink);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-mono);
+  text-transform: lowercase;
+  color: var(--color-ink);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: transform var(--duration-base) var(--ease-spring),
+              opacity var(--duration-base) var(--ease-spring),
+              background 120ms var(--ease-protest);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.subject-drawer[data-open="true"] .subject-drawer__card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.subject-drawer__card:hover {
+  background: var(--color-coral);
+}
+
+.subject-drawer__card:active {
+  transform: scale(0.96);
+}
+
+.subject-drawer__card-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-slate);
+  flex-shrink: 0;
+}
+
+.subject-drawer__card-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subject-drawer,
+  .subject-drawer__card {
+    transition: none;
+    transition-delay: 0ms;
+  }
+}

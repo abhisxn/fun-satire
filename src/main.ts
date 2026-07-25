@@ -4,6 +4,7 @@ import "@fontsource/space-mono/700.css";
 import "./styles/global.css";
 import "./hud/hud.css";
 import "./hud/audioControl.css";
+import "./hud/subjectDrawer.css";
 import "./audio/cues/hudCues";
 import "./audio/cues/chargeRespawnCues";
 import "./audio/cues/laserBurnCues";
