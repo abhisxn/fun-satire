@@ -16,6 +16,10 @@ export const LASER_BURN = Object.freeze({
   lineEase: EASE_OUT,
   glowEase: EASE_PROTEST,
   dissolveEase: EASE_PROTEST,
+  subjectRespawnMinMs: 1000,
+  subjectRespawnMaxMs: 2000,
+  eyeRespawnMinMs: 3000,
+  eyeRespawnMaxMs: 6000,
 } as const);
 
 export const laserBurnEffect: EffectDef = {
@@ -70,7 +74,11 @@ export const laserBurnEffect: EffectDef = {
             spin: 0,
           });
         }
-        ctx.world.startRespawn(ctx.entity.id, ctx.rng.rangeInt(3000, 6000));
+        const isSubject = ctx.entity.content.renderType === "subject";
+        const delayMs = isSubject
+          ? ctx.rng.rangeInt(LASER_BURN.subjectRespawnMinMs, LASER_BURN.subjectRespawnMaxMs)
+          : ctx.rng.rangeInt(LASER_BURN.eyeRespawnMinMs, LASER_BURN.eyeRespawnMaxMs);
+        ctx.world.startRespawn(ctx.entity.id, delayMs);
       },
       update: (ctx, _t) => {
         ctx.entity.physics.scale = 0;
