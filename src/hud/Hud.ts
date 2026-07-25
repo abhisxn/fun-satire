@@ -28,7 +28,7 @@ export class Hud {
   };
   private modeChangeCb: ((mode: HudMode) => void) | null = null;
   private skinChangeCb: ((skin: HudSkin) => void) | null = null;
-  private quantityChangeCb: ((delta: number) => void) | null = null;
+  private quantityChangeCb: ((quantity: number) => void) | null = null;
   private repelChangeCb: ((multiplier: number) => void) | null = null;
 
   constructor(root: HTMLElement) {
@@ -98,12 +98,12 @@ export class Hud {
     this.placard.querySelector<HTMLElement>(".hud-placard__qty-inc")!.addEventListener("click", () => {
       if (this.quantity >= QTY_MAX) return;
       this.setQuantity(this.quantity + 1);
-      this.quantityChangeCb?.(1);
+      this.quantityChangeCb?.(this.quantity);
     });
     this.placard.querySelector<HTMLElement>(".hud-placard__qty-dec")!.addEventListener("click", () => {
       if (this.quantity <= QTY_MIN) return;
       this.setQuantity(this.quantity - 1);
-      this.quantityChangeCb?.(-1);
+      this.quantityChangeCb?.(this.quantity);
     });
     this.repelInput.addEventListener("input", () => {
       const v = Math.max(0, Math.min(2, Number.parseFloat(this.repelInput.value)));
@@ -157,7 +157,7 @@ export class Hud {
     this.skinChangeCb = cb;
   }
 
-  onQuantityChange(cb: (delta: number) => void): void {
+  onQuantityChange(cb: (quantity: number) => void): void {
     this.quantityChangeCb = cb;
   }
 

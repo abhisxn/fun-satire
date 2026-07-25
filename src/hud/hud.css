@@ -73,6 +73,15 @@
   color: var(--color-ink);
 }
 
+.hud-placard__mode-icon,
+.hud-placard__skin-icon {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 160ms var(--ease-protest);
+}
+
 .hud-placard__mode-label,
 .hud-placard__power-label {
   white-space: nowrap;
@@ -129,18 +138,6 @@
   .hud-placard__charge {
     transition: none;
   }
-}
-
-.hud-placard__mode-icon,
-.hud-placard__skin-icon {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 160ms var(--ease-protest);
 }
 
 .hud-placard__mode-icon:hover,

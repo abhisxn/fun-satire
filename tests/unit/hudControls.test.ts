@@ -29,15 +29,35 @@ describe("Hud crowd controls", () => {
     expect(onSkinChange).toHaveBeenCalledWith("figure");
   });
 
-  it("steps quantity up/down within [1, 60] and calls onQuantityChange with the delta", () => {
+  it("steps quantity up/down within [1, 60] and calls onQuantityChange with absolute value", () => {
     const root = document.createElement("div");
     const hud = new Hud(root);
     const onQuantityChange = vi.fn();
     hud.onQuantityChange(onQuantityChange);
     root.querySelector<HTMLElement>(".hud-placard__qty-inc")!.click();
-    expect(onQuantityChange).toHaveBeenCalledWith(1);
+    expect(onQuantityChange).toHaveBeenCalledWith(21);
     root.querySelector<HTMLElement>(".hud-placard__qty-dec")!.click();
-    expect(onQuantityChange).toHaveBeenCalledWith(-1);
+    expect(onQuantityChange).toHaveBeenCalledWith(20);
+  });
+
+  it("clamps quantity at minimum of 1", () => {
+    const root = document.createElement("div");
+    const hud = new Hud(root);
+    hud.setQuantity(1);
+    const onQuantityChange = vi.fn();
+    hud.onQuantityChange(onQuantityChange);
+    root.querySelector<HTMLElement>(".hud-placard__qty-dec")!.click();
+    expect(onQuantityChange).not.toHaveBeenCalled();
+  });
+
+  it("clamps quantity at maximum of 60", () => {
+    const root = document.createElement("div");
+    const hud = new Hud(root);
+    hud.setQuantity(60);
+    const onQuantityChange = vi.fn();
+    hud.onQuantityChange(onQuantityChange);
+    root.querySelector<HTMLElement>(".hud-placard__qty-inc")!.click();
+    expect(onQuantityChange).not.toHaveBeenCalled();
   });
 
   it("reports repel track changes as a 0..2 multiplier via onRepelChange", () => {
@@ -49,6 +69,20 @@ describe("Hud crowd controls", () => {
     track.value = "1.5";
     track.dispatchEvent(new Event("input"));
     expect(onRepelChange).toHaveBeenCalledWith(1.5);
+  });
+
+  it("clamps repel value to [0, 2] range", () => {
+    const root = document.createElement("div");
+    const hud = new Hud(root);
+    const onRepelChange = vi.fn();
+    hud.onRepelChange(onRepelChange);
+    const track = root.querySelector<HTMLInputElement>(".hud-placard__repel-input")!;
+    track.value = "3";
+    track.dispatchEvent(new Event("input"));
+    expect(onRepelChange).toHaveBeenCalledWith(2);
+    track.value = "-1";
+    track.dispatchEvent(new Event("input"));
+    expect(onRepelChange).toHaveBeenCalledWith(0);
   });
 
   it("styles the repel control as a custom track, not a bare browser range input", () => {
