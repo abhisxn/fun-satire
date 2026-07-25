@@ -48,8 +48,10 @@ describe("pickCrowdMemberToDespawn", () => {
     expect(pickCrowdMemberToDespawn([])).toBeNull();
   });
 
-  it("returns the id of the last-spawned (highest-id) member", () => {
+  it("returns the entity with the highest id", () => {
     const members = [{ id: 1 }, { id: 7 }, { id: 3 }] as Entity[];
-    expect(pickCrowdMemberToDespawn(members)).toBe(7);
+    const result = pickCrowdMemberToDespawn(members);
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe(7);
   });
 });

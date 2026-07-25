@@ -166,9 +166,9 @@ export function spawnOneCrowdMember(opts: SpawnOneCrowdMemberOptions): Entity | 
   return buildEntity(nextId, entry, pos, scale);
 }
 
-export function pickCrowdMemberToDespawn(existing: readonly Entity[]): EntityId | null {
+export function pickCrowdMemberToDespawn(existing: readonly Entity[]): Entity | null {
   if (existing.length === 0) return null;
-  let maxId = existing[0]!.id;
-  for (const e of existing) if (e.id > maxId) maxId = e.id;
-  return maxId;
+  let maxEntity = existing[0]!;
+  for (const e of existing) if (e.id > maxEntity.id) maxEntity = e;
+  return maxEntity;
 }
