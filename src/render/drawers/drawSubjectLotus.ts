@@ -30,6 +30,7 @@ function colorByName(k: string): string {
 
 export function drawSubjectLotus(ctx: CanvasRenderingContext2D, input: DrawSubjectLotusInput): void {
   const { pos, sizePx, colors, scale, rotation } = input;
+  if (scale <= 0.02) return;
   const s = sizePx * scale;
   const petalCount = 5;
   const petalLen = s * 0.48;
