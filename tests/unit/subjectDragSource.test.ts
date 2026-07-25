@@ -94,4 +94,28 @@ describe("SubjectDragSource", () => {
 
     expect(cb).toHaveBeenCalledWith({ kind: "text", value: "second", scale: 1 });
   });
+
+  it("cleans up the ghost and listeners on pointercancel without calling onSwap", () => {
+    const dropTarget = document.createElement("canvas");
+    Object.defineProperty(dropTarget, "getBoundingClientRect", {
+      value: () => ({ left: 0, right: 999, top: 0, bottom: 999, width: 999, height: 999, x: 0, y: 0, toJSON() {} }),
+    });
+    document.body.appendChild(dropTarget);
+    const card = document.createElement("button");
+    document.body.appendChild(card);
+
+    const source = new SubjectDragSource({ dropTarget });
+    source.attachCard(card, () => ({ kind: "illustrated", id: "figure" }));
+    const cb = vi.fn();
+    source.onSwap(cb);
+
+    const beforeCount = document.body.children.length;
+    firePointer(card, "pointerdown", 10, 10);
+    expect(document.body.children.length).toBe(beforeCount + 1);
+    firePointer(window, "pointermove", 150, 150);
+    firePointer(window, "pointercancel", 150, 150);
+
+    expect(cb).not.toHaveBeenCalled();
+    expect(document.body.children.length).toBe(beforeCount);
+  });
 });

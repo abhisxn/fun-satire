@@ -9,6 +9,7 @@ type DragState = {
   ghost: HTMLElement;
   onMove: (e: PointerEvent) => void;
   onUp: (e: PointerEvent) => void;
+  onCancel: () => void;
 };
 
 /**
@@ -63,13 +64,21 @@ export class SubjectDragSource {
         ghost.remove();
         window.removeEventListener("pointermove", state.onMove);
         window.removeEventListener("pointerup", state.onUp);
+        window.removeEventListener("pointercancel", state.onCancel);
         const rect = this.dropTarget.getBoundingClientRect();
         const overTarget =
           e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
         if (overTarget) this.swapCb?.(getSkin());
       },
+      onCancel: () => {
+        ghost.remove();
+        window.removeEventListener("pointermove", state.onMove);
+        window.removeEventListener("pointerup", state.onUp);
+        window.removeEventListener("pointercancel", state.onCancel);
+      },
     };
     window.addEventListener("pointermove", state.onMove);
     window.addEventListener("pointerup", state.onUp);
+    window.addEventListener("pointercancel", state.onCancel);
   }
 }
