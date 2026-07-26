@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Fun Satire — Eyes Field (Merged Dummy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #EBE9E0;
+    --ink: #2A2723;
+    --slate: #5B737E;
+    --sage: #586452;
+    --brown: #5F5046;
+    --taupe: #907E72;
+    --line: rgba(42,39,35,.12);
+    --ease: cubic-bezier(.32,.72,0,1);
+    --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--cream);
+    overflow: hidden;
+    font-family: var(--sans);
+    cursor: default;
+    -webkit-font-smoothing: antialiased;
+  }
+  body.grab-hover { cursor: grab; }
+  body.grabbing, body.grabbing * { cursor: grabbing !important; }
+
+  #stage { position: fixed; inset: 0; display: block; touch-action: none; }
+
+  .grain {
+    position: fixed;
+    inset: -10%;
+    z-index: 40;
+    pointer-events: none;
+    opacity: .035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 260px 260px;
+  }
+
+  .caption {
+    position: fixed;
+    top: 1.75rem;
+    left: 1.75rem;
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(.6rem);
+    transition: opacity 1s var(--ease) .2s, transform 1s var(--ease) .2s;
+  }
+  .caption.in { opacity: 1; transform: translateY(0); }
+  .caption h1 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: var(--ink);
+    line-height: 1.15;
+  }
+  .caption p {
+    margin-top: .35rem;
+    font-size: .65rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: rgba(42,39,35,.5);
+  }
+
+  .hud {
+    position: fixed;
+    left: 50%;
+    bottom: 1.75rem;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .6rem .6rem .6rem 1.1rem;
+    border-radius: 999px;
+    background: rgba(42,39,35,.055);
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 1px rgba(255,255,255,.5) inset, 0 24px 50px -30px rgba(42,39,35,.45);
+    opacity: 0;
+    translate: 0 1rem;
+    transition: opacity .8s var(--ease), translate .8s var(--ease);
+  }
+  .hud.in { opacity: 1; translate: 0 0; }
+  .badge-mode { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: .85rem; color: var(--ink); }
+  .sep { width: 1px; height: 1.1rem; background: var(--line); }
+  .ctrl { display: flex; align-items: center; gap: .6rem; }
+  .lab { font-size: .6rem; letter-spacing: .18em; text-transform: uppercase; color: rgba(42,39,35,.55); }
+  .stepper { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.4); }
+  .stepper button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    width: 1.7rem; height: 1.7rem; display: grid; place-items: center;
+    font-family: var(--sans); font-size: .95rem; color: var(--ink);
+    transition: background .3s var(--ease);
+  }
+  .stepper button:hover { background: rgba(42,39,35,.08); }
+  .stepper .val {
+    min-width: 2.4rem; text-align: center; font-size: .72rem; color: var(--ink);
+    border-left: 1px solid var(--line); border-right: 1px solid var(--line); padding: .3rem .2rem;
+  }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 6.5rem; height: 2px;
+    background: var(--line); border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: .85rem; height: .85rem; border-radius: 50%;
+    background: var(--slate); border: 2px solid var(--cream); box-shadow: 0 0 0 1px var(--line); cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: .85rem; height: .85rem; border-radius: 50%;
+    background: var(--slate); border: 2px solid var(--cream); box-shadow: 0 0 0 1px var(--line); cursor: pointer;
+  }
+
+  @media (max-width: 640px) {
+    .hud { gap: .6rem; padding: .5rem; }
+    .lab { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="caption" id="caption">
+  <h1>The establishment<br>is always watching.</h1>
+  <p>Merged design dummy · drag the subject</p>
+</div>
+
+<div class="hud" id="hud">
+  <span class="badge-mode">Eyes mode</span>
+  <span class="sep"></span>
+  <div class="ctrl">
+    <span class="lab">Eyes</span>
+    <div class="stepper">
+      <button id="dec" type="button" aria-label="fewer eyes">−</button>
+      <span class="val" id="count">60</span>
+      <button id="inc" type="button" aria-label="more eyes">+</button>
+    </div>
+  </div>
+  <span class="sep"></span>
+  <div class="ctrl">
+    <span class="lab">Repel</span>
+    <input type="range" id="repel" min="0" max="100" value="55" />
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = 1;
+
+  const INK = '#2A2723', SLATE = '#5B737E', SAGE = '#586452', BROWN = '#5F5046', TAUPE = '#907E72';
+  const PUPIL_COLORS = [INK, SLATE, SAGE, BROWN, TAUPE];
+  const SUBJECT_COLOR = '#EBA2A2';
+  const SIZES = [52, 74, 100, 134];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  const subject = { x: 0, y: 0, r: 44 };
+
+  const pointer = { x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2 };
+  let lastMove = performance.now();
+  let dragging = false, dragDX = 0, dragDY = 0;
+
+  function updateCursor() {
+    if (dragging) {
+      document.body.classList.add('grabbing');
+      document.body.classList.remove('grab-hover');
+      return;
+    }
+    document.body.classList.remove('grabbing');
+    const dx = pointer.x - subject.x, dy = pointer.y - subject.y;
+    const hovering = Math.hypot(dx, dy) < subject.r + 16;
+    document.body.classList.toggle('grab-hover', hovering);
+  }
+
+  addEventListener('pointermove', e => {
+    pointer.tx = e.clientX;
+    pointer.ty = e.clientY;
+    lastMove = performance.now();
+    updateCursor();
+  });
+  addEventListener('pointerdown', e => {
+    const dx = e.clientX - subject.x, dy = e.clientY - subject.y;
+    if (dx * dx + dy * dy < (subject.r + 16) * (subject.r + 16)) {
+      dragging = true;
+      dragDX = dx;
+      dragDY = dy;
+    }
+    updateCursor();
+  });
+  addEventListener('pointerup', () => {
+    dragging = false;
+    updateCursor();
+  });
+
+  let eyes = [];
+  let targetCount = 60;
+  let repelStrength = 0.55;
+
+  function eyeShapePath(w, h) {
+    const rx = w * 0.42, ry = h * 0.35;
+    ctx.beginPath();
+    ctx.moveTo(-rx, 0);
+    ctx.bezierCurveTo(-rx * 0.5, -ry * 1.1, rx * 0.5, -ry * 1.1, rx, 0);
+    ctx.bezierCurveTo(rx * 0.5, ry * 1.1, -rx * 0.5, ry * 1.1, -rx, 0);
+    ctx.closePath();
+  }
+
+  function makeEye(x, y, w) {
+    const h = w * 0.56;
+    return {
+      x, y, w, h,
+      hx: x, hy: y,
+      vx: 0, vy: 0,
+      rot: rand(-0.15, 0.15), rotCur: 0,
+      pupilColor: pick(PUPIL_COLORS),
+      pupilR: h * 0.34,
+      px: 0, py: 0,
+      dilate: 0,
+      blink: 1, blinkT: rand(1, 6), blinkPhase: 0,
+      ph: Math.random() * Math.PI * 2, sp: 0.0006 + Math.random() * 0.0006,
+    };
+  }
+
+  function farEnough(x, y, w) {
+    for (const e of eyes) {
+      const dx = e.x - x, dy = e.y - y;
+      const minD = (e.w + w) * 0.5 * 0.92;
+      if (dx * dx + dy * dy < minD * minD) return false;
+    }
+    return true;
+  }
+
+  function placeEye() {
+    let guard = 0;
+    while (guard++ < 200) {
+      const w = pick(SIZES);
+      const x = rand(w * 0.4, W - w * 0.4);
+      const y = rand(w * 0.3, H - w * 0.3);
+      const dx = x - subject.x, dy = y - subject.y;
+      if (dx * dx + dy * dy < (subject.r + 90) * (subject.r + 90)) continue;
+      if (!farEnough(x, y, w)) continue;
+      eyes.push(makeEye(x, y, w));
+      return;
+    }
+  }
+
+  function setEyeCount(n) {
+    targetCount = clamp(n, 6, 220);
+    document.getElementById('count').textContent = targetCount;
+    let attempts = 0;
+    const maxAttempts = targetCount * 50;
+    while (eyes.length < targetCount && attempts++ < maxAttempts) placeEye();
+    if (eyes.length > targetCount) eyes.length = targetCount;
+  }
+
+  function resize() {
+    DPR = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    subject.x = W * 0.5; subject.y = H * 0.46;
+    eyes = [];
+    setEyeCount(targetCount);
+    spawnBugs();
+  }
+  addEventListener('resize', resize);
+
+  const bugs = [];
+  function spawnBugs() {
+    bugs.length = 0;
+    const n = Math.max(3, Math.round(W / 560));
+    for (let i = 0; i < n; i++) {
+      bugs.push({
+        x: rand(40, W - 40), y: rand(60, H - 60),
+        a: rand(0, Math.PI * 2), sp: rand(18, 42),
+        turn: 0, turnT: rand(0.4, 1.6), s: rand(0.8, 1.15), legT: rand(0, 10),
+      });
+    }
+  }
+
+  function stepBugs(dt) {
+    for (const b of bugs) {
+      b.turnT -= dt;
+      if (b.turnT <= 0) { b.turn = rand(-2.2, 2.2); b.turnT = rand(0.3, 1.4); }
+      const dx = b.x - pointer.x, dy = b.y - pointer.y, d2 = dx * dx + dy * dy;
+      if (d2 < 120 * 120) b.turn += (Math.atan2(dy, dx) - b.a > 0) ? 0.12 : -0.12;
+      b.a += b.turn * dt;
+      b.x += Math.cos(b.a) * b.sp * dt;
+      b.y += Math.sin(b.a) * b.sp * dt;
+      b.legT += dt;
+      if (b.x < 12) { b.x = 12; b.a = Math.PI - b.a; }
+      if (b.x > W - 12) { b.x = W - 12; b.a = Math.PI - b.a; }
+      if (b.y < 12) { b.y = 12; b.a = -b.a; }
+      if (b.y > H - 12) { b.y = H - 12; b.a = -b.a; }
+    }
+  }
+
+  function drawBug(b) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.a + Math.PI / 2);
+    ctx.scale(b.s, b.s);
+    ctx.strokeStyle = INK; ctx.fillStyle = INK; ctx.lineWidth = 1.1;
+    const wiggle = Math.sin(b.legT * 18) * 1.6;
+    for (let i = -1; i <= 1; i++) {
+      const ly = i * 3;
+      ctx.beginPath(); ctx.moveTo(-2, ly); ctx.lineTo(-6, ly + wiggle * (i || 1)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2, ly); ctx.lineTo(6, ly - wiggle * (i || 1)); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-1.4, -5); ctx.quadraticCurveTo(-4, -9, -5.5, -10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(1.4, -5); ctx.quadraticCurveTo(4, -9, 5.5, -10); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, 3.1, 5.2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -5.4, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawEye(e) {
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(e.rotCur);
+    eyeShapePath(e.w, e.h);
+    ctx.fillStyle = '#FBF8F2';
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    const pr = e.pupilR * (1 + e.dilate * 0.4);
+    ctx.beginPath();
+    ctx.arc(e.px, e.py, pr, 0, Math.PI * 2);
+    ctx.fillStyle = e.pupilColor;
+    ctx.fill();
+    ctx.restore();
+    if (e.blink < 1) {
+      ctx.save();
+      eyeShapePath(e.w, e.h);
+      ctx.clip();
+      const h2 = e.h / 2, w2 = e.w / 2;
+      const lidY = -h2 * 1.8 + (1 - e.blink) * (h2 * 3.6);
+      ctx.beginPath();
+      ctx.rect(-w2 - 2, -h2 * 1.9, w2 * 2 + 4, lidY + h2 * 1.9);
+      ctx.fillStyle = '#FBF8F2';
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawSubject(now) {
+    const breathe = 1 + Math.sin(now * 0.0016) * 0.035;
+    ctx.save();
+    ctx.translate(subject.x, subject.y);
+    ctx.scale(breathe, breathe);
+    ctx.beginPath();
+    ctx.ellipse(0, subject.r * 1.05, subject.r * 0.85, subject.r * 0.2, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(42,39,35,${dragging ? 0.12 : 0.06})`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 0, subject.r, 0, Math.PI * 2);
+    ctx.fillStyle = SUBJECT_COLOR;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function angleLerp(a, b, t) {
+    let d = b - a;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return a + d * t;
+  }
+
+  function stepEyes(dt, now) {
+    const R = Math.min(W, H);
+    const fieldR = R * 0.55;
+    for (const e of eyes) {
+      const dx = e.x - subject.x, dy = e.y - subject.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const nx = dx / dist, ny = dy / dist;
+
+      const influence = clamp(1 - dist / fieldR, 0, 1);
+      const dragBoost = dragging ? 2.2 : 1.0;
+      const repel = influence * influence * repelStrength * 2600 * dragBoost;
+      e.vx += nx * repel * dt;
+      e.vy += ny * repel * dt;
+
+      const hx = e.hx - e.x, hy = e.hy - e.y;
+      e.vx += hx * 2.2 * dt;
+      e.vy += hy * 2.2 * dt;
+
+      const damp = Math.pow(0.12, dt);
+      e.vx *= damp; e.vy *= damp;
+
+      e.x += e.vx * dt;
+      e.y += e.vy * dt;
+
+      const fieldAng = Math.atan2(dy, dx);
+      const tilt = Math.sin(fieldAng) * 0.35 * influence;
+      e.rotCur = angleLerp(e.rotCur, e.rot + tilt, 1 - Math.pow(0.01, dt));
+
+      const idle = now - lastMove > 1400;
+      let tx, ty;
+      if (idle) {
+        const a = e.ph + now * e.sp;
+        tx = subject.x + Math.cos(a) * 26;
+        ty = subject.y + Math.sin(a) * 22;
+      } else {
+        tx = pointer.x;
+        ty = pointer.y;
+      }
+      const cdx = tx - e.x, cdy = ty - e.y;
+      const cdist = Math.hypot(cdx, cdy) || 1;
+      const reach = clamp(cdist / 240, 0, 1);
+      const maxX = Math.max(0, (e.w / 2 - e.pupilR) * 0.7) * reach;
+      const maxY = Math.max(0, (e.h * 0.85 - e.pupilR) * 0.45) * reach;
+      const pk = 1 - Math.pow(0.001, dt);
+      e.px = lerp(e.px, (cdx / cdist) * maxX, pk);
+      e.py = lerp(e.py, (cdy / cdist) * maxY, pk);
+      e.dilate = lerp(e.dilate, clamp(1 - cdist / 220, 0, 1), 1 - Math.pow(0.02, dt));
+
+      e.blinkT -= dt;
+      if (e.blinkT <= 0 && e.blinkPhase === 0) e.blinkPhase = 1;
+      if (e.blinkPhase === 1) {
+        e.blink = Math.max(0, e.blink - dt * 9);
+        if (e.blink === 0) e.blinkPhase = 2;
+      } else if (e.blinkPhase === 2) {
+        e.blink = Math.min(1, e.blink + dt * 7);
+        if (e.blink === 1) { e.blinkPhase = 0; e.blinkT = rand(2.5, 8); }
+      }
+    }
+  }
+
+  let last = performance.now();
+
+  function tick(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    pointer.x = lerp(pointer.x, pointer.tx, 1 - Math.pow(0.0001, dt));
+    pointer.y = lerp(pointer.y, pointer.ty, 1 - Math.pow(0.0001, dt));
+    if (dragging) {
+      subject.x = lerp(subject.x, pointer.x - dragDX, 1 - Math.pow(0.00001, dt));
+      subject.y = lerp(subject.y, pointer.y - dragDY, 1 - Math.pow(0.00001, dt));
+      subject.x = clamp(subject.x, 50, W - 50);
+      subject.y = clamp(subject.y, 60, H - 50);
+    }
+    ctx.clearRect(0, 0, W, H);
+    stepEyes(dt, now);
+    for (const e of eyes) drawEye(e);
+    stepBugs(dt);
+    for (const b of bugs) drawBug(b);
+    drawSubject(now);
+    requestAnimationFrame(tick);
+  }
+
+  resize();
+  requestAnimationFrame(tick);
+
+  document.getElementById('inc').addEventListener('click', () => {
+    setEyeCount(targetCount + 1);
+  });
+  document.getElementById('dec').addEventListener('click', () => {
+    setEyeCount(targetCount - 1);
+  });
+  document.getElementById('repel').addEventListener('input', e => {
+    repelStrength = Number(e.target.value) / 100;
+  });
+
+  requestAnimationFrame(() => {
+    document.getElementById('caption').classList.add('in');
+    document.getElementById('hud').classList.add('in');
+  });
+})();
+</script>
+</body>
+</html>
