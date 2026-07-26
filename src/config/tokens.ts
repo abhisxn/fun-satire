@@ -35,6 +35,7 @@ export const EASE = Object.freeze({
   protest: "cubic-bezier(0.22, 1, 0.36, 1)",
   charge: "cubic-bezier(0.32, 0.72, 0, 1)",
   fade: "cubic-bezier(0.4, 0, 0.2, 1)",
+  spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
 } as const);
 
 export const DURATION = Object.freeze({

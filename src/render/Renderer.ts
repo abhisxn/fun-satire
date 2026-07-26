@@ -13,6 +13,7 @@ import type { EyeBehavior, EyeBlinkTimer } from "../entities/behaviors/EyeBehavi
 import { PALETTE } from "../config/tokens";
 import type { Rng } from "../core/Rng";
 import type { SubjectColors } from "../content/schema";
+import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 import type { HudMode } from "../hud/hudIcons";
 import type { Entity } from "../entities/Entity";
 
@@ -46,7 +47,7 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
     sizePx: number;
     colors: SubjectColors;
     scale: number;
-    subjectSkin?: import("../content/schema").SubjectSkin;
+    subjectSkin?: SubjectSkin;
   } | null;
   chargeT?: number;
   assistRadiusPx?: number;
@@ -192,6 +193,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
       sizePx: opts.subject.sizePx,
       colors: opts.subject.colors,
       scale: opts.subject.scale,
+      subjectSkin: opts.subject.subjectSkin,
       shadowIntensity,
     });
   }

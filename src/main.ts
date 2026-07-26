@@ -4,6 +4,7 @@ import "@fontsource/space-mono/700.css";
 import "./styles/global.css";
 import "./hud/hud.css";
 import "./hud/audioControl.css";
+import "./hud/subjectDrawer.css";
 import "./audio/cues/hudCues";
 import "./audio/cues/chargeRespawnCues";
 import "./audio/cues/laserBurnCues";
@@ -37,6 +38,7 @@ import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
 import { DURATION } from "./config/tokens";
 import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
+import type { SubjectSkin } from "./hud/subjectSkinRegistry";
 import { computeLookAtRotation } from "./physics/LookAt";
 import { accumulateSeparation } from "./physics/ForceField";
 import type { Entity, EntityId } from "./entities/Entity";
@@ -120,7 +122,7 @@ const manifest = loadManifestFromText(JSON.stringify(eyesRoster));
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 
-const hud = new Hud(hudRoot);
+const hud = new Hud(hudRoot, stage);
 hud.setMode("eyes");
 hud.setPower("laserBurn");
 
@@ -129,6 +131,7 @@ new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
+let activeSubjectSkin: SubjectSkin = { kind: "illustrated", id: "figure" };
 
 hud.onModeChange((mode) => {
   const power = MODE_POWER_MAP[mode];
@@ -138,12 +141,21 @@ hud.onModeChange((mode) => {
   startAmbientForMode(audioEngine, mode);
 });
 
-hud.onSkinChange((skin) => {
-  if (subjectId !== null) {
-    const subj = store.get(subjectId, { live: true });
-    if (subj) {
-      (subj.behavior.data as Record<string, unknown>).subjectSkin = skin;
-    }
+hud.onSubjectSkinChange((skin) => {
+  activeSubjectSkin = skin;
+  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
+  if (subj) {
+    (subj.behavior.data as Record<string, unknown>).subjectSkin = skin;
+  }
+  hud.setActiveSubjectSkin(skin);
+});
+
+hud.onSubjectResize((scale) => {
+  if (activeSubjectSkin.kind !== "text") return;
+  activeSubjectSkin = { ...activeSubjectSkin, scale };
+  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
+  if (subj) {
+    (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
   }
 });
 
@@ -230,6 +242,7 @@ engine.events.on("tick", ({ phase, dt }) => {
           sizePx: (subjEntity.behavior.data as { baseSizePx: number }).baseSizePx,
           colors: (subjEntity.behavior.data as { colors: SubjectColors }).colors,
           scale: subjEntity.physics.scale,
+          subjectSkin: (subjEntity.behavior.data as { subjectSkin?: SubjectSkin }).subjectSkin,
         }
       : null;
     renderFrame({
@@ -282,6 +295,7 @@ const spawnSubjectAt = (pos: { x: number; y: number }, nowMs: number): void => {
   store.insert(entity);
   subjectId = entity.id;
   subjectSpawnedAtMs = nowMs;
+  (entity.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
 };
 
 const worldAPI = {

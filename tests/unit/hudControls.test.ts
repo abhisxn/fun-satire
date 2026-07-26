@@ -5,7 +5,8 @@ import { Hud } from "../../src/hud/Hud";
 describe("Hud crowd controls", () => {
   it("cycles HudMode on mode-icon click and calls onModeChange", () => {
     const root = document.createElement("div");
-    const hud = new Hud(root);
+    const canvas = document.createElement("canvas");
+    const hud = new Hud(root, canvas);
     const onModeChange = vi.fn();
     hud.onModeChange(onModeChange);
     const modeBtn = root.querySelector<HTMLElement>(".hud-placard__mode-icon")!;
@@ -17,21 +18,10 @@ describe("Hud crowd controls", () => {
     expect(onModeChange).toHaveBeenCalledWith("eyes");
   });
 
-  it("cycles HudSkin on skin-icon click and calls onSkinChange", () => {
-    const root = document.createElement("div");
-    const hud = new Hud(root);
-    const onSkinChange = vi.fn();
-    hud.onSkinChange(onSkinChange);
-    const skinBtn = root.querySelector<HTMLElement>(".hud-placard__skin-icon")!;
-    skinBtn.click();
-    expect(onSkinChange).toHaveBeenCalledWith("lotus");
-    skinBtn.click();
-    expect(onSkinChange).toHaveBeenCalledWith("figure");
-  });
-
   it("steps quantity up/down within [1, 60] and calls onQuantityChange with absolute value", () => {
     const root = document.createElement("div");
-    const hud = new Hud(root);
+    const canvas = document.createElement("canvas");
+    const hud = new Hud(root, canvas);
     const onQuantityChange = vi.fn();
     hud.onQuantityChange(onQuantityChange);
     root.querySelector<HTMLElement>(".hud-placard__qty-inc")!.click();
@@ -42,7 +32,8 @@ describe("Hud crowd controls", () => {
 
   it("clamps quantity at minimum of 1", () => {
     const root = document.createElement("div");
-    const hud = new Hud(root);
+    const canvas = document.createElement("canvas");
+    const hud = new Hud(root, canvas);
     hud.setQuantity(1);
     const onQuantityChange = vi.fn();
     hud.onQuantityChange(onQuantityChange);
@@ -52,7 +43,8 @@ describe("Hud crowd controls", () => {
 
   it("clamps quantity at maximum of 60", () => {
     const root = document.createElement("div");
-    const hud = new Hud(root);
+    const canvas = document.createElement("canvas");
+    const hud = new Hud(root, canvas);
     hud.setQuantity(60);
     const onQuantityChange = vi.fn();
     hud.onQuantityChange(onQuantityChange);
@@ -62,7 +54,8 @@ describe("Hud crowd controls", () => {
 
   it("reports repel track changes as a 0..2 multiplier via onRepelChange", () => {
     const root = document.createElement("div");
-    const hud = new Hud(root);
+    const canvas = document.createElement("canvas");
+    const hud = new Hud(root, canvas);
     const onRepelChange = vi.fn();
     hud.onRepelChange(onRepelChange);
     const track = root.querySelector<HTMLInputElement>(".hud-placard__repel-input")!;
@@ -73,7 +66,8 @@ describe("Hud crowd controls", () => {
 
   it("clamps repel value to [0, 2] range", () => {
     const root = document.createElement("div");
-    const hud = new Hud(root);
+    const canvas = document.createElement("canvas");
+    const hud = new Hud(root, canvas);
     const onRepelChange = vi.fn();
     hud.onRepelChange(onRepelChange);
     const track = root.querySelector<HTMLInputElement>(".hud-placard__repel-input")!;
@@ -87,7 +81,45 @@ describe("Hud crowd controls", () => {
 
   it("styles the repel control as a custom track, not a bare browser range input", () => {
     const root = document.createElement("div");
-    new Hud(root);
+    const canvas = document.createElement("canvas");
+    new Hud(root, canvas);
     expect(root.querySelector<HTMLElement>(".hud-placard__repel-track")).not.toBeNull();
+  });
+});
+
+describe("Hud subject browser", () => {
+  it("Hud constructor takes a canvas drop target and does not render a skin-cycle icon", () => {
+    const root = document.createElement("div");
+    const canvas = document.createElement("canvas");
+    new Hud(root, canvas);
+    expect(root.querySelector(".hud-placard__skin-icon")).toBeNull();
+    expect(root.querySelector(".hud-placard__skin-label")).toBeNull();
+  });
+
+  it("renders a subject-browser toggle button in the placard", () => {
+    const root = document.createElement("div");
+    const canvas = document.createElement("canvas");
+    new Hud(root, canvas);
+    expect(root.querySelector(".hud-placard__subject-toggle")).not.toBeNull();
+  });
+
+  it("clicking the toggle opens the SubjectDrawer", () => {
+    const root = document.createElement("div");
+    const canvas = document.createElement("canvas");
+    new Hud(root, canvas);
+    root.querySelector<HTMLElement>(".hud-placard__subject-toggle")!.click();
+    expect(root.querySelector(".subject-drawer")!.getAttribute("data-open")).toBe("true");
+  });
+
+  it("onSubjectSkinChange fires when a card is tapped (touch)", () => {
+    const root = document.createElement("div");
+    const canvas = document.createElement("canvas");
+    const hud = new Hud(root, canvas);
+    const cb = vi.fn();
+    hud.onSubjectSkinChange(cb);
+    root.querySelector<HTMLElement>(".hud-placard__subject-toggle")!.click();
+    const firstCard = root.querySelector<HTMLElement>(".subject-drawer__card")!;
+    firstCard.dispatchEvent(new PointerEvent("pointerup", { clientX: 1, clientY: 1, pointerType: "touch", bubbles: true }));
+    expect(cb).toHaveBeenCalled();
   });
 });

@@ -112,3 +112,19 @@ describe("config tokens (T2)", () => {
     }
   });
 });
+
+describe("EASE.spring (T5)", () => {
+  it("is a cubic-bezier string with an overshoot (a y-value above 1)", async () => {
+    const { EASE } = await import("../../src/config/tokens");
+    expect(EASE.spring).toMatch(/^cubic-bezier\(/);
+    const nums = (EASE.spring.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+    // cubic-bezier(x1, y1, x2, y2) — overshoot means y1 or y2 exceeds 1.
+    expect(nums[1] > 1 || nums[3] > 1).toBe(true);
+  });
+
+  it("matches the CSS --ease-spring custom property", async () => {
+    const { EASE } = await import("../../src/config/tokens");
+    const css = readText("src/styles/tokens.css");
+    expect(css).toContain(`--ease-spring: ${EASE.spring}`);
+  });
+});

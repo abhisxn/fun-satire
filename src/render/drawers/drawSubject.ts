@@ -1,7 +1,8 @@
 // src/render/drawers/drawSubject.ts
-import type { SubjectColors, SubjectSkin } from "../../content/schema";
-import { drawSubjectFigure } from "./drawSubjectFigure";
-import { drawSubjectLotus } from "./drawSubjectLotus";
+import type { SubjectColors } from "../../content/schema";
+import type { SubjectSkin } from "../../hud/subjectSkinRegistry";
+import { getSubjectSkinEntry } from "../../hud/subjectSkinRegistry";
+import { drawSubjectText } from "./drawSubjectText";
 
 export type DrawSubjectInput = {
   pos: { x: number; y: number };
@@ -16,15 +17,25 @@ export type DrawSubjectInput = {
 
 export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInput): void {
   const rotation = input.rotation ?? 0;
-  const skin = input.subjectSkin ?? "figure";
-  switch (skin) {
-    case "figure":
-      drawSubjectFigure(ctx, { pos: input.pos, sizePx: input.sizePx, colors: input.colors, scale: input.scale, rotation, shadowIntensity: input.shadowIntensity });
-      return;
-    case "lotus":
-      drawSubjectLotus(ctx, { pos: input.pos, sizePx: input.sizePx, colors: input.colors, scale: input.scale, rotation, shadowIntensity: input.shadowIntensity });
-      return;
-    default:
-      throw new Error(`drawSubject: unknown subjectSkin "${skin as string}"`);
+  const subjectSkin: SubjectSkin = input.subjectSkin ?? { kind: "illustrated", id: "figure" };
+  if (subjectSkin.kind === "illustrated") {
+    const entry = getSubjectSkinEntry(subjectSkin.id);
+    entry.drawer(ctx, {
+      pos: input.pos,
+      sizePx: input.sizePx,
+      colors: input.colors,
+      scale: input.scale,
+      rotation,
+      shadowIntensity: input.shadowIntensity,
+    });
+    return;
   }
+  drawSubjectText(ctx, {
+    pos: input.pos,
+    sizePx: input.sizePx,
+    value: subjectSkin.value,
+    scale: input.scale * subjectSkin.scale,
+    colors: input.colors,
+    rotation,
+  });
 }
