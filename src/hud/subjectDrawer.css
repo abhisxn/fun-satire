@@ -2,6 +2,7 @@
   position: fixed;
   top: 0;
   bottom: 0;
+  pointer-events: auto;
   width: min(320px, 86vw);
   background: var(--color-cream);
   border-left: 1.5px solid var(--color-ink);
