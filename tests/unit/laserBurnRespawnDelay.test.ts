@@ -28,7 +28,7 @@ describe("effects/effectDefs/laserBurn respawn delay by renderType (T32)", () =>
       markDying: (id: number) => store.markDying(id),
       startRespawn,
     };
-    const fx = new EffectSystem(new ParticleSystem(new Rng(1), 8), new Rng(1), worldAPI);
+    const fx = new EffectSystem(new ParticleSystem(new Rng(1), 8), new Rng(1), worldAPI, { play: () => {} });
     fx.register(laserBurnEffect);
     fx.start("laserBurn", 1, { x: 0, y: 0 }, 0);
     fx.update(LASER_BURN.totalDurationMs + 10);
@@ -47,7 +47,7 @@ describe("effects/effectDefs/laserBurn respawn delay by renderType (T32)", () =>
       markDying: (id: number) => store.markDying(id),
       startRespawn,
     };
-    const fx = new EffectSystem(new ParticleSystem(new Rng(1), 8), new Rng(1), worldAPI);
+    const fx = new EffectSystem(new ParticleSystem(new Rng(1), 8), new Rng(1), worldAPI, { play: () => {} });
     fx.register(laserBurnEffect);
     fx.start("laserBurn", 2, { x: 0, y: 0 }, 0);
     fx.update(LASER_BURN.totalDurationMs + 10);

@@ -15,7 +15,7 @@ This document organizes the 15 tasks in `docs/superpowers/plans/2026-07-25-fun-s
 | 3. Assets building | New drawers, all routed through shared `paperCut.ts` | Tasks 4, 5, 6, 7 | A, B |
 | 4. UI controls | HUD controls + `main.ts` wiring | Tasks 10, 11 | C |
 | 5. Exceptional visual design | Visual-consistency review, shadow-intensity design rule, laserBurn polish | Task 9 (design rule for sub-step 8), Task 14, cross-lane review of Lane 3's `paperCut.ts` usage | C, E |
-| 6. Audio/effects engineering | Blocked — no task list yet | None (blocked) | — |
+| 6. Audio/effects engineering | `AudioEngine`, cue registry, damage/HUD/charge/respawn cues, ambient beds, music bed, mute/volume placard | Tasks 1-10 of `2026-07-25-fun-satire-audio-engineering.md` | F |
 | 7. Overall experience & code review | Final regression + whole-implementation review | Task 15, plus final review pass | E (runs after all others) |
 
 ## 1. Game design logic
@@ -67,13 +67,26 @@ Invoked via the `/high-end-visual-design` skill as a rigor reference, not a lice
 
 ## 6. Audio/effects engineering
 
-**Blocked pending `docs/superpowers/specs/<date>-fun-satire-audio-design.md` (not yet written).** No implementation task exists in the expansion plan for audio — this lane has no task list to execute yet. The following scope-inputs are noted here to seed that future spec:
+**Unblocked.** `docs/superpowers/specs/2026-07-25-fun-satire-audio-design.md` (design spec) and `docs/superpowers/plans/2026-07-25-fun-satire-audio-engineering.md` (10-task TDD implementation plan) now both exist. This lane's scope-input questions from the earlier blocked note are resolved in that spec: damage-signature cues per mode/power pair (§2), per-mode ambient idle loops + always-on tense filler texture (§2), HUD interaction tick/press cues (§2), charge/respawn lifecycle cues (§2), and a single master mute/volume control defaulting to unmuted (§3, §5) — no per-category sliders.
 
-- Damage-signature audio cues to match each mode/power pair's visual bar (spec §5a): a distinct sound for "the subject explodes" (eyes/laserBurn), "the subject burns" (pointedFinger/electricBurn), "the subject is eaten away" (bugs/bugEat).
-- Ambient/idle audio layer for the crowd modes (scuttle-jitter for bugs, point-and-shake for pointedFinger) — whether idle animation should carry a subtle audio loop or stay silent.
-- HUD interaction feedback (mode/skin cycling, quantity stepper, repel track) — click/tick sounds, if any, consistent with the Paper-Cut Protest identity (tactile, hand-cut, non-digital-feeling).
-- Charge/respawn lifecycle audio (from the v1-fix Subject spec) — whether v2's new crowd modes/skins change or extend that cycle's audio needs.
-- Volume/mute control placement within the existing HUD layout, and any reduced-motion-equivalent "reduced audio" accessibility posture.
+**Owns:** Tasks 1-10 of `2026-07-25-fun-satire-audio-engineering.md`:
+
+| Task | Scope |
+|---|---|
+| 1 | `synthToolkit.ts` (tone/noise-burst synthesis helpers) + `audioCueRegistry.ts` |
+| 2 | `AudioEngine.ts` — `AudioContext`, `musicBus`/`sfxBus`→`masterBus`, mute/volume, `unlock()` |
+| 3 | HUD interaction cues (tick, press, drawer open/close, card select/drop) |
+| 4 | Charge/respawn lifecycle cues |
+| 5 | `EffectStage.cue` hook on `EffectSystem.ts` + `laserBurn.ts` cue wiring |
+| 6 | `electricBurn.ts`/`bugEat.ts` cue registration + wiring |
+| 7 | Per-mode ambient loops (`bugs`, `pointedFinger`) + always-on tense filler texture |
+| 8 | Background music bed with silent-buffer fallback until the mp3 asset is supplied |
+| 9 | `AudioControl` HUD placard (mute toggle + volume slider) |
+| 10 | `main.ts` composition wiring + first-`pointerdown` autoplay unlock |
+
+**Dependency note (verified against the merged codebase, not just the plan's own text):** Tasks 1-8 have no dependency on anything outside this lane — `EffectSystem`'s current 3-arg constructor, `laserBurn.ts`/`electricBurn.ts`/`bugEat.ts`'s stage shapes, and `main.ts`'s `hud.onModeChange` call site all match what the plan assumes. Task 9 (`AudioControl`), however, is specced to route all motion through `var(--ease-spring)`, a token that does not exist yet — it ships with `docs/superpowers/plans/2026-07-25-subject-browser-premium-hud.md`, which is a **separate, still in-progress plan** (only its Task 1 — the `IllustratedSubjectId`/`subjectSkinRegistry.ts` rename/scaffold — is merged so far; confirmed via `git log` and absence of `--ease-spring` in `src/styles/tokens.css`). Two options for this lane, either is acceptable: (a) sequence Task 9 after the premium-hud plan lands `--ease-spring`, or (b) if audio needs to ship first, substitute the existing `var(--ease-protest)` token for Task 9's CSS and file a follow-up to swap to `--ease-spring` once available — do not block Tasks 1-8/10 on this.
+
+**Phase:** F. Runs independently of Phases A-E (those are all merged/complete — see `git log`'s v2 Phase E/docs-completion commits). Not worktree-parallel with anything else currently in flight; may run in its own single worktree, following the same per-task implementer → spec-compliance reviewer → code-quality reviewer protocol as `2026-07-25-fun-satire-v2-subagent-orchestration.md` describes for the other lanes.
 
 ## 7. Overall experience & code review
 
@@ -90,7 +103,8 @@ Cross-cutting, **not** worktree-isolated. Runs after all other lanes complete �
 - **Phase C (sequential, one shared worktree).** Tasks 9-11. Task 9 is joint Lane 2 (implements the draw-order sort and shadow-intensity computation, Steps 7-9) + Lane 5 (defines the shadow-intensity design rule, and confirms the rotation-transform visual correctness of Task 9 Step 6's eyes-case wrapper). Sequence Lane 5's rule definition before Lane 2 implements the consuming code in Task 9 Step 9 — in practice this means Lane 5 reviews/sets the `SHADOW_INTENSITY` constants before that step's commit, not after. Tasks 10-11 are Lane 4, and depend on Task 9's dispatch wiring landing first.
 - **Phase D.** Tasks 12-13 (electricBurn/bugEat test coverage — both already-implemented, tests only). Explicitly unowned by design among the 7 lanes; assign to whichever lane/subagent is free when Phase D starts, or treat as Lane 7's general coverage responsibility. Stated explicitly here since no lane above claims Tasks 12-13.
 - **Phase E.** Task 14 = Lane 5. Task 15 = Lane 7, runs last, strictly after every other lane's work has merged.
+- **Phase F (independent of A-E, own worktree).** Tasks 1-10 of `2026-07-25-fun-satire-audio-engineering.md`, all Lane 6. No ordering dependency on Phases A-E — those are already merged, and Phase F's own plan's prerequisites (the v2 expansion plan) are satisfied. Internally sequential per that plan's task order (Task 5 introduces the `EffectStage.cue`/4-arg `EffectSystem` breaking change that Task 6 and Task 10 depend on). Task 9 has an external dependency on the separate, still in-progress subject-browser-premium-hud plan's `--ease-spring` token — see Lane 6 above for the two acceptable ways to handle that without blocking the rest of Phase F.
 
 ## Closing note
 
-Lane 6 (audio/effects engineering) is the only lane without a task list in this sprint plan. It stays blocked until `docs/superpowers/specs/<date>-fun-satire-audio-design.md` is written; once that spec exists, this document should be updated with Lane 6's actual task numbers from whatever plan implements it, following the same lane format as Lanes 1-5 and 7 above.
+Lane 6 (audio/effects engineering) is now unblocked: `docs/superpowers/specs/2026-07-25-fun-satire-audio-design.md` and `docs/superpowers/plans/2026-07-25-fun-satire-audio-engineering.md` (Tasks 1-10) exist and are verified against the merged v2 codebase. It runs as Phase F, its own worktree, independent of Phases A-E. The one open item is Task 9's `--ease-spring` dependency on the separate subject-browser-premium-hud plan, noted above — not a blocker for the lane as a whole.

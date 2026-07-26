@@ -46,7 +46,7 @@ describe("core loop wiring (boot/P0 fix)", () => {
         if (e) respawn.schedule(e, 0, delayMs);
       },
     };
-    fx = new EffectSystem(ps, new Rng(1), worldAPI);
+    fx = new EffectSystem(ps, new Rng(1), worldAPI, { play: () => {} });
     fx.register(laserBurnEffect);
     power = new PowerController({
       rng: new Rng(1),

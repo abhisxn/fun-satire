@@ -31,6 +31,7 @@ export const electricBurnEffect: EffectDef = {
     {
       durationMs: ELECTRIC_BURN.crackleMs,
       easing: ELECTRIC_BURN.crackleEase,
+      cue: "electricBurn.start",
       update: (ctx, t) => {
         ctx.entity.behavior.data.electricArc = t;
       },
@@ -75,6 +76,7 @@ export const electricBurnEffect: EffectDef = {
     {
       durationMs: ELECTRIC_BURN.sootMs,
       easing: ELECTRIC_BURN.sootEase,
+      cue: "electricBurn.dissolve",
       onStart: (ctx) => {
         const sootColor = "#3A3028";
         for (let i = 0; i < ELECTRIC_BURN.sootCount; i++) {

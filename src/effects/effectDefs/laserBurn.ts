@@ -30,6 +30,7 @@ export const laserBurnEffect: EffectDef = {
     {
       durationMs: LASER_BURN.glowMs,
       easing: LASER_BURN.glowEase,
+      cue: "laserBurn.glow",
       update: (ctx, t) => {
         ctx.entity.physics.scale = (1 - t * 0.18);
       },
@@ -54,6 +55,7 @@ export const laserBurnEffect: EffectDef = {
     {
       durationMs: LASER_BURN.dissolveMs,
       easing: LASER_BURN.dissolveEase,
+      cue: "laserBurn.dissolve",
       onStart: (ctx) => {
         const palette = ctx.entity.content.palette;
         const irisKey = palette?.iris as PaletteKey | undefined;

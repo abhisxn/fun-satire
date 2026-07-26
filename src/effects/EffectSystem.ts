@@ -8,6 +8,7 @@ export type EffectStage = {
   durationMs: number;
   easing: EffectEasing;
   visual?: Record<string, number | string>;
+  cue?: string;
   onStart?: (ctx: EffectCtx) => void;
   update: (ctx: EffectCtx, t: number) => void;
 };
@@ -21,6 +22,10 @@ export type WorldAPI = {
   getEntity(id: EntityId): Entity | null;
   markDying(id: EntityId): void;
   startRespawn(id: EntityId, delayMs: number): void;
+};
+
+export type AudioEngineLike = {
+  play(cueId: string): void;
 };
 
 export type ActiveEffect = {
@@ -40,6 +45,7 @@ export type EffectCtx = {
   particles: ParticleSystem;
   rng: import("../core/Rng").Rng;
   world: WorldAPI;
+  audio: AudioEngineLike;
   stageIndex: number;
   effect: ActiveEffect;
 };
@@ -56,11 +62,13 @@ export class EffectSystem {
   private readonly particles: ParticleSystem;
   private readonly rng: import("../core/Rng").Rng;
   private readonly world: WorldAPI;
+  private readonly audio: AudioEngineLike;
 
-  constructor(particles: ParticleSystem, rng: import("../core/Rng").Rng, world: WorldAPI) {
+  constructor(particles: ParticleSystem, rng: import("../core/Rng").Rng, world: WorldAPI, audio: AudioEngineLike) {
     this.particles = particles;
     this.rng = rng;
     this.world = world;
+    this.audio = audio;
   }
 
   register(def: EffectDef): void {
@@ -89,11 +97,13 @@ export class EffectSystem {
       particles: this.particles,
       rng: this.rng,
       world: this.world,
+      audio: this.audio,
       stageIndex: 0,
       effect,
     };
     const stage = def.stages[0]!;
     stage.onStart?.(ctx);
+    if (stage.cue) this.audio.play(stage.cue);
     return effect;
   }
 
@@ -122,6 +132,7 @@ export class EffectSystem {
           particles: this.particles,
           rng: this.rng,
           world: this.world,
+          audio: this.audio,
           stageIndex: effect.stageIndex,
           effect,
         };
@@ -135,6 +146,7 @@ export class EffectSystem {
           } else {
             const next = def.stages[effect.stageIndex]!;
             next.onStart?.(ctx);
+            if (next.cue) this.audio.play(next.cue);
           }
         } else {
           break;

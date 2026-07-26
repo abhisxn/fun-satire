@@ -24,6 +24,7 @@ export const bugEatEffect: EffectDef = {
     {
       durationMs: BUG_EAT.chomp1Ms,
       easing: BUG_EAT.chomp1Ease,
+      cue: "bugEat.start",
       update: (ctx, t) => {
         ctx.entity.physics.scale = 1 - t * 0.15;
       },
@@ -48,6 +49,7 @@ export const bugEatEffect: EffectDef = {
     {
       durationMs: BUG_EAT.digestMs,
       easing: BUG_EAT.digestEase,
+      cue: "bugEat.dissolve",
       onStart: (ctx) => {
         const sageCount = ctx.rng.rangeInt(BUG_EAT.sageMinCount, BUG_EAT.sageMaxCount);
         for (let i = 0; i < sageCount; i++) {

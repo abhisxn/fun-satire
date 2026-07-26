@@ -31,3 +31,48 @@ Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
   writable: true,
   value: () => makeStubCtx(),
 });
+
+// happy-dom does not implement the Web Audio API. src/main.ts constructs a
+// real AudioContext at module load time (via AudioEngine), so a minimal stub
+// is required here for any test that statically imports src/main.ts.
+class StubAudioParam {
+  value = 0;
+  setValueAtTime(v: number): void { this.value = v; }
+  linearRampToValueAtTime(v: number): void { this.value = v; }
+}
+
+class StubGainNode {
+  gain = new StubAudioParam();
+  connect(): void {}
+  disconnect(): void {}
+}
+
+class StubAudioContext {
+  destination = {};
+  state: "suspended" | "running" = "suspended";
+  currentTime = 0;
+  sampleRate = 44100;
+  createGain(): StubGainNode { return new StubGainNode(); }
+  createOscillator(): unknown {
+    return { type: "sine", frequency: new StubAudioParam(), connect() {}, start() {}, stop() {} };
+  }
+  createBufferSource(): unknown {
+    return { buffer: null, loop: false, connect() {}, disconnect() {}, start() {}, stop() {} };
+  }
+  createBiquadFilter(): unknown {
+    return { type: "", frequency: new StubAudioParam(), connect() {} };
+  }
+  createBuffer(_channels: number, length: number): { getChannelData: () => Float32Array } {
+    const data = new Float32Array(length);
+    return { getChannelData: () => data };
+  }
+  decodeAudioData(): Promise<unknown> {
+    return Promise.resolve({ duration: 0 });
+  }
+  resume(): Promise<void> {
+    this.state = "running";
+    return Promise.resolve();
+  }
+}
+
+(globalThis as unknown as { AudioContext: typeof StubAudioContext }).AudioContext = StubAudioContext;
