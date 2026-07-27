@@ -1,6 +1,6 @@
-// tests/unit/rendererSubject.test.ts
+// tests/unit/rendererSubjects.test.ts
 // @vitest-environment happy-dom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 
 vi.mock("../../src/render/drawers/drawEye", () => ({ drawEye: vi.fn() }));
 vi.mock("../../src/render/drawers/drawSubject", () => ({ drawSubject: vi.fn() }));
@@ -15,7 +15,6 @@ vi.mock("../../src/render/drawers/drawCursor", () => ({
 }));
 
 import { renderFrame } from "../../src/render/Renderer";
-import { drawEye } from "../../src/render/drawers/drawEye";
 import { drawSubject } from "../../src/render/drawers/drawSubject";
 import { EntityStore } from "../../src/entities/EntityStore";
 import type { Entity } from "../../src/entities/Entity";
@@ -40,21 +39,57 @@ function makeEyeEntity(id: number): Entity {
   };
 }
 
-function makeSubjectEntity(id: number): Entity {
+const baseColors = { suit: "slate", shirt: "cream", outline: "ink" } as const;
+
+function makeSubjectInfo(id: number, x: number, y: number) {
   return {
     id,
-    content: { manifestId: "subject-figure-01", rig: "subject", renderType: "subject" },
-    physics: { pos: { x: 50, y: 50 }, vel: { x: 0, y: 0 }, home: { x: 50, y: 50 }, scale: 1, rotation: 0 },
-    behavior: { data: { baseSizePx: 96, colors: { suit: "slate", shirt: "cream", outline: "ink" } } },
-    lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
+    pos: { x, y },
+    sizePx: 96,
+    colors: baseColors,
+    scale: 1,
+    locked: false,
   };
 }
 
-describe("render/Renderer subject branching (T35)", () => {
-  it("draws eyes via drawEye and does not call drawEye for the subject entity", () => {
+describe("render/Renderer multi-subject (PR2 lane 2)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("draws each subject via drawSubject when opts.subjects contains multiple entries", () => {
     const store = new EntityStore();
     store.insert(makeEyeEntity(1));
-    store.insert(makeSubjectEntity(2));
+    renderFrame({
+      ctx: makeCtx(),
+      width: 400,
+      height: 300,
+      store,
+      cursor: { x: 0, y: 0, active: false },
+      particles: { draw: () => {} } as never,
+      blinkTimers: new Map(),
+      pupilOffsets: new Map(),
+      hoverEntityId: null,
+      cursorRingRadius: 0,
+      cursorRingOpacity: 0,
+      reducedMotion: false,
+      hudMode: "eyes",
+      quantity: 20,
+      repelMultiplier: 1,
+      nowMs: 0,
+      subjects: [
+        makeSubjectInfo(10, 50, 50),
+        makeSubjectInfo(11, 200, 200),
+        makeSubjectInfo(12, 350, 100),
+      ],
+      chargeT: 0,
+      assistRadiusPx: 140,
+    } as never);
+    expect(drawSubject).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not call drawSubject when opts.subjects is an empty array", () => {
+    const store = new EntityStore();
     renderFrame({
       ctx: makeCtx(),
       width: 400,
@@ -76,33 +111,6 @@ describe("render/Renderer subject branching (T35)", () => {
       chargeT: 0,
       assistRadiusPx: 140,
     } as never);
-    expect(drawEye).toHaveBeenCalledTimes(1);
-  });
-
-  it("calls drawSubject once when opts.subjects contains a single entry", () => {
-    const store = new EntityStore();
-    store.insert(makeSubjectEntity(2));
-    renderFrame({
-      ctx: makeCtx(),
-      width: 400,
-      height: 300,
-      store,
-      cursor: { x: 0, y: 0, active: false },
-      particles: { draw: () => {} } as never,
-      blinkTimers: new Map(),
-      pupilOffsets: new Map(),
-      hoverEntityId: null,
-      cursorRingRadius: 0,
-      cursorRingOpacity: 0,
-      reducedMotion: false,
-      hudMode: "eyes",
-      quantity: 20,
-      repelMultiplier: 1,
-      nowMs: 0,
-      subjects: [{ id: 2, pos: { x: 50, y: 50 }, sizePx: 96, colors: { suit: "slate", shirt: "cream", outline: "ink" }, scale: 1, locked: false }],
-      chargeT: 0,
-      assistRadiusPx: 140,
-    } as never);
-    expect(drawSubject).toHaveBeenCalledTimes(1);
+    expect(drawSubject).not.toHaveBeenCalled();
   });
 });

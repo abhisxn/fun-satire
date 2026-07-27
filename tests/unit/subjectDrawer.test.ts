@@ -102,11 +102,11 @@ describe("SubjectDrawer avatar card grid", () => {
     const root = document.createElement("div");
     const drawer = new SubjectDrawer(root, { anchor: "right" });
     const avatarCards = root.querySelectorAll<HTMLElement>(".subject-drawer__avatar-card");
-    expect(avatarCards.length).toBe(2);
+    expect(avatarCards.length).toBe(16);
     const allCards = root.querySelectorAll(
       ".subject-drawer__card:not(.subject-drawer__compose-preview), .subject-drawer__avatar-card",
     );
-    expect(allCards.length).toBe(5 + 2);
+    expect(allCards.length).toBe(5 + 16);
     void drawer;
   });
 
@@ -115,9 +115,9 @@ describe("SubjectDrawer avatar card grid", () => {
     new SubjectDrawer(root, { anchor: "right" });
     const first = root.querySelector<HTMLElement>(".subject-drawer__avatar-card")!;
     const img = first.querySelector("img.subject-drawer__avatar-thumb")!;
-    expect(img.getAttribute("src")).toBe("/avatars/sticker-1.png");
-    expect(img.getAttribute("alt")).toBe("Sticker 1");
-    expect(first.textContent).toContain("Sticker 1");
+    expect(img.getAttribute("src")).toBe("/avatars/Frame 38.png");
+    expect(img.getAttribute("alt")).toBe("Frame 38");
+    expect(first.textContent).toContain("Frame 38");
   });
 
   it("avatar section has a visible header label", () => {
@@ -133,9 +133,9 @@ describe("SubjectDrawer avatar card grid", () => {
     const drawer = new SubjectDrawer(root, { anchor: "right" });
     const entries = drawer.getCardElements();
     const avatarEntries = entries.filter((e) => e.skin.kind === "avatar");
-    expect(avatarEntries.length).toBe(2);
-    expect(avatarEntries[0]!.skin).toEqual({ kind: "avatar", assetId: "sticker-1" });
-    expect(avatarEntries[1]!.skin).toEqual({ kind: "avatar", assetId: "sticker-2" });
+    expect(avatarEntries.length).toBe(16);
+    expect(avatarEntries[0]!.skin).toEqual({ kind: "avatar", assetId: "frame-38" });
+    expect(avatarEntries[1]!.skin).toEqual({ kind: "avatar", assetId: "frame-39" });
   });
 });
 
@@ -143,7 +143,7 @@ describe("SubjectDrawer resize-after-placement", () => {
   it("setActiveSkin(text) pre-populates the compose row and marks resize mode", () => {
     const root = document.createElement("div");
     const drawer = new SubjectDrawer(root, { anchor: "right" });
-    drawer.setActiveSkin({ kind: "text", value: "Step Down", scale: 1.35 });
+    drawer.setActiveSkin(1, { kind: "text", value: "Step Down", scale: 1.35 });
     const input = root.querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
     expect(input.value).toBe("Step Down");
     expect(root.querySelector('[data-size="large"]')!.classList.contains("subject-drawer__size-btn--active")).toBe(true);
@@ -152,8 +152,8 @@ describe("SubjectDrawer resize-after-placement", () => {
   it("setActiveSkin(illustrated) clears resize mode", () => {
     const root = document.createElement("div");
     const drawer = new SubjectDrawer(root, { anchor: "right" });
-    drawer.setActiveSkin({ kind: "text", value: "X", scale: 1 });
-    drawer.setActiveSkin({ kind: "illustrated", id: "figure" });
+    drawer.setActiveSkin(1, { kind: "text", value: "X", scale: 1 });
+    drawer.setActiveSkin(1, { kind: "illustrated", id: "figure" });
     const cb = vi.fn();
     drawer.onResize(cb);
     root.querySelector<HTMLElement>('[data-size="large"]')!.click();
@@ -163,10 +163,66 @@ describe("SubjectDrawer resize-after-placement", () => {
   it("stepper clicks call onResize with the new scale only while a text skin is active", () => {
     const root = document.createElement("div");
     const drawer = new SubjectDrawer(root, { anchor: "right" });
-    drawer.setActiveSkin({ kind: "text", value: "Step Down", scale: 1 });
+    drawer.setActiveSkin(7, { kind: "text", value: "Step Down", scale: 1 });
     const cb = vi.fn();
     drawer.onResize(cb);
     root.querySelector<HTMLElement>('[data-size="large"]')!.click();
-    expect(cb).toHaveBeenCalledWith(1.35);
+    expect(cb).toHaveBeenCalledWith(7, 1.35);
+  });
+});
+
+describe("SubjectDrawer identity-aware callbacks (PR2 Lane 3)", () => {
+  it("setActiveSkin stores the subjectId and uses it in onResize callbacks", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    const cb = vi.fn();
+    drawer.onResize(cb);
+    drawer.setActiveSkin(42, { kind: "text", value: "Vote", scale: 1 });
+    root.querySelector<HTMLElement>('[data-size="small"]')!.click();
+    expect(cb).toHaveBeenCalledWith(42, 0.75);
+  });
+
+  it("onFontChange callback receives the active subjectId", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    const cb = vi.fn();
+    drawer.onFontChange(cb);
+    drawer.setActiveSkin(99, { kind: "text", value: "Hello", scale: 1 });
+    root.querySelector<HTMLElement>('[data-font-id="fraunces"]')!.click();
+    expect(cb).toHaveBeenCalledWith(99, "fraunces");
+  });
+
+  it("onAlignChange callback receives the active subjectId", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    const cb = vi.fn();
+    drawer.onAlignChange(cb);
+    drawer.setActiveSkin(7, { kind: "text", value: "Hi", scale: 1 });
+    root.querySelector<HTMLElement>('[data-align="left"]')!.click();
+    expect(cb).toHaveBeenCalledWith(7, "left");
+  });
+
+  it("onSkinChange callback receives the active subjectId and the picked skin", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    const cb = vi.fn();
+    drawer.onSkinChange(cb);
+    drawer.setActiveSkin(3, { kind: "illustrated", id: "figure" });
+    const jesterCard = Array.from(
+      root.querySelectorAll<HTMLElement>(".subject-drawer__card"),
+    ).find((c) => c.querySelector(".subject-drawer__card-label")?.textContent === "jester")!;
+    jesterCard.click();
+    expect(cb).toHaveBeenCalledWith(3, { kind: "illustrated", id: "jester" });
+  });
+
+  it("setActiveSkin(null) clears the active subject; compose callbacks do not fire", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    const resizeCb = vi.fn();
+    drawer.onResize(resizeCb);
+    drawer.setActiveSkin(5, { kind: "text", value: "X", scale: 1 });
+    drawer.setActiveSkin(null, null);
+    root.querySelector<HTMLElement>('[data-size="large"]')!.click();
+    expect(resizeCb).not.toHaveBeenCalled();
   });
 });

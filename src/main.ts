@@ -32,16 +32,18 @@ import "./audio/cues/bugEatCues";
 import { Engine } from "./core/Engine";
 import { Rng } from "./core/Rng";
 import { EntityStore } from "./entities/EntityStore";
-import { spawnEyes, spawnSubject, spawnOneCrowdMember, pickCrowdMemberToDespawn } from "./entities/EntityFactory";
+import { spawnEyes, spawnOneCrowdMember, pickCrowdMemberToDespawn, spawnSubject } from "./entities/EntityFactory";
 import { StateMachine, EyeBehavior, EyeBlinkTimer } from "./entities/behaviors";
 import { stepSubjectPhysics } from "./entities/behaviors/SubjectBehavior";
 import { loadManifestFromText } from "./content/manifestLoader";
-import type { EyeManifestEntry, SubjectManifestEntry, SubjectColors } from "./content/schema";
+import type { EyeManifestEntry, SubjectColors, SubjectManifestEntry } from "./content/schema";
 import eyesRoster from "./content/manifests/eyes.roster.json";
 import subjectRoster from "./content/manifests/subject.roster.json";
 import { PointerTracker } from "./input/PointerTracker";
 import { DragController } from "./input/DragController";
 import { PowerController } from "./input/PowerController";
+import type { SubjectDropResult } from "./input/SubjectDragSource";
+import { queryNearestSubject } from "./entities/subjectQueries";
 import { ParticleSystem } from "./effects/ParticleSystem";
 import { EffectSystem, EASE_PROTEST } from "./effects/EffectSystem";
 import { RespawnScheduler } from "./effects/RespawnScheduler";
@@ -73,6 +75,132 @@ type LocomotionState = "idle" | "flee" | "dragged";
 type LifecycleEvent = "die" | "respawn";
 type LocomotionEvent = "drag" | "release";
 
+export type SubjectRecord = {
+  id: EntityId;
+  skin: SubjectSkin;
+  spawnedAtMs: number;
+  locked: boolean;
+};
+
+const subjects: Map<EntityId, SubjectRecord> = new Map();
+let lockedSubjectId: EntityId | null = null;
+
+export function spawnSubjectForCollection(input: {
+  id: EntityId;
+  skin: SubjectSkin;
+  nowMs: number;
+}): SubjectRecord {
+  const record: SubjectRecord = {
+    id: input.id,
+    skin: input.skin,
+    spawnedAtMs: input.nowMs,
+    locked: false,
+  };
+  subjects.set(input.id, record);
+  return record;
+}
+
+export function removeSubjectFromCollection(id: EntityId): boolean {
+  const had = subjects.delete(id);
+  if (lockedSubjectId === id) lockedSubjectId = null;
+  return had;
+}
+
+export function getSubjectRecord(id: EntityId): SubjectRecord | undefined {
+  return subjects.get(id);
+}
+
+export function listSubjectRecords(): Map<EntityId, SubjectRecord> {
+  return subjects;
+}
+
+export function lockSubject(id: EntityId): void {
+  if (!subjects.has(id)) return;
+  const prev = lockedSubjectId;
+  if (prev !== null && prev !== id) {
+    const prevRec = subjects.get(prev);
+    if (prevRec) prevRec.locked = false;
+  }
+  lockedSubjectId = id;
+  const rec = subjects.get(id);
+  if (rec) rec.locked = true;
+}
+
+export function unlockSubject(): void {
+  if (lockedSubjectId === null) return;
+  const rec = subjects.get(lockedSubjectId);
+  if (rec) rec.locked = false;
+  lockedSubjectId = null;
+}
+
+export function getLockedSubjectId(): EntityId | null {
+  return lockedSubjectId;
+}
+
+export function clearLockedSubjectIf(predicate: (id: EntityId) => boolean): void {
+  if (lockedSubjectId !== null && predicate(lockedSubjectId)) {
+    unlockSubject();
+  }
+}
+
+export function __resetSubjectCollectionForTests(): void {
+  subjects.clear();
+  lockedSubjectId = null;
+}
+
+export type ApplySubjectDropInput = {
+  skin: SubjectSkin;
+  canvasPos: { x: number; y: number } | null;
+  nowMs: number;
+};
+
+/**
+ * Handles a drag/tap drop from the subject drawer. Spawns a new subject
+ * into the EntityStore + subjects Map at `canvasPos`. A null `canvasPos`
+ * (drop outside canvas, or touch tap on the card) is a no-op per Gate 2
+ * Option A (touch tap → spawn at center; drop outside → ignore).
+ */
+export function applySubjectDrop(input: ApplySubjectDropInput): EntityId | null {
+  const pos = input.canvasPos ?? {
+    x: viewport.state.width / 2,
+    y: viewport.state.height / 2,
+  };
+  const cursor = { x: pos.x, y: pos.y };
+  const entity = spawnSubject({
+    manifest: subjectManifestEntries,
+    cursor,
+    nextId: nextEntityId,
+    skin: input.skin,
+  });
+  if (!entity) return null;
+  nextEntityId += 1;
+  store.insert(entity);
+  spawnSubjectForCollection({ id: entity.id, skin: input.skin, nowMs: input.nowMs });
+  return entity.id;
+}
+
+/**
+ * Handles a canvas press. If a subject entity is under the cursor, toggles
+ * the lock on that subject. If no subject is under the cursor, the existing
+ * lock is preserved (so eyes/empty-press don't accidentally unlock).
+ */
+export function applyCanvasPress(_x: number, _y: number, hitSubjectId: EntityId | null): void {
+  if (hitSubjectId === null) return;
+  if (lockedSubjectId === hitSubjectId) {
+    unlockSubject();
+    hud.setCurrentSubjectId(null);
+    hud.setLockedSubjectId(null);
+    return;
+  }
+  lockSubject(hitSubjectId);
+  hud.setCurrentSubjectId(hitSubjectId);
+  const rec = subjects.get(hitSubjectId);
+  if (rec) {
+    hud.setActiveSubjectSkin(hitSubjectId, rec.skin);
+    hud.setLockedSubjectId(hitSubjectId);
+  }
+}
+
 /**
  * Finds the nearest live "eye" entity to `point` within `maxRange`,
  * explicitly ignoring the Subject entity (Subject is not eye-targetable —
@@ -98,17 +226,34 @@ export function queryNearestEye(
   return best;
 }
 
-/** Pure decision: should a new Subject be spawned this tick? */
-export function shouldSpawnSubject(input: {
-  subjectId: EntityId | null;
-  subjectRespawnAtMs: number | null;
-  nowMs: number;
-  cursorActive: boolean;
-}): boolean {
-  if (input.subjectId !== null) return false;
-  if (input.subjectRespawnAtMs === null) return false;
-  if (!input.cursorActive) return false;
-  return input.nowMs >= input.subjectRespawnAtMs;
+/**
+ * Update a single subject's skin formatting (font, scale, align) by entity id.
+ * No-op if the subject is unknown or its skin is not a text skin. The behavior
+ * data on the live entity is updated in lockstep with the `subjects` Map so
+ * the renderer sees the change on the next frame.
+ */
+export function applySubjectSkinPatch(
+  id: EntityId,
+  patch: { fontId?: string; scale?: number; align?: "left" | "center" | "right" },
+): void {
+  const rec = subjects.get(id);
+  if (!rec || rec.skin.kind !== "text") return;
+  const next: SubjectSkin = { ...rec.skin, ...patch };
+  rec.skin = next;
+  const e = store.get(id, { live: true });
+  if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = next;
+}
+
+export function applySubjectFontChange(id: EntityId, fontId: string): void {
+  applySubjectSkinPatch(id, { fontId });
+}
+
+export function applySubjectResizeChange(id: EntityId, scale: number): void {
+  applySubjectSkinPatch(id, { scale });
+}
+
+export function applySubjectAlignChange(id: EntityId, align: "left" | "center" | "right"): void {
+  applySubjectSkinPatch(id, { align });
 }
 
 const stage = document.querySelector<HTMLCanvasElement>("#stage");
@@ -140,6 +285,10 @@ const seed = seedParam && Number.isFinite(Number.parseInt(seedParam, 10))
 const rng = new Rng(seed);
 const store = new EntityStore();
 const manifest = loadManifestFromText(JSON.stringify(eyesRoster));
+const subjectManifest = loadManifestFromText(JSON.stringify(subjectRoster));
+const subjectManifestEntries = subjectManifest.entries.filter(
+  (e): e is SubjectManifestEntry => e.rig === "subject",
+);
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 const imageAssets = getImageAssetCache();
@@ -154,7 +303,6 @@ new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
-let activeSubjectSkin: SubjectSkin = { kind: "illustrated", id: "figure" };
 
 hud.onModeChange((mode) => {
   const power = MODE_POWER_MAP[mode];
@@ -164,40 +312,29 @@ hud.onModeChange((mode) => {
   startAmbientForMode(audioEngine, mode);
 });
 
-hud.onSubjectSkinChange((skin) => {
-  activeSubjectSkin = skin;
-  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
-  if (subj) {
-    (subj.behavior.data as Record<string, unknown>).subjectSkin = skin;
-  }
-  hud.setActiveSubjectSkin(skin);
+hud.onSubjectDrop((result: SubjectDropResult) => {
+  applySubjectDrop({ skin: result.skin, canvasPos: result.canvasPos, nowMs: engine.getNow() });
 });
 
-hud.onSubjectResize((scale) => {
-  if (activeSubjectSkin.kind !== "text") return;
-  activeSubjectSkin = { ...activeSubjectSkin, scale };
-  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
-  if (subj) {
-    (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
-  }
+hud.onSubjectResize((subjectId, scale) => {
+  if (subjectId === null) return;
+  applySubjectResizeChange(subjectId, scale);
+  const rec = subjects.get(subjectId);
+  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });
 
-hud.onSubjectFontChange((fontId) => {
-  if (activeSubjectSkin.kind !== "text") return;
-  activeSubjectSkin = { ...activeSubjectSkin, fontId };
-  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
-  if (subj) {
-    (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
-  }
+hud.onSubjectFontChange((subjectId, fontId) => {
+  if (subjectId === null) return;
+  applySubjectFontChange(subjectId, fontId);
+  const rec = subjects.get(subjectId);
+  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });
 
-hud.onSubjectAlignChange((align) => {
-  if (activeSubjectSkin.kind !== "text") return;
-  activeSubjectSkin = { ...activeSubjectSkin, align };
-  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
-  if (subj) {
-    (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
-  }
+hud.onSubjectAlignChange((subjectId, align) => {
+  if (subjectId === null) return;
+  applySubjectAlignChange(subjectId, align);
+  const rec = subjects.get(subjectId);
+  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });
 
 hud.onQuantityChange((quantity) => {
@@ -261,9 +398,8 @@ hud.onHandToolToggle((active) => {
 });
 
 hud.onTextTool(() => {
-  if (subjectId === null && subjectRespawnAtMs === null) {
-    subjectRespawnAtMs = engine.getNow();
-  }
+  // Text tool previously triggered an auto-respawn; with drag-to-place
+  // (PR2), the user drops a subject from the drawer onto the canvas.
 });
 
 hud.onGridTool(() => {
@@ -286,11 +422,6 @@ engine.events.on("tick", ({ phase, dt }) => {
   if (phase === "post-physics") {
     const respawned = respawn.tick(nowMs);
     for (const id of respawned) respawnEntity(id);
-    if (shouldSpawnSubject({ subjectId, subjectRespawnAtMs, nowMs, cursorActive: engine.cursor().active })) {
-      const cur = engine.cursor();
-      spawnSubjectAt({ x: cur.x, y: cur.y }, nowMs);
-      subjectRespawnAtMs = null;
-    }
     return;
   }
   if (phase === "render") {
@@ -307,17 +438,29 @@ engine.events.on("tick", ({ phase, dt }) => {
       typeof window !== "undefined" &&
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const subjEntity = subjectId !== null ? store.get(subjectId, { live: true }) : null;
-    const subjectRenderInfo = subjEntity
-      ? {
-          id: subjEntity.id,
-          pos: subjEntity.physics.pos,
-          sizePx: (subjEntity.behavior.data as { baseSizePx: number }).baseSizePx,
-          colors: (subjEntity.behavior.data as { colors: SubjectColors }).colors,
-          scale: subjEntity.physics.scale,
-          subjectSkin: (subjEntity.behavior.data as { subjectSkin?: SubjectSkin }).subjectSkin,
-        }
-      : null;
+    const subjectRenderInfos: Array<{
+      id: EntityId;
+      pos: { x: number; y: number };
+      sizePx: number;
+      colors: SubjectColors;
+      scale: number;
+      subjectSkin?: SubjectSkin;
+      locked: boolean;
+    }> = [];
+    subjects.forEach((rec) => {
+      const e = store.get(rec.id, { live: true });
+      if (!e) return;
+      subjectRenderInfos.push({
+        id: e.id,
+        pos: e.physics.pos,
+        sizePx: (e.behavior.data as { baseSizePx: number }).baseSizePx,
+        colors: (e.behavior.data as { colors: SubjectColors }).colors,
+        scale: e.physics.scale,
+        subjectSkin: (e.behavior.data as { subjectSkin?: SubjectSkin }).subjectSkin,
+        locked: rec.locked,
+      });
+    });
+    hud.setSubjectCount(subjects.size);
     renderFrame({
       ctx,
       store,
@@ -339,7 +482,8 @@ engine.events.on("tick", ({ phase, dt }) => {
       hudMode: currentMode,
       quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
       repelMultiplier,
-      subject: subjectRenderInfo,
+      subjects: subjectRenderInfos,
+      lockedSubjectId,
       chargeT: ringT,
       assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
       imageCache: imageAssets,
@@ -352,41 +496,23 @@ const behaviors = new Map<EntityId, EyeBehavior>();
 const blinkTimers = new Map<EntityId, EyeBlinkTimer>();
 const pupilOffsets = new Map<EntityId, { x: number; y: number }>();
 
-const subjectManifest = loadManifestFromText(JSON.stringify(subjectRoster));
-let subjectId: EntityId | null = null;
-let subjectSpawnedAtMs = 0;
-let subjectRespawnAtMs: number | null = null;
 let nextEntityId = 1;
 const SUBJECT_ASSIST_RADIUS_PX = 140;
-
-const spawnSubjectAt = (pos: { x: number; y: number }, nowMs: number): void => {
-  const entity = spawnSubject({
-    manifest: subjectManifest.entries.filter((e): e is SubjectManifestEntry => e.rig === "subject"),
-    cursor: pos,
-    nextId: nextEntityId++,
-  });
-  if (!entity) return;
-  store.insert(entity);
-  subjectId = entity.id;
-  subjectSpawnedAtMs = nowMs;
-  (entity.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
-};
 
 const worldAPI = {
   getEntity: (id: EntityId) => store.get(id, { live: true }),
   markDying: (id: EntityId) => {
     store.markDying(id);
   },
-  startRespawn: (id: EntityId, delayMs: number) => {
+  startRespawn: (id: EntityId, _delayMs: number) => {
     const e = store.get(id, { live: false });
     if (!e) return;
     if (e.content.renderType === "subject") {
       store.remove(id);
-      if (subjectId === id) subjectId = null;
-      subjectRespawnAtMs = engine.getNow() + delayMs;
+      removeSubjectFromCollection(id);
       return;
     }
-    respawn.schedule(e, engine.getNow(), delayMs);
+    respawn.schedule(e, engine.getNow(), _delayMs);
   },
 };
 
@@ -469,8 +595,14 @@ const pointer: PointerTracker = new PointerTracker(stage, {
   press() {
     const cur = engine.cursor();
     if (!cur.active) return;
-    if (subjectId !== null) {
-      powerCtrl.tryPress(subjectId, cur.x, cur.y, engine.getNow());
+    const nearest = queryNearestSubject(store, { x: cur.x, y: cur.y });
+    const hitSubjectId = nearest ? nearest.id : null;
+    if (hitSubjectId !== null) {
+      applyCanvasPress(cur.x, cur.y, hitSubjectId);
+    }
+    const targetId = lockedSubjectId ?? hitSubjectId;
+    if (targetId !== null) {
+      powerCtrl.tryPress(targetId, cur.x, cur.y, engine.getNow());
       subjectPressOrigin = { x: cur.x, y: cur.y };
     }
     const eyeTarget = queryNearestEye(store, { x: cur.x, y: cur.y }, 70);
@@ -498,16 +630,16 @@ engine.onTick("pre-physics", (dt) => {
   const cursor = engine.cursor();
 
   if (
-    subjectId !== null &&
+    lockedSubjectId !== null &&
     subjectPressOrigin &&
     powerCtrl.isCharging() &&
-    powerCtrl.chargeTargetId() === subjectId
+    powerCtrl.chargeTargetId() === lockedSubjectId
   ) {
     const dx = cursor.x - subjectPressOrigin.x;
     const dy = cursor.y - subjectPressOrigin.y;
     if (dx * dx + dy * dy > SUBJECT_DRAG_DEADZONE_PX * SUBJECT_DRAG_DEADZONE_PX) {
       powerCtrl.cancel();
-      dragCtrl.tryStart(subjectId, cursor.x, cursor.y);
+      dragCtrl.tryStart(lockedSubjectId, cursor.x, cursor.y);
       subjectPressOrigin = null;
     }
   }
@@ -550,12 +682,13 @@ engine.onTick("pre-physics", (dt) => {
     e.physics.vel = next.vel;
   });
 
-  if (subjectId !== null && cursor.active) {
-    const subj = store.get(subjectId, { live: true });
+  if (lockedSubjectId !== null && cursor.active) {
+    const subj = store.get(lockedSubjectId, { live: true });
     if (subj && !subj.lifecycle.dragged) {
       stepSubjectPhysics(subj.physics, cursor, dtSec);
-      if (subj.physics.scale < 1) {
-        const elapsed = engine.getNow() - subjectSpawnedAtMs;
+      const rec = subjects.get(lockedSubjectId);
+      if (rec && subj.physics.scale < 1) {
+        const elapsed = engine.getNow() - rec.spawnedAtMs;
         subj.physics.scale = EASE_PROTEST(Math.min(1, elapsed / DURATION.slow));
       }
     }
@@ -567,9 +700,9 @@ engine.onTick("pre-physics", (dt) => {
     if (beh) beh.tick(rng, engine.getNow());
   });
 
-  // Look-at rotation: eyes rotate toward subject
-  if (subjectId !== null) {
-    const subj = store.get(subjectId, { live: true });
+  // Look-at rotation: eyes rotate toward the locked subject
+  if (lockedSubjectId !== null) {
+    const subj = store.get(lockedSubjectId, { live: true });
     if (subj) {
       store.forEachAlive((e) => {
         if (e.content.renderType !== "eye") return;
@@ -590,7 +723,6 @@ viewport.onChange((s) => {
 
 spawnInitialEyes();
 nextEntityId = Math.max(0, ...store.ids()) + 1;
-subjectRespawnAtMs = engine.getNow();
 pointer.attach();
 engine.start();
 

@@ -63,6 +63,15 @@
 - **Decision**: Widen `SubjectManifestEntry.visual.styleGuardrail` to admit `curated-avatar` alongside `flat-illustrated`. A `curated-avatar` entry must carry a registered `assetId` from `AVATAR_ASSET_REGISTRY`. `manifestLoader.ts` validates the schema shape and a non-empty `assetId`; human curation-time review enforces that the asset is a cartoon/caricature illustration — never photoreal, never a doctored photograph, never hate iconography. The runtime loads only assets that pass both gates.
 - **Consequence**: Avatar subjects are gated by the same structural authoring pipeline as procedural subjects; the engine never loads arbitrary unreviewed images.
 
+### ADR 010: Multi-subject targeting (PR2)
+- **Status**: Accepted — `docs/superpowers/plans/2026-07-...` (phase C integration).
+- **Context**: PR1 introduced a single `Subject` entity that was swapped in/out of the crowd via a "merge eyes into subject" lifecycle. Only one subject could exist at a time, and its arrival/destruction was coupled to the eyes-to-subject transition. PR2 needs N subjects coexisting with distributed gaze, each with its own identity, skin, and lock state, while preserving the cathartic "attack one target" flow.
+- **Decision**: Replace the singleton with a `Map<EntityId, SubjectRecord>` collection (`subjects` in `EntityStore`). Add a separate `lockedSubjectId: EntityId | null` pointer that names the currently-targeted subject for power delivery and HUD display. Placement is drag-to-canvas (not swap); locking is explicit tap-to-lock on an in-canvas subject (or auto-lock on first placement if empty). The HUD renders the locked subject's identity (name, skin) and its attack CTA; other subjects in the collection render with distributed `SubjectBehavior` gaze but are not attackable until locked. Destroyed subjects are removed from the map with no auto-respawn — the collection shrinks permanently unless the user places more.
+- **Consequence**: Drag-to-place replaces the old swap mechanic. Tap-to-lock makes targeting intentional, not positional. Gaze is distributed across all members of the collection. The HUD is identity-aware (shows locked subject's name/skin/CTA). The eyes→subject merge pipeline is retired; eyes and subjects now share the canvas as peer entity types. No simultaneous multi-lock: exactly one `lockedSubjectId` exists at any time, simplifying power-routing logic in `PowerController`.
+- **Rejected alternatives**:
+  - **Multiple simultaneous locks**: Would require `PowerController` to split damage across N targets or queue attacks. Rejected — breaks the singular cathartic "aim at one person" feel; adds queue/state-complexity for marginal gain.
+  - **Global active-skin mutation on all subjects**: Would change every subject's appearance when the skin selector changes. Rejected — each subject retains the skin it was placed with, preserving individual identity in a multi-target scene.
+
 ## 3. Core Definitions
 
 | Term | Definition |
@@ -73,6 +82,8 @@
 | **ForceField** | The cursor-driven repulsion/attraction field math. |
 | **Integrator** | The physics step that updates Position/Velocity from Acceleration. |
 | **Registry** | A map of string IDs to Drawer or Behavior factories. |
+| **SubjectCollection** | `Map<EntityId, SubjectRecord>` in EntityStore holding all placed subjects. |
+| **LockedSubject** | The single `lockedSubjectId` entry in the collection that receives power and drives the HUD. |
 
 ## 4. System Relationships (Data Flow)
 
@@ -82,17 +93,22 @@ graph TD
   Pointer --> Engine[Engine]
   Pointer --> Drag[DragController]
   Pointer --> Power[PowerController]
-  Pointer --> HUD[HUD / SubjectDrawer]
+  Pointer --> HUD[HUD (identity-aware)]
 
   Engine -->|Tick pre-physics| Power
   Engine -->|Tick pre-physics| Effects[EffectSystem]
   Engine -->|Tick pre-physics| Physics[ForceField/SpringHome/Integrator]
   Engine -->|Tick render| Renderer
 
-  Power -->|Start| Effects
+  Power -->|Targets lockedSubjectId| Effects
   Effects -->|Spawn| Particles[ParticleSystem]
-  Effects -->|Kill| Store[EntityStore]
+  Effects -->|Kill / Remove from map| Store[EntityStore]
   Effects -->|Collective contributors| Renderer
+
+  Store -->|Holds subjects Map| Subjects[SubjectCollection]
+  Store -->|Holds eyes/bugs| Entities[Eye/Bug/PointedFinger]
+  Subjects -->|lockedSubjectId| HUD
+  Subjects -->|Distributed gaze| Renderer
 
   Renderer -->|Query| Store
   Renderer -->|Draw| Drawers[Eye/FieldLines/Cursor/Subject/Avatar/CollectiveEffect]

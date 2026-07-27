@@ -111,15 +111,18 @@ describe("Hud subject browser", () => {
     expect(root.querySelector(".subject-drawer")!.getAttribute("data-open")).toBe("true");
   });
 
-  it("onSubjectSkinChange fires when a card is tapped (touch)", () => {
+  it("onSubjectSkinChange fires when a card is clicked", () => {
     const root = document.createElement("div");
     const canvas = document.createElement("canvas");
     const hud = new Hud(root, canvas);
     const cb = vi.fn();
     hud.onSubjectSkinChange(cb);
     root.querySelector<HTMLElement>(".hud-placard__subject-toggle")!.click();
-    const firstCard = root.querySelector<HTMLElement>(".subject-drawer__card")!;
-    firstCard.dispatchEvent(new PointerEvent("pointerup", { clientX: 1, clientY: 1, pointerType: "touch", bubbles: true }));
+    const cards = Array.from(
+      root.querySelectorAll<HTMLElement>(".subject-drawer__card:not(.subject-drawer__compose-preview):not(.subject-drawer__avatar-card)"),
+    );
+    expect(cards.length).toBeGreaterThan(0);
+    cards[0]!.click();
     expect(cb).toHaveBeenCalled();
   });
 });

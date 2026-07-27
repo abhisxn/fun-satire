@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ATTACK CTA — No-Lock Behavior (PR2 / Task 7)</title>
+  <style>
+    :root {
+      --bg-0: #0a0810;
+      --bg-1: #14101c;
+      --ink: #f4ecdc;
+      --muted: #8a8294;
+      --hairline: rgba(244, 236, 220, 0.08);
+      --amber: #f5a623;
+      --gold: #e8c547;
+      --coral: #f25c54;
+      --sage: #9bb59b;
+      --cream: #f0d3a4;
+      --slate: #2a2433;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg-0);
+      color: var(--ink);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 48px 32px 80px; }
+    h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.1; letter-spacing: -0.02em; font-weight: 700; }
+    .sub { margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .crumb { margin: 0 0 32px; color: var(--muted); font-size: 12px; font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.04em; }
+    .crumb a { color: var(--cream); text-decoration: none; border-bottom: 1px dotted rgba(240,211,164,0.4); }
+
+    .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    @media (max-width: 860px) { .options { grid-template-columns: 1fr; } }
+
+    .opt {
+      position: relative;
+      border-radius: 16px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)) , var(--bg-1);
+      border: 1px solid var(--hairline);
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .opt-header { display: flex; align-items: center; gap: 12px; }
+    .letter {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; flex-shrink: 0;
+      background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .letter.b { background: rgba(232,197,71,0.15); color: var(--gold); border-color: rgba(232,197,71,0.3); }
+    .opt-title { font-size: 16px; font-weight: 600; }
+    .opt-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+    .stage {
+      height: 220px; border-radius: 12px;
+      background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.04) 0%, transparent 60%), var(--bg-0);
+      border: 1px solid var(--hairline);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Mini subjects */
+    .subj {
+      position: absolute;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #2a1f1a, #1a1014);
+      border: 1.5px solid rgba(244,236,220,0.14);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+    }
+    .subj::after {
+      content: ""; width: 14px; height: 14px; border-radius: 50%;
+      background: #d4a574; opacity: 0.7;
+    }
+
+    /* Cursor (mock) */
+    .cursor {
+      position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--coral);
+      box-shadow: 0 0 0 4px rgba(242,92,84,0.18), 0 0 18px rgba(242,92,84,0.45);
+    }
+    .cursor::after {
+      content: ""; position: absolute; left: 50%; top: 50%;
+      width: 4px; height: 4px; border-radius: 50%;
+      background: #fff; transform: translate(-50%, -50%);
+    }
+
+    /* "Locked" gold halo (visual language reused from lock-indicator.html) */
+    .locked {
+      position: absolute; inset: -7px; border-radius: 50%;
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 18px rgba(232,197,71,0.35);
+    }
+
+    /* Hover-bubble label (e.g. "tap to lock", "→ nearest") */
+    .bubble {
+      position: absolute;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(10,8,16,0.85);
+      border: 1px solid var(--hairline);
+      color: var(--ink);
+      font-size: 11px;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .bubble.warn { color: var(--amber); border-color: rgba(245,166,35,0.35); }
+    .bubble.target { color: var(--gold); border-color: rgba(232,197,71,0.4); }
+
+    /* Dotted targeting line for Option B */
+    .aim {
+      position: absolute;
+      pointer-events: none;
+      height: 0;
+      border-top: 1.5px dashed var(--gold);
+      opacity: 0.65;
+      transform-origin: 0 50%;
+    }
+
+    /* The ATTACK CTA mock strip across the bottom of each stage */
+    .cta-strip {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 10px 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.55));
+      border-top: 1px solid var(--hairline);
+      font-size: 11px;
+      color: var(--muted);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid var(--coral);
+      background: var(--coral);
+      color: #1a0a08;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      box-shadow: 0 0 12px rgba(242,92,84,0.35);
+    }
+    .cta-btn.disabled {
+      background: transparent;
+      color: var(--muted);
+      border-color: rgba(138,130,148,0.35);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .cta-btn .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(0,0,0,0.35);
+    }
+    .cta-btn.disabled .dot { background: var(--muted); opacity: 0.5; }
+
+    /* Trade-offs list */
+    .tradeoffs { padding: 0; margin: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .tradeoffs li {
+      font-size: 13px; line-height: 1.45; color: var(--ink);
+      padding-left: 18px; position: relative;
+    }
+    .tradeoffs li::before {
+      content: ""; position: absolute; left: 0; top: 8px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--amber);
+    }
+    .opt.b .tradeoffs li::before { background: var(--gold); }
+    .tradeoffs li b { color: var(--cream); font-weight: 600; }
+    .tradeoffs li i { color: var(--muted); font-style: normal; }
+
+    .pick {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 2px;
+      padding: 4px 8px; border-radius: 999px;
+      font-size: 11px; font-family: "JetBrains Mono", ui-monospace, monospace;
+      letter-spacing: 0.04em;
+      background: rgba(244,236,220,0.05);
+      color: var(--muted);
+      border: 1px dashed var(--hairline);
+    }
+    .pick .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+
+    /* Footer */
+    .foot {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--hairline);
+      color: var(--muted);
+      font-size: 12px; line-height: 1.6;
+    }
+    .foot code {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      color: var(--cream);
+      background: rgba(244,236,220,0.05);
+      padding: 1px 5px; border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>ATTACK CTA — no-lock behavior</h1>
+    <p class="sub">What should the ATTACK button do when no subject is locked?</p>
+    <p class="crumb">
+      PR2 · Task 7 · Lane 1 · <a href="../../../specs/2026-07-27-multi-subject-targeting-design.md">multi-subject-targeting-design.md §3</a>
+    </p>
+
+    <div class="options">
+
+      <!-- ============ OPTION A ============ -->
+      <div class="opt a">
+        <div class="opt-header">
+          <div class="letter">A</div>
+          <div>
+            <div class="opt-title">CTA disabled until a subject is locked</div>
+          </div>
+        </div>
+        <p class="opt-desc">
+          The ATTACK button is greyed out whenever <code style="font-family:'JetBrains Mono',monospace;color:var(--cream);background:rgba(244,236,220,0.05);padding:1px 5px;border-radius:4px;">lockedSubjectId === null</code>. Tapping a subject locks it; only then can the CTA fire. The press/hold charge-burn flow stays untouched when locked.
+        </p>
+
+        <!-- Stage: cursor over empty space, no subject locked, CTA disabled -->
+        <div class="stage">
+          <div class="subj" style="left: 38px;  top: 28px;"></div>
+          <div class="subj" style="left: 78px;  top: 130px;"></div>
+          <div class="subj" style="left: 175px; top: 48px;"></div>
+          <div class="subj" style="left: 230px; top: 140px;"></div>
+          <div class="subj" style="left: 290px; top: 60px;"></div>
+
+          <div class="cursor" style="left: 150px; top: 92px;"></div>
+          <div class="bubble warn" style="left: 110px; top: 60px;">tap a subject to lock</div>
+
+          <div class="cta-strip">
+            <span>locked: <i style="font-style:normal;color:var(--muted);">— none —</i></span>
+            <span class="cta-btn disabled"><span class="dot"></span>Attack</span>
+          </div>
+        </div>
+
+        <ul class="tradeoffs">
+          <li><b>Explicit targeting.</b> Every press hits an obviously-locked subject — no surprise victims.</li>
+          <li><b>One tap more.</b> First-time users have to discover tap-to-lock before ATTACK works.</li>
+          <li><b>Trivial state machine.</b> ATTACK onClick reads <code style="font-family:'JetBrains Mono',monospace;color:var(--cream);">lockedSubjectId</code>; the null branch is unreachable.</li>
+          <li><b>Discoverability cost.</b> New users may think the button is broken if they don't see the lock cue — pairs tightly with the lock indicator from Task 6.</li>
+          <li><b>Accessibility win.</b> <code style="font-family:'JetBrains Mono',monospace;color:var(--cream);">aria-disabled</code> + clear "why" hint is standard screen-reader fare.</li>
+        </ul>
+
+        <span class="pick"><span class="dot"></span>Plan calls this out as the simpler default if Option B is rejected.</span>
+      </div>
+
+      <!-- ============ OPTION B ============ -->
+      <div class="opt b">
+        <div class="opt-header">
+          <div class="letter b">B</div>
+          <div>
+            <div class="opt-title">CTA enabled — targets nearest subject to cursor</div>
+          </div>
+        </div>
+        <p class="opt-desc">
+          The ATTACK button is always active. When <code style="font-family:'JetBrains Mono',monospace;color:var(--cream);background:rgba(244,236,220,0.05);padding:1px 5px;border-radius:4px;">lockedSubjectId === null</code>, pressing it resolves the target by Euclidean distance from the press point to each live subject and calls <code style="font-family:'JetBrains Mono',monospace;color:var(--cream);background:rgba(244,236,220,0.05);padding:1px 5px;border-radius:4px;">PowerController.tryPress(nearestId, ...)</code>. A faint dashed line previews the target so the user sees who's about to get hit.
+        </p>
+
+        <!-- Stage: cursor with dashed aim to nearest subject, CTA enabled -->
+        <div class="stage">
+          <div class="subj" style="left: 38px;  top: 28px;"></div>
+          <div class="subj" style="left: 78px;  top: 130px;"></div>
+          <!-- nearest subject gets a gold halo -->
+          <div class="subj" style="left: 175px; top: 48px;">
+            <div class="locked"></div>
+          </div>
+          <div class="subj" style="left: 230px; top: 140px;"></div>
+          <div class="subj" style="left: 290px; top: 60px;"></div>
+
+          <div class="cursor" style="left: 150px; top: 92px;"></div>
+          <!-- dashed aim line from cursor to nearest subject (subject at 175,48, w/2=16, h/2=16 → center 191,64; cursor center 159,101) -->
+          <div class="aim" style="left: 159px; top: 100px; width: 58px; transform: rotate(-33deg);"></div>
+          <div class="bubble target" style="left: 188px; top: 18px;">→ nearest</div>
+
+          <div class="cta-strip">
+            <span>locked: <i style="font-style:normal;color:var(--muted);">— none —</i> · target: subj@175,48</span>
+            <span class="cta-btn"><span class="dot"></span>Attack</span>
+          </div>
+        </div>
+
+        <ul class="tradeoffs">
+          <li><b>Zero extra taps.</b> ATTACK just works — fastest path from idle to burning.</li>
+          <li><b>Ambiguity on dense crowds.</b> When several subjects are within a few pixels, "nearest" can flip between frames; the aim line keeps it legible.</li>
+          <li><b>Surprise damage.</b> Misclicks on the CTA — not on a subject — still hurt someone. Risk for desktop and touch users alike.</li>
+          <li><b>More code paths.</b> ATTACK onClick needs a "resolve target" branch on top of the locked path; two callers of <code style="font-family:'JetBrains Mono',monospace;color:var(--cream);">PowerController.tryPress</code> instead of one.</li>
+          <li><b>Better pairing with gaze/auto-mode.</b> The crowd already follows the cursor (look-at), so nearest-to-cursor is a natural "cursor is the target" mental model.</li>
+        </ul>
+
+        <span class="pick"><span class="dot"></span>Plan calls this out as the alternative — pick if zero-friction is the priority.</span>
+      </div>
+
+    </div>
+
+    <div class="foot">
+      <b style="color:var(--cream);">Decision needed before Task 7 Step 1.</b>
+      The spec (<code>multi-subject-targeting-design.md §3</code>) explicitly defers this to a PR2 kickoff decision; this showcase is the comparison artifact. Implementation is gated on the choice — tests, <code>Hud.ts</code> wiring, and the ATTACK onClick path all branch on it.
+    </div>
+  </div>
+</body>
+</html>

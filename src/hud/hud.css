@@ -361,6 +361,13 @@
   background: var(--color-coral);
 }
 
+.hud-placard__attack[data-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: var(--color-cream);
+}
+
 .hud-placard__attack-icon {
   display: inline-flex;
   align-items: center;

@@ -10,6 +10,7 @@ import { computeGazeLines } from "./drawers/drawGazeLines";
 import { drawCollectiveEffectVisual } from "./drawers/drawCollectiveEffectVisual";
 import { selectCollectiveContributors } from "../effects/collectiveContributors";
 import { drawSubject } from "./drawers/drawSubject";
+import { drawLockIndicator } from "./drawers/drawLockIndicator";
 import { computePupilOffset } from "./pupilTrack";
 import type { EyeBehavior, EyeBlinkTimer } from "../entities/behaviors/EyeBehavior";
 import { PALETTE } from "../config/tokens";
@@ -17,8 +18,18 @@ import type { Rng } from "../core/Rng";
 import type { SubjectColors } from "../content/schema";
 import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 import type { HudMode } from "../hud/hudIcons";
-import type { Entity } from "../entities/Entity";
+import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import type { ImageAssetCache } from "./imageAssets";
+
+export type SubjectRenderInfo = {
+  id: EntityId;
+  pos: Vec2;
+  sizePx: number;
+  colors: SubjectColors;
+  scale: number;
+  subjectSkin?: SubjectSkin;
+  locked: boolean;
+};
 
 export type RenderEntitiesOptions = {
   store: EntityStore;
@@ -44,14 +55,8 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   hudMode: HudMode;
   quantity: number;
   repelMultiplier: number;
-  subject?: {
-    id: number;
-    pos: { x: number; y: number };
-    sizePx: number;
-    colors: SubjectColors;
-    scale: number;
-    subjectSkin?: SubjectSkin;
-  } | null;
+  subjects: readonly SubjectRenderInfo[];
+  lockedSubjectId?: number | null;
   chargeT?: number;
   assistRadiusPx?: number;
   imageCache?: ImageAssetCache;
@@ -184,23 +189,29 @@ export function renderFrame(opts: RenderFrameOptions): void {
     }
   }
 
-  if (opts.subject) {
+  if (opts.subjects.length > 0) {
     const gazeLines = computeGazeLines({
       eyes: eyePositions,
-      subjectPos: opts.subject.pos,
+      subjects: opts.subjects,
+      lockedSubjectId: opts.lockedSubjectId ?? null,
       assistRadiusPx: opts.assistRadiusPx ?? 0,
       chargeT: opts.chargeT ?? 0,
     });
     drawFieldLines(ctx, gazeLines, { stroke: PALETTE.coral, ink: PALETTE.ink });
-    drawSubject(ctx, {
-      pos: opts.subject.pos,
-      sizePx: opts.subject.sizePx,
-      colors: opts.subject.colors,
-      scale: opts.subject.scale,
-      subjectSkin: opts.subject.subjectSkin,
-      shadowIntensity,
-      imageCache: opts.imageCache,
-    });
+    for (const s of opts.subjects) {
+      drawSubject(ctx, {
+        pos: s.pos,
+        sizePx: s.sizePx,
+        colors: s.colors,
+        scale: s.scale,
+        subjectSkin: s.subjectSkin,
+        shadowIntensity,
+        imageCache: opts.imageCache,
+      });
+      if (s.locked) {
+        drawLockIndicator(ctx, { pos: s.pos, sizePx: s.sizePx });
+      }
+    }
   }
 
   if (cursor.active) {

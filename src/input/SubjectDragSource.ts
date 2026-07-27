@@ -1,7 +1,13 @@
 import type { SubjectSkin } from "../hud/subjectSkinRegistry";
+import type { Vec2 } from "../entities/Entity";
 
 export type SubjectDragSourceOptions = {
   dropTarget: HTMLElement;
+};
+
+export type SubjectDropResult = {
+  skin: SubjectSkin;
+  canvasPos: Vec2 | null;
 };
 
 type DragState = {
@@ -15,18 +21,19 @@ type DragState = {
 /**
  * Panel-to-canvas drag source for the subject browser. Deliberately separate
  * from src/input/DragController.ts (entity-level canvas repositioning) — no
- * shared state, and swapping subjectSkin on drop is the only effect.
+ * shared state. On drop, emits the skin and a canvas-relative position
+ * (or null if dropped outside / from a touch tap).
  */
 export class SubjectDragSource {
   private readonly dropTarget: HTMLElement;
-  private swapCb: ((skin: SubjectSkin) => void) | null = null;
+  private dropCb: ((result: SubjectDropResult) => void) | null = null;
 
   constructor(opts: SubjectDragSourceOptions) {
     this.dropTarget = opts.dropTarget;
   }
 
-  onSwap(cb: (skin: SubjectSkin) => void): void {
-    this.swapCb = cb;
+  onDrop(cb: (result: SubjectDropResult) => void): void {
+    this.dropCb = cb;
   }
 
   attachCard(card: HTMLElement, getSkin: () => SubjectSkin): void {
@@ -39,7 +46,7 @@ export class SubjectDragSource {
     card.addEventListener("pointerup", (e: Event) => {
       const pe = e as PointerEvent;
       if (pe.pointerType !== "touch") return;
-      this.swapCb?.(getSkin());
+      this.dropCb?.({ skin: getSkin(), canvasPos: null });
     });
   }
 
@@ -68,7 +75,12 @@ export class SubjectDragSource {
         const rect = this.dropTarget.getBoundingClientRect();
         const overTarget =
           e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
-        if (overTarget) this.swapCb?.(getSkin());
+        const skin = getSkin();
+        if (overTarget) {
+          this.dropCb?.({ skin, canvasPos: { x: e.clientX - rect.left, y: e.clientY - rect.top } });
+        } else {
+          this.dropCb?.({ skin, canvasPos: null });
+        }
       },
       onCancel: () => {
         ghost.remove();
