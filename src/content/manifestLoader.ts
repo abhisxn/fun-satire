@@ -123,8 +123,14 @@ const validateSubjectEntry = (
     issues.push({ path: `${base}/renderType`, message: 'renderType must equal "subject"' });
   }
   const visual = (r.visual as Record<string, unknown> | undefined) ?? {};
-  if (visual.styleGuardrail !== "flat-illustrated") {
-    issues.push({ path: `${base}/visual/styleGuardrail`, message: 'styleGuardrail must equal "flat-illustrated"' });
+  if (visual.styleGuardrail === "flat-illustrated") {
+    // validated; no extra fields required
+  } else if (visual.styleGuardrail === "curated-avatar") {
+    if (typeof visual.assetId !== "string" || visual.assetId.length === 0) {
+      issues.push({ path: `${base}/visual/assetId`, message: "assetId must be a non-empty string" });
+    }
+  } else {
+    issues.push({ path: `${base}/visual/styleGuardrail`, message: 'styleGuardrail must equal "flat-illustrated" or "curated-avatar"' });
   }
   const colors = (r.colors as Record<string, unknown> | undefined) ?? {};
   if (typeof colors.suit !== "string" || !SUIT_COLORS.has(colors.suit)) {
