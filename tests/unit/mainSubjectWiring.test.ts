@@ -86,3 +86,79 @@ describe("main.ts subject drop + lock wiring (PR2 Task 5)", () => {
     expect(getLockedSubjectId()).toBe(id2);
   });
 });
+
+describe("main.ts identity-aware formatting handlers (PR2 Lane 3)", () => {
+  it("a font change for a specific subjectId updates only that subject's skin in the Map", async () => {
+    const id1 = applySubjectDrop({
+      skin: { kind: "text", value: "A", scale: 1 },
+      canvasPos: { x: 50, y: 50 },
+      nowMs: 1,
+    });
+    const id2 = applySubjectDrop({
+      skin: { kind: "text", value: "B", scale: 1 },
+      canvasPos: { x: 150, y: 150 },
+      nowMs: 2,
+    });
+    expect(id1).not.toBeNull();
+    expect(id2).not.toBeNull();
+
+    const { applySubjectFontChange, __resetSubjectSkinForTests } = await import("../../src/main");
+    __resetSubjectSkinForTests?.();
+    applySubjectFontChange(id1 as number, "fraunces");
+
+    const rec1 = listSubjectRecords().get(id1 as number);
+    const rec2 = listSubjectRecords().get(id2 as number);
+    expect(rec1?.skin).toEqual({ kind: "text", value: "A", scale: 1, fontId: "fraunces" });
+    expect(rec2?.skin).toEqual({ kind: "text", value: "B", scale: 1 });
+  });
+
+  it("a resize change for a specific subjectId updates only that subject's scale", async () => {
+    const id1 = applySubjectDrop({
+      skin: { kind: "text", value: "A", scale: 1 },
+      canvasPos: { x: 50, y: 50 },
+      nowMs: 1,
+    });
+    const id2 = applySubjectDrop({
+      skin: { kind: "text", value: "B", scale: 1 },
+      canvasPos: { x: 150, y: 150 },
+      nowMs: 2,
+    });
+
+    const { applySubjectResizeChange, __resetSubjectSkinForTests } = await import("../../src/main");
+    __resetSubjectSkinForTests?.();
+    applySubjectResizeChange(id1 as number, 1.35);
+
+    expect(listSubjectRecords().get(id1 as number)?.skin).toEqual({
+      kind: "text", value: "A", scale: 1.35,
+    });
+    expect(listSubjectRecords().get(id2 as number)?.skin).toEqual({
+      kind: "text", value: "B", scale: 1,
+    });
+  });
+
+  it("an align change for a specific subjectId updates only that subject's align", async () => {
+    const id1 = applySubjectDrop({
+      skin: { kind: "text", value: "A", scale: 1, align: "center" },
+      canvasPos: { x: 50, y: 50 },
+      nowMs: 1,
+    });
+
+    const { applySubjectAlignChange } = await import("../../src/main");
+    applySubjectAlignChange(id1 as number, "left");
+    expect(listSubjectRecords().get(id1 as number)?.skin).toMatchObject({ align: "left" });
+  });
+
+  it("a formatting change for an unknown subjectId is a no-op", async () => {
+    const id1 = applySubjectDrop({
+      skin: { kind: "text", value: "A", scale: 1 },
+      canvasPos: { x: 50, y: 50 },
+      nowMs: 1,
+    });
+    const before = listSubjectRecords().get(id1 as number)?.skin;
+
+    const { applySubjectFontChange } = await import("../../src/main");
+    applySubjectFontChange(9999, "fraunces");
+
+    expect(listSubjectRecords().get(id1 as number)?.skin).toEqual(before);
+  });
+});
