@@ -1,5 +1,6 @@
 import { SUBJECT_SKIN_REGISTRY, type SubjectSkin } from "./subjectSkinRegistry";
 import { TEXT_FONT_REGISTRY, type TextFontId } from "./textFontRegistry";
+import { AVATAR_ASSET_REGISTRY } from "./avatarAssetRegistry";
 
 export type SubjectDrawerOptions = {
   anchor: "left" | "right";
@@ -42,6 +43,7 @@ export class SubjectDrawer {
     root.appendChild(this.panel);
     this.cardList = this.panel.querySelector<HTMLElement>(".subject-drawer__list")!;
     this.renderCards();
+    this.renderAvatarCards();
     this.renderCompose();
   }
 
@@ -59,6 +61,29 @@ export class SubjectDrawer {
       `;
       this.cardList.appendChild(card);
       this.cardEntries.push({ skin: { kind: "illustrated", id: entry.id }, el: card });
+    });
+  }
+
+  private renderAvatarCards(): void {
+    const header = document.createElement("div");
+    header.className = "subject-drawer__avatar-header";
+    header.textContent = "Avatars";
+    this.cardList.appendChild(header);
+
+    AVATAR_ASSET_REGISTRY.forEach((entry, i) => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "subject-drawer__card subject-drawer__avatar-card";
+      card.setAttribute("role", "listitem");
+      card.dataset.avatarAssetId = entry.id;
+      card.setAttribute("aria-label", `Select ${entry.label} avatar`);
+      card.style.setProperty("--reveal-delay", `${(SUBJECT_SKIN_REGISTRY.length + i) * STAGGER_MS}ms`);
+      card.innerHTML = `
+        <img class="subject-drawer__avatar-thumb" src="${entry.url}" alt="${entry.label}" draggable="false" />
+        <span class="subject-drawer__card-label">${entry.label}</span>
+      `;
+      this.cardList.appendChild(card);
+      this.cardEntries.push({ skin: { kind: "avatar", assetId: entry.id }, el: card });
     });
   }
 
