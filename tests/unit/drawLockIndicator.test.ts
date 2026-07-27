@@ -84,7 +84,7 @@ describe("drawLockIndicator (PR2 Task 6, Gate 1 variant A: thin amber ring)", ()
 });
 
 describe("renderFrame: locked-subject indicator (PR2 Task 6)", () => {
-  function render(subjectOpts: Parameters<typeof renderFrame>[0]["subject"]) {
+  function render(subjectOpts: Parameters<typeof renderFrame>[0]["subjects"][number]) {
     const store = new EntityStore();
     store.insert(makeSubjectEntity(1, 50, 50));
     renderFrame({
@@ -104,7 +104,7 @@ describe("renderFrame: locked-subject indicator (PR2 Task 6)", () => {
       quantity: 20,
       repelMultiplier: 1,
       nowMs: 0,
-      subject: subjectOpts,
+      subjects: [subjectOpts],
       chargeT: 0,
       assistRadiusPx: 140,
     } as never);
