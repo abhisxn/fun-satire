@@ -164,6 +164,8 @@ export function spawnSubject(opts: SpawnSubjectOpts): Entity | null {
         baseSizePx: entry.physics.baseSizePx,
         colors: entry.colors,
         subjectSkin,
+        placed: true,
+        isFollowing: false,
       },
     },
     lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
