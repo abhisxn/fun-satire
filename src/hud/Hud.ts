@@ -137,6 +137,7 @@ export class Hud {
     });
     this.refreshIcons();
     this.wireControls();
+    this.attackBtn.dataset.disabled = this.currentSubjectId === null ? "true" : "false";
     requestAnimationFrame(() => this.placard.classList.add("hud-placard--ready"));
   }
 
@@ -225,6 +226,7 @@ export class Hud {
   private wireAttack(): void {
     const press = (e: Event): void => {
       e.preventDefault();
+      if (this.attackBtn.dataset.disabled === "true") return;
       this.attackBtn.dataset.pressed = "true";
       this.attackPressCb?.(this.currentSubjectId);
     };
@@ -307,6 +309,9 @@ export class Hud {
 
   setCurrentSubjectId(id: number | null): void {
     this.currentSubjectId = id;
+    if (this.attackBtn) {
+      this.attackBtn.dataset.disabled = id === null ? "true" : "false";
+    }
   }
 
   getCurrentSubjectId(): number | null {

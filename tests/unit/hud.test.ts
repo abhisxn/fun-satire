@@ -124,20 +124,43 @@ describe("hud/Hud (Phase C Lane 1 chrome)", () => {
     expect(attack.dataset.pressed).toBe("false");
   });
 
-  it("ATTACK press passes null when no subject is set", () => {
+  it("ATTACK press is a no-op when no subject is set (CTA disabled)", () => {
     const onPress = vi.fn();
     hud.onAttackPress(onPress);
     hud.setCurrentSubjectId(null);
 
-    q(".hud-placard__attack").dispatchEvent(
+    const attack = q(".hud-placard__attack");
+    expect(attack.dataset.disabled).toBe("true");
+
+    attack.dispatchEvent(
       new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }),
     );
-    expect(onPress).toHaveBeenCalledWith(null);
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it("ATTACK button is disabled by default (no subject locked)", () => {
+    const attack = q(".hud-placard__attack");
+    expect(attack.dataset.disabled).toBe("true");
+  });
+
+  it("ATTACK button becomes enabled when a subject is locked", () => {
+    const attack = q(".hud-placard__attack");
+    hud.setCurrentSubjectId(42);
+    expect(attack.dataset.disabled).toBe("false");
+  });
+
+  it("ATTACK button becomes disabled again when subject is unlocked", () => {
+    const attack = q(".hud-placard__attack");
+    hud.setCurrentSubjectId(42);
+    expect(attack.dataset.disabled).toBe("false");
+    hud.setCurrentSubjectId(null);
+    expect(attack.dataset.disabled).toBe("true");
   });
 
   it("ATTACK release fires on pointercancel and on pointerleave while pressed", () => {
     const onRelease = vi.fn();
     hud.onAttackRelease(onRelease);
+    hud.setCurrentSubjectId(7);
     const attack = q(".hud-placard__attack");
 
     attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
