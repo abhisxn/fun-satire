@@ -90,6 +90,29 @@
   letter-spacing: 0.02em;
 }
 
+.subject-drawer__avatar-header {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink);
+  opacity: 0.65;
+  padding: 8px 4px 4px;
+  border-top: 1.2px dashed var(--color-ink);
+  margin-top: 6px;
+}
+
+.subject-drawer__avatar-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--color-cream);
+  flex-shrink: 0;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .subject-drawer,
   .subject-drawer__card {

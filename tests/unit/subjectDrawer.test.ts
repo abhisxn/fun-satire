@@ -27,16 +27,17 @@ describe("SubjectDrawer scaffold", () => {
   it("renders one card per SUBJECT_SKIN_REGISTRY entry", () => {
     const root = document.createElement("div");
     const drawer = new SubjectDrawer(root, { anchor: "right" });
-    const cards = root.querySelectorAll(".subject-drawer__card:not(.subject-drawer__compose-preview)");
+    const cards = root.querySelectorAll(".subject-drawer__card:not(.subject-drawer__compose-preview):not(.subject-drawer__avatar-card)");
     expect(cards.length).toBe(5);
   });
 
-  it("getCardElements returns an illustrated SubjectSkin per card", () => {
+  it("getCardElements returns an illustrated SubjectSkin per illustrated card", () => {
     const root = document.createElement("div");
     const drawer = new SubjectDrawer(root, { anchor: "right" });
     const entries = drawer.getCardElements();
-    expect(entries.length).toBe(5);
-    for (const { skin } of entries) {
+    const illustrated = entries.filter((e) => e.skin.kind === "illustrated");
+    expect(illustrated.length).toBe(5);
+    for (const { skin } of illustrated) {
       expect(skin.kind).toBe("illustrated");
     }
   });
@@ -93,6 +94,48 @@ describe("SubjectDrawer compose row", () => {
     input.value = "Term Limits";
     input.dispatchEvent(new Event("input"));
     expect(drawer.getComposePreviewCard().el.textContent).toContain("Term Limits");
+  });
+});
+
+describe("SubjectDrawer avatar card grid", () => {
+  it("renders one avatar card per AVATAR_ASSET_REGISTRY entry alongside illustrated cards", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    const avatarCards = root.querySelectorAll<HTMLElement>(".subject-drawer__avatar-card");
+    expect(avatarCards.length).toBe(2);
+    const allCards = root.querySelectorAll(
+      ".subject-drawer__card:not(.subject-drawer__compose-preview), .subject-drawer__avatar-card",
+    );
+    expect(allCards.length).toBe(5 + 2);
+    void drawer;
+  });
+
+  it("avatar cards show the sticker image and label", () => {
+    const root = document.createElement("div");
+    new SubjectDrawer(root, { anchor: "right" });
+    const first = root.querySelector<HTMLElement>(".subject-drawer__avatar-card")!;
+    const img = first.querySelector("img.subject-drawer__avatar-thumb")!;
+    expect(img.getAttribute("src")).toBe("/avatars/sticker-1.png");
+    expect(img.getAttribute("alt")).toBe("Sticker 1");
+    expect(first.textContent).toContain("Sticker 1");
+  });
+
+  it("avatar section has a visible header label", () => {
+    const root = document.createElement("div");
+    new SubjectDrawer(root, { anchor: "right" });
+    const header = root.querySelector<HTMLElement>(".subject-drawer__avatar-header");
+    expect(header).not.toBeNull();
+    expect(header!.textContent?.toLowerCase()).toContain("avatar");
+  });
+
+  it("getCardElements includes avatar skins with kind:avatar and the correct assetId", () => {
+    const root = document.createElement("div");
+    const drawer = new SubjectDrawer(root, { anchor: "right" });
+    const entries = drawer.getCardElements();
+    const avatarEntries = entries.filter((e) => e.skin.kind === "avatar");
+    expect(avatarEntries.length).toBe(2);
+    expect(avatarEntries[0]!.skin).toEqual({ kind: "avatar", assetId: "sticker-1" });
+    expect(avatarEntries[1]!.skin).toEqual({ kind: "avatar", assetId: "sticker-2" });
   });
 });
 
