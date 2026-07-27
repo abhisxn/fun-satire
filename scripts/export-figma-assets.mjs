@@ -1,54 +1,153 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  APPROVED_SOURCE_NODES,
+  assertPayloadBudget,
+  assertSafeSvg,
+  canonicalizeAssets,
+  dimensionsOf,
+  eyeGeometryOf,
+  optimizePngLosslessly,
+  safeOutputPath,
+  validateManifest,
+  verifyNoUnlistedFiles,
+} from "./figma-asset-audit.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifestPath = resolve(root, "figma-assets.source.json");
+const outputRoot = resolve(root, "public/assets/figma");
 const registryPath = resolve(root, "src/assets/figmaAssetRegistry.ts");
 const eyeRegistryPath = resolve(root, "src/assets/eyeAssetRegistry.ts");
 const mode = process.argv[2];
+const SOURCE_VERSION = "figma-dev-mode-mcp@1.0.0";
 
 if (mode !== "--write" && mode !== "--verify") {
   throw new Error("Usage: node scripts/export-figma-assets.mjs --write|--verify");
 }
 
-const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-
-function sha256(bytes) {
+function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-function dimensionsOf(bytes, format) {
-  if (format === "png") {
-    const signature = bytes.subarray(0, 8).toString("hex");
-    if (signature !== "89504e470d0a1a0a" || bytes.toString("ascii", 12, 16) !== "IHDR") {
-      throw new Error("Invalid PNG payload");
-    }
-    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
-  }
-
-  const svg = bytes.toString("utf8");
-  const viewBox = svg.match(/viewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)\s*["']/i);
-  if (viewBox) return { width: Number(viewBox[1]), height: Number(viewBox[2]) };
-
-  const width = svg.match(/\bwidth=["']([\d.]+)(?:px)?["']/i);
-  const height = svg.match(/\bheight=["']([\d.]+)(?:px)?["']/i);
-  if (!width || !height) throw new Error("SVG has no intrinsic dimensions");
-  return { width: Number(width[1]), height: Number(height[1]) };
+function maxBytesFor(entry) {
+  if (entry.id === "subject-lotus") return 700_000;
+  if (entry.role === "subject") return 160_000;
+  if (entry.role === "reference") return 4 * 1024 * 1024;
+  if (entry.role === "eye") return 16_384;
+  return 65_536;
 }
 
-function validateEntry(entry) {
-  const expectedSource = `http://localhost:3845/assets/${entry.sourceHash}.${entry.format}`;
-  if (entry.sourceUrl !== expectedSource) {
-    throw new Error(`${entry.id}: source URL does not match its source hash and format`);
+function prepareManifest(rawManifest) {
+  const manifest = structuredClone(rawManifest);
+  manifest.schemaVersion = 2;
+  manifest.sourceNodes = APPROVED_SOURCE_NODES;
+  manifest.payloadBudgetBytes = 12 * 1024 * 1024;
+  manifest.exportProvenance = {
+    sourceVersion: SOURCE_VERSION,
+    capturedAt: manifest.exportProvenance?.capturedAt ?? "2026-07-28T02:46:53+05:30",
+  };
+
+  const renames = {
+    "scene-bug-left": { id: "crowd-bug-left", role: "crowd", category: "crowd" },
+    "scene-bug-right": { id: "crowd-bug-right", role: "crowd", category: "crowd" },
+    "scene-bug-upright": { id: "crowd-bug-upright", role: "crowd", category: "crowd" },
+    "attack-target-glow": { id: "effect-attack-target-glow", role: "effect", category: "effects" },
+  };
+
+  manifest.assets = manifest.assets
+    .filter((entry) => !entry.id.startsWith("reference-"))
+    .map((sourceEntry) => {
+      const entry = { ...sourceEntry, ...(renames[sourceEntry.id] ?? {}) };
+      entry.sourceKind = "figma-asset-endpoint";
+      entry.destination = `public/assets/figma/${entry.category}/${entry.id}.${entry.format}`;
+      entry.maxBytes = maxBytesFor(entry);
+      entry.optimization = entry.id === "subject-lotus" ? "lossless-deflate" : "source-bytes";
+      entry.provenance = {
+        fileKey: manifest.figmaFile.key,
+        pageNodeId: manifest.figmaFile.pageNodeId,
+        sourceNodeId: entry.nodeId,
+        sourceVersion: SOURCE_VERSION,
+        captureMethod: "asset-endpoint",
+      };
+      return entry;
+    });
+
+  for (const node of APPROVED_SOURCE_NODES) {
+    manifest.assets.push({
+      id: `reference-${node.name}`,
+      role: "reference",
+      category: "references",
+      nodeId: node.id,
+      sourceHash: "0".repeat(64),
+      sourceKind: "figma-mcp-screenshot",
+      format: "png",
+      destination: `public/assets/figma/references/reference-${node.name}.png`,
+      requiredFor: [node.id],
+      maxBytes: 4 * 1024 * 1024,
+      optimization: "source-bytes",
+      provenance: {
+        fileKey: manifest.figmaFile.key,
+        pageNodeId: manifest.figmaFile.pageNodeId,
+        sourceNodeId: node.id,
+        sourceVersion: SOURCE_VERSION,
+        captureMethod: "get_screenshot",
+        nodeDimensions: { width: node.width, height: node.height },
+      },
+    });
   }
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id)) {
-    throw new Error(`${entry.id}: asset ID is not semantic kebab-case`);
+  manifest.assets = canonicalizeAssets(manifest.assets);
+  return manifest;
+}
+
+function parseSse(text) {
+  const data = text.split("\n").filter((line) => line.startsWith("data: ")).map((line) => line.slice(6));
+  if (data.length === 0) throw new Error("Figma MCP returned no SSE data");
+  return JSON.parse(data.at(-1));
+}
+
+async function postMcp(body, sessionId) {
+  const response = await fetch("http://localhost:3845/mcp", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+      ...(sessionId ? { "Mcp-Session-Id": sessionId } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(`Figma MCP failed with HTTP ${response.status}`);
+  return { payload: parseSse(await response.text()), sessionId: response.headers.get("mcp-session-id") ?? sessionId };
+}
+
+async function createScreenshotClient() {
+  const initialized = await postMcp({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "fun-satire-figma-export", version: "1.0.0" },
+    },
+  });
+  const server = initialized.payload.result?.serverInfo;
+  if (`${server?.name}@${server?.version}` !== "Figma Dev Mode MCP Server@1.0.0") {
+    throw new Error(`Unexpected Figma MCP source version: ${server?.name}@${server?.version}`);
   }
-  if (!entry.destination.startsWith(`public/assets/figma/${entry.category}/`)) {
-    throw new Error(`${entry.id}: destination does not match category ${entry.category}`);
-  }
+  let requestId = 2;
+  return async (nodeId) => {
+    const result = await postMcp({
+      jsonrpc: "2.0",
+      id: requestId++,
+      method: "tools/call",
+      params: { name: "get_screenshot", arguments: { nodeId, contentsOnly: false } },
+    }, initialized.sessionId);
+    const image = result.payload.result?.content?.find((item) => item.type === "image" && item.mimeType === "image/png");
+    if (!image?.data) throw new Error(`${nodeId}: Figma MCP returned no PNG screenshot`);
+    return Buffer.from(image.data, "base64");
+  };
 }
 
 function runtimeEntry(entry) {
@@ -57,28 +156,58 @@ function runtimeEntry(entry) {
     role: entry.role,
     nodeId: entry.nodeId,
     sourceHash: entry.sourceHash,
+    sourceSha256: entry.sourceSha256,
     sha256: entry.sha256,
+    format: entry.format,
     url: entry.destination.slice("public".length),
     width: entry.width,
     height: entry.height,
+    sourceByteLength: entry.sourceByteLength,
+    byteLength: entry.byteLength,
+    maxBytes: entry.maxBytes,
     requiredFor: entry.requiredFor,
+    provenance: entry.provenance,
+    ...(entry.geometry ? { geometry: entry.geometry } : {}),
   };
 }
 
 function generateRegistry(entries) {
-  const body = JSON.stringify(entries.map(runtimeEntry), null, 2);
-  return `export type FigmaAssetRole = "eye" | "subject" | "control-icon" | "reference";
+  const body = JSON.stringify(canonicalizeAssets(entries).map(runtimeEntry), null, 2);
+  return `export type FigmaAssetRole = "eye" | "subject" | "control-icon" | "crowd" | "effect" | "reference";
 
 export type FigmaAssetEntry = Readonly<{
   id: string;
   role: FigmaAssetRole;
   nodeId: string;
   sourceHash: string;
+  sourceSha256: string;
   sha256: string;
+  format: "svg" | "png";
   url: string;
   width: number;
   height: number;
+  sourceByteLength: number;
+  byteLength: number;
+  maxBytes: number;
   requiredFor: readonly string[];
+  provenance: Readonly<{
+    fileKey: string;
+    pageNodeId: string;
+    sourceNodeId: string;
+    sourceVersion: string;
+    captureMethod: "asset-endpoint" | "get_screenshot";
+    nodeDimensions?: Readonly<{ width: number; height: number }>;
+  }>;
+  geometry?: EyeAssetGeometry;
+}>;
+
+export type EyeAssetGeometry = Readonly<{
+  viewBox: Readonly<{ x: number; y: number; width: number; height: number }>;
+  crop: Readonly<{ x: number; y: number; width: number; height: number }>;
+  socketPath: string;
+  clipPath: string;
+  iris: Readonly<{ centerX: number; centerY: number; radius: number; fill: string }>;
+  irisSourceOffset: Readonly<{ x: number; y: number }>;
 }>;
 
 export const FIGMA_ASSETS = Object.freeze(${body} satisfies readonly FigmaAssetEntry[]);
@@ -89,23 +218,23 @@ export function requiredAssetsFor(id: string): readonly FigmaAssetEntry[] {
 `;
 }
 
-function generateEyeRegistry() {
-  return `import {
-  FIGMA_ASSETS,
-} from "./figmaAssetRegistry";
+function generateEyeRegistry(entries) {
+  const eyeIds = canonicalizeAssets(entries).filter((entry) => entry.role === "eye").map((entry) => entry.id);
+  return `import { FIGMA_ASSETS } from "./figmaAssetRegistry";
 
 type RegisteredFigmaAsset = (typeof FIGMA_ASSETS)[number];
 export type EyeAssetEntry = Extract<RegisteredFigmaAsset, Readonly<{ role: "eye" }>>;
 
-function isEyeAsset(entry: RegisteredFigmaAsset): entry is EyeAssetEntry {
-  return entry.role === "eye";
-}
+export const EYE_ASSET_IDS = Object.freeze(${JSON.stringify(eyeIds, null, 2)} as const);
 
-export const EYE_ASSETS = Object.freeze(FIGMA_ASSETS.filter(isEyeAsset));
+const eyeAssetsById = new Map(FIGMA_ASSETS.filter((entry): entry is EyeAssetEntry => entry.role === "eye").map((entry) => [entry.id, entry]));
+export const EYE_ASSETS = Object.freeze(EYE_ASSET_IDS.map((id) => {
+  const asset = eyeAssetsById.get(id);
+  if (!asset) throw new Error(\`Missing golden eye asset: \${id}\`);
+  return asset;
+}));
 
 export function eyeAssetForEntity(entityId: string): EyeAssetEntry {
-  if (EYE_ASSETS.length === 0) throw new Error("No Figma eye assets are registered");
-
   let hash = 2166136261;
   for (let index = 0; index < entityId.length; index += 1) {
     hash ^= entityId.charCodeAt(index);
@@ -116,45 +245,77 @@ export function eyeAssetForEntity(entityId: string): EyeAssetEntry {
 `;
 }
 
-for (const entry of manifest.assets) validateEntry(entry);
+const sourceManifest = JSON.parse(await readFile(manifestPath, "utf8"));
 
 if (mode === "--write") {
+  const manifest = prepareManifest(sourceManifest);
+  const payloads = new Map();
+  let screenshot;
+
   for (const entry of manifest.assets) {
-    const response = await fetch(entry.sourceUrl);
-    if (!response.ok) throw new Error(`${entry.id}: Figma export failed with HTTP ${response.status}`);
-    const bytes = Buffer.from(await response.arrayBuffer());
-    const dimensions = dimensionsOf(bytes, entry.format);
+    let sourceBytes;
+    if (entry.sourceKind === "figma-mcp-screenshot") {
+      screenshot ??= await createScreenshotClient();
+      sourceBytes = await screenshot(entry.nodeId);
+      entry.sourceHash = digest(sourceBytes);
+    } else {
+      const expectedSource = `http://localhost:3845/assets/${entry.sourceHash}.${entry.format}`;
+      if (entry.sourceUrl !== expectedSource) throw new Error(`${entry.id}: source URL does not match hash and format`);
+      const response = await fetch(entry.sourceUrl);
+      if (!response.ok) throw new Error(`${entry.id}: Figma export failed with HTTP ${response.status}`);
+      sourceBytes = Buffer.from(await response.arrayBuffer());
+    }
+
+    entry.sourceSha256 = digest(sourceBytes);
+    entry.sourceByteLength = sourceBytes.length;
+    const outputBytes = entry.optimization === "lossless-deflate" ? optimizePngLosslessly(sourceBytes) : sourceBytes;
+    if (entry.format === "svg") assertSafeSvg(outputBytes);
+    const dimensions = dimensionsOf(outputBytes, entry.format);
     entry.width = dimensions.width;
     entry.height = dimensions.height;
-    entry.sha256 = sha256(bytes);
-
-    const outputPath = resolve(root, entry.destination);
-    await mkdir(dirname(outputPath), { recursive: true });
-    await writeFile(outputPath, bytes);
+    entry.byteLength = outputBytes.length;
+    entry.sha256 = digest(outputBytes);
+    if (entry.role === "eye") entry.geometry = eyeGeometryOf(outputBytes);
+    else delete entry.geometry;
+    assertPayloadBudget(entry, outputBytes);
+    payloads.set(entry.id, outputBytes);
   }
 
+  manifest.assets = canonicalizeAssets(manifest.assets);
+  if (manifest.assets.reduce((total, entry) => total + entry.byteLength, 0) > manifest.payloadBudgetBytes) {
+    throw new Error("Figma asset inventory exceeds total payload budget");
+  }
+  validateManifest(manifest);
+
+  await rm(outputRoot, { recursive: true, force: true });
+  for (const entry of manifest.assets) {
+    const outputPath = safeOutputPath(root, entry.destination);
+    await mkdir(dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, payloads.get(entry.id));
+  }
   await mkdir(dirname(registryPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   await writeFile(registryPath, generateRegistry(manifest.assets));
-  await writeFile(eyeRegistryPath, generateEyeRegistry());
-  console.log(`Exported and recorded ${manifest.assets.length} Figma assets.`);
+  await writeFile(eyeRegistryPath, generateEyeRegistry(manifest.assets));
+  await verifyNoUnlistedFiles(root, manifest.assets);
+  console.log(`Exported and recorded ${manifest.assets.length} audited Figma assets.`);
 } else {
+  const manifest = sourceManifest;
+  validateManifest(manifest);
   for (const entry of manifest.assets) {
-    const bytes = await readFile(resolve(root, entry.destination));
+    const bytes = await readFile(safeOutputPath(root, entry.destination));
+    if (entry.format === "svg") assertSafeSvg(bytes);
     const dimensions = dimensionsOf(bytes, entry.format);
-    if (sha256(bytes) !== entry.sha256) throw new Error(`${entry.id}: SHA-256 mismatch`);
-    if (dimensions.width !== entry.width || dimensions.height !== entry.height) {
-      throw new Error(`${entry.id}: intrinsic dimension mismatch`);
+    if (digest(bytes) !== entry.sha256) throw new Error(`${entry.id}: SHA-256 mismatch`);
+    if (bytes.length !== entry.byteLength) throw new Error(`${entry.id}: byte-length mismatch`);
+    if (dimensions.width !== entry.width || dimensions.height !== entry.height) throw new Error(`${entry.id}: dimension mismatch`);
+    if (entry.role === "eye" && JSON.stringify(eyeGeometryOf(bytes)) !== JSON.stringify(entry.geometry)) {
+      throw new Error(`${entry.id}: eye geometry drift`);
     }
+    assertPayloadBudget(entry, bytes);
   }
-
-  const expectedRegistry = generateRegistry(manifest.assets);
-  const expectedEyeRegistry = generateEyeRegistry();
-  if (await readFile(registryPath, "utf8") !== expectedRegistry) {
-    throw new Error("src/assets/figmaAssetRegistry.ts has drifted from the source manifest");
-  }
-  if (await readFile(eyeRegistryPath, "utf8") !== expectedEyeRegistry) {
-    throw new Error("src/assets/eyeAssetRegistry.ts has drifted from the source manifest");
-  }
-  console.log(`Verified ${manifest.assets.length} Figma assets and generated registries.`);
+  await verifyNoUnlistedFiles(root, manifest.assets);
+  if (await readFile(registryPath, "utf8") !== generateRegistry(manifest.assets)) throw new Error("General registry drift");
+  if (await readFile(eyeRegistryPath, "utf8") !== generateEyeRegistry(manifest.assets)) throw new Error("Eye registry drift");
+  console.log(`Verified ${manifest.assets.length} audited Figma assets and generated registries.`);
 }
