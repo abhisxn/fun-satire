@@ -20,6 +20,7 @@ export class Hud {
   private subjectToggle: HTMLElement;
   private repelInput: HTMLInputElement;
   private chargeRing: HTMLElement;
+  private subjectCountEl: HTMLElement;
   private handToolBtn: HTMLElement;
   private textToolBtn: HTMLElement;
   private gridToolBtn: HTMLElement;
@@ -30,6 +31,9 @@ export class Hud {
   private mode: HudMode = "eyes";
   private power: HudPower = "laserBurn";
   private quantity = 20;
+  private subjectCount = 0;
+  private lockedSubjectId: number | null = null;
+  private activeSubjectSkin: SubjectSkin | null = null;
   private readonly powerLabels: Record<HudPower, string> = {
     laserBurn: "laser burn",
     electricBurn: "shock",
@@ -42,7 +46,6 @@ export class Hud {
   private placardOffset = { x: 0, y: 0 };
   private dragStart = { x: 0, y: 0, ox: 0, oy: 0 };
   private modeChangeCb: ((mode: HudMode) => void) | null = null;
-  private subjectSkinChangeCb: ((skin: SubjectSkin) => void) | null = null;
   private subjectDropCb: ((result: SubjectDropResult) => void) | null = null;
   private quantityChangeCb: ((quantity: number) => void) | null = null;
   private repelChangeCb: ((multiplier: number) => void) | null = null;
@@ -95,6 +98,8 @@ export class Hud {
           <span class="hud-placard__qty-value">20</span>
           <button type="button" class="hud-placard__qty-inc" aria-label="Increase quantity">+</button>
         </div>
+        <span class="hud-placard__divider" aria-hidden="true"></span>
+        <span class="hud-placard__subject-count" aria-label="Subject count">0</span>
         <div class="hud-placard__repel-track" role="group" aria-label="Repel strength">
           <label class="hud-placard__repel-label" for="hud-repel-input">repel</label>
           <input id="hud-repel-input" class="hud-placard__repel-input" type="range" min="0" max="2" step="0.05" value="1" />
@@ -117,6 +122,7 @@ export class Hud {
     this.subjectToggle = this.placard.querySelector<HTMLElement>(".hud-placard__subject-toggle")!;
     this.repelInput = this.placard.querySelector<HTMLInputElement>(".hud-placard__repel-input")!;
     this.chargeRing = this.placard.querySelector<HTMLElement>(".hud-placard__charge")!;
+    this.subjectCountEl = this.placard.querySelector<HTMLElement>(".hud-placard__subject-count")!;
     this.handToolBtn = this.placard.querySelector<HTMLElement>(".hud-placard__tool--hand")!;
     this.textToolBtn = this.placard.querySelector<HTMLElement>(".hud-placard__tool--text")!;
     this.gridToolBtn = this.placard.querySelector<HTMLElement>(".hud-placard__tool--grid")!;
@@ -133,7 +139,6 @@ export class Hud {
     this.dragSource.onDrop((result) => {
       this.drawer.close();
       this.subjectDropCb?.(result);
-      this.subjectSkinChangeCb?.(result.skin);
     });
     this.refreshIcons();
     this.wireControls();
@@ -282,8 +287,29 @@ export class Hud {
     this.refreshIcons();
   }
 
-  setActiveSubjectSkin(skin: SubjectSkin): void {
-    this.drawer.setActiveSkin(skin);
+  setActiveSubjectSkin(subjectId: number | null, skin: SubjectSkin): void {
+    this.activeSubjectSkin = skin;
+    this.drawer.setActiveSkin(subjectId, skin);
+  }
+
+  setSubjectCount(n: number): void {
+    this.subjectCount = Math.max(0, Math.round(n));
+    this.subjectCountEl.textContent = String(this.subjectCount);
+  }
+
+  setLockedSubjectId(id: number | null): void {
+    this.lockedSubjectId = id;
+    if (id === null) {
+      this.drawer.setActiveSkin(null, null);
+      return;
+    }
+    if (this.activeSubjectSkin) {
+      this.drawer.setActiveSkin(id, this.activeSubjectSkin);
+    }
+  }
+
+  getLockedSubjectId(): number | null {
+    return this.lockedSubjectId;
   }
 
   setQuantity(quantity: number): void {
@@ -330,24 +356,24 @@ export class Hud {
     this.modeChangeCb = cb;
   }
 
-  onSubjectSkinChange(cb: (skin: SubjectSkin) => void): void {
-    this.subjectSkinChangeCb = cb;
-  }
-
   onSubjectDrop(cb: (result: SubjectDropResult) => void): void {
     this.subjectDropCb = cb;
   }
 
-  onSubjectResize(cb: (scale: number) => void): void {
+  onSubjectResize(cb: (subjectId: number | null, scale: number) => void): void {
     this.drawer.onResize(cb);
   }
 
-  onSubjectFontChange(cb: (fontId: TextFontId) => void): void {
+  onSubjectFontChange(cb: (subjectId: number | null, fontId: TextFontId) => void): void {
     this.drawer.onFontChange(cb);
   }
 
-  onSubjectAlignChange(cb: (align: "left" | "center" | "right") => void): void {
+  onSubjectAlignChange(cb: (subjectId: number | null, align: "left" | "center" | "right") => void): void {
     this.drawer.onAlignChange(cb);
+  }
+
+  onSubjectSkinChange(cb: (subjectId: number | null, skin: SubjectSkin) => void): void {
+    this.drawer.onSkinChange(cb);
   }
 
   onQuantityChange(cb: (quantity: number) => void): void {

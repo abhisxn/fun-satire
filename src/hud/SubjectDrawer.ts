@@ -25,9 +25,11 @@ export class SubjectDrawer {
   private composePreviewEl!: HTMLElement;
   private composePreviewLabel!: HTMLElement;
   private activeSkin: SubjectSkin | null = null;
-  private resizeCb: ((scale: number) => void) | null = null;
-  private fontChangeCb: ((fontId: TextFontId) => void) | null = null;
-  private alignChangeCb: ((align: AlignStep) => void) | null = null;
+  private activeSubjectId: number | null = null;
+  private resizeCb: ((subjectId: number | null, scale: number) => void) | null = null;
+  private fontChangeCb: ((subjectId: number | null, fontId: TextFontId) => void) | null = null;
+  private alignChangeCb: ((subjectId: number | null, align: AlignStep) => void) | null = null;
+  private skinChangeCb: ((subjectId: number | null, skin: SubjectSkin) => void) | null = null;
 
   constructor(root: HTMLElement, opts: SubjectDrawerOptions) {
     this.panel = document.createElement("div");
@@ -45,6 +47,7 @@ export class SubjectDrawer {
     this.renderCards();
     this.renderAvatarCards();
     this.renderCompose();
+    this.wireCardSkinClicks();
   }
 
   private renderCards(): void {
@@ -140,7 +143,7 @@ export class SubjectDrawer {
         }
         this.refreshComposePreview();
         if (this.activeSkin?.kind === "text") {
-          this.resizeCb?.(this.composeScale);
+          this.resizeCb?.(this.activeSubjectId, this.composeScale);
         }
       });
     }
@@ -153,7 +156,7 @@ export class SubjectDrawer {
           other.classList.toggle("subject-drawer__align-btn--active", other.dataset.align === align);
         }
         this.refreshComposePreview();
-        this.alignChangeCb?.(align);
+        this.alignChangeCb?.(this.activeSubjectId, align);
       });
     }
     for (const btn of slot.querySelectorAll<HTMLElement>(".subject-drawer__font-btn")) {
@@ -165,10 +168,18 @@ export class SubjectDrawer {
           other.classList.toggle("subject-drawer__font-btn--active", other.dataset.fontId === fid);
         }
         this.refreshComposePreview();
-        this.fontChangeCb?.(fid);
+        this.fontChangeCb?.(this.activeSubjectId, fid);
       });
     }
     this.refreshComposePreview();
+  }
+
+  private wireCardSkinClicks(): void {
+    for (const { skin, el } of this.cardEntries) {
+      el.addEventListener("click", () => {
+        this.skinChangeCb?.(this.activeSubjectId, skin);
+      });
+    }
   }
 
   private refreshComposePreview(): void {
@@ -200,8 +211,9 @@ export class SubjectDrawer {
     };
   }
 
-  setActiveSkin(skin: SubjectSkin | null): void {
+  setActiveSkin(subjectId: number | null, skin: SubjectSkin | null): void {
     this.activeSkin = skin;
+    this.activeSubjectId = subjectId;
     if (skin?.kind === "text") {
       const slot = this.getComposeSlot();
       const input = slot.querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
@@ -224,16 +236,20 @@ export class SubjectDrawer {
     }
   }
 
-  onResize(cb: (scale: number) => void): void {
+  onResize(cb: (subjectId: number | null, scale: number) => void): void {
     this.resizeCb = cb;
   }
 
-  onFontChange(cb: (fontId: TextFontId) => void): void {
+  onFontChange(cb: (subjectId: number | null, fontId: TextFontId) => void): void {
     this.fontChangeCb = cb;
   }
 
-  onAlignChange(cb: (align: AlignStep) => void): void {
+  onAlignChange(cb: (subjectId: number | null, align: AlignStep) => void): void {
     this.alignChangeCb = cb;
+  }
+
+  onSkinChange(cb: (subjectId: number | null, skin: SubjectSkin) => void): void {
+    this.skinChangeCb = cb;
   }
 
   open(): void {

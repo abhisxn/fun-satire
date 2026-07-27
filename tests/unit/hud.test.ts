@@ -233,3 +233,56 @@ describe("hud/Hud (Phase C Lane 1 chrome)", () => {
     }));
   });
 });
+
+describe("hud/Hud (PR2 Lane 3 identity binding + subject count)", () => {
+  let root: HTMLElement;
+  let hud: Hud;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="hud-root"></div>';
+    root = document.querySelector<HTMLElement>("#hud-root")!;
+    hud = new Hud(root);
+  });
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("setSubjectCount(n) renders a count indicator with the number", () => {
+    hud.setSubjectCount(3);
+    const count = root.querySelector<HTMLElement>(".hud-placard__subject-count");
+    expect(count).not.toBeNull();
+    expect(count?.textContent).toBe("3");
+  });
+
+  it("setSubjectCount(0) renders 0", () => {
+    hud.setSubjectCount(0);
+    expect(root.querySelector<HTMLElement>(".hud-placard__subject-count")?.textContent).toBe("0");
+  });
+
+  it("setLockedSubjectId(id) pre-populates the compose row with the locked subject's text skin", () => {
+    hud.setActiveSubjectSkin(7, { kind: "text", value: "Vote", scale: 1.35, fontId: "fraunces", align: "left" });
+    hud.setLockedSubjectId(7);
+    const input = root.querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
+    expect(input.value).toBe("Vote");
+    expect(root.querySelector('[data-size="large"]')?.classList.contains("subject-drawer__size-btn--active")).toBe(true);
+  });
+
+  it("setLockedSubjectId(null) does not throw and clears the active subject", () => {
+    hud.setActiveSubjectSkin(7, { kind: "text", value: "X", scale: 1 });
+    hud.setLockedSubjectId(7);
+    hud.setLockedSubjectId(null);
+    const resize = vi.fn();
+    hud.onSubjectResize(resize);
+    root.querySelector<HTMLElement>('[data-size="large"]')?.click();
+    expect(resize).not.toHaveBeenCalled();
+  });
+
+  it("propagates identity through onSubjectResize to the callback", () => {
+    const cb = vi.fn();
+    hud.onSubjectResize(cb);
+    hud.setActiveSubjectSkin(42, { kind: "text", value: "Hi", scale: 1 });
+    hud.setLockedSubjectId(42);
+    root.querySelector<HTMLElement>('[data-size="small"]')?.click();
+    expect(cb).toHaveBeenCalledWith(42, 0.75);
+  });
+});

@@ -189,10 +189,16 @@ export function applyCanvasPress(_x: number, _y: number, hitSubjectId: EntityId 
   if (lockedSubjectId === hitSubjectId) {
     unlockSubject();
     hud.setCurrentSubjectId(null);
+    hud.setLockedSubjectId(null);
     return;
   }
   lockSubject(hitSubjectId);
   hud.setCurrentSubjectId(hitSubjectId);
+  const rec = subjects.get(hitSubjectId);
+  if (rec) {
+    hud.setActiveSubjectSkin(hitSubjectId, rec.skin);
+    hud.setLockedSubjectId(hitSubjectId);
+  }
 }
 
 /**
@@ -218,6 +224,36 @@ export function queryNearestEye(
     }
   });
   return best;
+}
+
+/**
+ * Update a single subject's skin formatting (font, scale, align) by entity id.
+ * No-op if the subject is unknown or its skin is not a text skin. The behavior
+ * data on the live entity is updated in lockstep with the `subjects` Map so
+ * the renderer sees the change on the next frame.
+ */
+export function applySubjectSkinPatch(
+  id: EntityId,
+  patch: { fontId?: string; scale?: number; align?: "left" | "center" | "right" },
+): void {
+  const rec = subjects.get(id);
+  if (!rec || rec.skin.kind !== "text") return;
+  const next: SubjectSkin = { ...rec.skin, ...patch };
+  rec.skin = next;
+  const e = store.get(id, { live: true });
+  if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = next;
+}
+
+export function applySubjectFontChange(id: EntityId, fontId: string): void {
+  applySubjectSkinPatch(id, { fontId });
+}
+
+export function applySubjectResizeChange(id: EntityId, scale: number): void {
+  applySubjectSkinPatch(id, { scale });
+}
+
+export function applySubjectAlignChange(id: EntityId, align: "left" | "center" | "right"): void {
+  applySubjectSkinPatch(id, { align });
 }
 
 const stage = document.querySelector<HTMLCanvasElement>("#stage");
@@ -267,7 +303,6 @@ new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
-let activeSubjectSkin: SubjectSkin = { kind: "illustrated", id: "figure" };
 
 hud.onModeChange((mode) => {
   const power = MODE_POWER_MAP[mode];
@@ -281,31 +316,25 @@ hud.onSubjectDrop((result: SubjectDropResult) => {
   applySubjectDrop({ skin: result.skin, canvasPos: result.canvasPos, nowMs: engine.getNow() });
 });
 
-hud.onSubjectResize((scale) => {
-  if (activeSubjectSkin.kind !== "text") return;
-  activeSubjectSkin = { ...activeSubjectSkin, scale };
-  subjects.forEach((rec) => {
-    const e = store.get(rec.id, { live: true });
-    if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
-  });
+hud.onSubjectResize((subjectId, scale) => {
+  if (subjectId === null) return;
+  applySubjectResizeChange(subjectId, scale);
+  const rec = subjects.get(subjectId);
+  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });
 
-hud.onSubjectFontChange((fontId) => {
-  if (activeSubjectSkin.kind !== "text") return;
-  activeSubjectSkin = { ...activeSubjectSkin, fontId };
-  subjects.forEach((rec) => {
-    const e = store.get(rec.id, { live: true });
-    if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
-  });
+hud.onSubjectFontChange((subjectId, fontId) => {
+  if (subjectId === null) return;
+  applySubjectFontChange(subjectId, fontId);
+  const rec = subjects.get(subjectId);
+  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });
 
-hud.onSubjectAlignChange((align) => {
-  if (activeSubjectSkin.kind !== "text") return;
-  activeSubjectSkin = { ...activeSubjectSkin, align };
-  subjects.forEach((rec) => {
-    const e = store.get(rec.id, { live: true });
-    if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
-  });
+hud.onSubjectAlignChange((subjectId, align) => {
+  if (subjectId === null) return;
+  applySubjectAlignChange(subjectId, align);
+  const rec = subjects.get(subjectId);
+  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });
 
 hud.onQuantityChange((quantity) => {
@@ -431,6 +460,7 @@ engine.events.on("tick", ({ phase, dt }) => {
         locked: rec.locked,
       });
     });
+    hud.setSubjectCount(subjects.size);
     renderFrame({
       ctx,
       store,
