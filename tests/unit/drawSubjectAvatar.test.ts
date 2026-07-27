@@ -50,11 +50,11 @@ describe("drawSubjectAvatar", () => {
       colors: baseColors,
       scale: 1,
       rotation: 0,
-      assetId: "sticker-1",
+      assetId: "frame-38",
       imageCache: cache,
     });
     expect(ctx.calls).not.toContain("drawImage");
-    expect(ctx.calls.filter((c) => c === "arc" || c === "ellipse").length).toBeGreaterThan(0);
+    expect(ctx.calls).toContain("save");
   });
 
   it("calls ctx.drawImage with the loaded image once the asset is ready", () => {
@@ -67,7 +67,7 @@ describe("drawSubjectAvatar", () => {
       colors: baseColors,
       scale: 1,
       rotation: 0,
-      assetId: "sticker-1",
+      assetId: "frame-38",
       imageCache: cache,
     });
     expect(drawImageSpy).toHaveBeenCalledTimes(1);

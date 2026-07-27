@@ -22,10 +22,6 @@ export const AVATAR_DRAW = Object.freeze({
   paddingXFraction: 0.14,
   paddingYFraction: 0.28,
   paperCutSeed: 71,
-  placeholderHeadRadiusFraction: 0.18,
-  placeholderBodyWidthFraction: 0.5,
-  placeholderBodyHeightFraction: 0.4,
-  placeholderBodyOffsetYFraction: 0.1,
 } as const);
 
 function colorByName(k: string): string {
@@ -81,22 +77,8 @@ export function drawSubjectAvatar(ctx: CanvasRenderingContext2D, input: DrawSubj
     const imgH = ry * 2 * 0.86;
     ctx.drawImage(assetState.image, cx - imgW / 2, cy - imgH / 2, imgW, imgH);
     ctx.restore();
-  } else {
-    const headR = s * AVATAR_DRAW.placeholderHeadRadiusFraction;
-    const headCy = cy - s * 0.08;
-    ctx.beginPath();
-    ctx.arc(cx, headCy, headR, 0, Math.PI * 2);
-    ctx.fillStyle = colorByName(colors.outline);
-    ctx.fill();
-
-    const bodyW = s * AVATAR_DRAW.placeholderBodyWidthFraction;
-    const bodyH = s * AVATAR_DRAW.placeholderBodyHeightFraction;
-    const bodyCy = cy + s * AVATAR_DRAW.placeholderBodyOffsetYFraction;
-    ctx.beginPath();
-    ctx.ellipse(cx, bodyCy, bodyW / 2, bodyH / 2, 0, 0, Math.PI * 2);
-    ctx.fillStyle = colorByName(colors.outline);
-    ctx.fill();
   }
+  // While loading or on error, render only the paper-cut frame; no placeholder silhouette.
 
   ctx.restore();
 }

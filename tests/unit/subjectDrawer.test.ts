@@ -102,11 +102,11 @@ describe("SubjectDrawer avatar card grid", () => {
     const root = document.createElement("div");
     const drawer = new SubjectDrawer(root, { anchor: "right" });
     const avatarCards = root.querySelectorAll<HTMLElement>(".subject-drawer__avatar-card");
-    expect(avatarCards.length).toBe(2);
+    expect(avatarCards.length).toBe(16);
     const allCards = root.querySelectorAll(
       ".subject-drawer__card:not(.subject-drawer__compose-preview), .subject-drawer__avatar-card",
     );
-    expect(allCards.length).toBe(5 + 2);
+    expect(allCards.length).toBe(5 + 16);
     void drawer;
   });
 
@@ -115,9 +115,9 @@ describe("SubjectDrawer avatar card grid", () => {
     new SubjectDrawer(root, { anchor: "right" });
     const first = root.querySelector<HTMLElement>(".subject-drawer__avatar-card")!;
     const img = first.querySelector("img.subject-drawer__avatar-thumb")!;
-    expect(img.getAttribute("src")).toBe("/avatars/sticker-1.png");
-    expect(img.getAttribute("alt")).toBe("Sticker 1");
-    expect(first.textContent).toContain("Sticker 1");
+    expect(img.getAttribute("src")).toBe("/avatars/Frame 38.png");
+    expect(img.getAttribute("alt")).toBe("Frame 38");
+    expect(first.textContent).toContain("Frame 38");
   });
 
   it("avatar section has a visible header label", () => {
@@ -133,9 +133,9 @@ describe("SubjectDrawer avatar card grid", () => {
     const drawer = new SubjectDrawer(root, { anchor: "right" });
     const entries = drawer.getCardElements();
     const avatarEntries = entries.filter((e) => e.skin.kind === "avatar");
-    expect(avatarEntries.length).toBe(2);
-    expect(avatarEntries[0]!.skin).toEqual({ kind: "avatar", assetId: "sticker-1" });
-    expect(avatarEntries[1]!.skin).toEqual({ kind: "avatar", assetId: "sticker-2" });
+    expect(avatarEntries.length).toBe(16);
+    expect(avatarEntries[0]!.skin).toEqual({ kind: "avatar", assetId: "frame-38" });
+    expect(avatarEntries[1]!.skin).toEqual({ kind: "avatar", assetId: "frame-39" });
   });
 });
 
