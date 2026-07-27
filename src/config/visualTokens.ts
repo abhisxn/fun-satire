@@ -4,14 +4,15 @@ type DeepReadonly<T> = T extends object
   ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
   : T;
 
-export const UI_TOKENS = Object.freeze(inventory) as DeepReadonly<typeof inventory>;
+function deepFreeze<T extends object>(value: T): DeepReadonly<T> {
+  for (const child of Object.values(value)) {
+    if (child !== null && typeof child === "object") deepFreeze(child);
+  }
+  return Object.freeze(value) as DeepReadonly<T>;
+}
 
-export const CANVAS_ART = Object.freeze({
-  cream: "#EDE7DD",
-  slate: "#5B7A8C",
-  sage: "#6D7A5E",
-  ink: "#2A2420",
-  coral: "#E8A9A0",
-} as const);
+export const UI_TOKENS = deepFreeze(inventory.ui);
+
+export const CANVAS_ART = deepFreeze(inventory.canvasArt);
 
 export const PALETTE = CANVAS_ART;

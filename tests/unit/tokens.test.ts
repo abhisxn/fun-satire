@@ -35,6 +35,15 @@ describe("config tokens (T2)", () => {
     expect(Object.isFrozen(UI_TOKENS)).toBe(true);
   });
 
+  it("freezes nested UI token objects at runtime", async () => {
+    const { UI_TOKENS } = await import("../../src/config/visualTokens");
+
+    expect(Object.isFrozen(UI_TOKENS.control)).toBe(true);
+    expect(Object.isFrozen(UI_TOKENS.control.bar)).toBe(true);
+    expect(Reflect.set(UI_TOKENS.control.bar, "width", 999)).toBe(false);
+    expect(UI_TOKENS.control.bar.width).toBe(542);
+  });
+
   it("exposes a frozen palette that mirrors src/styles/tokens.css", async () => {
     const mod = await import("../../src/config/tokens");
     const { PALETTE, COLOR_HEX } = mod;
@@ -45,6 +54,17 @@ describe("config tokens (T2)", () => {
     expect(PALETTE.coral).toBe("#E8A9A0");
     expect(Object.isFrozen(PALETTE)).toBe(true);
     expect(COLOR_HEX.cream).toBe(PALETTE.cream);
+  });
+
+  it("derives every Canvas-art CSS alias from the shared inventory", async () => {
+    const inventory = JSON.parse(readText("src/config/visualTokens.json"));
+    const { CANVAS_ART } = await import("../../src/config/visualTokens");
+    const css = readText("src/styles/tokens.css");
+
+    expect(CANVAS_ART).toEqual(inventory.canvasArt);
+    for (const [name, value] of Object.entries(inventory.canvasArt)) {
+      expect(css).toContain(`--color-${name}: ${value};`);
+    }
   });
 
   it("exposes font, easing, duration, and motion tokens", async () => {
@@ -109,6 +129,31 @@ describe("config tokens (T2)", () => {
     });
   });
 
+});
+
+describe("visual token CSS numeric units", () => {
+  it("formats dimensional token paths as px", async () => {
+    const { formatNumericToken } = await import("../../scripts/generate-visual-tokens.mjs");
+    expect(formatNumericToken("control.bar.width", 542)).toBe("542px");
+  });
+
+  it("formats duration token paths as ms", async () => {
+    const { formatNumericToken } = await import("../../scripts/generate-visual-tokens.mjs");
+    expect(formatNumericToken("motion.duration.fast", 120)).toBe("120ms");
+  });
+
+  it("formats scale and z-index token paths as unitless", async () => {
+    const { formatNumericToken } = await import("../../scripts/generate-visual-tokens.mjs");
+    expect(formatNumericToken("scene.densityScale.mobile", 0.74)).toBe("0.74");
+    expect(formatNumericToken("overlay.zIndex.hud", 60)).toBe("60");
+  });
+
+  it("rejects numeric paths without explicit unit metadata", async () => {
+    const { formatNumericToken } = await import("../../scripts/generate-visual-tokens.mjs");
+    expect(() => formatNumericToken("unknown.size", 12)).toThrowError(
+      'No numeric unit metadata for "unknown.size"',
+    );
+  });
 });
 
 describe("EASE.spring (T5)", () => {

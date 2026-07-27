@@ -1,4 +1,12 @@
 {
+  "canvasArt": {
+    "cream": "#EDE7DD",
+    "slate": "#5B7A8C",
+    "sage": "#6D7A5E",
+    "ink": "#2A2420",
+    "coral": "#E8A9A0"
+  },
+  "ui": {
   "stage": {
     "gradient": {
       "center": "#ebe9e0",
@@ -123,5 +131,53 @@
   "atmosphere": {
     "grainOpacity": 0.04,
     "grainTileUrl": "url(\"/textures/grain.png\")"
+  }
+  },
+  "numericUnits": {
+    "glass.backdropBlur": "px",
+    "content.disabledOpacity": "unitless",
+    "control.bar.width": "px",
+    "control.bar.height": "px",
+    "control.bar.radius": "px",
+    "control.well": "px",
+    "control.touchMinimum": "px",
+    "control.gap": "px",
+    "panel.filter.width": "px",
+    "panel.filter.height": "px",
+    "panel.gallery.width": "px",
+    "panel.gallery.cardWidth": "px",
+    "panel.gallery.artSize": "px",
+    "panel.radius": "px",
+    "panel.sheetRadius": "px",
+    "spacing.xs": "px",
+    "spacing.sm": "px",
+    "spacing.md": "px",
+    "spacing.lg": "px",
+    "spacing.xl": "px",
+    "spacing.xxl": "px",
+    "typography.labelSize": "px",
+    "typography.valueSize": "px",
+    "typography.attackSize": "px",
+    "motion.duration.fast": "ms",
+    "motion.duration.base": "ms",
+    "motion.duration.slow": "ms",
+    "motion.multiplier": "unitless",
+    "motion.reducedMultiplier": "unitless",
+    "breakpoint.phone": "px",
+    "breakpoint.tablet": "px",
+    "breakpoint.desktop": "px",
+    "breakpoint.landscapePhoneHeight": "px",
+    "safeArea.inline": "px",
+    "state.pressedScale": "unitless",
+    "overlay.zIndex.canvas": "unitless",
+    "overlay.zIndex.grain": "unitless",
+    "overlay.zIndex.hud": "unitless",
+    "overlay.zIndex.panel": "unitless",
+    "overlay.zIndex.dialog": "unitless",
+    "scene.densityScale.desktop": "unitless",
+    "scene.densityScale.mobile": "unitless",
+    "scene.visualEnvelopeScale.desktop": "unitless",
+    "scene.visualEnvelopeScale.mobile": "unitless",
+    "atmosphere.grainOpacity": "unitless"
   }
 }
