@@ -2,12 +2,23 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Entity } from "../../src/entities/Entity";
 import {
+  collectVisibleFixtureResourceUrls,
   completeVisualFixtureBoot,
   installVisualFixtureDocumentState,
   readVisualFixture,
   requiredAssetUrlsForVisualFixture,
 } from "../../src/testing/visualFixture";
-import { applyEyesFixtureState } from "../../src/testing/eyesFixtures";
+import { applyEyesFixtureState, materializeEyesAttackFixture } from "../../src/testing/eyesFixtures";
+import { Hud } from "../../src/hud/Hud";
+import { AVATAR_ASSET_REGISTRY } from "../../src/hud/avatarAssetRegistry";
+import { EntityStore } from "../../src/entities/EntityStore";
+import { ParticleSystem } from "../../src/effects/ParticleSystem";
+import { EffectSystem } from "../../src/effects/EffectSystem";
+import { laserBurnEffect, LASER_BURN } from "../../src/effects/effectDefs/laserBurn";
+import { Rng } from "../../src/core/Rng";
+import { loadManifestFromText } from "../../src/content/manifestLoader";
+import type { SubjectManifestEntry } from "../../src/content/schema";
+import subjectRoster from "../../src/content/manifests/subject.roster.json";
 
 const FIXTURE_IDS = [
   "eyes-default",
@@ -77,6 +88,31 @@ describe("visual fixture query contract", () => {
     expect(document.querySelector("style[data-visual-fixture-motion]")?.textContent)
       .toContain("transition-duration: 0s");
   });
+
+  it("discovers visible DOM images and CSS image resources but excludes closed panels", () => {
+    document.body.innerHTML = `
+      <img src="/visible.png" />
+      <div hidden><img src="/hidden.png" /></div>
+      <div class="subject-drawer" data-open="false"><img src="/closed.png" /></div>
+      <div id="painted" style="background-image: url('/texture.png')"></div>
+      <div aria-hidden="true" style="background-image: url('/decorative.png')"></div>
+    `;
+
+    expect(collectVisibleFixtureResourceUrls(document)).toEqual([
+      "/visible.png",
+      "/texture.png",
+      "/decorative.png",
+    ]);
+  });
+
+  it("includes every avatar image when the gallery fixture opens the real drawer", () => {
+    document.body.innerHTML = '<div id="hud"></div>';
+    const hud = new Hud(document.querySelector<HTMLElement>("#hud")!);
+    hud.setVisualFixturePanel("gallery");
+
+    const urls = collectVisibleFixtureResourceUrls(document);
+    expect(AVATAR_ASSET_REGISTRY.every(({ url }) => urls.includes(url))).toBe(true);
+  });
 });
 
 describe("eyes fixture state", () => {
@@ -97,11 +133,51 @@ describe("eyes fixture state", () => {
     expect(first.every(({ physics }) => physics.vel.x === 0 && physics.vel.y === 0)).toBe(true);
     expect(first.every(({ physics }) => physics.rotation === 0)).toBe(true);
   });
+
+  it("materializes a central target with contributors and active laser lifecycle progress", () => {
+    const store = new EntityStore();
+    const eyes = [makeEye(1), makeEye(2), makeEye(3), makeEye(4)];
+    eyes.forEach((eye) => store.insert(eye));
+    applyEyesFixtureState(eyes, new Map(), { width: 1280, height: 832 });
+    const rng = new Rng(20260728);
+    const particles = new ParticleSystem(rng, 64);
+    const effects = new EffectSystem(particles, rng, {
+      getEntity: (id) => store.get(id, { live: true }),
+      markDying: (id) => store.markDying(id),
+      startRespawn: () => {},
+    }, { play: () => {} });
+    effects.register(laserBurnEffect);
+    const manifest = loadManifestFromText(JSON.stringify(subjectRoster)).entries.filter(
+      (entry): entry is SubjectManifestEntry => entry.rig === "subject",
+    );
+
+    const scenario = materializeEyesAttackFixture({
+      store,
+      effects,
+      subjectManifest: manifest,
+      nextId: 5,
+      viewport: { width: 1280, height: 832 },
+      nowMs: 4200,
+      progress: 0.68,
+    });
+
+    const subject = store.get(scenario.targetId, { live: true })!;
+    const active = effects.liveEffects()[0]!;
+    expect(subject.content.renderType).toBe("subject");
+    expect(subject.physics.pos).toEqual({ x: 640, y: 416 });
+    expect(subject.lifecycle).toMatchObject({ alive: false, dying: true });
+    expect(scenario.contributorIds).toEqual([1, 2, 3, 4]);
+    expect(active.defId).toBe("laserBurn");
+    expect(active.entityId).toBe(subject.id);
+    expect(active.stageIndex).toBe(4);
+    expect((4200 - active.startedAtMs) / LASER_BURN.totalDurationMs).toBeCloseTo(0.68);
+  });
 });
 
 describe("visual fixture readiness", () => {
   it("awaits audited assets and fonts, records failures, then completes one render", async () => {
     const calls: string[] = [];
+    let completedRenderCount = 0;
     const preload = vi.fn(async () => {
       calls.push("assets");
       return [
@@ -110,18 +186,51 @@ describe("visual fixture readiness", () => {
       ];
     });
     const fontsReady = Promise.resolve().then(() => { calls.push("fonts"); });
-    const renderOnce = vi.fn(() => { calls.push("render"); });
+    const finishEntranceTransitions = vi.fn(async () => { calls.push("entrance"); });
+    const renderOnce = vi.fn(() => {
+      calls.push("render");
+      completedRenderCount += 1;
+    });
 
     const result = await completeVisualFixtureBoot({
       assetUrls: ["/ready.svg", "/failed.svg"],
       preload,
       fontsReady,
+      finishEntranceTransitions,
       renderOnce,
+      completedRenderCount: () => completedRenderCount,
+      renderError: () => null,
     });
 
     expect(preload).toHaveBeenCalledWith(["/ready.svg", "/failed.svg"]);
     expect(calls.at(-1)).toBe("render");
+    expect(finishEntranceTransitions).toHaveBeenCalledOnce();
     expect(renderOnce).toHaveBeenCalledOnce();
     expect(result.failedAssets).toEqual(["/failed.svg"]);
+  });
+
+  it("rejects readiness when the render callback returns without a completion marker", async () => {
+    await expect(completeVisualFixtureBoot({
+      assetUrls: [],
+      preload: async () => [],
+      fontsReady: Promise.resolve(),
+      finishEntranceTransitions: async () => {},
+      renderOnce: () => {},
+      completedRenderCount: () => 0,
+      renderError: () => null,
+    })).rejects.toThrow("did not complete exactly one render");
+  });
+
+  it("rejects readiness with render errors captured outside EventBus", async () => {
+    const renderFailure = new Error("canvas exploded");
+    await expect(completeVisualFixtureBoot({
+      assetUrls: [],
+      preload: async () => [],
+      fontsReady: Promise.resolve(),
+      finishEntranceTransitions: async () => {},
+      renderOnce: () => {},
+      completedRenderCount: () => 0,
+      renderError: () => renderFailure,
+    })).rejects.toThrow("canvas exploded");
   });
 });

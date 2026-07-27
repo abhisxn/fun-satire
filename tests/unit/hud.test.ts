@@ -51,6 +51,46 @@ describe("hud/Hud (T22)", () => {
     expect(charge.style.getPropertyValue("--charge")).toBe("0.000");
   });
 
+  it("materializes distinct default, filter, and gallery fixture panel DOM states", () => {
+    hud.setVisualFixturePanel("none");
+    expect(root.querySelector<HTMLElement>('[data-visual-fixture-panel="filter"]')?.hidden).toBe(true);
+    expect(root.querySelector<HTMLElement>(".subject-drawer")?.dataset.open).toBe("false");
+
+    hud.setVisualFixturePanel("filter");
+    const filter = root.querySelector<HTMLElement>('[data-visual-fixture-panel="filter"]')!;
+    expect(filter.hidden).toBe(false);
+    expect(filter.getAttribute("aria-hidden")).toBe("false");
+    expect(root.querySelector<HTMLElement>(".subject-drawer")?.dataset.open).toBe("false");
+
+    hud.setVisualFixturePanel("gallery");
+    expect(filter.hidden).toBe(true);
+    expect(root.querySelector<HTMLElement>(".subject-drawer")?.dataset.open).toBe("true");
+    expect(root.querySelectorAll(".subject-drawer__avatar-thumb").length).toBeGreaterThan(0);
+  });
+
+  it("finishes entrance and card transitions without waiting on constructor RAF", async () => {
+    await hud.finishEntranceTransitions();
+
+    expect(root.querySelector(".hud-placard")?.classList.contains("hud-placard--ready")).toBe(true);
+    const cards = [...root.querySelectorAll<HTMLElement>(".subject-drawer__card")];
+    expect(cards.every((card) => card.style.getPropertyValue("--reveal-delay") === "0ms")).toBe(true);
+  });
+
+  it("reflects a deterministic attack target, lock, CTA, and field charge state", () => {
+    hud.setVisualFixtureAttackState({
+      targetId: 42,
+      skin: { kind: "illustrated", id: "figure" },
+      progress: 0.68,
+    });
+
+    expect(hud.getCurrentSubjectId()).toBe(42);
+    expect(hud.getLockedSubjectId()).toBe(42);
+    expect(root.querySelector<HTMLElement>(".hud-placard__attack")?.dataset.disabled).toBe("false");
+    const charge = root.querySelector<HTMLElement>(".hud-placard__charge")!;
+    expect(charge.dataset.visible).toBe("true");
+    expect(charge.style.getPropertyValue("--charge")).toBe("0.680");
+  });
+
   it("uses only the locked palette colors in the rendered HTML", () => {
     const html = root.innerHTML;
     const banned = ["#aa3bff", "#646cff", "#ffffff", "#000000", "system-ui", "Inter"];

@@ -87,6 +87,43 @@ export function requiredAssetUrlsForVisualFixture(config: VisualFixtureConfig): 
   return [...urls];
 }
 
+const CSS_IMAGE_PROPERTIES = [
+  "background-image",
+  "border-image-source",
+  "content",
+  "list-style-image",
+  "mask-image",
+  "-webkit-mask-image",
+] as const;
+
+function isFixtureResourceVisible(element: Element): boolean {
+  return element.closest('[hidden], .subject-drawer[data-open="false"]') === null;
+}
+
+function addCssUrls(value: string, urls: Set<string>): void {
+  const matches = value.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g);
+  for (const match of matches) {
+    const url = match[1];
+    if (url && !url.startsWith("data:")) urls.add(url);
+  }
+}
+
+export function collectVisibleFixtureResourceUrls(target: Document): readonly string[] {
+  const urls = new Set<string>();
+  for (const image of target.querySelectorAll<HTMLImageElement>("img[src]")) {
+    if (isFixtureResourceVisible(image)) urls.add(image.getAttribute("src")!);
+  }
+  for (const element of target.querySelectorAll<HTMLElement>("*")) {
+    if (!isFixtureResourceVisible(element)) continue;
+    const style = target.defaultView?.getComputedStyle(element);
+    if (!style) continue;
+    for (const property of CSS_IMAGE_PROPERTIES) {
+      addCssUrls(style.getPropertyValue(property), urls);
+    }
+  }
+  return [...urls];
+}
+
 export function installVisualFixtureDocumentState(
   target: Document,
   config: VisualFixtureConfig,
@@ -113,13 +150,25 @@ export async function completeVisualFixtureBoot(input: Readonly<{
   assetUrls: readonly string[];
   preload: (urls: readonly string[]) => Promise<readonly AssetLoadResult[]>;
   fontsReady: Promise<unknown>;
+  finishEntranceTransitions: () => Promise<void>;
   renderOnce: () => void;
+  completedRenderCount: () => number;
+  renderError: () => unknown;
 }>): Promise<Pick<VisualFixtureStatus, "failedAssets">> {
   const [assets] = await Promise.all([
     input.preload(input.assetUrls),
     input.fontsReady,
+    input.finishEntranceTransitions(),
   ]);
+  const completedBefore = input.completedRenderCount();
   input.renderOnce();
+  const renderError = input.renderError();
+  if (renderError) {
+    throw renderError instanceof Error ? renderError : new Error(String(renderError));
+  }
+  if (input.completedRenderCount() !== completedBefore + 1) {
+    throw new Error("Visual fixture did not complete exactly one render");
+  }
   return {
     failedAssets: assets
       .filter((asset) => asset.status === "error")

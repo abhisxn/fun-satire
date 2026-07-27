@@ -26,6 +26,8 @@ export class Hud {
   private gridToolBtn: HTMLElement;
   private attackBtn: HTMLElement;
   private attackIconHost: HTMLElement;
+  private fixtureFilterPanel: HTMLElement | null = null;
+  private readonly root: HTMLElement;
   private readonly drawer: SubjectDrawer;
   private readonly dragSource: SubjectDragSource;
   private mode: HudMode = "eyes";
@@ -55,8 +57,10 @@ export class Hud {
   private textToolCb: (() => void) | null = null;
   private gridToolCb: (() => void) | null = null;
   private visibilityToggleCb: ((visible: boolean) => void) | null = null;
+  private entranceFrame: number | null = null;
 
   constructor(root: HTMLElement, canvasDropTarget?: HTMLElement) {
+    this.root = root;
     root.dataset.layer = "hud";
     root.innerHTML = "";
     this.placard = document.createElement("div");
@@ -143,7 +147,10 @@ export class Hud {
     this.refreshIcons();
     this.wireControls();
     this.attackBtn.dataset.disabled = this.currentSubjectId === null ? "true" : "false";
-    requestAnimationFrame(() => this.placard.classList.add("hud-placard--ready"));
+    this.entranceFrame = requestAnimationFrame(() => {
+      this.entranceFrame = null;
+      this.placard.classList.add("hud-placard--ready");
+    });
   }
 
   private wireControls(): void {
@@ -315,6 +322,58 @@ export class Hud {
   setQuantity(quantity: number): void {
     this.quantity = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(quantity)));
     this.qtyValue.textContent = String(this.quantity);
+    const fixtureQuantity = this.fixtureFilterPanel?.querySelector<HTMLOutputElement>("[data-fixture-quantity]");
+    if (fixtureQuantity) fixtureQuantity.value = String(this.quantity);
+  }
+
+  setVisualFixturePanel(panel: "none" | "filter" | "gallery"): void {
+    const fixtureFilterPanel = this.ensureFixtureFilterPanel();
+    const filterOpen = panel === "filter";
+    fixtureFilterPanel.hidden = !filterOpen;
+    fixtureFilterPanel.setAttribute("aria-hidden", filterOpen ? "false" : "true");
+    if (panel === "gallery") this.drawer.open();
+    else this.drawer.close();
+    this.subjectToggle.setAttribute("aria-expanded", panel === "gallery" ? "true" : "false");
+  }
+
+  private ensureFixtureFilterPanel(): HTMLElement {
+    if (this.fixtureFilterPanel) return this.fixtureFilterPanel;
+    const panel = document.createElement("section");
+    panel.className = "hud-fixture-filter-panel";
+    panel.dataset.visualFixturePanel = "filter";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", "Crowd filters");
+    panel.setAttribute("aria-hidden", "true");
+    panel.hidden = true;
+    panel.innerHTML = `
+      <strong>Filter crowd</strong>
+      <span>quantity <output data-fixture-quantity>${this.quantity}</output></span>
+      <span>repel <output data-fixture-repel>1</output></span>
+    `;
+    this.root.appendChild(panel);
+    this.fixtureFilterPanel = panel;
+    return panel;
+  }
+
+  setVisualFixtureAttackState(input: Readonly<{
+    targetId: number;
+    skin: SubjectSkin;
+    progress: number;
+  }>): void {
+    this.setCurrentSubjectId(input.targetId);
+    this.setActiveSubjectSkin(input.targetId, input.skin);
+    this.setLockedSubjectId(input.targetId);
+    this.setCharge(input.progress, true);
+  }
+
+  async finishEntranceTransitions(): Promise<void> {
+    if (this.entranceFrame !== null) {
+      cancelAnimationFrame(this.entranceFrame);
+      this.entranceFrame = null;
+    }
+    this.placard.classList.add("hud-placard--ready");
+    this.drawer.finishEntranceTransitions();
+    await Promise.resolve();
   }
 
   setCharge(progress: number, visible: boolean): void {

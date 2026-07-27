@@ -70,12 +70,13 @@ import { startAmbientForMode, startTenseFiller } from "./audio/ambientBeds";
 import { startMusicBed } from "./audio/musicBed";
 import { startAmbientBedTrack } from "./audio/ambientBedTrack";
 import {
+  collectVisibleFixtureResourceUrls,
   completeVisualFixtureBoot,
   installVisualFixtureDocumentState,
   readVisualFixture,
   requiredAssetUrlsForVisualFixture,
 } from "./testing/visualFixture";
-import { applyEyesFixtureState } from "./testing/eyesFixtures";
+import { applyEyesFixtureState, materializeEyesAttackFixture } from "./testing/eyesFixtures";
 
 type LifecycleState = "alive" | "dying";
 type LocomotionState = "idle" | "flee" | "dragged";
@@ -319,7 +320,7 @@ hud.setMode("eyes");
 hud.setPower("laserBurn");
 if (visualFixture) {
   hud.setQuantity(visualFixture.quantity);
-  hudRoot.dataset.visualPanel = visualFixture.panel;
+  hud.setVisualFixturePanel(visualFixture.panel);
 }
 
 const audioEngine = visualFixture ? null : new AudioEngine(new AudioContext());
@@ -434,6 +435,9 @@ hud.onGridTool(() => {
 });
 
 let fixtureFrame: ((timestamp: number) => void) | null = null;
+let fixtureAttackTargetId: EntityId | null = null;
+let completedRenderCount = 0;
+let fixtureRenderError: unknown = null;
 const engine = visualFixture ? new Engine({
   now: () => visualFixture.nowMs,
   raf: (callback) => {
@@ -498,35 +502,40 @@ engine.events.on("tick", ({ phase, dt }) => {
       });
     });
     hud.setSubjectCount(subjects.size);
-    renderFrame({
-      ctx,
-      store,
-      particles,
-      effects,
-      cursor,
-      rng,
-      width: viewport.state.width,
-      height: viewport.state.height,
-      behaviors,
-      blinkTimers,
-      pupilOffsets,
-      cursorRingRadius,
-      cursorRingOpacity,
-      chargeTargetId: visualFixture?.attackProgress !== null && visualFixture?.attackProgress !== undefined
-        ? (store.ids()[0] ?? null)
-        : powerCtrl.chargeTargetId(),
-      hoverEntityId: hoverEntity?.id ?? null,
-      reducedMotion,
-      nowMs: engine.getNow(),
-      hudMode: currentMode,
-      quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
-      repelMultiplier,
-      subjects: subjectRenderInfos,
-      lockedSubjectId,
-      chargeT: ringT,
-      assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
-      imageCache: imageAssets,
-    });
+    fixtureRenderError = null;
+    try {
+      renderFrame({
+        ctx,
+        store,
+        particles,
+        effects,
+        cursor,
+        rng,
+        width: viewport.state.width,
+        height: viewport.state.height,
+        behaviors,
+        blinkTimers,
+        pupilOffsets,
+        cursorRingRadius,
+        cursorRingOpacity,
+        chargeTargetId: fixtureAttackTargetId ?? powerCtrl.chargeTargetId(),
+        hoverEntityId: hoverEntity?.id ?? null,
+        reducedMotion,
+        nowMs: engine.getNow(),
+        hudMode: currentMode,
+        quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
+        repelMultiplier,
+        subjects: subjectRenderInfos,
+        lockedSubjectId,
+        chargeT: ringT,
+        assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
+        imageCache: imageAssets,
+      });
+      completedRenderCount += 1;
+    } catch (error) {
+      fixtureRenderError = error;
+      throw error;
+    }
     void inCooldown;
   }
 });
@@ -547,6 +556,7 @@ const worldAPI = {
     const e = store.get(id, { live: false });
     if (!e) return;
     if (e.content.renderType === "subject") {
+      if (visualFixture?.id === "eyes-attack") return;
       store.remove(id);
       removeSubjectFromCollection(id);
       return;
@@ -770,6 +780,33 @@ if (visualFixture) {
   applyEyesFixtureState(eyes, pupilOffsets, viewport.state);
 }
 nextEntityId = Math.max(0, ...store.ids()) + 1;
+if (visualFixture?.id === "eyes-attack" && visualFixture.attackProgress !== null) {
+  const scenario = materializeEyesAttackFixture({
+    store,
+    effects,
+    subjectManifest: subjectManifestEntries,
+    nextId: nextEntityId++,
+    viewport: viewport.state,
+    nowMs: visualFixture.nowMs,
+    progress: visualFixture.attackProgress,
+  });
+  fixtureAttackTargetId = scenario.targetId;
+  const target = store.get(scenario.targetId, { live: true });
+  if (!target) throw new Error("Visual attack fixture target is unavailable");
+  const subjectSkin = (target.behavior.data as { subjectSkin: SubjectSkin }).subjectSkin;
+  spawnSubjectForCollection({
+    id: target.id,
+    skin: subjectSkin,
+    nowMs: visualFixture.nowMs,
+  });
+  lockSubject(target.id);
+  hud.setVisualFixtureAttackState({
+    targetId: target.id,
+    skin: subjectSkin,
+    progress: visualFixture.attackProgress,
+  });
+  engine.setCursor(viewport.state.width / 2, viewport.state.height / 2);
+}
 if (!visualFixture) pointer.attach();
 engine.start();
 
@@ -783,15 +820,22 @@ const unlockAudio = (): void => {
 };
 if (visualFixture) {
   const config = visualFixture;
+  const assetUrls = [...new Set([
+    ...requiredAssetUrlsForVisualFixture(config),
+    ...collectVisibleFixtureResourceUrls(document),
+  ])];
   void completeVisualFixtureBoot({
-    assetUrls: requiredAssetUrlsForVisualFixture(config),
+    assetUrls,
     preload: (urls) => imageAssets.preload(urls),
     fontsReady: document.fonts.ready,
+    finishEntranceTransitions: () => hud.finishEntranceTransitions(),
     renderOnce: () => {
       const render = fixtureFrame;
       if (!render) throw new Error("Visual fixture frame was not scheduled");
       render(config.nowMs);
     },
+    completedRenderCount: () => completedRenderCount,
+    renderError: () => fixtureRenderError,
   }).then(({ failedAssets }) => {
     document.documentElement.dataset.visualReady = "true";
     window.__FUN_SATIRE_VISUAL__ = { ready: true, error: null, failedAssets };

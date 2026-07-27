@@ -270,4 +270,11 @@ export class SubjectDrawer {
   isOpen(): boolean {
     return this.open_;
   }
+
+  finishEntranceTransitions(): void {
+    for (const { el } of this.cardEntries) {
+      el.style.setProperty("--reveal-delay", "0ms");
+    }
+    this.composePreviewEl.style.setProperty("--reveal-delay", "0ms");
+  }
 }
