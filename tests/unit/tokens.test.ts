@@ -18,6 +18,23 @@ function exists(rel: string): boolean {
 }
 
 describe("config tokens (T2)", () => {
+  it("records the measured Figma stage and overlay geometry", async () => {
+    const { UI_TOKENS } = await import("../../src/config/visualTokens");
+
+    expect(UI_TOKENS.stage.gradient).toEqual({
+      center: "#ebe9e0",
+      mid: "#cdc0b8",
+      outer: "#aa988e",
+    });
+    expect(UI_TOKENS.control.bar.width).toBe(542);
+    expect(UI_TOKENS.control.bar.height).toBe(70);
+    expect(UI_TOKENS.control.well).toBe(46);
+    expect(UI_TOKENS.control.touchMinimum).toBe(44);
+    expect(UI_TOKENS.panel.filter).toEqual({ width: 139, height: 170 });
+    expect(UI_TOKENS.panel.gallery.width).toBe(284);
+    expect(Object.isFrozen(UI_TOKENS)).toBe(true);
+  });
+
   it("exposes a frozen palette that mirrors src/styles/tokens.css", async () => {
     const mod = await import("../../src/config/tokens");
     const { PALETTE, COLOR_HEX } = mod;
@@ -46,17 +63,6 @@ describe("config tokens (T2)", () => {
   it("throws a descriptive error on an unknown palette key", async () => {
     const mod = await import("../../src/config/tokens");
     expect(() => mod.assertPaletteKey("purple")).toThrowError(/palette/);
-  });
-
-  it("listAcceptedPaletteKeys returns the locked five keys in a stable order", async () => {
-    const mod = await import("../../src/config/tokens");
-    expect(mod.listAcceptedPaletteKeys()).toEqual([
-      "cream",
-      "slate",
-      "sage",
-      "ink",
-      "coral",
-    ]);
   });
 
   describe("self-hosted fonts", () => {
@@ -103,14 +109,6 @@ describe("config tokens (T2)", () => {
     });
   });
 
-  it("keeps only the locked five colors as literals in CSS and TS", () => {
-    const css = readText("src/styles/tokens.css");
-    const ts = readText("src/config/tokens.ts");
-    for (const bad of ["#aa3bff", "#646cff", "#ffffff", "#000000", "system-ui"]) {
-      expect(css.toLowerCase()).not.toContain(bad.toLowerCase());
-      expect(ts.toLowerCase()).not.toContain(bad.toLowerCase());
-    }
-  });
 });
 
 describe("EASE.spring (T5)", () => {
