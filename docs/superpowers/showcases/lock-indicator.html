@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Locked Subject Indicator — Option Showcase</title>
+  <style>
+    :root {
+      --bg-0: #0a0810;
+      --bg-1: #14101c;
+      --ink: #f4ecdc;
+      --muted: #8a8294;
+      --hairline: rgba(244, 236, 220, 0.08);
+      --amber: #f5a623;
+      --gold: #e8c547;
+      --cream: #f0d3a4;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg-0);
+      color: var(--ink);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 48px 32px 80px; }
+    h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.1; letter-spacing: -0.02em; font-weight: 700; }
+    .sub { margin: 0 0 40px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+    .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    @media (max-width: 860px) { .options { grid-template-columns: 1fr; } }
+
+    .opt {
+      position: relative;
+      border-radius: 16px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)) , var(--bg-1);
+      border: 1px solid var(--hairline);
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .opt-header { display: flex; align-items: center; gap: 12px; }
+    .letter {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; flex-shrink: 0;
+      background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .letter.b { background: rgba(232,197,71,0.15); color: var(--gold); border-color: rgba(232,197,71,0.3); }
+    .letter.c { background: rgba(244,236,220,0.10); color: var(--cream); border-color: rgba(244,236,220,0.25); }
+    .letter.d { background: rgba(138,130,148,0.15); color: var(--muted); border-color: rgba(138,130,148,0.3); }
+    .opt-title { font-size: 16px; font-weight: 600; }
+    .opt-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    .stage {
+      height: 180px; border-radius: 12px;
+      background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.04) 0%, transparent 60%), var(--bg-0);
+      border: 1px solid var(--hairline);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subject card mock */
+    .subject-card {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #2a1f1a, #1a1014);
+      border: 1.5px solid rgba(244,236,220,0.12);
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .subject-card .face { width: 36px; height: 36px; border-radius: 50%; background: #d4a574; opacity: 0.7; }
+
+    /* Indicator A: thin amber ring */
+    .ind-a { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--amber); opacity: 0.85; }
+    /* Indicator B: soft gold glow (PR1 archetype) */
+    .ind-b { position: absolute; inset: -14px; border-radius: 50%; background: radial-gradient(circle, rgba(232,197,71,0.25) 20%, transparent 70%); }
+    .ind-b-ring { position: absolute; inset: -8px; border-radius: 50%; border: 2.5px solid rgba(232,197,71,0.5); opacity: 0.7; }
+    /* Indicator C: dashed paper-cut outline */
+    .ind-c { position: absolute; inset: -8px; border-radius: 50%; border: 2px dashed rgba(244,236,220,0.45); animation: dash-spin 20s linear infinite; }
+    @keyframes dash-spin { to { transform: rotate(360deg); } }
+    /* Indicator D: none */
+
+    .tradeoffs { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+    .tradeoffs li { margin-bottom: 4px; }
+    .tradeoffs strong { color: var(--ink); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Locked-Subject Indicator Options</h1>
+    <p class="sub">PR2 Task 6 — visual decision gate for the "tap-to-lock" feedback state. Each mock shows the indicator rendered around an 80px subject card on canvas.</p>
+
+    <div class="options">
+      <!-- Option A -->
+      <div class="opt">
+        <div class="opt-header">
+          <div class="letter">A</div>
+          <div class="opt-title">Amber Ring</div>
+        </div>
+        <div class="opt-desc">A 2px solid amber circle, 6px outside the subject edge. High contrast, minimal footprint.</div>
+        <div class="stage">
+          <div class="subject-card"><div class="face"></div>
+            <div class="ind-a"></div>
+          </div>
+        </div>
+        <ul class="tradeoffs">
+          <li><strong>Pro:</strong> unmistakable, cheap to render, readable at distance</li>
+          <li><strong>Pro:</strong> color-codes "active/selected" consistently with HUD</li>
+          <li><strong>Con:</strong> can clash with subject's own border/shadow</li>
+          <li><strong>Con:</strong> sharp geometric feel; less "organic" for the art style</li>
+        </ul>
+      </div>
+
+      <!-- Option B -->
+      <div class="opt">
+        <div class="opt-header">
+          <div class="letter b">B</div>
+          <div class="opt-title">Gold Glow (PR1 Archetype)</div>
+        </div>
+        <div class="opt-desc">Radial gold halo + soft inner ring, ~14px radius. Reuses PR1 collective-effect glow shape at lower intensity.</div>
+        <div class="stage">
+          <div class="subject-card"><div class="face"></div>
+            <div class="ind-b"></div>
+            <div class="ind-b-ring"></div>
+          </div>
+        </div>
+        <ul class="tradeoffs">
+          <li><strong>Pro:</strong> harmonizes with existing attack VFX palette</li>
+          <li><strong>Pro:</strong> soft edges avoid hard clipping near canvas edge</li>
+          <li><strong>Con:</strong> larger footprint (~28px) risks overlap with neighbors</li>
+          <li><strong>Con:</strong> can be misread as "under attack" during collective charge</li>
+        </ul>
+      </div>
+
+      <!-- Option C -->
+      <div class="opt">
+        <div class="opt-header">
+          <div class="letter c">C</div>
+          <div class="opt-title">Dashed Paper-Cut Outline</div>
+        </div>
+        <div class="opt-desc">Rotating dashed circle in cream/paper tone, ~8px outside. References the project's paper-cut edge aesthetic.</div>
+        <div class="stage">
+          <div class="subject-card"><div class="face"></div>
+            <div class="ind-c"></div>
+          </div>
+        </div>
+        <ul class="tradeoffs">
+          <li><strong>Pro:</strong> thematically on-brand with paper-cut UI language</li>
+          <li><strong>Pro:</strong> dashed pattern reads "selected outline" without color</li>
+          <li><strong>Con:</strong> rotation animation adds continuous render cost</li>
+          <li><strong>Con:</strong> low contrast on dark canvas; may vanish at small sizes</li>
+        </ul>
+      </div>
+
+      <!-- Option D -->
+      <div class="opt">
+        <div class="opt-header">
+          <div class="letter d">D</div>
+          <div class="opt-title">Implicit (No Indicator)</div>
+        </div>
+        <div class="opt-desc">Lock state is shown only in HUD (highlighted card, "LOCKED" badge). Canvas subject is unchanged.</div>
+        <div class="stage">
+          <div class="subject-card"><div class="face"></div></div>
+        </div>
+        <ul class="tradeoffs">
+          <li><strong>Pro:</strong> zero render cost, zero visual clutter</li>
+          <li><strong>Pro:</strong> forces user attention to HUD for state awareness</li>
+          <li><strong>Con:</strong> hard to tell which subject is locked in multi-subject scenes</li>
+          <li><strong>Con:</strong> breaks direct-manipulation feedback loop</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
