@@ -108,6 +108,48 @@ describe("FIGMA_ASSETS", () => {
     }
   });
 
+  it("maps capped scene references to the full canonical 20:13 crop uniformly", () => {
+    for (const nodeId of ["18:113", "109:3669"]) {
+      const reference = FIGMA_ASSETS.find((asset) => asset.role === "reference" && asset.nodeId === nodeId);
+      expect(reference).toBeDefined();
+      expect({ width: reference?.width, height: reference?.height }).toEqual({ width: 1020, height: 663 });
+      expect(reference?.provenance).toMatchObject({
+        originalCaptureDimensions: { width: 1024, height: 666 },
+        sourceDimensions: { width: 1280, height: 832 },
+        parityMapping: {
+          kind: "full-scene-normalized",
+          normalizedDimensions: { width: 1020, height: 663 },
+          sourceCrop: { x: 0, y: 0, width: 1280, height: 832 },
+          scaleX: 0.796875,
+          scaleY: 0.796875,
+          transform: "full-crop-resample",
+          resampling: "nearest-neighbor",
+          browserCapture: { width: 1020, height: 663, scale: 0.796875 },
+        },
+      });
+      expect((reference?.width ?? 0) * 832).toBe((reference?.height ?? 0) * 1280);
+    }
+  });
+
+  it("keeps component parity references at exact intrinsic identity mappings", () => {
+    for (const nodeId of ["103:2490", "103:3579", "103:3593"]) {
+      const reference = FIGMA_ASSETS.find((asset) => asset.role === "reference" && asset.nodeId === nodeId);
+      expect(reference?.provenance.parityMapping).toMatchObject({
+        kind: "intrinsic",
+        scaleX: 1,
+        scaleY: 1,
+        transform: "identity",
+        resampling: "none",
+      });
+      expect(reference?.provenance.originalCaptureDimensions)
+        .toEqual(reference?.provenance.sourceDimensions);
+      expect(reference?.provenance.parityMapping.normalizedDimensions)
+        .toEqual(reference?.provenance.sourceDimensions);
+      expect({ width: reference?.width, height: reference?.height })
+        .toEqual(reference?.provenance.sourceDimensions);
+    }
+  });
+
   it("reserves crowd and effect roles for scene fragments", () => {
     const crowdBugs = FIGMA_ASSETS.filter((asset) => asset.id.startsWith("crowd-bug-"));
     expect(crowdBugs).toHaveLength(3);

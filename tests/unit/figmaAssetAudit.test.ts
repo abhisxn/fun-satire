@@ -7,6 +7,8 @@ import {
   assertPayloadBudget,
   assertSafeSvg,
   canonicalizeAssets,
+  dimensionsOf,
+  normalizeSceneReference,
   optimizePngLosslessly,
   safeOutputPath,
   validateManifest,
@@ -103,6 +105,46 @@ describe("Figma asset manifest audit", () => {
     if (!reference) throw new Error("Missing reference fixture");
     reference.sourceKind = "figma-asset-endpoint";
     expect(() => validateManifest(badReference)).toThrow(/source kind|provenance/i);
+  });
+
+  it("rejects page, source-node, and timestamp provenance drift", () => {
+    const badPage = cloneManifest();
+    badPage.assets[0].provenance.pageNodeId = "9:9";
+    expect(() => validateManifest(badPage)).toThrow(/page|provenance/i);
+
+    const badNode = cloneManifest();
+    badNode.assets[0].provenance.sourceNodeId = "9:9";
+    expect(() => validateManifest(badNode)).toThrow(/source node|provenance/i);
+
+    const badTimestamp = cloneManifest();
+    badTimestamp.exportProvenance.capturedAt = "not-an-iso-timestamp";
+    expect(() => validateManifest(badTimestamp)).toThrow(/capturedAt|timestamp/i);
+  });
+
+  it("resamples a capped full-scene capture to the reviewed 20:13 mapping", () => {
+    const source = readFileSync(resolve(__dirname, "../../public/assets/figma/references/reference-eyes-default.png"));
+    const normalized = normalizeSceneReference(source);
+    expect(dimensionsOf(normalized, "png")).toEqual({ width: 1020, height: 663 });
+  });
+
+  it("rejects mismatched, cropped, or nonuniform parity mappings", () => {
+    const reference = manifest.assets.find((entry) => entry.id === "reference-eyes-default");
+    if (!reference) throw new Error("Missing scene reference fixture");
+
+    const wrongDimensions = cloneManifest();
+    const wrongDimensionsReference = wrongDimensions.assets.find((entry) => entry.id === reference.id)!;
+    wrongDimensionsReference.width = 1024;
+    expect(() => validateManifest(wrongDimensions)).toThrow(/normalized|mapping/i);
+
+    const nonuniform = cloneManifest();
+    const nonuniformReference = nonuniform.assets.find((entry) => entry.id === reference.id)!;
+    nonuniformReference.provenance.parityMapping.scaleY = 0.8;
+    expect(() => validateManifest(nonuniform)).toThrow(/uniform|mapping/i);
+
+    const cropped = cloneManifest();
+    const croppedReference = cropped.assets.find((entry) => entry.id === reference.id)!;
+    croppedReference.provenance.parityMapping.sourceCrop.width = 1279;
+    expect(() => validateManifest(cropped)).toThrow(/crop|mapping/i);
   });
 
   it("losslessly recompresses PNG image data", () => {

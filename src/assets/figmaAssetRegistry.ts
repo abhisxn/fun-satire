@@ -21,7 +21,9 @@ export type FigmaAssetEntry = Readonly<{
     sourceNodeId: string;
     sourceVersion: string;
     captureMethod: "asset-endpoint" | "get_screenshot";
-    nodeDimensions?: Readonly<{ width: number; height: number }>;
+    sourceDimensions?: Readonly<{ width: number; height: number }>;
+    originalCaptureDimensions?: Readonly<{ width: number; height: number }>;
+    parityMapping?: FigmaParityMapping;
   }>;
   geometry?: EyeAssetGeometry;
 }>;
@@ -33,6 +35,25 @@ export type EyeAssetGeometry = Readonly<{
   clipPath: string;
   iris: Readonly<{ centerX: number; centerY: number; radius: number; fill: string }>;
   irisSourceOffset: Readonly<{ x: number; y: number }>;
+}>;
+
+export type FigmaParityMapping = Readonly<{
+  kind: "full-scene-normalized" | "intrinsic";
+  normalizedDimensions: Readonly<{ width: number; height: number }>;
+  sourceCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
+  captureCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
+  scaleX: number;
+  scaleY: number;
+  transform: "full-crop-resample" | "identity";
+  resampling: "nearest-neighbor" | "none";
+  browserCapture: Readonly<{
+    width: number;
+    height: number;
+    scale: number;
+    sourceCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
+    transform: "full-crop-resample" | "identity";
+    resampling: "nearest-neighbor" | "none";
+  }>;
 }>;
 
 export const FIGMA_ASSETS = Object.freeze([
@@ -2403,9 +2424,49 @@ export const FIGMA_ASSETS = Object.freeze([
       "sourceNodeId": "103:3593",
       "sourceVersion": "figma-dev-mode-mcp@1.0.0",
       "captureMethod": "get_screenshot",
-      "nodeDimensions": {
+      "sourceDimensions": {
         "width": 284,
         "height": 700
+      },
+      "originalCaptureDimensions": {
+        "width": 284,
+        "height": 700
+      },
+      "parityMapping": {
+        "kind": "intrinsic",
+        "normalizedDimensions": {
+          "width": 284,
+          "height": 700
+        },
+        "sourceCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 284,
+          "height": 700
+        },
+        "captureCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 284,
+          "height": 700
+        },
+        "scaleX": 1,
+        "scaleY": 1,
+        "transform": "identity",
+        "resampling": "none",
+        "browserCapture": {
+          "width": 284,
+          "height": 700,
+          "scale": 1,
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 284,
+            "height": 700
+          },
+          "transform": "identity",
+          "resampling": "none"
+        }
       }
     }
   },
@@ -2432,9 +2493,49 @@ export const FIGMA_ASSETS = Object.freeze([
       "sourceNodeId": "103:2490",
       "sourceVersion": "figma-dev-mode-mcp@1.0.0",
       "captureMethod": "get_screenshot",
-      "nodeDimensions": {
+      "sourceDimensions": {
         "width": 200,
         "height": 99
+      },
+      "originalCaptureDimensions": {
+        "width": 200,
+        "height": 99
+      },
+      "parityMapping": {
+        "kind": "intrinsic",
+        "normalizedDimensions": {
+          "width": 200,
+          "height": 99
+        },
+        "sourceCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 200,
+          "height": 99
+        },
+        "captureCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 200,
+          "height": 99
+        },
+        "scaleX": 1,
+        "scaleY": 1,
+        "transform": "identity",
+        "resampling": "none",
+        "browserCapture": {
+          "width": 200,
+          "height": 99,
+          "scale": 1,
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 200,
+            "height": 99
+          },
+          "transform": "identity",
+          "resampling": "none"
+        }
       }
     }
   },
@@ -2444,13 +2545,13 @@ export const FIGMA_ASSETS = Object.freeze([
     "nodeId": "109:3669",
     "sourceHash": "9403e15a2fc71b00fbc0aebd649136f2f8d164f49814d456c8b9b2b8f88c2e7c",
     "sourceSha256": "9403e15a2fc71b00fbc0aebd649136f2f8d164f49814d456c8b9b2b8f88c2e7c",
-    "sha256": "9403e15a2fc71b00fbc0aebd649136f2f8d164f49814d456c8b9b2b8f88c2e7c",
+    "sha256": "32babf66ced5565ce65ba0eb16fc939823caab25f75d5b2312409dbccd1444dd",
     "format": "png",
     "url": "/assets/figma/references/reference-eyes-attack.png",
-    "width": 1024,
-    "height": 666,
+    "width": 1020,
+    "height": 663,
     "sourceByteLength": 621485,
-    "byteLength": 621485,
+    "byteLength": 698412,
     "maxBytes": 4194304,
     "requiredFor": [
       "109:3669"
@@ -2461,9 +2562,49 @@ export const FIGMA_ASSETS = Object.freeze([
       "sourceNodeId": "109:3669",
       "sourceVersion": "figma-dev-mode-mcp@1.0.0",
       "captureMethod": "get_screenshot",
-      "nodeDimensions": {
+      "sourceDimensions": {
         "width": 1280,
         "height": 832
+      },
+      "originalCaptureDimensions": {
+        "width": 1024,
+        "height": 666
+      },
+      "parityMapping": {
+        "kind": "full-scene-normalized",
+        "normalizedDimensions": {
+          "width": 1020,
+          "height": 663
+        },
+        "sourceCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 832
+        },
+        "captureCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 666
+        },
+        "scaleX": 0.796875,
+        "scaleY": 0.796875,
+        "transform": "full-crop-resample",
+        "resampling": "nearest-neighbor",
+        "browserCapture": {
+          "width": 1020,
+          "height": 663,
+          "scale": 0.796875,
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 832
+          },
+          "transform": "full-crop-resample",
+          "resampling": "nearest-neighbor"
+        }
       }
     }
   },
@@ -2473,13 +2614,13 @@ export const FIGMA_ASSETS = Object.freeze([
     "nodeId": "18:113",
     "sourceHash": "49e1f505732e9b8975932a2769f56067431907af4f4b6beb3795fd4e9bc6d9fa",
     "sourceSha256": "49e1f505732e9b8975932a2769f56067431907af4f4b6beb3795fd4e9bc6d9fa",
-    "sha256": "49e1f505732e9b8975932a2769f56067431907af4f4b6beb3795fd4e9bc6d9fa",
+    "sha256": "85c79803cbdc9616eeba2b573959362e4b2fde55e620dc811c831ad369aa423e",
     "format": "png",
     "url": "/assets/figma/references/reference-eyes-default.png",
-    "width": 1024,
-    "height": 666,
+    "width": 1020,
+    "height": 663,
     "sourceByteLength": 413469,
-    "byteLength": 413469,
+    "byteLength": 350071,
     "maxBytes": 4194304,
     "requiredFor": [
       "18:113"
@@ -2490,9 +2631,49 @@ export const FIGMA_ASSETS = Object.freeze([
       "sourceNodeId": "18:113",
       "sourceVersion": "figma-dev-mode-mcp@1.0.0",
       "captureMethod": "get_screenshot",
-      "nodeDimensions": {
+      "sourceDimensions": {
         "width": 1280,
         "height": 832
+      },
+      "originalCaptureDimensions": {
+        "width": 1024,
+        "height": 666
+      },
+      "parityMapping": {
+        "kind": "full-scene-normalized",
+        "normalizedDimensions": {
+          "width": 1020,
+          "height": 663
+        },
+        "sourceCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 832
+        },
+        "captureCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 666
+        },
+        "scaleX": 0.796875,
+        "scaleY": 0.796875,
+        "transform": "full-crop-resample",
+        "resampling": "nearest-neighbor",
+        "browserCapture": {
+          "width": 1020,
+          "height": 663,
+          "scale": 0.796875,
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 832
+          },
+          "transform": "full-crop-resample",
+          "resampling": "nearest-neighbor"
+        }
       }
     }
   },
@@ -2519,9 +2700,49 @@ export const FIGMA_ASSETS = Object.freeze([
       "sourceNodeId": "103:3579",
       "sourceVersion": "figma-dev-mode-mcp@1.0.0",
       "captureMethod": "get_screenshot",
-      "nodeDimensions": {
+      "sourceDimensions": {
         "width": 139,
-        "height": 170.00010681152344
+        "height": 170
+      },
+      "originalCaptureDimensions": {
+        "width": 139,
+        "height": 170
+      },
+      "parityMapping": {
+        "kind": "intrinsic",
+        "normalizedDimensions": {
+          "width": 139,
+          "height": 170
+        },
+        "sourceCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 139,
+          "height": 170
+        },
+        "captureCrop": {
+          "x": 0,
+          "y": 0,
+          "width": 139,
+          "height": 170
+        },
+        "scaleX": 1,
+        "scaleY": 1,
+        "transform": "identity",
+        "resampling": "none",
+        "browserCapture": {
+          "width": 139,
+          "height": 170,
+          "scale": 1,
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 139,
+            "height": 170
+          },
+          "transform": "identity",
+          "resampling": "none"
+        }
       }
     }
   },

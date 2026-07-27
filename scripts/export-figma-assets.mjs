@@ -9,6 +9,7 @@ import {
   canonicalizeAssets,
   dimensionsOf,
   eyeGeometryOf,
+  normalizeSceneReference,
   optimizePngLosslessly,
   safeOutputPath,
   validateManifest,
@@ -46,7 +47,7 @@ function prepareManifest(rawManifest) {
   manifest.payloadBudgetBytes = 12 * 1024 * 1024;
   manifest.exportProvenance = {
     sourceVersion: SOURCE_VERSION,
-    capturedAt: manifest.exportProvenance?.capturedAt ?? "2026-07-28T02:46:53+05:30",
+    capturedAt: new Date().toISOString(),
   };
 
   const renames = {
@@ -93,12 +94,37 @@ function prepareManifest(rawManifest) {
         sourceNodeId: node.id,
         sourceVersion: SOURCE_VERSION,
         captureMethod: "get_screenshot",
-        nodeDimensions: { width: node.width, height: node.height },
       },
     });
   }
   manifest.assets = canonicalizeAssets(manifest.assets);
   return manifest;
+}
+
+function parityMappingFor(node, originalCaptureDimensions) {
+  const sourceDimensions = { width: node.width, height: node.height };
+  const sourceCrop = { x: 0, y: 0, ...sourceDimensions };
+  const captureCrop = { x: 0, y: 0, ...originalCaptureDimensions };
+  const isFullScene = node.id === "18:113" || node.id === "109:3669";
+  const normalizedDimensions = isFullScene ? { width: 1020, height: 663 } : sourceDimensions;
+  const scale = isFullScene ? 0.796875 : 1;
+  const transform = isFullScene ? "full-crop-resample" : "identity";
+  const resampling = isFullScene ? "nearest-neighbor" : "none";
+  return {
+    sourceDimensions,
+    originalCaptureDimensions,
+    parityMapping: {
+      kind: isFullScene ? "full-scene-normalized" : "intrinsic",
+      normalizedDimensions,
+      sourceCrop,
+      captureCrop,
+      scaleX: scale,
+      scaleY: scale,
+      transform,
+      resampling,
+      browserCapture: { width: normalizedDimensions.width, height: normalizedDimensions.height, scale, sourceCrop, transform, resampling },
+    },
+  };
 }
 
 function parseSse(text) {
@@ -196,7 +222,9 @@ export type FigmaAssetEntry = Readonly<{
     sourceNodeId: string;
     sourceVersion: string;
     captureMethod: "asset-endpoint" | "get_screenshot";
-    nodeDimensions?: Readonly<{ width: number; height: number }>;
+    sourceDimensions?: Readonly<{ width: number; height: number }>;
+    originalCaptureDimensions?: Readonly<{ width: number; height: number }>;
+    parityMapping?: FigmaParityMapping;
   }>;
   geometry?: EyeAssetGeometry;
 }>;
@@ -208,6 +236,25 @@ export type EyeAssetGeometry = Readonly<{
   clipPath: string;
   iris: Readonly<{ centerX: number; centerY: number; radius: number; fill: string }>;
   irisSourceOffset: Readonly<{ x: number; y: number }>;
+}>;
+
+export type FigmaParityMapping = Readonly<{
+  kind: "full-scene-normalized" | "intrinsic";
+  normalizedDimensions: Readonly<{ width: number; height: number }>;
+  sourceCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
+  captureCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
+  scaleX: number;
+  scaleY: number;
+  transform: "full-crop-resample" | "identity";
+  resampling: "nearest-neighbor" | "none";
+  browserCapture: Readonly<{
+    width: number;
+    height: number;
+    scale: number;
+    sourceCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
+    transform: "full-crop-resample" | "identity";
+    resampling: "nearest-neighbor" | "none";
+  }>;
 }>;
 
 export const FIGMA_ASSETS = Object.freeze(${body} satisfies readonly FigmaAssetEntry[]);
@@ -258,6 +305,9 @@ if (mode === "--write") {
       screenshot ??= await createScreenshotClient();
       sourceBytes = await screenshot(entry.nodeId);
       entry.sourceHash = digest(sourceBytes);
+      const sourceNode = APPROVED_SOURCE_NODES.find((node) => node.id === entry.nodeId);
+      if (!sourceNode) throw new Error(`${entry.id}: unapproved screenshot source node`);
+      Object.assign(entry.provenance, parityMappingFor(sourceNode, dimensionsOf(sourceBytes, "png")));
     } else {
       const expectedSource = `http://localhost:3845/assets/${entry.sourceHash}.${entry.format}`;
       if (entry.sourceUrl !== expectedSource) throw new Error(`${entry.id}: source URL does not match hash and format`);
@@ -268,7 +318,11 @@ if (mode === "--write") {
 
     entry.sourceSha256 = digest(sourceBytes);
     entry.sourceByteLength = sourceBytes.length;
-    const outputBytes = entry.optimization === "lossless-deflate" ? optimizePngLosslessly(sourceBytes) : sourceBytes;
+    const isNormalizedScene = entry.role === "reference" && entry.provenance.parityMapping.kind === "full-scene-normalized";
+    entry.optimization = isNormalizedScene ? "nearest-neighbor-full-crop-normalization" : entry.optimization;
+    const outputBytes = isNormalizedScene
+      ? normalizeSceneReference(sourceBytes)
+      : entry.optimization === "lossless-deflate" ? optimizePngLosslessly(sourceBytes) : sourceBytes;
     if (entry.format === "svg") assertSafeSvg(outputBytes);
     const dimensions = dimensionsOf(outputBytes, entry.format);
     entry.width = dimensions.width;

@@ -22,7 +22,7 @@
       "id": "103:3579",
       "name": "filter-panel",
       "width": 139,
-      "height": 170.00010681152344
+      "height": 170
     },
     {
       "id": "103:3593",
@@ -2634,9 +2634,49 @@
         "sourceNodeId": "103:3593",
         "sourceVersion": "figma-dev-mode-mcp@1.0.0",
         "captureMethod": "get_screenshot",
-        "nodeDimensions": {
+        "sourceDimensions": {
           "width": 284,
           "height": 700
+        },
+        "originalCaptureDimensions": {
+          "width": 284,
+          "height": 700
+        },
+        "parityMapping": {
+          "kind": "intrinsic",
+          "normalizedDimensions": {
+            "width": 284,
+            "height": 700
+          },
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 284,
+            "height": 700
+          },
+          "captureCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 284,
+            "height": 700
+          },
+          "scaleX": 1,
+          "scaleY": 1,
+          "transform": "identity",
+          "resampling": "none",
+          "browserCapture": {
+            "width": 284,
+            "height": 700,
+            "scale": 1,
+            "sourceCrop": {
+              "x": 0,
+              "y": 0,
+              "width": 284,
+              "height": 700
+            },
+            "transform": "identity",
+            "resampling": "none"
+          }
         }
       },
       "sourceSha256": "74f0cb3b774a1ea1fa016fb8e189a5bd49bf5bd986c44e2b620575e42e16e752",
@@ -2666,9 +2706,49 @@
         "sourceNodeId": "103:2490",
         "sourceVersion": "figma-dev-mode-mcp@1.0.0",
         "captureMethod": "get_screenshot",
-        "nodeDimensions": {
+        "sourceDimensions": {
           "width": 200,
           "height": 99
+        },
+        "originalCaptureDimensions": {
+          "width": 200,
+          "height": 99
+        },
+        "parityMapping": {
+          "kind": "intrinsic",
+          "normalizedDimensions": {
+            "width": 200,
+            "height": 99
+          },
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 200,
+            "height": 99
+          },
+          "captureCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 200,
+            "height": 99
+          },
+          "scaleX": 1,
+          "scaleY": 1,
+          "transform": "identity",
+          "resampling": "none",
+          "browserCapture": {
+            "width": 200,
+            "height": 99,
+            "scale": 1,
+            "sourceCrop": {
+              "x": 0,
+              "y": 0,
+              "width": 200,
+              "height": 99
+            },
+            "transform": "identity",
+            "resampling": "none"
+          }
         }
       },
       "sourceSha256": "87d01dcac4663d5c5ed8efb3223be6d5acae48306240fdc57adbb5235b25cb11",
@@ -2691,24 +2771,64 @@
         "109:3669"
       ],
       "maxBytes": 4194304,
-      "optimization": "source-bytes",
+      "optimization": "nearest-neighbor-full-crop-normalization",
       "provenance": {
         "fileKey": "oPAdd7oWLQVMTP1v6pJOW0",
         "pageNodeId": "0:1",
         "sourceNodeId": "109:3669",
         "sourceVersion": "figma-dev-mode-mcp@1.0.0",
         "captureMethod": "get_screenshot",
-        "nodeDimensions": {
+        "sourceDimensions": {
           "width": 1280,
           "height": 832
+        },
+        "originalCaptureDimensions": {
+          "width": 1024,
+          "height": 666
+        },
+        "parityMapping": {
+          "kind": "full-scene-normalized",
+          "normalizedDimensions": {
+            "width": 1020,
+            "height": 663
+          },
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 832
+          },
+          "captureCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 666
+          },
+          "scaleX": 0.796875,
+          "scaleY": 0.796875,
+          "transform": "full-crop-resample",
+          "resampling": "nearest-neighbor",
+          "browserCapture": {
+            "width": 1020,
+            "height": 663,
+            "scale": 0.796875,
+            "sourceCrop": {
+              "x": 0,
+              "y": 0,
+              "width": 1280,
+              "height": 832
+            },
+            "transform": "full-crop-resample",
+            "resampling": "nearest-neighbor"
+          }
         }
       },
       "sourceSha256": "9403e15a2fc71b00fbc0aebd649136f2f8d164f49814d456c8b9b2b8f88c2e7c",
       "sourceByteLength": 621485,
-      "width": 1024,
-      "height": 666,
-      "byteLength": 621485,
-      "sha256": "9403e15a2fc71b00fbc0aebd649136f2f8d164f49814d456c8b9b2b8f88c2e7c"
+      "width": 1020,
+      "height": 663,
+      "byteLength": 698412,
+      "sha256": "32babf66ced5565ce65ba0eb16fc939823caab25f75d5b2312409dbccd1444dd"
     },
     {
       "id": "reference-eyes-default",
@@ -2723,24 +2843,64 @@
         "18:113"
       ],
       "maxBytes": 4194304,
-      "optimization": "source-bytes",
+      "optimization": "nearest-neighbor-full-crop-normalization",
       "provenance": {
         "fileKey": "oPAdd7oWLQVMTP1v6pJOW0",
         "pageNodeId": "0:1",
         "sourceNodeId": "18:113",
         "sourceVersion": "figma-dev-mode-mcp@1.0.0",
         "captureMethod": "get_screenshot",
-        "nodeDimensions": {
+        "sourceDimensions": {
           "width": 1280,
           "height": 832
+        },
+        "originalCaptureDimensions": {
+          "width": 1024,
+          "height": 666
+        },
+        "parityMapping": {
+          "kind": "full-scene-normalized",
+          "normalizedDimensions": {
+            "width": 1020,
+            "height": 663
+          },
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 832
+          },
+          "captureCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 666
+          },
+          "scaleX": 0.796875,
+          "scaleY": 0.796875,
+          "transform": "full-crop-resample",
+          "resampling": "nearest-neighbor",
+          "browserCapture": {
+            "width": 1020,
+            "height": 663,
+            "scale": 0.796875,
+            "sourceCrop": {
+              "x": 0,
+              "y": 0,
+              "width": 1280,
+              "height": 832
+            },
+            "transform": "full-crop-resample",
+            "resampling": "nearest-neighbor"
+          }
         }
       },
       "sourceSha256": "49e1f505732e9b8975932a2769f56067431907af4f4b6beb3795fd4e9bc6d9fa",
       "sourceByteLength": 413469,
-      "width": 1024,
-      "height": 666,
-      "byteLength": 413469,
-      "sha256": "49e1f505732e9b8975932a2769f56067431907af4f4b6beb3795fd4e9bc6d9fa"
+      "width": 1020,
+      "height": 663,
+      "byteLength": 350071,
+      "sha256": "85c79803cbdc9616eeba2b573959362e4b2fde55e620dc811c831ad369aa423e"
     },
     {
       "id": "reference-filter-panel",
@@ -2762,9 +2922,49 @@
         "sourceNodeId": "103:3579",
         "sourceVersion": "figma-dev-mode-mcp@1.0.0",
         "captureMethod": "get_screenshot",
-        "nodeDimensions": {
+        "sourceDimensions": {
           "width": 139,
-          "height": 170.00010681152344
+          "height": 170
+        },
+        "originalCaptureDimensions": {
+          "width": 139,
+          "height": 170
+        },
+        "parityMapping": {
+          "kind": "intrinsic",
+          "normalizedDimensions": {
+            "width": 139,
+            "height": 170
+          },
+          "sourceCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 139,
+            "height": 170
+          },
+          "captureCrop": {
+            "x": 0,
+            "y": 0,
+            "width": 139,
+            "height": 170
+          },
+          "scaleX": 1,
+          "scaleY": 1,
+          "transform": "identity",
+          "resampling": "none",
+          "browserCapture": {
+            "width": 139,
+            "height": 170,
+            "scale": 1,
+            "sourceCrop": {
+              "x": 0,
+              "y": 0,
+              "width": 139,
+              "height": 170
+            },
+            "transform": "identity",
+            "resampling": "none"
+          }
         }
       },
       "sourceSha256": "31ca756866ccab76ef97375535772ed8ab0059e84502156b1e43aefb4655184e",
@@ -3408,6 +3608,6 @@
   "payloadBudgetBytes": 12582912,
   "exportProvenance": {
     "sourceVersion": "figma-dev-mode-mcp@1.0.0",
-    "capturedAt": "2026-07-28T02:46:53+05:30"
+    "capturedAt": "2026-07-27T21:37:14.430Z"
   }
 }

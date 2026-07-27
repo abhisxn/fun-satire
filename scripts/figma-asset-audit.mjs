@@ -5,7 +5,7 @@ import { isAbsolute, relative, resolve, sep } from "node:path";
 export const APPROVED_SOURCE_NODES = Object.freeze([
   { id: "18:113", name: "eyes-default", width: 1280, height: 832 },
   { id: "103:2490", name: "control-icons", width: 200, height: 99 },
-  { id: "103:3579", name: "filter-panel", width: 139, height: 170.00010681152344 },
+  { id: "103:3579", name: "filter-panel", width: 139, height: 170 },
   { id: "103:3593", name: "avatar-gallery", width: 284, height: 700 },
   { id: "109:3669", name: "eyes-attack", width: 1280, height: 832 },
 ]);
@@ -143,6 +143,86 @@ function pngChunk(type, data) {
   return output;
 }
 
+function paeth(left, up, upperLeft) {
+  const prediction = left + up - upperLeft;
+  const leftDistance = Math.abs(prediction - left);
+  const upDistance = Math.abs(prediction - up);
+  const upperLeftDistance = Math.abs(prediction - upperLeft);
+  return leftDistance <= upDistance && leftDistance <= upperLeftDistance ? left : upDistance <= upperLeftDistance ? up : upperLeft;
+}
+
+function decodeRgbaPng(bytes) {
+  const chunks = pngChunks(bytes);
+  const ihdr = chunks.find((chunk) => chunk.type === "IHDR")?.data;
+  if (!ihdr || ihdr[8] !== 8 || ihdr[9] !== 6 || ihdr[12] !== 0) {
+    throw new Error("Scene normalization requires non-interlaced 8-bit RGBA PNG input");
+  }
+  const width = ihdr.readUInt32BE(0);
+  const height = ihdr.readUInt32BE(4);
+  const stride = width * 4;
+  const filtered = inflateSync(Buffer.concat(chunks.filter((chunk) => chunk.type === "IDAT").map((chunk) => chunk.data)));
+  if (filtered.length !== (stride + 1) * height) throw new Error("Unexpected RGBA PNG scanline length");
+  const pixels = Buffer.alloc(stride * height);
+
+  for (let y = 0; y < height; y += 1) {
+    const filter = filtered[y * (stride + 1)];
+    for (let x = 0; x < stride; x += 1) {
+      const encoded = filtered[y * (stride + 1) + x + 1];
+      const left = x >= 4 ? pixels[y * stride + x - 4] : 0;
+      const up = y > 0 ? pixels[(y - 1) * stride + x] : 0;
+      const upperLeft = y > 0 && x >= 4 ? pixels[(y - 1) * stride + x - 4] : 0;
+      const predictor = filter === 0 ? 0
+        : filter === 1 ? left
+          : filter === 2 ? up
+            : filter === 3 ? Math.floor((left + up) / 2)
+              : filter === 4 ? paeth(left, up, upperLeft)
+                : -1;
+      if (predictor < 0) throw new Error(`Unsupported PNG filter: ${filter}`);
+      pixels[y * stride + x] = (encoded + predictor) & 0xff;
+    }
+  }
+  return { chunks, width, height, pixels };
+}
+
+function encodeRgbaPng(source, width, height, pixels) {
+  const stride = width * 4;
+  const scanlines = Buffer.alloc((stride + 1) * height);
+  for (let y = 0; y < height; y += 1) pixels.copy(scanlines, y * (stride + 1) + 1, y * stride, (y + 1) * stride);
+  const compressed = deflateSync(scanlines, { level: 9 });
+  const outputChunks = [];
+  let wroteImageData = false;
+  for (const chunk of source.chunks) {
+    if (chunk.type === "IHDR") {
+      const ihdr = Buffer.from(chunk.data);
+      ihdr.writeUInt32BE(width, 0);
+      ihdr.writeUInt32BE(height, 4);
+      outputChunks.push(pngChunk("IHDR", ihdr));
+    } else if (chunk.type === "IDAT") {
+      if (!wroteImageData) outputChunks.push(pngChunk("IDAT", compressed));
+      wroteImageData = true;
+    } else {
+      outputChunks.push(pngChunk(chunk.type, chunk.data));
+    }
+  }
+  return Buffer.concat([PNG_SIGNATURE, ...outputChunks]);
+}
+
+export function normalizeSceneReference(bytes) {
+  const targetWidth = 1020;
+  const targetHeight = 663;
+  const source = decodeRgbaPng(bytes);
+  if (source.width === targetWidth && source.height === targetHeight) return bytes;
+  const pixels = Buffer.alloc(targetWidth * targetHeight * 4);
+  for (let y = 0; y < targetHeight; y += 1) {
+    const sourceY = Math.floor(y * source.height / targetHeight);
+    for (let x = 0; x < targetWidth; x += 1) {
+      const sourceX = Math.floor(x * source.width / targetWidth);
+      source.pixels.copy(pixels, (y * targetWidth + x) * 4, (sourceY * source.width + sourceX) * 4, (sourceY * source.width + sourceX + 1) * 4);
+    }
+  }
+  return encodeRgbaPng(source, targetWidth, targetHeight, pixels);
+}
+
 export function optimizePngLosslessly(bytes) {
   const chunks = pngChunks(bytes);
   const sourceImageData = inflateSync(Buffer.concat(chunks.filter((chunk) => chunk.type === "IDAT").map((chunk) => chunk.data)));
@@ -179,6 +259,11 @@ export function validateManifest(manifest) {
   if (manifest.exportProvenance?.sourceVersion !== "figma-dev-mode-mcp@1.0.0") {
     throw new Error("Missing Figma export source version");
   }
+  const capturedAt = manifest.exportProvenance.capturedAt;
+  const capturedAtTime = typeof capturedAt === "string" ? Date.parse(capturedAt) : Number.NaN;
+  if (!Number.isFinite(capturedAtTime) || new Date(capturedAtTime).toISOString() !== capturedAt) {
+    throw new Error("exportProvenance.capturedAt must be a canonical ISO timestamp");
+  }
   if (JSON.stringify(manifest.sourceNodes) !== JSON.stringify(APPROVED_SOURCE_NODES)) {
     throw new Error("Approved-node inventory is incomplete or has drifted");
   }
@@ -210,7 +295,10 @@ export function validateManifest(manifest) {
     if (!/^[a-f0-9]{64}$/.test(entry.sha256) || !/^[a-f0-9]{64}$/.test(entry.sourceSha256)) {
       throw new Error(`${entry.id}: invalid SHA-256 provenance`);
     }
-    if (entry.provenance?.fileKey !== manifest.figmaFile.key || entry.provenance?.sourceVersion !== manifest.exportProvenance.sourceVersion) {
+    if (entry.provenance?.fileKey !== manifest.figmaFile.key
+      || entry.provenance?.pageNodeId !== manifest.figmaFile.pageNodeId
+      || entry.provenance?.sourceNodeId !== entry.nodeId
+      || entry.provenance?.sourceVersion !== manifest.exportProvenance.sourceVersion) {
       throw new Error(`${entry.id}: incomplete export provenance`);
     }
     if (entry.role === "reference") {
@@ -218,9 +306,10 @@ export function validateManifest(manifest) {
       if (entry.sourceKind !== "figma-mcp-screenshot" || entry.provenance.captureMethod !== "get_screenshot") {
         throw new Error(`${entry.id}: invalid screenshot source kind or provenance`);
       }
-      if (entry.sourceHash !== entry.sourceSha256 || JSON.stringify(entry.provenance.nodeDimensions) !== JSON.stringify({ width: sourceNode?.width, height: sourceNode?.height })) {
-        throw new Error(`${entry.id}: screenshot hash or node-dimension provenance drift`);
+      if (entry.sourceHash !== entry.sourceSha256) {
+        throw new Error(`${entry.id}: screenshot hash provenance drift`);
       }
+      validateParityMapping(entry, sourceNode);
     } else {
       const expectedSourceUrl = `http://localhost:3845/assets/${entry.sourceHash}.${entry.format}`;
       if (entry.sourceKind !== "figma-asset-endpoint" || entry.provenance.captureMethod !== "asset-endpoint" || entry.sourceUrl !== expectedSourceUrl) {
@@ -242,6 +331,57 @@ export function validateManifest(manifest) {
     if (matches.length !== 1 || matches[0].requiredFor.length !== 1 || matches[0].requiredFor[0] !== node.id) {
       throw new Error(`${node.id}: parity reference completeness failure`);
     }
+  }
+}
+
+function sameDimensions(left, right) {
+  return left?.width === right?.width && left?.height === right?.height;
+}
+
+function validateParityMapping(entry, sourceNode) {
+  const provenance = entry.provenance;
+  const mapping = provenance.parityMapping;
+  const sourceDimensions = { width: sourceNode?.width, height: sourceNode?.height };
+  if (!sameDimensions(provenance.sourceDimensions, sourceDimensions)
+    || !sameDimensions(mapping?.sourceCrop, { width: sourceDimensions.width, height: sourceDimensions.height })
+    || mapping.sourceCrop.x !== 0 || mapping.sourceCrop.y !== 0
+    || !sameDimensions(mapping.captureCrop, provenance.originalCaptureDimensions)
+    || mapping.captureCrop.x !== 0 || mapping.captureCrop.y !== 0
+    || !sameDimensions(mapping.normalizedDimensions, { width: entry.width, height: entry.height })) {
+    throw new Error(`${entry.id}: parity crop or normalized mapping mismatch`);
+  }
+  if (mapping.scaleX !== mapping.scaleY) throw new Error(`${entry.id}: parity mapping must use a uniform scale`);
+
+  const isFullScene = entry.nodeId === "18:113" || entry.nodeId === "109:3669";
+  const expectedBrowserCapture = {
+    width: mapping.normalizedDimensions.width,
+    height: mapping.normalizedDimensions.height,
+    scale: mapping.scaleX,
+    sourceCrop: mapping.sourceCrop,
+    transform: mapping.transform,
+    resampling: mapping.resampling,
+  };
+  if (JSON.stringify(mapping.browserCapture) !== JSON.stringify(expectedBrowserCapture)) {
+    throw new Error(`${entry.id}: parity browser capture mapping drift`);
+  }
+
+  if (isFullScene) {
+    if (!sameDimensions(provenance.originalCaptureDimensions, { width: 1024, height: 666 })
+      || !sameDimensions(mapping.normalizedDimensions, { width: 1020, height: 663 })
+      || mapping.normalizedDimensions.width * sourceDimensions.height !== mapping.normalizedDimensions.height * sourceDimensions.width
+      || mapping.scaleX !== 0.796875
+      || mapping.kind !== "full-scene-normalized"
+      || mapping.transform !== "full-crop-resample"
+      || mapping.resampling !== "nearest-neighbor") {
+      throw new Error(`${entry.id}: invalid full-scene normalized mapping`);
+    }
+  } else if (!sameDimensions(provenance.originalCaptureDimensions, sourceDimensions)
+    || !sameDimensions(mapping.normalizedDimensions, sourceDimensions)
+    || mapping.scaleX !== 1
+    || mapping.kind !== "intrinsic"
+    || mapping.transform !== "identity"
+    || mapping.resampling !== "none") {
+    throw new Error(`${entry.id}: component reference must use intrinsic identity mapping`);
   }
 }
 
