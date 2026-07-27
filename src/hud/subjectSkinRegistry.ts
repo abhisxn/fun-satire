@@ -5,9 +5,12 @@ import { drawSubjectScribe } from "../render/drawers/drawSubjectScribe";
 import { drawSubjectHerald } from "../render/drawers/drawSubjectHerald";
 import { drawSubjectJester } from "../render/drawers/drawSubjectJester";
 
+export type AvatarAssetId = string;
+
 export type SubjectSkin =
   | { kind: "illustrated"; id: IllustratedSubjectId }
-  | { kind: "text"; value: string; scale: number };
+  | { kind: "text"; value: string; scale: number; fontId?: string; align?: "left" | "center" | "right" }
+  | { kind: "avatar"; assetId: AvatarAssetId };
 
 export type DrawSubjectSkinFn = (
   ctx: CanvasRenderingContext2D,
