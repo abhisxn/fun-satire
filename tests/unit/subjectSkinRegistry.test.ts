@@ -28,10 +28,30 @@ describe("SUBJECT_SKIN_REGISTRY", () => {
     expect(() => getSubjectSkinEntry("not-an-id")).toThrow(/unknown illustrated subject id/);
   });
 
-  it("SubjectSkin discriminates illustrated vs text", () => {
+  it("SubjectSkin discriminates illustrated vs text vs avatar", () => {
     const illustrated: SubjectSkin = { kind: "illustrated", id: "figure" };
     const text: SubjectSkin = { kind: "text", value: "Resign Now", scale: 1 };
+    const avatar: SubjectSkin = { kind: "avatar", assetId: "jester-sticker" };
     expect(illustrated.kind).toBe("illustrated");
     expect(text.kind).toBe("text");
+    expect(avatar.kind).toBe("avatar");
+  });
+
+  it("text SubjectSkin remains backward compatible without fontId or align", () => {
+    const text: SubjectSkin = { kind: "text", value: "Resign Now", scale: 1 };
+    expect(text.fontId).toBeUndefined();
+    expect(text.align).toBeUndefined();
+  });
+
+  it("text SubjectSkin accepts optional fontId and align", () => {
+    const text: SubjectSkin = {
+      kind: "text",
+      value: "Resign Now",
+      scale: 1,
+      fontId: "fraunces",
+      align: "left",
+    };
+    expect(text.fontId).toBe("fraunces");
+    expect(text.align).toBe("left");
   });
 });

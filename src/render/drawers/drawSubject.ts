@@ -30,6 +30,10 @@ export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInp
     });
     return;
   }
+  if (subjectSkin.kind === "avatar") {
+    // Placeholder: real avatar drawer lands in Phase B Lane 2.
+    return;
+  }
   drawSubjectText(ctx, {
     pos: input.pos,
     sizePx: input.sizePx,

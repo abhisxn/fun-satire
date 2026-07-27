@@ -1,11 +1,12 @@
 import { getAudioCue } from "./audioCueRegistry";
 
-export type AudioBus = "music" | "sfx";
+export type AudioBus = "music" | "sfx" | "ambient";
 
 export class AudioEngine {
   private readonly ctx: AudioContext;
   private readonly musicBus: GainNode;
   private readonly sfxBus: GainNode;
+  private readonly ambientBus: GainNode;
   private readonly masterBus: GainNode;
   private muted = false;
   private masterVolume = 0.8;
@@ -22,6 +23,9 @@ export class AudioEngine {
     this.sfxBus = ctx.createGain();
     this.sfxBus.gain.value = 1;
     this.sfxBus.connect(this.masterBus);
+    this.ambientBus = ctx.createGain();
+    this.ambientBus.gain.value = 1;
+    this.ambientBus.connect(this.masterBus);
   }
 
   getContext(): AudioContext {
@@ -29,7 +33,9 @@ export class AudioEngine {
   }
 
   getBus(bus: AudioBus): GainNode {
-    return bus === "music" ? this.musicBus : this.sfxBus;
+    if (bus === "music") return this.musicBus;
+    if (bus === "ambient") return this.ambientBus;
+    return this.sfxBus;
   }
 
   unlock(): void {

@@ -19,6 +19,16 @@ const valid = (entries: unknown[] = [validEntry()]) => ({
   entries,
 });
 
+const validSubjectEntry = (overrides: Record<string, unknown> = {}) => ({
+  id: "subject-1",
+  rig: "subject",
+  renderType: "subject",
+  visual: { styleGuardrail: "flat-illustrated" },
+  colors: { suit: "slate", shirt: "cream", outline: "ink" },
+  physics: { baseSizePx: 80 },
+  ...overrides,
+});
+
 describe("content/manifestLoader (T11)", () => {
   it("round-trips a valid manifest with one eye", () => {
     const m = validateManifest(valid());
@@ -85,6 +95,29 @@ describe("content/manifestLoader (T11)", () => {
   it("throws on negative or zero baseSizePx", () => {
     expect(() => validateManifest(valid([validEntry({ physics: { baseSizePx: -1 } })]))).toThrowError();
     expect(() => validateManifest(valid([validEntry({ physics: { baseSizePx: 0 } })]))).toThrowError();
+  });
+
+  it("accepts curated-avatar styleGuardrail with assetId on subject entries", () => {
+    const e = validSubjectEntry({
+      visual: { styleGuardrail: "curated-avatar", assetId: "anchor-sticker" },
+    });
+    const m = validateManifest(valid([e]));
+    expect(m.entries).toHaveLength(1);
+    expect(m.entries[0].visual.styleGuardrail).toBe("curated-avatar");
+  });
+
+  it("throws when curated-avatar styleGuardrail is missing assetId", () => {
+    const e = validSubjectEntry({
+      visual: { styleGuardrail: "curated-avatar" },
+    });
+    expect(() => validateManifest(valid([e]))).toThrowError(/assetId/);
+  });
+
+  it("throws when curated-avatar assetId is empty", () => {
+    const e = validSubjectEntry({
+      visual: { styleGuardrail: "curated-avatar", assetId: "" },
+    });
+    expect(() => validateManifest(valid([e]))).toThrowError(/assetId/);
   });
 
   it("loadManifestFromText parses JSON and validates", () => {

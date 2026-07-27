@@ -82,6 +82,31 @@ describe("entities/EntityFactory (T13)", () => {
     expect(moved).toBe(true);
   });
 
+  it("randomizes crowd member size per entity using the seeded rng", () => {
+    const manifest = Array.from({ length: 18 }, (_, i) => entry(`eye-${i}`));
+    const { entities } = spawnEyes({ rng: new Rng(7), width: 1280, height: 720, manifest });
+    const scales = new Set([1.4, 1.15, 1.0, 0.8]);
+    expect(entities.length).toBeGreaterThan(0);
+    for (const e of entities) {
+      const data = e.behavior.data as Record<string, unknown>;
+      expect(scales.has(data.sizeScale as number)).toBe(true);
+      expect(data.sizeClass).toBeDefined();
+    }
+  });
+
+  it("keeps size randomization deterministic for a fixed seed", () => {
+    const manifest = Array.from({ length: 18 }, (_, i) => entry(`eye-${i}`));
+    const a = spawnEyes({ rng: new Rng(4242), width: 1280, height: 720, manifest });
+    const b = spawnEyes({ rng: new Rng(4242), width: 1280, height: 720, manifest });
+    expect(a.entities.length).toBe(b.entities.length);
+    for (let i = 0; i < a.entities.length; i++) {
+      expect(a.entities[i].physics.pos.x).toBeCloseTo(b.entities[i].physics.pos.x, 6);
+      expect(a.entities[i].physics.pos.y).toBeCloseTo(b.entities[i].physics.pos.y, 6);
+      expect(a.entities[i].behavior.data.sizeScale).toBe(b.entities[i].behavior.data.sizeScale);
+      expect(a.entities[i].behavior.data.sizeClass).toBe(b.entities[i].behavior.data.sizeClass);
+    }
+  });
+
   it("attaches the manifest entry data into behavior.data", () => {
     const manifest = [entry("eye-pinned", 72)];
     const { entities } = spawnEyes({ rng: new Rng(0), width: 800, height: 600, manifest });

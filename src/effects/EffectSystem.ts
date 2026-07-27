@@ -3,11 +3,20 @@ import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 
 export type EffectEasing = (t: number) => number;
 
+export type EffectVisual = {
+  archetype: "beam" | "arc" | "bite" | "glow";
+  color: string;
+  opacity: number;
+  widthPx?: number;
+  radiusPx?: number;
+  jitterPx?: number;
+};
+
 export type EffectStage = {
   id?: string;
   durationMs: number;
   easing: EffectEasing;
-  visual?: Record<string, number | string>;
+  visual?: EffectVisual;
   cue?: string;
   onStart?: (ctx: EffectCtx) => void;
   update: (ctx: EffectCtx, t: number) => void;

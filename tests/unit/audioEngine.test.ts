@@ -61,6 +61,15 @@ describe("audio/AudioEngine", () => {
     expect(ctx.resumeCalls).toBe(1);
   });
 
+  it("exposes an ambient bus connected to the master bus", () => {
+    const { engine } = makeEngine();
+    const ambientBus = engine.getBus("ambient");
+    const musicBus = engine.getBus("music");
+    const masterBus = (musicBus as FakeGainNode).connectedTo[0];
+    expect(ambientBus).toBeDefined();
+    expect((ambientBus as FakeGainNode).connectedTo).toContain(masterBus);
+  });
+
   it("play() looks up the cue registry and calls its synth with the sfx bus", () => {
     const { engine, ctx } = makeEngine();
     const calls: unknown[][] = [];

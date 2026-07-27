@@ -222,11 +222,11 @@ export function renderFrame(opts: RenderFrameOptions): void {
       const progress = stage.durationMs <= 0 ? 1 : Math.min(1, elapsed / stage.durationMs);
 
       if (stage.id === "beam" && stage.visual) {
-        const opacity = (stage.visual.beamOpacity as number) * (1 - progress);
+        const opacity = stage.visual.opacity * (1 - progress);
         ctx.save();
         ctx.globalAlpha = opacity;
-        ctx.strokeStyle = stage.visual.beamColor as string;
-        ctx.lineWidth = stage.visual.beamWidth as number;
+        ctx.strokeStyle = stage.visual.color;
+        ctx.lineWidth = stage.visual.widthPx ?? 2;
         ctx.beginPath();
         ctx.moveTo(opts.width / 2, 0);
         ctx.lineTo(effect.target.x, effect.target.y);
@@ -235,11 +235,11 @@ export function renderFrame(opts: RenderFrameOptions): void {
       }
 
       if (stage.id === "glow" && stage.visual) {
-        const radius = (stage.visual.glowRadius as number) + progress * 20;
-        const opacity = (stage.visual.glowOpacity as number) * (1 - progress);
+        const radius = (stage.visual.radiusPx ?? 40) + progress * 20;
+        const opacity = stage.visual.opacity * (1 - progress);
         ctx.save();
         ctx.globalAlpha = opacity;
-        ctx.fillStyle = stage.visual.glowColor as string;
+        ctx.fillStyle = stage.visual.color;
         ctx.beginPath();
         ctx.arc(effect.target.x, effect.target.y, radius, 0, Math.PI * 2);
         ctx.fill();

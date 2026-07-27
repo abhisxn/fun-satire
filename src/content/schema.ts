@@ -60,9 +60,14 @@ export type SubjectManifestEntry = {
   id: string;
   rig: "subject";
   renderType: "subject";
-  visual: {
-    styleGuardrail: "flat-illustrated";
-  };
+  visual:
+    | {
+        styleGuardrail: "flat-illustrated";
+      }
+    | {
+        styleGuardrail: "curated-avatar";
+        assetId: string;
+      };
   colors: SubjectColors;
   physics: SubjectPhysics;
   subjectSkin?: IllustratedSubjectId;

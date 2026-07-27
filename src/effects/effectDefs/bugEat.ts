@@ -25,6 +25,11 @@ export const bugEatEffect: EffectDef = {
       durationMs: BUG_EAT.chomp1Ms,
       easing: BUG_EAT.chomp1Ease,
       cue: "bugEat.start",
+      visual: {
+        archetype: "bite",
+        color: "#2a2a2a",
+        opacity: 1,
+      },
       update: (ctx, t) => {
         ctx.entity.physics.scale = 1 - t * 0.15;
       },

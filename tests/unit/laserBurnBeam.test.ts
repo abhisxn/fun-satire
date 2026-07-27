@@ -17,14 +17,16 @@ describe("laserBurn beam/glow polish", () => {
   it("beam stage has visual parameters for beam rendering", () => {
     const beamStage = laserBurnEffect.stages.find((s) => s.id === "beam");
     expect(beamStage!.visual).toBeDefined();
-    expect(beamStage!.visual!.beamWidth).toBeGreaterThan(0);
-    expect(beamStage!.visual!.beamColor).toBeDefined();
+    expect(beamStage!.visual!.archetype).toBe("beam");
+    expect(beamStage!.visual!.widthPx).toBeGreaterThan(0);
+    expect(beamStage!.visual!.color).toBeDefined();
   });
 
   it("glow stage has visual parameters for glow rendering", () => {
     const glowStage = laserBurnEffect.stages.find((s) => s.id === "glow");
     expect(glowStage!.visual).toBeDefined();
-    expect(glowStage!.visual!.glowRadius).toBeGreaterThan(0);
-    expect(glowStage!.visual!.glowColor).toBeDefined();
+    expect(glowStage!.visual!.archetype).toBe("glow");
+    expect(glowStage!.visual!.radiusPx).toBeGreaterThan(0);
+    expect(glowStage!.visual!.color).toBeDefined();
   });
 });
