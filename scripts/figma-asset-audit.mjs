@@ -1,6 +1,7 @@
 import { inflateSync, deflateSync } from "node:zlib";
 import { readdir } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
+import { SaxesParser } from "saxes";
 
 export const APPROVED_SOURCE_NODES = Object.freeze([
   { id: "18:113", name: "eyes-default", width: 1280, height: 832 },
@@ -20,6 +21,22 @@ const ROLE_POLICY = Object.freeze({
 });
 
 const PNG_SIGNATURE = Buffer.from("89504e470d0a1a0a", "hex");
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
+const XMLNS_NAMESPACE = "http://www.w3.org/2000/xmlns/";
+const SVG_ELEMENTS = new Set([
+  "circle", "clipPath", "defs", "feBlend", "feColorMatrix", "feComposite", "feFlood",
+  "feGaussianBlur", "feMorphology", "feOffset", "filter", "g", "line", "linearGradient",
+  "mask", "path", "rect", "stop", "svg",
+]);
+const SVG_ATTRIBUTES = new Set([
+  "clip-path", "clip-rule", "color-interpolation-filters", "cx", "cy", "d", "dy", "fill",
+  "fill-rule", "filter", "filterUnits", "flood-opacity", "gradientUnits", "height", "href",
+  "id", "in", "in2", "mask", "maskUnits", "mode", "offset", "opacity", "operator",
+  "overflow", "preserveAspectRatio", "r", "radius", "result", "stdDeviation", "stop-color",
+  "stroke", "stroke-linecap", "stroke-linejoin", "stroke-width", "style", "type", "values",
+  "viewBox", "width", "x", "x1", "x2", "y", "y1", "y2",
+]);
 
 export function sha256(createHash, bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -94,29 +111,65 @@ export function eyeGeometryOf(bytes) {
 
 export function assertSafeSvg(bytes) {
   const svg = bytes.toString("utf8");
-  const unsafe = [
-    /<\s*script\b/i,
-    /<\s*style\b/i,
-    /<\s*foreignObject\b/i,
-    /<\s*(?:animate|set|animateMotion|animateTransform|discard)\b/i,
-    /<\s*!DOCTYPE\b/i,
-    /<\s*!ENTITY\b/i,
-    /@import\b/i,
-    /\son[a-z]+\s*=/i,
-    /javascript\s*:/i,
-  ];
-  if (unsafe.some((pattern) => pattern.test(svg))) throw new Error("Unsafe SVG executable content");
+  const parser = new SaxesParser({ xmlns: true });
+  let rootSeen = false;
 
-  for (const match of svg.matchAll(/(?:href|xlink:href|src)\s*=\s*(?:["']([^"']+)["']|([^\s>]+))/gi)) {
-    const value = match[1] ?? match[2];
-    if (!value.startsWith("#")) throw new Error("Unsafe SVG external reference");
+  parser.on("opentag", (element) => {
+    if (element.uri !== SVG_NAMESPACE || !SVG_ELEMENTS.has(element.local)) {
+      throw new Error(`Unsafe SVG element: {${element.uri}}${element.local}`);
+    }
+    if (!rootSeen) {
+      rootSeen = true;
+      if (element.local !== "svg") throw new Error("Unsafe SVG root element");
+    }
+
+    for (const attribute of Object.values(element.attributes)) {
+      if (attribute.uri === XMLNS_NAMESPACE) {
+        if (attribute.value !== SVG_NAMESPACE && attribute.value !== XLINK_NAMESPACE) {
+          throw new Error(`Unsafe SVG namespace declaration: ${attribute.value}`);
+        }
+        continue;
+      }
+      if (attribute.uri === XLINK_NAMESPACE) {
+        if (attribute.local !== "href") throw new Error(`Unsafe SVG xlink attribute: ${attribute.local}`);
+      } else if (attribute.uri !== "" || !SVG_ATTRIBUTES.has(attribute.local)) {
+        throw new Error(`Unsafe SVG attribute: {${attribute.uri}}${attribute.local}`);
+      }
+      assertSafeSvgAttribute(attribute.local, attribute.value);
+    }
+  });
+  parser.on("doctype", () => { throw new Error("Unsafe SVG doctype"); });
+  parser.on("processinginstruction", () => { throw new Error("Unsafe SVG processing instruction"); });
+  parser.on("cdata", () => { throw new Error("Unsafe SVG CDATA"); });
+
+  try {
+    parser.write(svg).close();
+  } catch (error) {
+    throw new Error(`Malformed XML or unsafe SVG: ${error instanceof Error ? error.message : String(error)}`);
   }
-  for (const match of svg.matchAll(/url\(\s*["']?([^)'"\s]+)["']?\s*\)/gi)) {
-    if (!match[1].startsWith("#")) throw new Error("Unsafe SVG external URL");
+  if (!rootSeen) throw new Error("Malformed XML or unsafe SVG: missing root element");
+}
+
+function assertSafeSvgAttribute(name, value) {
+  if (/^on/i.test(name)) throw new Error(`Unsafe SVG event attribute: ${name}`);
+  if (/(?:javascript\s*:|data\s*:|@import\b|expression\s*\(|behavior\s*:|-moz-binding\s*:)/i.test(value)) {
+    throw new Error(`Unsafe SVG attribute value: ${name}`);
   }
-  for (const match of svg.matchAll(/\bstyle\s*=\s*["']([^"']*)["']/gi)) {
-    if (/(?:url\s*\(|javascript\s*:|expression\s*\(|@import\b|behavior\s*:|-moz-binding\s*:)/i.test(match[1])) {
-      throw new Error("Unsafe SVG CSS mutation");
+  if (name === "href" && !/^#[A-Za-z_][\w:.-]*$/.test(value)) {
+    throw new Error("Unsafe SVG external reference");
+  }
+  for (const match of value.matchAll(/url\(\s*["']?([^)'"\s]+)["']?\s*\)/gi)) {
+    if (!/^#[A-Za-z_][\w:.-]*$/.test(match[1])) throw new Error("Unsafe SVG external URL");
+  }
+  if (/url\s*\(/i.test(value) && !/url\(\s*["']?#[A-Za-z_][\w:.-]*["']?\s*\)/i.test(value)) {
+    throw new Error("Unsafe SVG malformed URL");
+  }
+  if (name === "style") {
+    for (const declaration of value.split(";").map((part) => part.trim()).filter(Boolean)) {
+      const [property, styleValue, ...extra] = declaration.split(":").map((part) => part.trim());
+      const allowed = (property === "display" && styleValue === "block")
+        || (property === "mask-type" && (styleValue === "alpha" || styleValue === "luminance"));
+      if (!allowed || extra.length > 0) throw new Error(`Unsafe SVG style declaration: ${declaration}`);
     }
   }
 }

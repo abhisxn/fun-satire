@@ -68,8 +68,28 @@ describe("Figma asset manifest audit", () => {
   });
 
   it("allows self-contained Figma SVGs", () => {
-    expect(() => assertSafeSvg(Buffer.from('<svg><defs><clipPath id="a" /></defs><g clip-path="url(#a)" /></svg>')))
+    expect(() => assertSafeSvg(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="a" /></defs><g clip-path="url(#a)" /></svg>')))
       .not.toThrow();
+  });
+
+  it.each([
+    '<svg xmlns="http://www.w3.org/2000/svg" xmlns:s="http://www.w3.org/2000/svg"><s:script>alert(1)</s:script></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" xmlns:s="http://www.w3.org/2000/svg"><s:animate attributeName="href" values="java&#x73;cript:alert(1)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path style="fill:&#x75;rl(https://evil.example/a.svg#x)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" xmlns:evil="https://evil.example/ns"><evil:path /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" xmlns:evil="https://evil.example/ns"><path evil:onload="alert(1)" /></svg>',
+  ])("rejects namespace-aware or encoded SVG attacks", (svg) => {
+    expect(() => assertSafeSvg(Buffer.from(svg))).toThrow(/unsafe svg|malformed xml/i);
+  });
+
+  it("accepts every committed Figma SVG through the XML allowlist", () => {
+    const svgAssets = manifest.assets.filter((entry) => entry.format === "svg");
+    expect(svgAssets).toHaveLength(77);
+    for (const asset of svgAssets) {
+      const bytes = readFileSync(resolve(__dirname, `../../${asset.destination}`));
+      expect(() => assertSafeSvg(bytes), asset.id).not.toThrow();
+    }
   });
 
   it("rejects files that are absent from or extra to the manifest", async () => {
