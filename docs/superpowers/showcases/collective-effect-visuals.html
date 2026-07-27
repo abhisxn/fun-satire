@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Collective Effect Visuals — Variant Showcase</title>
+  <style>
+    :root {
+      --bg: #EDE7DD;
+      --ink: #2A2420;
+      --rule: #C9C2B5;
+      --accent: #5B7A8C;
+    }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: "Fraunces", Georgia, serif; }
+    body { padding: 32px 40px 64px; max-width: 1280px; margin: 0 auto; }
+    h1 { font-weight: 500; font-size: 32px; margin: 0 0 8px; letter-spacing: -0.01em; }
+    h2 { font-weight: 500; font-size: 22px; margin: 48px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+    h3 { font-weight: 500; font-size: 16px; margin: 16px 0 4px; }
+    .sub { color: var(--accent); font-size: 14px; margin: 0 0 24px; }
+    .sub code { font-family: "Space Mono", monospace; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .card { background: var(--bg); border: 1px solid var(--rule); padding: 14px 16px 18px; }
+    .card .label { font-family: "Space Mono", monospace; font-size: 13px; color: var(--ink); margin-bottom: 8px; letter-spacing: 0.04em; }
+    .card .label b { font-weight: 700; }
+    .card canvas { display: block; width: 100%; height: 220px; background: var(--bg); }
+    .params { font-family: "Space Mono", monospace; font-size: 11.5px; color: var(--accent); margin-top: 6px; line-height: 1.5; }
+    .ask { background: #fff; border: 1px solid var(--ink); padding: 18px 20px; margin: 32px 0 0; font-size: 14px; line-height: 1.55; }
+    .ask b { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Collective Effect Visuals — Variant Showcase</h1>
+  <p class="sub">Phase B Lane 1 · pick one variant per archetype (A/B/C/D labels). Implementation uses the selected parameters; everything else is discarded.</p>
+
+  <!-- ============================================================ BEAM ============================================================ -->
+  <h2>1 · <code>beam</code> — two-pass stroke (wide low-alpha outer + thin high-alpha inner)</h2>
+  <p class="sub">Anchor: top-center of canvas. Target: live, animated hover. Contributors: 8 random crowd.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="label"><b>A</b> · hot-pink + crimson inner · wide halo</div>
+      <canvas id="beam-A" width="560" height="220"></canvas>
+      <div class="params">outer: 14px · rgba(255,61,127,0.22) · magenta<br/>inner: 2.4px · #ff3d7f · hot pink</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>B</b> · crimson + white-hot core · tighter halo</div>
+      <canvas id="beam-B" width="560" height="220"></canvas>
+      <div class="params">outer: 10px · rgba(232,38,38,0.28) · red<br/>inner: 1.8px · #ffe1cc · near-white core</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>C</b> · coral + ink core · high contrast</div>
+      <canvas id="beam-C" width="560" height="220"></canvas>
+      <div class="params">outer: 12px · rgba(232,169,160,0.35) · coral<br/>inner: 2px · #2A2420 · ink</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>D</b> · hot-pink with three-stop layering</div>
+      <canvas id="beam-D" width="560" height="220"></canvas>
+      <div class="params">outer: 16px · rgba(255,61,127,0.18) · magenta<br/>mid:   6px · rgba(255,61,127,0.45) · pink<br/>inner: 1.6px · #fff · white-hot</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ ARC ============================================================ -->
+  <h2>2 · <code>arc</code> — jittered zigzag with two-pass glow</h2>
+  <p class="sub">Anchor: contributor pos. Target: animated. Each line: 6 zig-zag samples, perpendicular jitter, deterministic per (id, time).</p>
+  <div class="grid">
+    <div class="card">
+      <div class="label"><b>A</b> · electric blue</div>
+      <canvas id="arc-A" width="560" height="220"></canvas>
+      <div class="params">outer: 4px · rgba(91,122,140,0.4) · slate<br/>inner: 1.2px · #5B7A8C · electric blue<br/>jitter: 4px</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>B</b> · white-hot lightning</div>
+      <canvas id="arc-B" width="560" height="220"></canvas>
+      <div class="params">outer: 5px · rgba(255,255,255,0.35) · white glow<br/>inner: 1px · #fff · white core<br/>jitter: 5px</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>C</b> · cyan + violet dual-tone</div>
+      <canvas id="arc-C" width="560" height="220"></canvas>
+      <div class="params">outer: 4px · rgba(180,210,255,0.4) · pale cyan<br/>inner: 1.2px · #6FA8DC · cyan<br/>jitter: 3.5px</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>D</b> · cool teal</div>
+      <canvas id="arc-D" width="560" height="220"></canvas>
+      <div class="params">outer: 3.5px · rgba(109,122,94,0.45) · sage<br/>inner: 1.1px · #6D7A5E · sage green<br/>jitter: 3px</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ BITE ============================================================ -->
+  <h2>3 · <code>bite</code> — bug / cockroach swarm feeding frenzy</h2>
+  <p class="sub">Bug / cockroach swarm eating, chewing, and biting. Serrated mandibles, organic devoured paper edges, twitchy chitin pinchers & chew debris.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="label"><b>A</b> · mandible pinchers + twitching chitin swarm</div>
+      <canvas id="bite-A" width="560" height="220"></canvas>
+      <div class="params">stroke: 1.8px · #2A2420 ink<br/>details: 8 radial mandible pairs + twitchy insect legs + chitin crumbs<br/>feel: sharp, frantic insect nibbling</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>B</b> · devoured crater + serrated chewed paper edge</div>
+      <canvas id="bite-B" width="560" height="220"></canvas>
+      <div class="params">stroke: 2px · #2A2420 ink + #b03030 crimson rim<br/>details: expanding chewed paper cavity with swarming roach heads & antennae<br/>feel: voracious cockroach feast</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>C</b> · corrosive acid-gnaw + scissor jaws</div>
+      <canvas id="bite-C" width="560" height="220"></canvas>
+      <div class="params">stroke: 1.8px · #b03030 crimson + #E8A9A0 acid spatter<br/>details: crossed serrated scissor blades + acid droplets<br/>feel: corrosive feeding frenzy</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>D</b> · 360° mandible ring clamp + crunch impact</div>
+      <canvas id="bite-D" width="560" height="220"></canvas>
+      <div class="params">stroke: 1.6px · #2A2420 & #5B7A8C<br/>details: 12 radial chitin jaws snapping shut + crunch lines<br/>feel: coordinated swarm strike</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ GLOW ============================================================ -->
+  <h2>4 · <code>glow</code> — radial-gradient white→pink burst flare</h2>
+  <p class="sub">Concentric stroked rings + soft fill, expanding and fading. No shadowBlur — layered stroke only.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="label"><b>A</b> · white core, hot-pink corona</div>
+      <canvas id="glow-A" width="560" height="220"></canvas>
+      <div class="params">ring 1: 4px · rgba(255,255,255,0.9) · white<br/>ring 2: 2px · #ff3d7f · hot pink<br/>rings: 3 concentric</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>B</b> · pink core, magenta corona</div>
+      <canvas id="glow-B" width="560" height="220"></canvas>
+      <div class="params">ring 1: 3px · rgba(255,61,127,0.95) · pink<br/>ring 2: 1.5px · #ff66b3 · magenta<br/>rings: 4 concentric</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>C</b> · soft cream-to-coral wash</div>
+      <canvas id="glow-C" width="560" height="220"></canvas>
+      <div class="params">fill:  rgba(232,169,160,0.35) · coral<br/>ring:  2px · #fff · white edge<br/>rings: 2 concentric</div>
+    </div>
+    <div class="card">
+      <div class="label"><b>D</b> · single bright ring, ink + pink</div>
+      <canvas id="glow-D" width="560" height="220"></canvas>
+      <div class="params">ring outer: 5px · #2A2420 · ink (0.3 alpha)<br/>ring inner: 1.5px · #ff3d7f · hot pink<br/>rings: 2 concentric</div>
+    </div>
+  </div>
+
+  <div class="ask">
+    <b>HARD STOP — please pick one variant per archetype and reply with the labels, e.g. <code>beam=A, arc=B, bite=A, glow=A</code>.</b><br/>
+    The next step (Task 7 implementation) will use only the selected parameters and discard the rest.
+  </div>
+
+  <script>
+    // deterministic hash for per-id jitter, matches the spec for arc
+    function hash01(id, stage, timeBin) {
+      const x = Math.sin(id * 12.9898 + stage * 78.233 + timeBin * 37.719) * 43758.5453;
+      return x - Math.floor(x);
+    }
+
+    // --- crowd (paper-cut "eyes") for the visual context of each card
+    function drawCrowd(ctx, w, h, count) {
+      ctx.save();
+      ctx.fillStyle = "rgba(42,36,32,0.6)";
+      const eyes = [];
+      let s = 0xC0FFEE;
+      function rnd() { s = (s * 1664525 + 1013904223) >>> 0; return (s & 0xFFFFFF) / 0x1000000; }
+      for (let i = 0; i < count; i++) {
+        const x = 40 + rnd() * (w - 80);
+        const y = 30 + rnd() * (h - 60);
+        eyes.push({ id: i + 1, x, y });
+        ctx.beginPath();
+        ctx.ellipse(x, y, 11, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(237,231,221,0.9)";
+        ctx.beginPath();
+        ctx.arc(x + (rnd() - 0.5) * 3, y + (rnd() - 0.5) * 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(42,36,32,0.6)";
+      }
+      ctx.restore();
+      return eyes;
+    }
+
+    // --- shared "subject" anchor at the lower right (where the burn happens)
+    function drawSubject(ctx, w, h) {
+      const tx = w * 0.78, ty = h * 0.7;
+      ctx.save();
+      ctx.fillStyle = "rgba(109,122,94,0.35)";
+      ctx.beginPath(); ctx.arc(tx, ty, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#6D7A5E";
+      ctx.beginPath(); ctx.arc(tx, ty, 11, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      return { x: tx, y: ty };
+    }
+
+    // === beam variants ==================================================
+    function drawBeam(ctx, w, h, variant, time) {
+      ctx.clearRect(0, 0, w, h);
+      drawCrowd(ctx, w, h, 14);
+      const target = drawSubject(ctx, w, h);
+      const ox = w * 0.5, oy = -10;
+      const jx = Math.sin(time * 0.003) * 4;
+      const jy = Math.cos(time * 0.0027) * 2;
+      ctx.save();
+      ctx.lineCap = "round";
+      let layers;
+      if (variant === "A") layers = [
+        { w: 14, c: "rgba(255,61,127,0.22)" },
+        { w: 2.4, c: "#ff3d7f" },
+      ];
+      else if (variant === "B") layers = [
+        { w: 10, c: "rgba(232,38,38,0.28)" },
+        { w: 1.8, c: "#ffe1cc" },
+      ];
+      else if (variant === "C") layers = [
+        { w: 12, c: "rgba(232,169,160,0.35)" },
+        { w: 2,   c: "#2A2420" },
+      ];
+      else layers = [
+        { w: 16, c: "rgba(255,61,127,0.18)" },
+        { w: 6,  c: "rgba(255,61,127,0.45)" },
+        { w: 1.6, c: "#ffffff" },
+      ];
+      for (const L of layers) {
+        ctx.strokeStyle = L.c;
+        ctx.lineWidth = L.w;
+        ctx.beginPath();
+        ctx.moveTo(ox + jx, oy);
+        ctx.lineTo(target.x, target.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // === arc variants ===================================================
+    function drawArc(ctx, w, h, variant, time) {
+      ctx.clearRect(0, 0, w, h);
+      const eyes = drawCrowd(ctx, w, h, 16);
+      const target = drawSubject(ctx, w, h);
+      const timeBin = Math.floor(time / 60); // quantize to 60ms
+      const jitterAmp = variant === "A" ? 4 : variant === "B" ? 5 : variant === "C" ? 3.5 : 3;
+      const layers = variant === "A" ? [
+        { w: 4, c: "rgba(91,122,140,0.4)" },
+        { w: 1.2, c: "#5B7A8C" },
+      ] : variant === "B" ? [
+        { w: 5, c: "rgba(255,255,255,0.5)" },
+        { w: 1, c: "#ffffff" },
+      ] : variant === "C" ? [
+        { w: 4, c: "rgba(180,210,255,0.45)" },
+        { w: 1.2, c: "#6FA8DC" },
+      ] : [
+        { w: 3.5, c: "rgba(109,122,94,0.45)" },
+        { w: 1.1, c: "#6D7A5E" },
+      ];
+      ctx.save();
+      ctx.lineCap = "round";
+      for (const e of eyes.slice(0, 6)) {
+        const samples = 6;
+        ctx.beginPath();
+        for (let i = 0; i <= samples; i++) {
+          const t = i / samples;
+          const x = e.x + (target.x - e.x) * t;
+          const y = e.y + (target.y - e.y) * t;
+          if (i > 0) {
+            const j = (hash01(e.id, i, timeBin) - 0.5) * 2 * jitterAmp;
+            const nx = -(target.y - e.y);
+            const ny = (target.x - e.x);
+            const len = Math.hypot(nx, ny) || 1;
+            const px = x + (nx / len) * j;
+            const py = y + (ny / len) * j;
+            ctx.lineTo(px, py);
+          } else {
+            ctx.moveTo(x, y);
+          }
+        }
+        for (const L of layers) {
+          ctx.strokeStyle = L.c;
+          ctx.lineWidth = L.w;
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    // === bite variants ==================================================
+    function drawBite(ctx, w, h, variant, time) {
+      ctx.clearRect(0, 0, w, h);
+      const eyes = drawCrowd(ctx, w, h, 14);
+      const target = drawSubject(ctx, w, h);
+      const phase = (time % 1600) / 1600;
+      const snap = Math.sin(phase * Math.PI); // 0 -> 1 -> 0 pulse
+
+      ctx.save();
+
+      if (variant === "A") {
+        // Mandible pinchers + twitching chitin swarm
+        for (const e of eyes.slice(0, 6)) {
+          const dx = target.x - e.x;
+          const dy = target.y - e.y;
+          const angle = Math.atan2(dy, dx);
+          
+          const bx = e.x + (dx * 0.75 * snap);
+          const by = e.y + (dy * 0.75 * snap);
+
+          ctx.save();
+          ctx.translate(bx, by);
+          ctx.rotate(angle);
+
+          // Roach body
+          ctx.fillStyle = "#2A2420";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 8, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Twitching antennae
+          const antJitter = Math.sin(time * 0.03 + e.id) * 0.3;
+          ctx.strokeStyle = "#2A2420";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(8, -1); ctx.quadraticCurveTo(14, -6 + antJitter * 5, 18, -4 + antJitter * 8);
+          ctx.moveTo(8, 1); ctx.quadraticCurveTo(14, 6 - antJitter * 5, 18, 4 - antJitter * 8);
+          ctx.stroke();
+
+          // Serrated Mandibles pinching together
+          const pinch = (1 - snap) * 0.4 + 0.1;
+          ctx.strokeStyle = "#b03030";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(7, -2); ctx.quadraticCurveTo(13, -6 * pinch, 14, 0);
+          ctx.moveTo(7, 2); ctx.quadraticCurveTo(13, 6 * pinch, 14, 0);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        // Bite chew marks on target
+        ctx.fillStyle = "#2A2420";
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2 + time * 0.001;
+          const rx = target.x + Math.cos(a) * (10 + snap * 4);
+          const ry = target.y + Math.sin(a) * (10 + snap * 4);
+          ctx.beginPath();
+          ctx.arc(rx, ry, 2 + (i % 3), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (variant === "B") {
+        // Devoured crater + serrated chewed paper edge
+        const craterR = 12 + snap * 14;
+        
+        ctx.fillStyle = "rgba(42,36,32,0.85)";
+        ctx.beginPath();
+        const teethCount = 18;
+        for (let i = 0; i <= teethCount; i++) {
+          const a = (i / teethCount) * Math.PI * 2;
+          const jitter = Math.sin(i * 3.7 + time * 0.01) * 3;
+          const r = craterR + jitter;
+          const x = target.x + Math.cos(a) * r;
+          const y = target.y + Math.sin(a) * r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#b03030";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        for (let i = 0; i < 7; i++) {
+          const a = (i / 7) * Math.PI * 2 + (time * 0.002);
+          const headX = target.x + Math.cos(a) * (craterR + 2);
+          const headY = target.y + Math.sin(a) * (craterR + 2);
+
+          ctx.save();
+          ctx.translate(headX, headY);
+          ctx.rotate(a);
+
+          ctx.fillStyle = "#2A2420";
+          ctx.beginPath();
+          ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          const antSwing = Math.sin(time * 0.02 + i) * 0.4;
+          ctx.strokeStyle = "#2A2420";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(2, -1); ctx.lineTo(10, -5 + antSwing * 4);
+          ctx.moveTo(2, 1); ctx.lineTo(10, 5 - antSwing * 4);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+      } else if (variant === "C") {
+        // Corrosive acid-gnaw + scissor jaws
+        const jawsAngle = (1 - snap) * 0.7;
+        
+        ctx.save();
+        ctx.translate(target.x, target.y);
+
+        ctx.fillStyle = "rgba(232,169,160,0.6)";
+        for (let i = 0; i < 10; i++) {
+          const sa = (i / 10) * Math.PI * 2 + time * 0.005;
+          const sr = 8 + snap * 12 + Math.sin(i * 1.5) * 4;
+          ctx.beginPath();
+          ctx.arc(Math.cos(sa) * sr, Math.sin(sa) * sr, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (const side of [-1, 1]) {
+          ctx.save();
+          ctx.rotate(side * jawsAngle);
+          ctx.strokeStyle = "#b03030";
+          ctx.lineWidth = 2.2;
+          ctx.fillStyle = "#2A2420";
+
+          ctx.beginPath();
+          ctx.moveTo(-20 * side, -15);
+          ctx.lineTo(0, -2);
+          ctx.lineTo(18, 0);
+          ctx.lineTo(0, 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.strokeStyle = "#E8A9A0";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let t = 0; t < 5; t++) {
+            ctx.moveTo(t * 3, 0);
+            ctx.lineTo(t * 3 + 1.5, -side * 3);
+          }
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        ctx.restore();
+
+      } else {
+        // Variant D: 360° mandible ring clamp + crunch impact
+        const count = 10;
+        const radius = 24 * (1 - snap * 0.6);
+
+        ctx.save();
+        ctx.translate(target.x, target.y);
+
+        ctx.strokeStyle = "#2A2420";
+        ctx.lineWidth = 1.8;
+        ctx.fillStyle = "#5B7A8C";
+
+        for (let i = 0; i < count; i++) {
+          const a = (i / count) * Math.PI * 2;
+          ctx.save();
+          ctx.rotate(a);
+          ctx.translate(radius, 0);
+
+          ctx.beginPath();
+          ctx.moveTo(0, -3);
+          ctx.lineTo(-10, -6);
+          ctx.lineTo(-4, 0);
+          ctx.lineTo(-10, 6);
+          ctx.lineTo(0, 3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        if (snap > 0.6) {
+          ctx.strokeStyle = "#b03030";
+          ctx.lineWidth = 1.2;
+          for (let i = 0; i < 6; i++) {
+            const ca = (i / 6) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(ca) * 2, Math.sin(ca) * 2);
+            ctx.lineTo(Math.cos(ca) * 12, Math.sin(ca) * 12);
+            ctx.stroke();
+          }
+        }
+
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    // === glow variants ==================================================
+    function drawGlow(ctx, w, h, variant, time) {
+      ctx.clearRect(0, 0, w, h);
+      drawCrowd(ctx, w, h, 14);
+      const target = drawSubject(ctx, w, h);
+      const phase = (time % 1400) / 1400;
+      const expand = phase;
+      const fade = 1 - phase;
+      const base = 22;
+      const radius = base + expand * 36;
+      ctx.save();
+      if (variant === "A") {
+        // white core, pink corona, 3 rings
+        const rings = [
+          { off: 0,    w: 4,   c: "rgba(255,255,255," + (0.9 * fade) + ")" },
+          { off: 8,    w: 2.5, c: "rgba(255,61,127," + (0.7 * fade) + ")" },
+          { off: 16,   w: 1.6, c: "rgba(255,61,127," + (0.4 * fade) + ")" },
+        ];
+        for (const R of rings) {
+          ctx.strokeStyle = R.c;
+          ctx.lineWidth = R.w;
+          ctx.beginPath();
+          ctx.arc(target.x, target.y, radius + R.off, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      } else if (variant === "B") {
+        const rings = [
+          { off: 0,   w: 3,   c: "rgba(255,61,127," + (0.95 * fade) + ")" },
+          { off: 7,   w: 2,   c: "rgba(255,102,179," + (0.7 * fade) + ")" },
+          { off: 14,  w: 1.4, c: "rgba(255,102,179," + (0.45 * fade) + ")" },
+          { off: 22,  w: 1,   c: "rgba(255,102,179," + (0.25 * fade) + ")" },
+        ];
+        for (const R of rings) {
+          ctx.strokeStyle = R.c;
+          ctx.lineWidth = R.w;
+          ctx.beginPath();
+          ctx.arc(target.x, target.y, radius + R.off, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      } else if (variant === "C") {
+        ctx.fillStyle = "rgba(232,169,160," + (0.35 * fade) + ")";
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, radius + 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255," + (0.6 * fade) + ")";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(232,169,160," + (0.5 * fade) + ")";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, radius + 12, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = "rgba(42,36,32," + (0.3 * fade) + ")";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, radius + 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(255,61,127," + (0.95 * fade) + ")";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // boot all canvases
+    const start = performance.now();
+    const make = (id, fn, variant) => {
+      const c = document.getElementById(id);
+      const c2 = c.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      c.width = 560 * dpr; c.height = 220 * dpr;
+      c2.setTransform(dpr, 0, 0, dpr, 0, 0);
+      function loop(now) {
+        fn(c2, 560, 220, variant, now - start);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    };
+    make("beam-A", drawBeam, "A"); make("beam-B", drawBeam, "B");
+    make("beam-C", drawBeam, "C"); make("beam-D", drawBeam, "D");
+    make("arc-A", drawArc, "A"); make("arc-B", drawArc, "B");
+    make("arc-C", drawArc, "C"); make("arc-D", drawArc, "D");
+    make("bite-A", drawBite, "A"); make("bite-B", drawBite, "B");
+    make("bite-C", drawBite, "C"); make("bite-D", drawBite, "D");
+    make("glow-A", drawGlow, "A"); make("glow-B", drawGlow, "B");
+    make("glow-C", drawGlow, "C"); make("glow-D", drawGlow, "D");
+  </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Font Pairings Showcase — Phase B Lane 3</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #EDE7DD;
+      color: #2A2420;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    .subtitle {
+      font-size: 0.875rem;
+      color: #5B7A8C;
+      margin-bottom: 2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .option {
+      background: white;
+      border: 2px solid #2A2420;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(42, 36, 32, 0.12);
+    }
+    .option-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      color: #5B7A8C;
+    }
+    .option-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .option-rationale {
+      font-size: 0.8125rem;
+      color: #6D7A5E;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 200px;
+      background: #EDE7DD;
+      border: 1px solid #5B7A8C;
+      border-radius: 4px;
+    }
+    .instructions {
+      background: #E8A9A0;
+      border: 2px solid #2A2420;
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.875rem;
+    }
+    .instructions strong {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Text Font Pairings Showcase</h1>
+  <p class="subtitle">Phase B Lane 3: Text Formatting — Task 10 (SHOWCASE GATE)</p>
+
+  <div class="grid">
+    <div class="option">
+      <div class="option-label">Baseline (Current Default)</div>
+      <div class="option-title">Space Mono · Center</div>
+      <div class="option-rationale">Monospace technical feel; matches the existing HUD aesthetic.</div>
+      <canvas id="baseline" width="280" height="200"></canvas>
+    </div>
+
+    <div class="option">
+      <div class="option-label">Option A</div>
+      <div class="option-title">Fraunces · Center</div>
+      <div class="option-rationale">Display serif with character; already used for HUD headings.</div>
+      <canvas id="optionA" width="280" height="200"></canvas>
+    </div>
+
+    <div class="option">
+      <div class="option-label">Option B</div>
+      <div class="option-title">Fraunces · Left-Aligned</div>
+      <div class="option-rationale">Same display serif, but left-aligned for a more editorial, asymmetric layout.</div>
+      <canvas id="optionB" width="280" height="200"></canvas>
+    </div>
+
+    <div class="option">
+      <div class="option-label">Option C (New Curated Font)</div>
+      <div class="option-title">DM Serif Display · Center</div>
+      <div class="option-rationale">Elegant high-contrast serif; more formal than Fraunces, ideal for literary or satirical tone.</div>
+      <canvas id="optionC" width="280" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <strong>Next Steps:</strong>
+    Review the four options above. Reply with your choice (Baseline, Option A, Option B, or Option C) and confirm the align/size behavior. Once you select, I'll:
+    <ol style="margin-top: 0.5rem; margin-left: 1.5rem;">
+      <li>Install the chosen font via <code>@fontsource</code></li>
+      <li>Create <code>textFontRegistry.ts</code> with the registry</li>
+      <li>Update <code>drawSubjectText.ts</code> to resolve font/align from the registry</li>
+      <li>Write tests and verify</li>
+      <li>Commit the changes</li>
+    </ol>
+  </div>
+
+  <script type="module">
+    // Inlined from src/render/paperCut.ts (verbatim) to faithfully render the real canvas path
+    function pseudoRandom(n) {
+      const x = Math.sin(n * 12.9898) * 43758.5453;
+      return x - Math.floor(x);
+    }
+    function paperCutEdgePath(ctx, opts) {
+      const segments = opts.segments ?? 14;
+      const jitterFraction = opts.jitterFraction ?? 0.06;
+      const jitterX = opts.rx * jitterFraction;
+      const jitterY = opts.ry * jitterFraction;
+      ctx.beginPath();
+      for (let i = 0; i <= segments; i++) {
+        const t = (i / segments) * Math.PI * 2;
+        const j = pseudoRandom(opts.seed * 1000 + i);
+        const wobble = (j - 0.5) * 2;
+        const x = opts.cx + Math.cos(t) * (opts.rx + wobble * jitterX);
+        const y = opts.cy + Math.sin(t) * (opts.ry + wobble * jitterY);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+    }
+    function withPaperCutShadow(ctx, draw, intensity = 1) {
+      ctx.save();
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 3 * intensity;
+      ctx.shadowBlur = 6 * intensity;
+      ctx.shadowColor = "rgba(42, 36, 32, 0.22)";
+      draw();
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
+      ctx.restore();
+    }
+
+    // Inlined from src/render/drawers/drawSubjectText.ts (verbatim logic, with font/align param added)
+    const PALETTE = {
+      cream: "#EDE7DD",
+      slate: "#5B7A8C",
+      sage: "#6D7A5E",
+      ink: "#2A2420",
+      coral: "#E8A9A0",
+    };
+    function colorByName(k) {
+      switch (k) {
+        case "cream": return PALETTE.cream;
+        case "slate": return PALETTE.slate;
+        case "sage": return PALETTE.sage;
+        case "ink": return PALETTE.ink;
+        case "coral": return PALETTE.coral;
+        default: throw new Error(`color "${k}" is not in the locked palette`);
+      }
+    }
+    const SUBJECT_TEXT_DRAW = {
+      maxChars: 24,
+      paddingXFraction: 0.14,
+      paddingYFraction: 0.28,
+      fontSizeFraction: 0.22,
+      paperCutSeed: 61,
+    };
+    function drawSubjectText(ctx, input) {
+      const { pos, sizePx, scale, rotation, colors, fontFamily, textAlign } = input;
+      const s = sizePx * scale;
+      const text = input.value.length > SUBJECT_TEXT_DRAW.maxChars
+        ? input.value.slice(0, SUBJECT_TEXT_DRAW.maxChars)
+        : input.value;
+      const rx = s * (0.5 + SUBJECT_TEXT_DRAW.paddingXFraction);
+      const ry = s * (0.28 + SUBJECT_TEXT_DRAW.paddingYFraction);
+
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate(rotation);
+      ctx.translate(-pos.x, -pos.y);
+
+      withPaperCutShadow(ctx, () => {
+        paperCutEdgePath(ctx, { cx: pos.x, cy: pos.y, rx, ry, seed: SUBJECT_TEXT_DRAW.paperCutSeed });
+        ctx.fillStyle = colorByName(colors.outline);
+        ctx.fill();
+      });
+      paperCutEdgePath(ctx, { cx: pos.x, cy: pos.y, rx: rx * 0.92, ry: ry * 0.86, seed: SUBJECT_TEXT_DRAW.paperCutSeed });
+      ctx.fillStyle = colorByName(colors.shirt);
+      ctx.fill();
+
+      ctx.fillStyle = colorByName(colors.outline);
+      ctx.font = `700 ${Math.max(10, s * SUBJECT_TEXT_DRAW.fontSizeFraction)}px ${fontFamily}`;
+      ctx.textAlign = textAlign;
+      ctx.textBaseline = "middle";
+      
+      const textX = textAlign === "left" ? pos.x - rx * 0.7 : pos.x;
+      ctx.fillText(text, textX, pos.y);
+
+      ctx.restore();
+    }
+
+    const colors = { suit: "slate", shirt: "cream", outline: "ink" };
+    const sampleText = "Resign";
+
+    // Baseline: Space Mono, center
+    const baselineCtx = document.getElementById("baseline").getContext("2d");
+    drawSubjectText(baselineCtx, {
+      pos: { x: 140, y: 100 },
+      sizePx: 80,
+      value: sampleText,
+      scale: 1,
+      colors,
+      rotation: 0,
+      fontFamily: '"Space Mono", ui-monospace, monospace',
+      textAlign: "center",
+    });
+
+    // Option A: Fraunces, center
+    const optionACtx = document.getElementById("optionA").getContext("2d");
+    drawSubjectText(optionACtx, {
+      pos: { x: 140, y: 100 },
+      sizePx: 80,
+      value: sampleText,
+      scale: 1,
+      colors,
+      rotation: 0,
+      fontFamily: '"Fraunces", Georgia, serif',
+      textAlign: "center",
+    });
+
+    // Option B: Fraunces, left-aligned
+    const optionBCtx = document.getElementById("optionB").getContext("2d");
+    drawSubjectText(optionBCtx, {
+      pos: { x: 140, y: 100 },
+      sizePx: 80,
+      value: sampleText,
+      scale: 1,
+      colors,
+      rotation: 0,
+      fontFamily: '"Fraunces", Georgia, serif',
+      textAlign: "left",
+    });
+
+    // Option C: DM Serif Display, center
+    const optionCCtx = document.getElementById("optionC").getContext("2d");
+    drawSubjectText(optionCCtx, {
+      pos: { x: 140, y: 100 },
+      sizePx: 80,
+      value: sampleText,
+      scale: 1,
+      colors,
+      rotation: 0,
+      fontFamily: '"DM Serif Display", Georgia, serif',
+      textAlign: "center",
+    });
+  </script>
+</body>
+</html>

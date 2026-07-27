@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>TAI — 10 Art Movement Studies · Phase B Lane 2</title>
+  <style>
+    :root {
+      --bg-0: #0a0810;
+      --bg-1: #14101c;
+      --ink: #f4ecdc;
+      --muted: #8a8294;
+      --hairline: rgba(244, 236, 220, 0.08);
+      --saffron: #e8702a;
+      --red: #b83232;
+      --cream: #f0d3a4;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background:
+        radial-gradient(1400px 900px at 10% 0%, #1a1326 0%, transparent 55%),
+        radial-gradient(1100px 800px at 95% 100%, #1a1408 0%, transparent 55%),
+        var(--bg-0);
+      color: var(--ink);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1320px; margin: 0 auto; padding: 56px 48px 120px; }
+    .eyebrow {
+      font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: 56px; line-height: 1; letter-spacing: -0.025em;
+      font-weight: 700;
+    }
+    h1 em { font-style: normal; background: linear-gradient(120deg, #ff8fb1, #ffba6a, #5cf0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lede {
+      margin: 0 0 56px; color: var(--muted); font-size: 16px; line-height: 1.65;
+      max-width: 740px;
+    }
+    .grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 32px;
+    }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      position: relative;
+      border-radius: 20px;
+      padding: 28px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0)) , var(--bg-1);
+      border: 1px solid var(--hairline);
+      overflow: hidden;
+      transition: transform 0.4s cubic-bezier(.2,.7,.2,1), border-color 0.4s;
+    }
+    .card:hover { transform: translateY(-3px); border-color: rgba(244,236,220,0.18); }
+    .card::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(600px 220px at var(--mx, 50%) var(--my, 0%), rgba(255,255,255,0.06), transparent 60%);
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .card:hover::before { opacity: 1; }
+
+    .meta {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 16px; margin-bottom: 6px;
+    }
+    .meta .num {
+      font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--muted); font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .meta .chip {
+      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+      padding: 5px 10px; border-radius: 999px;
+      border: 1px solid var(--hairline); color: var(--muted);
+    }
+    h2 {
+      margin: 0 0 8px; font-size: 26px; letter-spacing: -0.012em; font-weight: 600;
+    }
+    .movement { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--saffron); margin-bottom: 12px; font-family: "JetBrains Mono", ui-monospace, monospace; }
+    .rationale { margin: 0 0 22px; font-size: 14px; line-height: 1.6; color: rgba(244,236,220,0.78); }
+    .specs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+    .specs span {
+      font-size: 11px; padding: 4px 9px; border-radius: 6px;
+      background: rgba(255,255,255,0.04); color: rgba(244,236,220,0.7);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .stage {
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stage svg { width: 100%; height: 100%; display: block; }
+
+    @keyframes drift { 0%,100% { transform: translate(0,0) } 50% { transform: translate(1.5px,-2px) } }
+    @keyframes flicker { 0%,100% { opacity: 0.92 } 50% { opacity: 1 } }
+    @keyframes spray { 0%,100% { opacity: 0.6 } 50% { opacity: 0.85 } }
+    @keyframes blink { 0%,92%,100% { transform: scaleY(1) } 96% { transform: scaleY(0.1) } }
+    .drift { animation: drift 8s ease-in-out infinite; transform-origin: center; }
+    .flicker { animation: flicker 4s ease-in-out infinite; }
+    .spray { animation: spray 5s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">Phase B · Lane 2 · Subject Style Studies</div>
+    <h1>One character. <em>Ten movements.</em></h1>
+    <p class="lede">TAI — the elderly Indian "everywoman" subject — reinterpreted across ten art movements and design traditions. Each card shows the same character in a different visual language, so we can compare how the registry should render her in HUD swatches and on canvas.</p>
+
+    <div class="grid">
+
+      <article class="card opt1" data-option="01">
+        <div class="meta"><span class="num">A · 01</span><span class="chip">Swiss / Intl. Typographic</span></div>
+        <h2>Clean Grid Authority</h2>
+        <div class="movement">1950s · Müller-Brockmann · Akzidenz</div>
+        <p class="rationale">Strict asymmetric grid, single Akzidenz-style sans serif, generous negative space, one signal accent color. Reads as institutional fact — neutral, objective, modern.</p>
+        <div class="specs"><span>12-col grid</span><span>1 accent</span><span>figure right</span><span>type left</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Swiss typographic TAI">
+            <rect width="200" height="200" fill="#f0e8d4"/>
+            <rect x="0" y="0" width="200" height="200" fill="none" stroke="#1a1610" stroke-width="1"/>
+            <g opacity="0.18" stroke="#1a1610" stroke-width="0.4">
+              <line x1="50" y1="0" x2="50" y2="200"/><line x1="100" y1="0" x2="100" y2="200"/><line x1="150" y1="0" x2="150" y2="200"/>
+              <line x1="0" y1="50" x2="200" y2="50"/><line x1="0" y1="100" x2="200" y2="100"/><line x1="0" y1="150" x2="200" y2="150"/>
+            </g>
+            <rect x="100" y="0" width="100" height="200" fill="#e8702a"/>
+            <g transform="translate(150 100)">
+              <path d="M-32 36 C -50 34 -52 6 -36 -4 C -42 -22 -28 -38 0 -38 C 28 -38 42 -22 36 -4 C 52 6 50 34 32 36 Z" fill="#b83232"/>
+              <ellipse cx="0" cy="-2" rx="28" ry="32" fill="#f0d3a4"/>
+              <path d="M-30 -22 C -30 -42 -10 -50 0 -50 C 10 -50 30 -42 30 -22 L 24 -28 C 16 -38 -16 -38 -24 -28 Z" fill="#1a1610"/>
+              <ellipse cx="-22" cy="-18" rx="4" ry="6" fill="#1a1610"/>
+              <ellipse cx="22" cy="-18" rx="4" ry="6" fill="#1a1610"/>
+              <circle cx="0" cy="-30" r="2" fill="#b83232"/>
+              <path d="M-8 -6 Q0 0 8 -6" stroke="#1a1610" stroke-width="1.6" fill="none"/>
+              <path d="M-10 6 Q0 12 10 6" stroke="#1a1610" stroke-width="1.4" fill="none"/>
+            </g>
+            <text x="14" y="40" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#1a1610" letter-spacing="-0.5">TAX</text>
+            <text x="14" y="78" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#1a1610" letter-spacing="-0.5">TAI</text>
+            <rect x="14" y="88" width="64" height="3" fill="#b83232"/>
+            <text x="14" y="108" font-family="Helvetica, Arial, sans-serif" font-size="7" font-weight="400" fill="#1a1610" letter-spacing="1.5">SUBJECT · 003</text>
+            <text x="14" y="118" font-family="Helvetica, Arial, sans-serif" font-size="6" font-weight="400" fill="#1a1610" letter-spacing="0.8">EVERY INDIAN WOMAN</text>
+            <text x="14" y="184" font-family="Helvetica, Arial, sans-serif" font-size="6" font-weight="400" fill="#1a1610" letter-spacing="1.2">— A SUBJECT FILE</text>
+            <text x="14" y="194" font-family="Helvetica, Arial, sans-serif" font-size="6" font-weight="400" fill="#1a1610" letter-spacing="1.2">REVENUE DEPT.</text>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt2" data-option="02">
+        <div class="meta"><span class="num">A · 02</span><span class="chip">Brutalist</span></div>
+        <h2>Concrete Bureaucracy</h2>
+        <div class="movement">1970s · photocopied · monospace</div>
+        <p class="rationale">Halftone screentone, off-register printing, stamped red marks, monospace type set like an internal memo. The aesthetic of a leaked government file — uncomfortable, true, undeniable.</p>
+        <div class="specs"><span>halftone 60lpi</span><span>off-register</span><span>stamp marks</span><span>monospace</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Brutalist TAI">
+            <defs>
+              <pattern id="brutDots" x="0" y="0" width="3" height="3" patternUnits="userSpaceOnUse">
+                <circle cx="1.5" cy="1.5" r="0.7" fill="#1a1610"/>
+              </pattern>
+              <filter id="brutGrain"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0.25 0"/></filter>
+            </defs>
+            <rect width="200" height="200" fill="#d8cfb6"/>
+            <rect x="0" y="0" width="200" height="200" fill="url(#brutDots)" opacity="0.18"/>
+            <rect width="200" height="200" filter="url(#brutGrain)" opacity="0.5"/>
+            <g transform="translate(0.6 0.6)" opacity="0.95">
+              <g transform="translate(100 110)">
+                <ellipse cx="0" cy="50" rx="62" ry="46" fill="#1a1610"/>
+                <ellipse cx="0" cy="0" rx="40" ry="44" fill="#1a1610"/>
+                <circle cx="-14" cy="-2" r="3" fill="#d8cfb6"/>
+                <circle cx="14" cy="-2" r="3" fill="#d8cfb6"/>
+                <circle cx="0" cy="14" r="2" fill="#d8cfb6"/>
+              </g>
+            </g>
+            <g transform="translate(-0.4 -0.3)">
+              <g transform="translate(100 110)">
+                <ellipse cx="0" cy="50" rx="62" ry="46" fill="#b83232"/>
+                <ellipse cx="0" cy="0" rx="40" ry="44" fill="#d8a878"/>
+                <path d="M-34 -22 C -30 -42 -8 -50 0 -50 C 8 -50 30 -42 34 -22" fill="#1a1610"/>
+                <ellipse cx="-14" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+                <ellipse cx="14" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+                <circle cx="0" cy="-32" r="2" fill="#b83232"/>
+                <path d="M-8 16 Q0 12 8 16" stroke="#1a1610" stroke-width="1.6" fill="none"/>
+                <path d="M-12 22 Q0 18 12 22" stroke="#1a1610" stroke-width="1.2" fill="none"/>
+                <ellipse cx="-28" cy="6" rx="3" ry="2" fill="#1a1610" opacity="0.4"/>
+                <ellipse cx="28" cy="6" rx="3" ry="2" fill="#1a1610" opacity="0.4"/>
+              </g>
+            </g>
+            <g font-family="Courier New, monospace" fill="#1a1610">
+              <text x="10" y="22" font-size="9" font-weight="700" letter-spacing="0.5">FILE // 0042-TAX</text>
+              <text x="10" y="34" font-size="6" letter-spacing="0.3">STATUS: OVERDUE</text>
+              <text x="10" y="186" font-size="7" font-weight="700">TAX.TAI</text>
+              <text x="10" y="195" font-size="5" letter-spacing="0.2">CASE NO. ████████</text>
+            </g>
+            <g transform="translate(150 50) rotate(-12)">
+              <rect x="-20" y="-12" width="40" height="24" fill="none" stroke="#b83232" stroke-width="1.8"/>
+              <text x="0" y="3" font-family="Courier New, monospace" font-size="7" font-weight="700" fill="#b83232" text-anchor="middle">DUE 1998</text>
+            </g>
+            <g transform="translate(160 160) rotate(8)">
+              <rect x="-18" y="-8" width="36" height="16" fill="none" stroke="#1a1610" stroke-width="1.4"/>
+              <text x="0" y="3" font-family="Courier New, monospace" font-size="5" font-weight="700" fill="#1a1610" text-anchor="middle">RECEIVED</text>
+            </g>
+            <line x1="0" y1="180" x2="200" y2="180" stroke="#1a1610" stroke-width="0.6" opacity="0.5"/>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt3" data-option="03">
+        <div class="meta"><span class="num">A · 03</span><span class="chip">Protest Poster · 1968</span></div>
+        <h2>Enough</h2>
+        <div class="movement">Pushpin · Bass · MacLean</div>
+        <p class="rationale">Saturated saffron field, bold black silhouette, hand-cut display type, flat color planes. The visual language of the anti-war / civil rights movement — a poster that screams from a brick wall.</p>
+        <div class="specs"><span>flat color</span><span>heavy display</span><span>stacked composition</span><span>saffron/black</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="1968 protest poster TAI">
+            <rect width="200" height="200" fill="#e8702a"/>
+            <rect x="0" y="0" width="200" height="38" fill="#1a1610"/>
+            <rect x="0" y="170" width="200" height="30" fill="#1a1610"/>
+            <text x="100" y="24" font-family="Impact, 'Arial Black', sans-serif" font-size="20" font-weight="900" fill="#f0d3a4" text-anchor="middle" letter-spacing="2">A NATION DIVIDED</text>
+            <g transform="translate(100 105)">
+              <ellipse cx="0" cy="44" rx="58" ry="42" fill="#1a1610"/>
+              <ellipse cx="0" cy="0" rx="36" ry="40" fill="#1a1610"/>
+              <path d="M-32 -22 C -30 -38 -8 -46 0 -46 C 8 -46 30 -38 32 -22 L 24 -28 C 14 -36 -14 -36 -24 -28 Z" fill="#1a1610"/>
+              <circle cx="-12" cy="-4" r="3" fill="#f0d3a4"/>
+              <circle cx="12" cy="-4" r="3" fill="#f0d3a4"/>
+              <circle cx="0" cy="-26" r="2.2" fill="#b83232"/>
+              <path d="M-10 12 L 10 12" stroke="#f0d3a4" stroke-width="2" fill="none"/>
+              <ellipse cx="-26" cy="6" rx="3" ry="2" fill="#f0d3a4" opacity="0.6"/>
+              <ellipse cx="26" cy="6" rx="3" ry="2" fill="#f0d3a4" opacity="0.6"/>
+            </g>
+            <text x="100" y="190" font-family="Impact, 'Arial Black', sans-serif" font-size="14" font-weight="900" fill="#e8702a" text-anchor="middle" letter-spacing="3">REVOLT NOW</text>
+            <g transform="translate(40 105)">
+              <path d="M0 -8 L0 8 M-8 0 L8 0 M-6 -6 L6 6 M-6 6 L6 -6" stroke="#1a1610" stroke-width="3"/>
+            </g>
+            <g transform="translate(160 105)">
+              <path d="M0 -8 L0 8 M-8 0 L8 0 M-6 -6 L6 6 M-6 6 L6 -6" stroke="#1a1610" stroke-width="3"/>
+            </g>
+            <rect x="20" y="60" width="20" height="20" fill="#b83232"/>
+            <rect x="160" y="130" width="20" height="20" fill="#b83232"/>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt4" data-option="04">
+        <div class="meta"><span class="num">A · 04</span><span class="chip">Risograph</span></div>
+        <h2>Riso Duotone</h2>
+        <div class="movement">indie print · fluorescent</div>
+        <p class="rationale">Two-color run — fluorescent pink layered with teal at 0.6px misregistration, halftone dot field, paper grain. High-impact, low-fi, very on-trend. Cheap to render at any size; instantly recognizable.</p>
+        <div class="specs"><span>2-color duotone</span><span>0.6px misreg</span><span>halftone</span><span>paper grain</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Risograph TAI">
+            <defs>
+              <filter id="risoGrain"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 0.4 0 0 0 0 0.4 0 0 0 0 0.4 0 0 0 0.18 0"/></filter>
+              <pattern id="risoDots" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+                <circle cx="2.5" cy="2.5" r="0.9" fill="#0a6478" opacity="0.6"/>
+              </pattern>
+              <pattern id="risoDotsPink" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+                <circle cx="2.5" cy="2.5" r="0.9" fill="#ff5c87" opacity="0.7"/>
+              </pattern>
+            </defs>
+            <rect width="200" height="200" fill="#f4ede0"/>
+            <rect width="200" height="200" fill="url(#risoDots)" opacity="0.5"/>
+            <g transform="translate(-0.6 0.6)" opacity="0.92">
+              <ellipse cx="100" cy="190" rx="70" ry="56" fill="#ff5c87"/>
+              <circle cx="100" cy="100" r="52" fill="#ff5c87"/>
+              <path d="M70 60 Q100 30 130 60 L122 52 Q100 36 78 52 Z" fill="#ff5c87"/>
+            </g>
+            <rect width="200" height="200" fill="url(#risoDotsPink)" opacity="0.55"/>
+            <g opacity="0.9">
+              <ellipse cx="100" cy="190" rx="70" ry="56" fill="none" stroke="#0a6478" stroke-width="2.2"/>
+              <circle cx="100" cy="100" r="52" fill="none" stroke="#0a6478" stroke-width="2.2"/>
+              <path d="M70 60 Q100 30 130 60 L122 52 Q100 36 78 52 Z" fill="none" stroke="#0a6478" stroke-width="2.2"/>
+              <circle cx="86" cy="100" r="3.5" fill="#0a6478"/>
+              <circle cx="114" cy="100" r="3.5" fill="#0a6478"/>
+              <path d="M88 122 Q100 128 112 122" stroke="#0a6478" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+              <circle cx="100" cy="80" r="2" fill="#b83232"/>
+            </g>
+            <g transform="translate(100 178)">
+              <rect x="-40" y="-12" width="80" height="20" fill="#ff5c87"/>
+              <text x="0" y="3" font-family="'Courier New', monospace" font-size="13" font-weight="700" fill="#f4ede0" text-anchor="middle" letter-spacing="2">TAX·TAI</text>
+            </g>
+            <g transform="translate(30 28)">
+              <text x="0" y="0" font-family="'Courier New', monospace" font-size="6" fill="#0a6478" letter-spacing="0.4">№ 003 / 200</text>
+            </g>
+            <rect width="200" height="200" filter="url(#risoGrain)" opacity="0.7"/>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt5" data-option="05">
+        <div class="meta"><span class="num">A · 05</span><span class="chip">Marker / Sharpie</span></div>
+        <h2>Sharpie Wall</h2>
+        <div class="movement">street · bleed · raw</div>
+        <p class="rationale">Bold marker strokes with bleeding edges, scribbled hatching, high-saturation colors, splatter. Looks drawn on a napkin or a wall in thirty seconds. Honest, immediate, human.</p>
+        <div class="specs"><span>marker bleed</span><span>splatter</span><span>scribbled type</span><span>no halftone</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Marker TAI">
+            <defs>
+              <filter id="markerBleed"><feTurbulence type="fractalNoise" baseFrequency="2" numOctaves="1" seed="6"/><feDisplacementMap in="SourceGraphic" scale="0.8"/></filter>
+              <filter id="splatter"><feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" seed="2"/><feColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.45 0 0 0 0 0.18 0 0 0 0.6 0"/></filter>
+            </defs>
+            <rect width="200" height="200" fill="#faf6ec"/>
+            <g filter="url(#markerBleed)">
+              <ellipse cx="100" cy="200" rx="74" ry="58" fill="#e8702a" stroke="#1a1610" stroke-width="3"/>
+              <path d="M30 168 L42 130 L80 110 L120 110 L158 130 L170 168" fill="none" stroke="#1a1610" stroke-width="3"/>
+              <ellipse cx="100" cy="100" rx="48" ry="50" fill="#f0d3a4" stroke="#1a1610" stroke-width="3"/>
+              <path d="M52 70 C 52 40 78 28 100 28 C 122 28 148 40 148 70 L 140 60 C 130 48 70 48 60 60 Z" fill="#1a1610" stroke="#1a1610" stroke-width="2"/>
+              <path d="M148 70 C 160 64 168 60 172 56" fill="none" stroke="#1a1610" stroke-width="3"/>
+              <circle cx="100" cy="80" r="3" fill="#b83232"/>
+              <ellipse cx="86" cy="104" rx="3" ry="4" fill="#1a1610"/>
+              <ellipse cx="114" cy="104" rx="3" ry="4" fill="#1a1610"/>
+              <path d="M88 124 Q100 132 112 124" stroke="#1a1610" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M86 116 Q92 118 94 114" stroke="#1a1610" stroke-width="1.4" fill="none"/>
+              <path d="M114 116 Q108 118 106 114" stroke="#1a1610" stroke-width="1.4" fill="none"/>
+              <line x1="76" y1="92" x2="88" y2="92" stroke="#1a1610" stroke-width="1.4"/>
+              <line x1="112" y1="92" x2="124" y2="92" stroke="#1a1610" stroke-width="1.4"/>
+              <path d="M70 110 Q60 120 70 130" fill="none" stroke="#b83232" stroke-width="2.4" opacity="0.7"/>
+              <path d="M130 110 Q140 120 130 130" fill="none" stroke="#b83232" stroke-width="2.4" opacity="0.7"/>
+            </g>
+            <g font-family="'Permanent Marker', 'Comic Sans MS', cursive" fill="#1a1610">
+              <text x="14" y="40" font-size="20" font-weight="700" transform="rotate(-3 14 40)">TAX</text>
+              <text x="14" y="60" font-size="20" font-weight="700" fill="#b83232" transform="rotate(2 14 60)">TAI!!</text>
+            </g>
+            <g opacity="0.7">
+              <circle cx="170" cy="40" r="2" fill="#1a1610"/>
+              <circle cx="180" cy="50" r="1" fill="#1a1610"/>
+              <circle cx="30" cy="170" r="1.4" fill="#b83232"/>
+              <circle cx="40" cy="180" r="1" fill="#1a1610"/>
+              <circle cx="178" cy="160" r="2" fill="#e8702a"/>
+            </g>
+            <line x1="10" y1="190" x2="190" y2="190" stroke="#1a1610" stroke-width="2.4"/>
+            <line x1="14" y1="194" x2="60" y2="194" stroke="#b83232" stroke-width="2.4"/>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt6" data-option="06">
+        <div class="meta"><span class="num">A · 06</span><span class="chip">Constructivist</span></div>
+        <h2>Worker Hero</h2>
+        <div class="movement">Rodchenko · Lissitzky · 1920s</div>
+        <p class="rationale">Diagonal red-black composition, bold geometry, industrial display type, the silhouette of the common citizen. Treats TAI as the dignified subject of a revolutionary poster — serious, monumental.</p>
+        <div class="specs"><span>diagonal</span><span>red/black</span><span>bold display</span><span>monumental</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Constructivist TAI">
+            <defs>
+              <clipPath id="diag"><polygon points="0,0 200,0 200,140 80,200 0,200"/></clipPath>
+            </defs>
+            <rect width="200" height="200" fill="#d8c896"/>
+            <g clip-path="url(#diag)">
+              <rect width="200" height="200" fill="#b83232"/>
+              <polygon points="0,0 200,0 200,60 0,200" fill="#1a1610" opacity="0.85"/>
+              <polygon points="0,200 200,200 0,140" fill="#1a1610"/>
+              <circle cx="40" cy="40" r="22" fill="#e8702a"/>
+              <line x1="0" y1="0" x2="200" y2="160" stroke="#f0d3a4" stroke-width="2" opacity="0.4"/>
+              <line x1="0" y1="40" x2="180" y2="200" stroke="#f0d3a4" stroke-width="1.4" opacity="0.3"/>
+            </g>
+            <g transform="translate(110 120) rotate(-8)" class="drift">
+              <ellipse cx="0" cy="48" rx="58" ry="42" fill="#e8702a"/>
+              <ellipse cx="0" cy="0" rx="36" ry="40" fill="#f0d3a4"/>
+              <path d="M-32 -22 C -30 -38 -8 -46 0 -46 C 8 -46 30 -38 32 -22 L 24 -28 C 14 -36 -14 -36 -24 -28 Z" fill="#1a1610"/>
+              <ellipse cx="-12" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+              <ellipse cx="12" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+              <circle cx="0" cy="-28" r="2" fill="#b83232"/>
+              <path d="M-10 12 Q0 8 10 12" stroke="#1a1610" stroke-width="2" fill="none"/>
+              <path d="M-30 -10 L 30 10" stroke="#b83232" stroke-width="2" opacity="0.6"/>
+            </g>
+            <g transform="translate(0 0)">
+              <text x="14" y="32" font-family="'Arial Black', sans-serif" font-size="22" font-weight="900" fill="#f0d3a4" letter-spacing="-1">ТАКС</text>
+              <text x="14" y="52" font-family="'Arial Black', sans-serif" font-size="14" font-weight="900" fill="#e8702a" letter-spacing="0">—ТАИ</text>
+              <text x="14" y="64" font-family="'Arial Black', sans-serif" font-size="6" font-weight="700" fill="#f0d3a4" letter-spacing="2">№ 1 / THE CITIZEN</text>
+            </g>
+            <g transform="translate(180 180) rotate(0)">
+              <rect x="-30" y="-10" width="60" height="14" fill="#e8702a"/>
+              <text x="0" y="0" font-family="'Arial Black', sans-serif" font-size="6" font-weight="900" fill="#1a1610" text-anchor="middle" letter-spacing="1">PROLETARIAT</text>
+            </g>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt7" data-option="07">
+        <div class="meta"><span class="num">A · 07</span><span class="chip">Woodcut</span></div>
+        <h2>Linocut</h2>
+        <div class="movement">Wartime print · 2-color</div>
+        <p class="rationale">Carved black ink lines, cross-hatched shading, two-color overlay (black + saffron), high contrast, hand-pulled feel. The look of a clandestine pamphlet — heavy, slow, deliberate.</p>
+        <div class="specs"><span>cross-hatch</span><span>2-color</span><span>carved edges</span><span>pamphlet feel</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Woodcut TAI">
+            <defs>
+              <filter id="woodGrain"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="13"/><feColorMatrix values="0 0 0 0 0.3 0 0 0 0 0.18 0 0 0 0 0.08 0 0 0 0.2 0"/></filter>
+              <pattern id="hatch" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+                <line x1="0" y1="0" x2="0" y2="4" stroke="#1a1610" stroke-width="0.7"/>
+              </pattern>
+              <pattern id="hatchCross" x="0" y="0" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+                <line x1="0" y1="0" x2="0" y2="3" stroke="#1a1610" stroke-width="0.6"/>
+              </pattern>
+            </defs>
+            <rect width="200" height="200" fill="#f0e3c4"/>
+            <rect width="200" height="200" filter="url(#woodGrain)" opacity="0.5"/>
+            <g transform="translate(0.5 0)">
+              <g transform="translate(100 110)">
+                <ellipse cx="0" cy="48" rx="62" ry="46" fill="url(#hatch)"/>
+                <ellipse cx="0" cy="48" rx="62" ry="46" fill="none" stroke="#1a1610" stroke-width="2.4"/>
+                <ellipse cx="0" cy="0" rx="40" ry="44" fill="#f0e3c4"/>
+                <ellipse cx="0" cy="0" rx="40" ry="44" fill="url(#hatchCross)" opacity="0.4"/>
+                <ellipse cx="0" cy="0" rx="40" ry="44" fill="none" stroke="#1a1610" stroke-width="2.4"/>
+                <path d="M-32 -22 C -30 -42 -8 -50 0 -50 C 8 -50 30 -42 32 -22 L 24 -28 C 14 -36 -14 -36 -24 -28 Z" fill="#1a1610"/>
+                <path d="M-32 -22 C -30 -42 -8 -50 0 -50 C 8 -50 30 -42 32 -22" fill="none" stroke="#1a1610" stroke-width="1.2"/>
+                <ellipse cx="-14" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+                <ellipse cx="14" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+                <circle cx="0" cy="-28" r="2.4" fill="#1a1610"/>
+                <path d="M-10 14 Q0 8 10 14" stroke="#1a1610" stroke-width="1.6" fill="none"/>
+                <path d="M-12 22 Q0 18 12 22" stroke="#1a1610" stroke-width="1.2" fill="none"/>
+                <line x1="-22" y1="6" x2="-14" y2="6" stroke="#1a1610" stroke-width="0.6"/>
+                <line x1="14" y1="6" x2="22" y2="6" stroke="#1a1610" stroke-width="0.6"/>
+                <line x1="-26" y1="10" x2="-18" y2="10" stroke="#1a1610" stroke-width="0.6"/>
+                <line x1="18" y1="10" x2="26" y2="10" stroke="#1a1610" stroke-width="0.6"/>
+              </g>
+            </g>
+            <g transform="translate(0 0.4)" opacity="0.95">
+              <g transform="translate(100 110)">
+                <ellipse cx="0" cy="48" rx="62" ry="46" fill="#e8702a" opacity="0.65"/>
+                <ellipse cx="0" cy="48" rx="62" ry="46" fill="none" stroke="#b83232" stroke-width="1.4"/>
+                <ellipse cx="0" cy="0" rx="40" ry="44" fill="#e8702a" opacity="0.45"/>
+              </g>
+            </g>
+            <g font-family="'Times New Roman', serif" fill="#1a1610">
+              <text x="14" y="32" font-size="16" font-weight="900" letter-spacing="-0.5">TAX TAI</text>
+              <text x="14" y="44" font-size="6" font-style="italic" letter-spacing="0.5">— a citizen's lament</text>
+            </g>
+            <g font-family="'Times New Roman', serif" fill="#1a1610">
+              <text x="186" y="194" font-size="6" font-weight="700" text-anchor="end" letter-spacing="0.5">PLATE III · 1947</text>
+            </g>
+            <rect x="0" y="0" width="200" height="200" fill="none" stroke="#1a1610" stroke-width="2"/>
+            <rect x="6" y="6" width="188" height="188" fill="none" stroke="#1a1610" stroke-width="0.6"/>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt8" data-option="08">
+        <div class="meta"><span class="num">A · 08</span><span class="chip">Punk Zine</span></div>
+        <h2>Xerox Riot</h2>
+        <div class="movement">cut-and-paste · 1977</div>
+        <p class="rationale">Photocopied, distressed, cut-and-paste, hand-scrawled type, hot pink + black + neon. Pure DIY chaos — the visual language of a stapled zine passed hand to hand.</p>
+        <div class="specs"><span>cut-paste</span><span>hand-scrawl</span><span>hot pink</span><span>tape marks</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Punk zine TAI">
+            <defs>
+              <filter id="punkGrain"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="21"/><feColorMatrix values="0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0.3 0"/></filter>
+              <pattern id="punkDots" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="0.6" fill="#1a1610" opacity="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="200" height="200" fill="#f0e8d4"/>
+            <rect width="200" height="200" filter="url(#punkGrain)" opacity="0.5"/>
+            <g transform="translate(60 30) rotate(-6)">
+              <rect x="-44" y="-18" width="88" height="40" fill="#ff3d8a"/>
+              <rect x="-44" y="-18" width="88" height="40" fill="url(#punkDots)" opacity="0.5"/>
+              <text x="0" y="6" font-family="'Courier New', monospace" font-size="14" font-weight="900" fill="#1a1610" text-anchor="middle" letter-spacing="1">F*** TAX</text>
+            </g>
+            <g transform="translate(70 80)">
+              <ellipse cx="0" cy="50" rx="58" ry="44" fill="#1a1610"/>
+              <ellipse cx="0" cy="0" rx="36" ry="40" fill="#f0d3a4"/>
+              <path d="M-32 -22 C -30 -38 -8 -46 0 -46 C 8 -46 30 -38 32 -22" fill="#1a1610"/>
+              <ellipse cx="-12" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+              <ellipse cx="12" cy="-2" rx="3" ry="4" fill="#1a1610"/>
+              <circle cx="0" cy="-28" r="2" fill="#1a1610"/>
+              <path d="M-10 14 Q0 8 10 14" stroke="#1a1610" stroke-width="2" fill="none"/>
+              <g stroke="#1a1610" stroke-width="0.6" fill="none">
+                <line x1="-26" y1="0" x2="-18" y2="0"/>
+                <line x1="-30" y1="6" x2="-20" y2="6"/>
+                <line x1="-26" y1="12" x2="-18" y2="12"/>
+                <line x1="18" y1="0" x2="26" y2="0"/>
+                <line x1="20" y1="6" x2="30" y2="6"/>
+                <line x1="18" y1="12" x2="26" y2="12"/>
+              </g>
+            </g>
+            <g transform="translate(150 130) rotate(8)">
+              <rect x="-30" y="-14" width="60" height="28" fill="#39ff8a"/>
+              <text x="0" y="4" font-family="'Courier New', monospace" font-size="10" font-weight="900" fill="#1a1610" text-anchor="middle">NO MORE!</text>
+            </g>
+            <g font-family="'Courier New', monospace" fill="#1a1610">
+              <text x="14" y="180" font-size="8" font-weight="900">TAI WAS HERE</text>
+              <text x="14" y="192" font-size="6" letter-spacing="0.4">p. 47 // ISSUE 003</text>
+            </g>
+            <g transform="translate(40 175)">
+              <line x1="-6" y1="-6" x2="6" y2="6" stroke="#1a1610" stroke-width="2"/>
+              <line x1="-6" y1="6" x2="6" y2="-6" stroke="#1a1610" stroke-width="2"/>
+            </g>
+            <g transform="translate(180 50)">
+              <text font-family="'Courier New', monospace" font-size="14" fill="#1a1610" font-weight="900">★</text>
+            </g>
+            <g transform="translate(20 60)">
+              <text font-family="'Courier New', monospace" font-size="10" fill="#1a1610" font-weight="900">!!!</text>
+            </g>
+            <g transform="translate(40 60)" opacity="0.8">
+              <rect x="0" y="-6" width="20" height="3" fill="#ff3d8a" transform="rotate(8)"/>
+              <rect x="0" y="-2" width="20" height="3" fill="#1a1610" transform="rotate(-4)"/>
+            </g>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt9" data-option="09">
+        <div class="meta"><span class="num">A · 09</span><span class="chip">Pixel Arcade</span></div>
+        <h2>Quarter Muncher</h2>
+        <div class="movement">16-bit · arcade · 1991</div>
+        <p class="rationale">Limited SNES-style palette, dithered shading, pixel-precise character sprite, score display, game frame. TAI as a video game NPC — the boss you didn't expect.</p>
+        <div class="specs"><span>32×32 grid</span><span>dithered</span><span>limited palette</span><span>score display</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Pixel arcade TAI" shape-rendering="crispEdges">
+            <rect width="200" height="200" fill="#0a0a2a"/>
+            <g fill="#1a1a4a">
+              <rect x="0" y="0" width="200" height="6"/>
+              <rect x="0" y="194" width="200" height="6"/>
+              <rect x="0" y="0" width="6" height="200"/>
+              <rect x="194" y="0" width="6" height="200"/>
+            </g>
+            <g transform="translate(0 0)" font-family="'Courier New', monospace" font-size="7" fill="#5cf0a8" font-weight="700">
+              <text x="12" y="18">1UP</text>
+              <text x="180" y="18" text-anchor="end">0034500</text>
+            </g>
+            <g transform="translate(50 56)">
+              <g fill="#f0d3a4">
+                <rect x="40" y="40" width="40" height="6"/>
+                <rect x="34" y="46" width="52" height="6"/>
+                <rect x="28" y="52" width="64" height="40"/>
+                <rect x="34" y="92" width="52" height="12"/>
+                <rect x="40" y="104" width="40" height="6"/>
+                <rect x="40" y="110" width="6" height="6"/>
+                <rect x="74" y="110" width="6" height="6"/>
+              </g>
+              <g fill="#1a1610">
+                <rect x="40" y="28" width="40" height="6"/>
+                <rect x="28" y="34" width="64" height="6"/>
+                <rect x="28" y="40" width="12" height="6"/>
+                <rect x="80" y="40" width="12" height="6"/>
+              </g>
+              <g fill="#e8e0c8">
+                <rect x="40" y="22" width="40" height="6"/>
+              </g>
+              <g fill="#1a1610">
+                <rect x="40" y="58" width="6" height="10"/>
+                <rect x="74" y="58" width="6" height="10"/>
+                <rect x="42" y="60" width="2" height="2"/>
+                <rect x="76" y="60" width="2" height="2"/>
+              </g>
+              <g fill="#b83232">
+                <rect x="58" y="46" width="4" height="4"/>
+              </g>
+              <g fill="#1a1610">
+                <rect x="52" y="80" width="16" height="2"/>
+                <rect x="48" y="82" width="24" height="2"/>
+              </g>
+              <g fill="#e8702a">
+                <rect x="22" y="110" width="76" height="30"/>
+                <rect x="16" y="116" width="6" height="24"/>
+                <rect x="98" y="116" width="6" height="24"/>
+                <rect x="22" y="140" width="76" height="6"/>
+              </g>
+              <g fill="#b83232">
+                <rect x="22" y="134" width="76" height="6"/>
+              </g>
+              <g fill="#000000" opacity="0.4">
+                <rect x="30" y="116" width="2" height="18"/>
+                <rect x="34" y="116" width="2" height="18"/>
+                <rect x="38" y="116" width="2" height="18"/>
+                <rect x="42" y="116" width="2" height="18"/>
+                <rect x="46" y="116" width="2" height="18"/>
+                <rect x="50" y="116" width="2" height="18"/>
+                <rect x="54" y="116" width="2" height="18"/>
+                <rect x="58" y="116" width="2" height="18"/>
+                <rect x="62" y="116" width="2" height="18"/>
+                <rect x="66" y="116" width="2" height="18"/>
+                <rect x="70" y="116" width="2" height="18"/>
+                <rect x="74" y="116" width="2" height="18"/>
+                <rect x="78" y="116" width="2" height="18"/>
+                <rect x="82" y="116" width="2" height="18"/>
+                <rect x="86" y="116" width="2" height="18"/>
+                <rect x="90" y="116" width="2" height="18"/>
+                <rect x="94" y="116" width="2" height="18"/>
+              </g>
+            </g>
+            <g transform="translate(0 0)">
+              <rect x="20" y="170" width="160" height="14" fill="#1a1a4a"/>
+              <text x="100" y="180" font-family="'Courier New', monospace" font-size="9" font-weight="700" fill="#5cf0a8" text-anchor="middle" letter-spacing="3">TAX · TAI</text>
+            </g>
+            <g fill="#5cf0a8" opacity="0.4">
+              <rect x="0" y="6" width="2" height="2"/>
+              <rect x="40" y="6" width="2" height="2"/>
+              <rect x="100" y="6" width="2" height="2"/>
+              <rect x="160" y="6" width="2" height="2"/>
+            </g>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card opt10" data-option="10">
+        <div class="meta"><span class="num">A · 10</span><span class="chip">Stencil · Graffiti</span></div>
+        <h2>Wall Paste-Up</h2>
+        <div class="movement">Banksy · street · wheatpaste</div>
+        <p class="rationale">Black stencil silhouette on a concrete wall, spray paint drips, wheatpaste edges, a hand-painted tag below. The visual language of a piece slapped on a wall overnight — seen in passing, not gone.</p>
+        <div class="specs"><span>stencil cut</span><span>spray drips</span><span>wheatpaste</span><span>concrete</span></div>
+        <div class="stage">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Stencil TAI">
+            <defs>
+              <filter id="concrete"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="5"/><feColorMatrix values="0 0 0 0 0.4 0 0 0 0 0.38 0 0 0 0 0.35 0 0 0 0.5 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+              <filter id="sprayDrip"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="1" seed="2"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+              <filter id="sprayEdge"><feGaussianBlur stdDeviation="0.4"/></filter>
+              <pattern id="brick" x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse">
+                <rect width="40" height="20" fill="#7a7468"/>
+                <line x1="0" y1="0" x2="40" y2="0" stroke="#5a5448" stroke-width="1"/>
+                <line x1="20" y1="0" x2="20" y2="10" stroke="#5a5448" stroke-width="1"/>
+                <line x1="0" y1="10" x2="0" y2="20" stroke="#5a5448" stroke-width="1"/>
+                <line x1="40" y1="10" x2="40" y2="20" stroke="#5a5448" stroke-width="1"/>
+                <line x1="0" y1="20" x2="40" y2="20" stroke="#5a5448" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="200" height="200" fill="url(#brick)"/>
+            <rect width="200" height="200" filter="url(#concrete)" opacity="0.4"/>
+            <g transform="translate(100 100)" class="spray">
+              <g fill="#faf6ec" opacity="0.96" filter="url(#sprayEdge)">
+                <path d="M-50 60 C -60 30 -40 10 -30 0 C -36 -28 -20 -50 0 -50 C 20 -50 36 -28 30 0 C 40 10 60 30 50 60 Z"/>
+              </g>
+              <g fill="#0a0a0a" filter="url(#sprayEdge)">
+                <path d="M-44 56 C -54 28 -36 12 -28 4 C -32 -22 -16 -44 0 -44 C 16 -44 32 -22 28 4 C 36 12 54 28 44 56 Z"/>
+                <path d="M-26 -16 C -22 -32 -6 -38 0 -38 C 6 -38 22 -32 26 -16 L 18 -22 C 8 -28 -8 -28 -18 -22 Z" fill="#0a0a0a"/>
+                <ellipse cx="-10" cy="-2" rx="2.4" ry="3" fill="#faf6ec"/>
+                <ellipse cx="10" cy="-2" rx="2.4" ry="3" fill="#faf6ec"/>
+                <circle cx="0" cy="-22" r="1.6" fill="#b83232"/>
+                <path d="M-8 10 L 8 10" stroke="#faf6ec" stroke-width="1.6"/>
+              </g>
+              <g fill="#0a0a0a" opacity="0.9">
+                <rect x="-2" y="36" width="4" height="40"/>
+                <rect x="14" y="38" width="2" height="20"/>
+                <rect x="-12" y="40" width="2" height="14"/>
+              </g>
+            </g>
+            <g transform="translate(100 175)">
+              <g font-family="'Permanent Marker', cursive" fill="#faf6ec" font-size="14" font-weight="700" text-anchor="middle">
+                <text>TAI WAS HERE</text>
+              </g>
+              <g font-family="'Permanent Marker', cursive" fill="#b83232" font-size="8" text-anchor="middle" letter-spacing="1">
+                <text y="14">— PAY YOUR TAXES —</text>
+              </g>
+            </g>
+            <g transform="translate(20 30)" opacity="0.5">
+              <text font-family="'Courier New', monospace" font-size="6" fill="#faf6ec" font-weight="700">001/100</text>
+            </g>
+            <g opacity="0.3">
+              <rect x="0" y="100" width="200" height="1" fill="#0a0a0a"/>
+              <rect x="0" y="105" width="200" height="1" fill="#0a0a0a" transform="translate(0 0.3)"/>
+            </g>
+          </svg>
+        </div>
+      </article>
+
+    </div>
+  </div>
+  <script>
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+        card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+      });
+    });
+  </script>
+</body>
+</html>

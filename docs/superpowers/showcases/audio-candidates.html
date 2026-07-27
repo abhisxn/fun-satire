@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fun Satire — Audio Candidate Showcase</title>
+  <style>
+    :root {
+      --bg: #111111;
+      --ink: #f4ecde;
+      --ink-dim: #9a9286;
+      --line: #2a2622;
+      --accent: #ff3d7f;
+      --accent-2: #4de3ff;
+      --accent-3: #c5d77a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-monospace, "SFMono-Regular", "Space Mono", Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 48px 0 6px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    p.lede { color: var(--ink-dim); margin: 0 0 24px; }
+    .meta { color: var(--ink-dim); font-size: 12px; margin: 0 0 32px; }
+    .group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 16px 0 0;
+    }
+    .card {
+      border: 1px solid var(--line);
+      padding: 18px 18px 16px;
+      border-radius: 4px;
+      background: #161310;
+    }
+    .card header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .label {
+      font-size: 12px;
+      color: var(--ink-dim);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .desc { margin: 6px 0 12px; color: #d6cdbf; }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    button {
+      appearance: none;
+      background: var(--ink);
+      color: var(--bg);
+      border: 0;
+      padding: 8px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .status {
+      font-size: 12px;
+      color: var(--ink-dim);
+      min-height: 1.2em;
+    }
+    .pick {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px dashed var(--line);
+      border-radius: 2px;
+      background: #1a1714;
+    }
+    .pick summary {
+      cursor: pointer;
+      color: var(--ink-dim);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .pick ol { margin: 10px 0 0; padding-left: 18px; }
+    .pick li { margin: 4px 0; }
+    .pick code {
+      background: #221d18;
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+    .stamp { color: var(--ink-dim); font-size: 12px; }
+    .stop-all {
+      margin: 8px 0 0;
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Audio Candidate Showcase</h1>
+    <p class="lede">Lane 4 — Phase B. Synthesized candidates for ambient bed and attack SFX envelopes. Tap a card to audition. Pick one per category; cite the label back to the assistant.</p>
+    <p class="meta">Web Audio API synthesis. No assets loaded. Click "Enable audio" once to satisfy autoplay policy.</p>
+    <div class="row">
+      <button id="enable" class="secondary">Enable audio</button>
+      <button id="stop-all" class="stop-all" disabled>Stop all</button>
+      <span class="stamp" id="ctx-state">context: not started</span>
+    </div>
+
+    <h2>1. Ambient Bed</h2>
+    <p class="lede">Long-running pad underneath all action. Routes to the <code>ambient</code> bus. Looped, low gain, non-fatiguing.</p>
+    <div class="group" id="ambient-group">
+      <div class="card" data-candidate="ambient.A">
+        <header><h3>Option A — Low Drone</h3><span class="label">80 Hz · LFO · dark</span></header>
+        <p class="desc">A single sine oscillator near 80 Hz, gently detuned and gain-modulated by a slow LFO (≈0.07 Hz). Deep, motionless, unsettling. Sits underneath everything else.</p>
+        <div class="row">
+          <button data-play="ambient.A">Play</button>
+          <span class="status" data-status="ambient.A">idle</span>
+        </div>
+      </div>
+      <div class="card" data-candidate="ambient.B">
+        <header><h3>Option B — Filtered Noise Bed</h3><span class="label">pink-ish · lowpass · wind</span></header>
+        <p class="desc">White noise passed through a low-pass biquad (≈400 Hz, Q ≈ 0.7) with a slow LFO sweeping the cutoff between 220 and 700 Hz. Subtle, airy, "room tone" feel.</p>
+        <div class="row">
+          <button data-play="ambient.B">Play</button>
+          <span class="status" data-status="ambient.B">idle</span>
+        </div>
+      </div>
+      <div class="card" data-candidate="ambient.C">
+        <header><h3>Option C — Pad Texture</h3><span class="label">3 detuned sines · slow AR</span></header>
+        <p class="desc">Three slightly detuned sine oscillators (root + fifth + octave, ±7 cents), routed through a slow attack/release envelope (≈1.5 s in, 2.5 s out). Warm, synth-pad, slightly melodic.</p>
+        <div class="row">
+          <button data-play="ambient.C">Play</button>
+          <span class="status" data-status="ambient.C">idle</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>2. Beam SFX (laserBurn.glow)</h2>
+    <p class="lede">Fired when the laser beam charges and draws toward the subject. One-shot, gated on glow + line stages.</p>
+    <div class="group">
+      <div class="card" data-candidate="beam.A">
+        <header><h3>Option A — Sharp attack, quick decay</h3><span class="label">sawtooth · 500→1400 Hz · ≈0.2 s</span></header>
+        <p class="desc">Sawtooth tone ramping 500 → 1400 Hz, 3 ms attack, exponential decay. Punchy and immediate. Reads as a hot beam.</p>
+        <div class="row">
+          <button data-play="beam.A">Play</button>
+          <span class="status" data-status="beam.A">idle</span>
+        </div>
+      </div>
+      <div class="card" data-candidate="beam.B">
+        <header><h3>Option B — Slow swell, sustained</h3><span class="label">sine + harmonic · 200→900 Hz · ≈0.6 s</span></header>
+        <p class="desc">Sine fundamental plus a soft 3× harmonic, gain swells over ≈0.4 s, holds at peak for ≈0.15 s, then fades. Builds tension before the burn.</p>
+        <div class="row">
+          <button data-play="beam.B">Play</button>
+          <span class="status" data-status="beam.B">idle</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>3. Arc SFX (electricBurn.start)</h2>
+    <p class="lede">Fired at the start of an electric-burn. Should feel jagged, short, and electric.</p>
+    <div class="group">
+      <div class="card" data-candidate="arc.A">
+        <header><h3>Option A — High-Voltage Spark</h3><span class="label">sawtooth + ringmod + high-pass</span></header>
+        <p class="desc">A sharp 120 Hz buzz with multiple harmonics (sawtooth wave modulated by a fast LFO/ringmod at 50 Hz to create a ragged, crackling quality), routed through a tight high-pass filter (1 kHz) and a 150 ms exponential decay envelope. Captures a classic high-voltage arc zap.</p>
+        <div class="row">
+          <button data-play="arc.A">Play</button>
+          <span class="status" data-status="arc.A">idle</span>
+        </div>
+      </div>
+      <div class="card" data-candidate="arc.B">
+        <header><h3>Option B — Static Current Buzz</h3><span class="label">triangle/square buzz + noise crackle</span></header>
+        <p class="desc">A 60 Hz current hum (using a square wave for raw buzz, combined with a high-pass filtered noise burst to simulate a physical spark gap discharge) over 250 ms. Includes rapid micro-gated volume drops to simulate sputtering electrical contact.</p>
+        <div class="row">
+          <button data-play="arc.B">Play</button>
+          <span class="status" data-status="arc.B">idle</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>4. Bite SFX (bugEat.start)</h2>
+    <p class="lede">Fired at the first chomp of a bug eating an eye. Should feel mouthy, percussive, immediate.</p>
+    <div class="group">
+      <div class="card" data-candidate="bite.A">
+        <header><h3>Option A — Short percussive thud</h3><span class="label">sine 120 Hz + click · ≈60 ms</span></header>
+        <p class="desc">A low sine thud at ≈120 Hz with a 2 ms attack / 50 ms decay, plus a 5 ms transient click on top. Compact, snappy, "snap of teeth".</p>
+        <div class="row">
+          <button data-play="bite.A">Play</button>
+          <span class="status" data-status="bite.A">idle</span>
+        </div>
+      </div>
+      <div class="card" data-candidate="bite.B">
+        <header><h3>Option B — Chomping noise with filter sweep</h3><span class="label">noise · BP 2 kHz → 600 Hz · ≈100 ms</span></header>
+        <p class="desc">White noise routed through a band-pass whose center frequency sweeps from 2 kHz down to 600 Hz. Reads as a wet chomp closing shut.</p>
+        <div class="row">
+          <button data-play="bite.B">Play</button>
+          <span class="status" data-status="bite.B">idle</span>
+        </div>
+      </div>
+    </div>
+
+    <details class="pick">
+      <summary>How to report picks back</summary>
+      <ol>
+        <li>Ambient bed: <code>ambient.A</code>, <code>ambient.B</code>, or <code>ambient.C</code></li>
+        <li>Beam SFX: <code>beam.A</code> or <code>beam.B</code></li>
+        <li>Arc SFX: <code>arc.A</code> or <code>arc.B</code></li>
+        <li>Bite SFX: <code>bite.A</code> or <code>bite.B</code></li>
+      </ol>
+    </details>
+  </div>
+
+  <script type="module">
+    // ---------- minimal Web Audio helpers (synthesized; no assets) ----------
+    const state = {
+      ctx: null,
+      master: null,
+      activeHandles: new Set(),
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const statusEl = (id) => document.querySelector(`[data-status="${id}"]`);
+
+    function setCtxLabel() {
+      if (!state.ctx) { $("#ctx-state").textContent = "context: not started"; return; }
+      $("#ctx-state").textContent = `context: ${state.ctx.state}`;
+    }
+
+    async function ensureCtx() {
+      if (!state.ctx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        state.ctx = new Ctx();
+        state.master = state.ctx.createGain();
+        state.master.gain.value = 0.6;
+        state.master.connect(state.ctx.destination);
+      }
+      if (state.ctx.state === "suspended") await state.ctx.resume();
+      setCtxLabel();
+    }
+
+    function trackHandle(handle, label) {
+      state.activeHandles.add(handle);
+      const stop = handle.stop;
+      handle.stop = () => { stop(); state.activeHandles.delete(handle); setStatus(label, "idle"); };
+      return handle;
+    }
+
+    function setStatus(id, msg) {
+      const el = statusEl(id);
+      if (el) el.textContent = msg;
+    }
+
+    function stopAll() {
+      for (const h of [...state.activeHandles]) {
+        try { h.stop(); } catch { /* already stopped */ }
+      }
+      state.activeHandles.clear();
+    }
+
+    // ---------- shared synth primitives ----------
+    function nowSec() { return state.ctx.currentTime; }
+    function gainNode(initial = 0.0001) {
+      const g = state.ctx.createGain();
+      g.gain.value = initial;
+      return g;
+    }
+    function osc(type, freq, start = false) {
+      const o = state.ctx.createOscillator();
+      o.type = type;
+      o.frequency.value = freq;
+      if (start) o.start();
+      return o;
+    }
+    function whiteNoiseBuffer(durationSec) {
+      const sr = state.ctx.sampleRate;
+      const len = Math.max(1, Math.floor(sr * durationSec));
+      const buf = state.ctx.createBuffer(1, len, sr);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      return buf;
+    }
+    function noiseSource(durationSec) {
+      const src = state.ctx.createBufferSource();
+      src.buffer = whiteNoiseBuffer(durationSec);
+      return src;
+    }
+    function biquad(type, freq, q = 1) {
+      const f = state.ctx.createBiquadFilter();
+      f.type = type;
+      f.frequency.value = freq;
+      f.Q.value = q;
+      return f;
+    }
+    function expDecay(gain, fromVal, toVal, start, end) {
+      gain.gain.cancelScheduledValues(start);
+      gain.gain.setValueAtTime(fromVal, start);
+      gain.gain.exponentialRampToValueAtTime(Math.max(toVal, 0.0001), end);
+    }
+    function linearRamp(param, fromVal, toVal, start, end) {
+      param.cancelScheduledValues(start);
+      param.setValueAtTime(fromVal, start);
+      param.linearRampToValueAtTime(toVal, end);
+    }
+
+    // ---------- 1. ambient bed candidates ----------
+    function playAmbientA() {
+      const ctx = state.ctx;
+      const out = gainNode(0); out.gain.value = 0; out.connect(state.master);
+      const lfo = osc("sine", 0.07, true);
+      const lfoGain = gainNode(30); lfoGain.gain.value = 30;
+      lfo.connect(lfoGain);
+      const o1 = osc("sine", 80); o1.detune.value = -3;
+      const o2 = osc("sine", 80.4); o2.detune.value = 4;
+      const o3 = osc("triangle", 40);
+      o1.connect(out); o2.connect(out); o3.connect(out);
+      lfoGain.connect(o1.detune);
+      lfoGain.connect(o2.detune);
+      const t0 = nowSec();
+      linearRamp(out.gain, 0, 0.18, t0, t0 + 1.2);
+      o1.start(t0); o2.start(t0); o3.start(t0);
+      return trackHandle({
+        stop: () => {
+          const t = nowSec();
+          linearRamp(out.gain, out.gain.value, 0.0001, t, t + 0.6);
+          [o1, o2, o3, lfo].forEach((n) => { try { n.stop(t + 0.7); } catch { /* */ } });
+          setTimeout(() => { try { out.disconnect(); } catch { /* */ } }, 800);
+        }
+      }, "ambient.A");
+    }
+
+    function playAmbientB() {
+      const ctx = state.ctx;
+      const lp = biquad("lowpass", 400, 0.7);
+      const lfo = osc("sine", 0.05, true);
+      const lfoGain = gainNode(240); lfoGain.gain.value = 240;
+      lfo.connect(lfoGain); lfoGain.connect(lp.frequency);
+      const out = gainNode(0); out.gain.value = 0;
+      const src = noiseSource(6);
+      src.connect(lp); lp.connect(out); out.connect(state.master);
+      const t0 = nowSec();
+      linearRamp(out.gain, 0, 0.22, t0, t0 + 1.5);
+      src.start(t0);
+      return trackHandle({
+        stop: () => {
+          const t = nowSec();
+          linearRamp(out.gain, out.gain.value, 0.0001, t, t + 0.8);
+          [src, lfo].forEach((n) => { try { n.stop(t + 0.9); } catch { /* */ } });
+          setTimeout(() => { try { out.disconnect(); } catch { /* */ } }, 1000);
+        }
+      }, "ambient.B");
+    }
+
+    function playAmbientC() {
+      const ctx = state.ctx;
+      const out = gainNode(0); out.gain.value = 0; out.connect(state.master);
+      const root = 110;
+      const detunesCents = [-7, 0, 7];
+      const ratios = [1, 1.5, 2];
+      const oscs = ratios.map((r, i) => {
+        const o = osc("sine", root * r);
+        o.detune.value = detunesCents[i];
+        o.connect(out);
+        return o;
+      });
+      const t0 = nowSec();
+      linearRamp(out.gain, 0, 0.14, t0, t0 + 1.5);
+      oscs.forEach((o) => o.start(t0));
+      return trackHandle({
+        stop: () => {
+          const t = nowSec();
+          linearRamp(out.gain, out.gain.value, 0.0001, t, t + 2.0);
+          oscs.forEach((o) => { try { o.stop(t + 2.2); } catch { /* */ } });
+          setTimeout(() => { try { out.disconnect(); } catch { /* */ } }, 2300);
+        }
+      }, "ambient.C");
+    }
+
+    // ---------- 2. beam SFX candidates ----------
+    function playBeamA() {
+      const t0 = nowSec();
+      const dur = 0.22;
+      const g = gainNode(0.0001); g.connect(state.master);
+      const o = osc("sawtooth", 500, false); o.frequency.setValueAtTime(500, t0);
+      o.frequency.linearRampToValueAtTime(1400, t0 + dur);
+      o.connect(g); o.start(t0); o.stop(t0 + dur + 0.05);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.32, t0 + 0.005);
+      expDecay(g.gain, 0.32, 0.0001, t0 + 0.005, t0 + dur);
+      return trackHandle({ stop: () => { try { o.stop(); g.disconnect(); } catch { /* */ } } }, "beam.A");
+    }
+
+    function playBeamB() {
+      const t0 = nowSec();
+      const total = 0.6;
+      const g = gainNode(0.0001); g.connect(state.master);
+      const o1 = osc("sine", 200, false);
+      const o2 = osc("sine", 600, false);
+      o1.frequency.linearRampToValueAtTime(900, t0 + 0.4);
+      o2.frequency.linearRampToValueAtTime(2700, t0 + 0.4);
+      o1.connect(g); o2.connect(g);
+      o1.start(t0); o2.start(t0);
+      o1.stop(t0 + total + 0.05); o2.stop(t0 + total + 0.05);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.22, t0 + 0.4);
+      g.gain.setValueAtTime(0.22, t0 + 0.55);
+      g.gain.linearRampToValueAtTime(0.0001, t0 + total);
+      return trackHandle({ stop: () => { try { o1.stop(); o2.stop(); g.disconnect(); } catch { /* */ } } }, "beam.B");
+    }
+
+    // ---------- 3. arc SFX candidates ----------
+    function playArcA() {
+      const t0 = nowSec();
+      const dur = 0.15;
+      const g = gainNode(0.0001); g.connect(state.master);
+      
+      // Carrier at 120 Hz, sawtooth for aggressive buzz
+      const carrier = osc("sawtooth", 120, false);
+      // Modulator at 50 Hz to introduce rapid ring-modulation crackle
+      const modulator = osc("sine", 50, false);
+      const modGain = gainNode(100); modGain.gain.value = 100;
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+
+      // High-pass filter to make it feel sharp and electrical rather than heavy
+      const hp = biquad("highpass", 1000, 1.5);
+      carrier.connect(hp);
+      hp.connect(g);
+
+      carrier.start(t0); modulator.start(t0);
+      carrier.stop(t0 + dur + 0.05); modulator.stop(t0 + dur + 0.05);
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.38, t0 + 0.005);
+      expDecay(g.gain, 0.38, 0.0001, t0 + 0.005, t0 + dur);
+
+      return trackHandle({ stop: () => { try { carrier.stop(); modulator.stop(); } catch {} g.disconnect(); } }, "arc.A");
+    }
+
+    function playArcB() {
+      const t0 = nowSec();
+      const dur = 0.25;
+      const g = gainNode(0.0001); g.connect(state.master);
+      
+      // Raw 60 Hz hum with square wave harmonics
+      const hum = osc("square", 60, false);
+      const hpFilter = biquad("highpass", 400, 1.0);
+      hum.connect(hpFilter); hpFilter.connect(g);
+
+      // White noise for physical spark/crackles
+      const noiseG = gainNode(0.0001); noiseG.connect(state.master);
+      const noise = noiseSource(dur);
+      const noiseFilter = biquad("bandpass", 2500, 2.0);
+      noise.connect(noiseFilter); noiseFilter.connect(noiseG);
+
+      hum.start(t0); noise.start(t0);
+      hum.stop(t0 + dur + 0.05); noise.stop(t0 + dur + 0.05);
+
+      // Hum envelope with sputtering micro-gates
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.3, t0 + 0.01);
+      // Sputter 1
+      g.gain.setValueAtTime(0.3, t0 + 0.06);
+      g.gain.setValueAtTime(0.05, t0 + 0.07);
+      g.gain.setValueAtTime(0.3, t0 + 0.09);
+      // Sputter 2
+      g.gain.setValueAtTime(0.3, t0 + 0.16);
+      g.gain.setValueAtTime(0.02, t0 + 0.17);
+      g.gain.setValueAtTime(0.2, t0 + 0.19);
+      g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+
+      // Noise crackle envelope
+      noiseG.gain.setValueAtTime(0.0001, t0);
+      noiseG.gain.linearRampToValueAtTime(0.4, t0 + 0.005);
+      expDecay(noiseG.gain, 0.4, 0.0001, t0 + 0.005, t0 + dur);
+
+      return trackHandle({ stop: () => { try { hum.stop(); noise.stop(); } catch {} g.disconnect(); noiseG.disconnect(); } }, "arc.B");
+    }
+
+    // ---------- 4. bite SFX candidates ----------
+    function playBiteA() {
+      const t0 = nowSec();
+      const dur = 0.06;
+      const g = gainNode(0.0001); g.connect(state.master);
+      const o = osc("sine", 120);
+      o.connect(g); o.start(t0); o.stop(t0 + dur + 0.02);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.4, t0 + 0.002);
+      g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+      // transient click
+      const click = noiseSource(0.01);
+      const hp = biquad("highpass", 1800, 1);
+      const cg = gainNode(0.5);
+      click.connect(hp); hp.connect(cg); cg.connect(state.master);
+      click.start(t0); click.stop(t0 + 0.02);
+      return trackHandle({ stop: () => { try { o.stop(); click.stop(); } catch { /* */ } g.disconnect(); cg.disconnect(); } }, "bite.A");
+    }
+
+    function playBiteB() {
+      const t0 = nowSec();
+      const dur = 0.1;
+      const bp = biquad("bandpass", 2000, 2);
+      const g = gainNode(0.0001);
+      bp.connect(g); g.connect(state.master);
+      const src = noiseSource(dur + 0.05);
+      src.connect(bp);
+      bp.frequency.setValueAtTime(2000, t0);
+      bp.frequency.linearRampToValueAtTime(600, t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.4, t0 + 0.003);
+      g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+      src.start(t0); src.stop(t0 + dur + 0.05);
+      return trackHandle({ stop: () => { try { src.stop(); } catch { /* */ } g.disconnect(); } }, "bite.B");
+    }
+
+    // ---------- wiring ----------
+    const PLAYERS = {
+      "ambient.A": playAmbientA,
+      "ambient.B": playAmbientB,
+      "ambient.C": playAmbientC,
+      "beam.A": playBeamA,
+      "beam.B": playBeamB,
+      "arc.A": playArcA,
+      "arc.B": playArcB,
+      "bite.A": playBiteA,
+      "bite.B": playBiteB,
+    };
+
+    async function playCandidate(id) {
+      await ensureCtx();
+      const player = PLAYERS[id];
+      if (!player) return;
+      setStatus(id, "playing…");
+      const handle = player();
+      if (handle && handle.stop) {
+        // If not a tracked handle, no status change
+      }
+      if (id.startsWith("ambient")) {
+        // ambient beds are long; mark stop-all useful
+        $("#stop-all").disabled = false;
+      } else {
+        // short SFX — clear status after expected duration
+        const clearMs = id === "beam.A" ? 250 : id === "beam.B" ? 700 : id === "arc.A" ? 200 : id === "arc.B" ? 150 : 200;
+        setTimeout(() => setStatus(id, "idle"), clearMs);
+      }
+    }
+
+    document.getElementById("enable").addEventListener("click", async () => {
+      await ensureCtx();
+      setCtxLabel();
+    });
+
+    document.getElementById("stop-all").addEventListener("click", () => {
+      stopAll();
+      ["ambient.A", "ambient.B", "ambient.C"].forEach((id) => setStatus(id, "idle"));
+      $("#stop-all").disabled = true;
+    });
+
+    $$("[data-play]").forEach((btn) => {
+      btn.addEventListener("click", () => playCandidate(btn.dataset.play));
+    });
+  </script>
+</body>
+</html>
