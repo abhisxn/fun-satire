@@ -63,7 +63,7 @@ function makeOptions(overrides: Record<string, unknown> = {}) {
     quantity: 20,
     repelMultiplier: 1,
     nowMs: 0,
-    subject: null,
+    subjects: [],
     chargeT: 0,
     assistRadiusPx: 140,
     ...overrides,
