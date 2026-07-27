@@ -273,6 +273,7 @@ engine.events.on("tick", ({ phase, dt }) => {
       subject: subjectRenderInfo,
       chargeT: ringT,
       assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
+      imageCache: imageAssets,
     });
     void inCooldown;
   }
