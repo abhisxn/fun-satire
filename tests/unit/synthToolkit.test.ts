@@ -37,6 +37,7 @@ class FakeBufferSource {
 class FakeFilter {
   type = "";
   frequency = new FakeParam();
+  Q = new FakeParam();
   connected: unknown[] = [];
   connect(dest: unknown): void { this.connected.push(dest); }
 }

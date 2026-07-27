@@ -6,11 +6,13 @@ registerAudioCue({
   id: "laserBurn.glow",
   synth: (ctx, dest) =>
     playTone(ctx, dest, {
-      freqStartHz: 500,
-      freqEndHz: 1400,
+      freqStartHz: 300,
+      freqEndHz: 1200,
       durationMs: LASER_BURN.glowMs + LASER_BURN.lineMs,
       shape: "sawtooth",
       gainPeak: 0.3,
+      attackMs: 200,
+      releaseMs: 300,
     }),
 });
 

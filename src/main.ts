@@ -46,6 +46,7 @@ import { AudioEngine } from "./audio/AudioEngine";
 import { AudioControl } from "./hud/AudioControl";
 import { startAmbientForMode, startTenseFiller } from "./audio/ambientBeds";
 import { startMusicBed } from "./audio/musicBed";
+import { startAmbientBedTrack } from "./audio/ambientBedTrack";
 
 type LifecycleState = "alive" | "dying";
 type LocomotionState = "idle" | "flee" | "dragged";
@@ -523,6 +524,7 @@ engine.start();
 const unlockAudio = (): void => {
   audioEngine.unlock();
   void startMusicBed(audioEngine, "/audio/music-bed.mp3");
+  void startAmbientBedTrack(audioEngine);
   startTenseFiller(audioEngine);
   startAmbientForMode(audioEngine, currentMode);
 };
