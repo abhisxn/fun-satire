@@ -7,6 +7,20 @@ export const ENTITY_FACTORY = Object.freeze({
   maxAttempts: 64,
 } as const);
 
+export const SIZE_SCALES = Object.freeze({
+  xl: 1.4,
+  l: 1.15,
+  m: 1.0,
+  s: 0.8,
+} as const);
+
+export type SizeClass = keyof typeof SIZE_SCALES;
+
+export function pickSizeClass(rng: Rng): SizeClass {
+  const classes: SizeClass[] = ["xl", "l", "m", "s"];
+  return classes[Math.floor(rng.float() * classes.length)]!;
+}
+
 export type EntityFactoryOptions = {
   rng: Rng;
   width: number;
@@ -35,6 +49,8 @@ const buildEntity = (
   entry: EyeManifestEntry,
   pos: Vec2,
   scale: number,
+  sizeClass: SizeClass,
+  sizeScale: number,
 ): Entity => ({
   id,
   content: {
@@ -52,6 +68,8 @@ const buildEntity = (
       blinkIntervalMaxMs: entry.behavior.blinkIntervalMaxMs,
       blinkDurationMs: entry.behavior.blinkDurationMs,
       pupilTrackMs: entry.behavior.pupilTrackMs,
+      sizeClass,
+      sizeScale,
     },
   },
   lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
@@ -88,26 +106,29 @@ export function spawnEyes(opts: EntityFactoryOptions): FactoryResult {
   const placed: Entity[] = [];
   let rejected = 0;
   let nextId = 1;
-  for (let i = 0; i < target; i++) {
-    const entry = manifest[i % manifest.length]!;
-    const sepSq = Math.pow(
-      ENTITY_FACTORY.minSeparationPx * (entry.physics.baseSizePx / 56),
-      2,
-    );
-    let attempt = 0;
-    let placedOk = false;
-    for (attempt = 0; attempt < ENTITY_FACTORY.maxAttempts; attempt++) {
-      const pos = samplePos(rng, entry, width, height);
-      if (!overlapsAny(pos, placed, sepSq)) {
-        placed.push(
-          buildEntity(nextId++, entry, pos, jitterScale(entry, rng)),
-        );
-        placedOk = true;
-        break;
+    for (let i = 0; i < target; i++) {
+      const entry = manifest[i % manifest.length]!;
+      const sepSq = Math.pow(
+        ENTITY_FACTORY.minSeparationPx * (entry.physics.baseSizePx / 56),
+        2,
+      );
+      let attempt = 0;
+      let placedOk = false;
+      for (attempt = 0; attempt < ENTITY_FACTORY.maxAttempts; attempt++) {
+        const pos = samplePos(rng, entry, width, height);
+        if (!overlapsAny(pos, placed, sepSq)) {
+          const sizeClass = pickSizeClass(rng);
+          const sizeScale = SIZE_SCALES[sizeClass];
+          const jitter = jitterScale(entry, rng);
+          placed.push(
+            buildEntity(nextId++, entry, pos, jitter * sizeScale, sizeClass, sizeScale),
+          );
+          placedOk = true;
+          break;
+        }
       }
+      if (!placedOk) rejected++;
     }
-    if (!placedOk) rejected++;
-  }
   return { entities: placed, rejected };
 }
 
@@ -163,7 +184,9 @@ export function spawnOneCrowdMember(opts: SpawnOneCrowdMemberOptions): Entity | 
     pos = samplePos(rng, entry, width, height);
   }
   const scale = jitterScale(entry, rng);
-  return buildEntity(nextId, entry, pos, scale);
+  const sizeClass = pickSizeClass(rng);
+  const sizeScale = SIZE_SCALES[sizeClass];
+  return buildEntity(nextId, entry, pos, scale * sizeScale, sizeClass, sizeScale);
 }
 
 export function pickCrowdMemberToDespawn(existing: readonly Entity[]): Entity | null {
