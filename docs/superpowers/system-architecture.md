@@ -57,6 +57,12 @@
 - **Decision**: Every subject manifest must declare `visual.styleGuardrail: 'flat-illustrated'`; manifest validation (`content/schema.ts`, `content/manifestLoader.ts`) rejects any entry missing or misusing it. This is a structural authoring-pipeline/schema gate, not a runtime image-content check — the guarantee comes from what's allowed into a manifest, not from inspecting pixels.
 - **Consequence**: All subjects, including any future real-figure caricatures, are constrained to flat, paper-craft-style, satirical illustration — never photoreal, never doctored photos, no hate iconography. Adding a subject that violates this fails validation before it can render.
 
+### ADR 009: Curated avatar sticker guardrail (`styleGuardrail: 'curated-avatar'`)
+- **Status**: Accepted (PR1 — premium visual & collective attack overhaul).
+- **Context**: PR1 added an avatar image pipeline to `SubjectSkin`, letting a subject display a curated pre-authored illustrated sticker instead of the procedural `flat-illustrated` drawer path. The same likeness/defamation risk that motivated ADR 008 applies: photoreal images, doctored photographs, or hate iconography must not enter the subject roster through the new image path.
+- **Decision**: Widen `SubjectManifestEntry.visual.styleGuardrail` to admit `curated-avatar` alongside `flat-illustrated`. A `curated-avatar` entry must carry a registered `assetId` from `AVATAR_ASSET_REGISTRY`. `manifestLoader.ts` validates the schema shape and a non-empty `assetId`; human curation-time review enforces that the asset is a cartoon/caricature illustration — never photoreal, never a doctored photograph, never hate iconography. The runtime loads only assets that pass both gates.
+- **Consequence**: Avatar subjects are gated by the same structural authoring pipeline as procedural subjects; the engine never loads arbitrary unreviewed images.
+
 ## 3. Core Definitions
 
 | Term | Definition |
@@ -76,17 +82,22 @@ graph TD
   Pointer --> Engine[Engine]
   Pointer --> Drag[DragController]
   Pointer --> Power[PowerController]
-  
+  Pointer --> HUD[HUD / SubjectDrawer]
+
   Engine -->|Tick pre-physics| Power
   Engine -->|Tick pre-physics| Effects[EffectSystem]
   Engine -->|Tick pre-physics| Physics[ForceField/SpringHome/Integrator]
   Engine -->|Tick render| Renderer
-  
+
   Power -->|Start| Effects
   Effects -->|Spawn| Particles[ParticleSystem]
   Effects -->|Kill| Store[EntityStore]
-  
+  Effects -->|Collective contributors| Renderer
+
   Renderer -->|Query| Store
-  Renderer -->|Draw| Drawers[Eye/FieldLines/Cursor]
+  Renderer -->|Draw| Drawers[Eye/FieldLines/Cursor/Subject/Avatar/CollectiveEffect]
   Renderer -->|Draw| Particles
+  Drawers -->|Assets| ImageAssetCache[ImageAssetCache]
+
+  Audio[AudioEngine] -->|Ambient + SFX| Output[Audio Output]
 ```
