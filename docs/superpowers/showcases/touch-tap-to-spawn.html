@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Touch Tap-to-Spawn — Decision Gate</title>
+  <style>
+    :root {
+      --bg: #EDE7DD;
+      --ink: #2A2420;
+      --rule: #C9C2B5;
+      --accent: #5B7A8C;
+    }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: "Fraunces", Georgia, serif; }
+    body { padding: 32px 40px 64px; max-width: 1100px; margin: 0 auto; }
+    h1 { font-weight: 500; font-size: 32px; margin: 0 0 8px; letter-spacing: -0.01em; }
+    h2 { font-weight: 500; font-size: 20px; margin: 0 0 12px; }
+    .sub { color: var(--accent); font-size: 14px; margin: 0 0 32px; }
+    .sub code { font-family: "Space Mono", monospace; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .card { background: #fff; border: 1px solid var(--rule); padding: 20px 22px 24px; }
+    .card .label { font-family: "Space Mono", monospace; font-size: 13px; color: var(--ink); margin-bottom: 10px; letter-spacing: 0.04em; }
+    .card .label b { font-weight: 700; font-size: 16px; background: var(--ink); color: var(--bg); padding: 2px 8px; margin-right: 8px; }
+    .card .desc { font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
+    .mock { background: var(--bg); border: 1px dashed var(--rule); height: 200px; position: relative; margin-bottom: 16px; overflow: hidden; }
+    .mock .canvas-area { position: absolute; inset: 0; }
+    .mock .tap-card { position: absolute; bottom: 12px; left: 12px; width: 60px; height: 44px; background: #fff; border: 1px solid var(--ink); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: "Space Mono", monospace; font-size: 10px; }
+    .mock .tap-card::after { content: "tap"; }
+    .mock .finger { position: absolute; width: 22px; height: 22px; border: 2px solid var(--accent); border-radius: 50%; }
+    .mock .arrow { position: absolute; stroke: var(--accent); stroke-width: 2; fill: none; }
+    .mock .spawn-mark { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: rgba(91,122,140,0.5); border: 1.5px solid var(--accent); }
+    .mock .crosshair { position: absolute; width: 24px; height: 24px; }
+    .mock .crosshair::before, .mock .crosshair::after { content: ""; position: absolute; background: var(--accent); }
+    .mock .crosshair::before { width: 24px; height: 2px; top: 11px; left: 0; }
+    .mock .crosshair::after { width: 2px; height: 24px; top: 0; left: 11px; }
+    .mock .step-label { position: absolute; font-family: "Space Mono", monospace; font-size: 10px; color: var(--accent); }
+    ul.tradeoffs { font-size: 13px; line-height: 1.55; margin: 0; padding-left: 18px; }
+    ul.tradeoffs li { margin-bottom: 6px; }
+    ul.tradeoffs .plus { color: #3d7a4f; }
+    ul.tradeoffs .minus { color: #a3372f; }
+  </style>
+</head>
+<body>
+  <h1>Touch Tap-to-Spawn — Decision Gate</h1>
+  <p class="sub">PR2 Task 3 · Multi-Subject Targeting. Pick <b>A</b> or <b>B</b> before implementation proceeds.</p>
+
+  <div class="grid">
+    <!-- OPTION A -->
+    <div class="card">
+      <div class="label"><b>A</b> Tap → spawn at center</div>
+      <p class="desc">Tapping a subject card immediately spawns the subject at the canvas center. Single tap, single action, no intermediate state.</p>
+      <div class="mock">
+        <div class="canvas-area">
+          <div class="crosshair" style="top: 88px; left: 268px;"></div>
+          <div class="step-label" style="top: 118px; left: 245px;">spawn point (fixed)</div>
+        </div>
+        <div class="finger" style="bottom: 26px; left: 20px;"></div>
+        <div class="tap-card"></div>
+        <svg class="mock-svg" style="position:absolute; inset:0; width:100%; height:100%;">
+          <path class="arrow" d="M 55 172 Q 160 60 268 100" marker-end="url(#arrowhead-a)" />
+          <defs>
+            <marker id="arrowhead-a" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#5B7A8C" />
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <ul class="tradeoffs">
+        <li><span class="plus">+</span> Simplest to implement; one event handler, no mode state to track.</li>
+        <li><span class="plus">+</span> Zero ambiguity on touch devices — no risk of the "next tap" landing on the wrong target (HUD button, another card, etc.).</li>
+        <li><span class="plus">+</span> Matches existing desktop click-to-spawn-at-cursor pattern if center is treated as touch's cursor-equivalent.</li>
+        <li><span class="minus">−</span> User has no control over placement; may need to drag the subject afterward if center is occupied or undesired.</li>
+        <li><span class="minus">−</span> Multiple taps in a row stack subjects at the same point, requiring the physics separation system to resolve overlap.</li>
+      </ul>
+    </div>
+
+    <!-- OPTION B -->
+    <div class="card">
+      <div class="label"><b>B</b> Tap → placement mode → tap canvas</div>
+      <p class="desc">Tapping a card arms "placement mode" (card highlights, cursor/HUD shows a hint). The next tap on the canvas spawns the subject at that exact point.</p>
+      <div class="mock">
+        <div class="canvas-area">
+          <div class="spawn-mark" style="top: 40px; left: 320px;"></div>
+          <div class="step-label" style="top: 66px; left: 296px;">② tap canvas → spawn here</div>
+        </div>
+        <div class="finger" style="bottom: 26px; left: 20px;"></div>
+        <div class="tap-card" style="outline: 2px solid var(--accent); outline-offset: 2px;"></div>
+        <div class="step-label" style="bottom: 6px; left: 82px;">① tap card (armed)</div>
+      </div>
+      <ul class="tradeoffs">
+        <li><span class="plus">+</span> Precise placement — user chooses exactly where the subject appears, same as a future drag-and-drop flow.</li>
+        <li><span class="plus">+</span> Scales naturally to placing multiple subjects of different types in sequence.</li>
+        <li><span class="minus">−</span> Requires a mode/state machine addition ("armed" state, cancel-on-outside-tap or cancel-on-second-card-tap, visual affordance for "what happens next").</li>
+        <li><span class="minus">−</span> Ambiguous edge cases: what if the user taps another card while armed? Taps a HUD control? Never taps the canvas at all?</li>
+        <li><span class="minus">−</span> Two-step interactions are less discoverable without an explicit instructional hint, especially on first use.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
