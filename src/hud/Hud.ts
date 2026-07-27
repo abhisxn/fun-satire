@@ -129,7 +129,7 @@ export class Hud {
     }
     const preview = this.drawer.getComposePreviewCard();
     this.dragSource.attachCard(preview.el, preview.getSkin);
-    this.dragSource.onSwap((skin) => {
+    this.dragSource.onDrop(({ skin }) => {
       this.drawer.close();
       this.subjectSkinChangeCb?.(skin);
     });
