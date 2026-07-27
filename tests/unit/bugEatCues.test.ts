@@ -10,7 +10,7 @@ class FakeAudioContext {
     return { buffer: null, connect() {}, start() {}, stop() {} };
   }
   createBiquadFilter() {
-    return { type: "", frequency: { value: 0 }, connect() {} };
+    return { type: "", frequency: { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {} }, Q: { value: 1 }, connect() {} };
   }
   createGain() {
     return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, value: 1 }, connect() {} };

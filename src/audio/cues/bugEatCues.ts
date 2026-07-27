@@ -4,9 +4,7 @@ import { playNoiseBurst } from "../synthToolkit";
 registerAudioCue({
   id: "bugEat.start",
   synth: (ctx, dest) => {
-    for (let i = 0; i < 4; i++) {
-      playNoiseBurst(ctx, dest, { durationMs: 30, filterFreqHz: 3500 + i * 400, gainPeak: 0.15 });
-    }
+    playNoiseBurst(ctx, dest, { durationMs: 150, filterFreqHz: 5000, filterEndHz: 600, filterType: "lowpass", gainPeak: 0.25, attackMs: 5, releaseMs: 20 });
   },
 });
 
