@@ -409,17 +409,28 @@ engine.events.on("tick", ({ phase, dt }) => {
       typeof window !== "undefined" &&
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const subjEntity = lockedSubjectId !== null ? store.get(lockedSubjectId, { live: true }) : null;
-    const subjectRenderInfo = subjEntity
-      ? {
-          id: subjEntity.id,
-          pos: subjEntity.physics.pos,
-          sizePx: (subjEntity.behavior.data as { baseSizePx: number }).baseSizePx,
-          colors: (subjEntity.behavior.data as { colors: SubjectColors }).colors,
-          scale: subjEntity.physics.scale,
-          subjectSkin: (subjEntity.behavior.data as { subjectSkin?: SubjectSkin }).subjectSkin,
-        }
-      : null;
+    const subjectRenderInfos: Array<{
+      id: EntityId;
+      pos: { x: number; y: number };
+      sizePx: number;
+      colors: SubjectColors;
+      scale: number;
+      subjectSkin?: SubjectSkin;
+      locked: boolean;
+    }> = [];
+    subjects.forEach((rec) => {
+      const e = store.get(rec.id, { live: true });
+      if (!e) return;
+      subjectRenderInfos.push({
+        id: e.id,
+        pos: e.physics.pos,
+        sizePx: (e.behavior.data as { baseSizePx: number }).baseSizePx,
+        colors: (e.behavior.data as { colors: SubjectColors }).colors,
+        scale: e.physics.scale,
+        subjectSkin: (e.behavior.data as { subjectSkin?: SubjectSkin }).subjectSkin,
+        locked: rec.locked,
+      });
+    });
     renderFrame({
       ctx,
       store,
@@ -441,7 +452,8 @@ engine.events.on("tick", ({ phase, dt }) => {
       hudMode: currentMode,
       quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
       repelMultiplier,
-      subject: subjectRenderInfo,
+      subjects: subjectRenderInfos,
+      lockedSubjectId,
       chargeT: ringT,
       assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
       imageCache: imageAssets,
