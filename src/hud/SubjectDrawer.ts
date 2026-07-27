@@ -1,10 +1,12 @@
 import { SUBJECT_SKIN_REGISTRY, type SubjectSkin } from "./subjectSkinRegistry";
+import { TEXT_FONT_REGISTRY, type TextFontId } from "./textFontRegistry";
 
 export type SubjectDrawerOptions = {
   anchor: "left" | "right";
 };
 
 export type SizeStep = "small" | "medium" | "large";
+export type AlignStep = "left" | "center" | "right";
 
 const SIZE_SCALE: Record<SizeStep, number> = { small: 0.75, medium: 1, large: 1.35 };
 
@@ -17,10 +19,14 @@ export class SubjectDrawer {
   private readonly cardEntries: { skin: SubjectSkin; el: HTMLElement }[] = [];
   private composeText = "";
   private composeScale = SIZE_SCALE.medium;
+  private composeFontId: TextFontId = "spaceMono";
+  private composeAlign: AlignStep = "center";
   private composePreviewEl!: HTMLElement;
   private composePreviewLabel!: HTMLElement;
   private activeSkin: SubjectSkin | null = null;
   private resizeCb: ((scale: number) => void) | null = null;
+  private fontChangeCb: ((fontId: TextFontId) => void) | null = null;
+  private alignChangeCb: ((align: AlignStep) => void) | null = null;
 
   constructor(root: HTMLElement, opts: SubjectDrawerOptions) {
     this.panel = document.createElement("div");
@@ -56,14 +62,38 @@ export class SubjectDrawer {
     });
   }
 
+  private fontOptionsMarkup(): string {
+    return TEXT_FONT_REGISTRY.map((entry) => {
+      const sample = entry.id === "spaceMono" ? "Aa" : entry.id === "fraunces" ? "Aa" : "Aa";
+      return `<button type="button" class="subject-drawer__font-btn" data-font-id="${entry.id}" style="font-family: ${entry.cssFontFamily};" aria-label="Font ${entry.label}">${sample}</button>`;
+    }).join("");
+  }
+
   private renderCompose(): void {
     const slot = this.getComposeSlot();
     slot.innerHTML = `
       <input type="text" class="subject-drawer__compose-input" placeholder="type a subject..." maxlength="24" aria-label="Typed subject text" />
-      <div class="subject-drawer__compose-sizes" role="group" aria-label="Text size">
-        <button type="button" data-size="small" class="subject-drawer__size-btn">S</button>
-        <button type="button" data-size="medium" class="subject-drawer__size-btn subject-drawer__size-btn--active">M</button>
-        <button type="button" data-size="large" class="subject-drawer__size-btn">L</button>
+      <div class="subject-drawer__row">
+        <span class="subject-drawer__row-label">size</span>
+        <div class="subject-drawer__compose-sizes" role="group" aria-label="Text size">
+          <button type="button" data-size="small" class="subject-drawer__size-btn">S</button>
+          <button type="button" data-size="medium" class="subject-drawer__size-btn subject-drawer__size-btn--active">M</button>
+          <button type="button" data-size="large" class="subject-drawer__size-btn">L</button>
+        </div>
+      </div>
+      <div class="subject-drawer__row">
+        <span class="subject-drawer__row-label">align</span>
+        <div class="subject-drawer__align" role="group" aria-label="Text alignment">
+          <button type="button" data-align="left" class="subject-drawer__align-btn" aria-label="Align left">L</button>
+          <button type="button" data-align="center" class="subject-drawer__align-btn subject-drawer__align-btn--active" aria-label="Align center">C</button>
+          <button type="button" data-align="right" class="subject-drawer__align-btn" aria-label="Align right">R</button>
+        </div>
+      </div>
+      <div class="subject-drawer__row subject-drawer__row--font">
+        <span class="subject-drawer__row-label">font</span>
+        <div class="subject-drawer__font-grid" role="group" aria-label="Font family">
+          ${this.fontOptionsMarkup()}
+        </div>
       </div>
       <button type="button" class="subject-drawer__card subject-drawer__compose-preview" aria-label="Typed subject preview, drag or tap to place">
         <span class="subject-drawer__card-thumb subject-drawer__compose-preview-thumb" aria-hidden="true"></span>
@@ -89,11 +119,38 @@ export class SubjectDrawer {
         }
       });
     }
+    for (const btn of slot.querySelectorAll<HTMLElement>(".subject-drawer__align-btn")) {
+      const align = btn.dataset.align as AlignStep | undefined;
+      if (!align) continue;
+      btn.addEventListener("click", () => {
+        this.composeAlign = align;
+        for (const other of slot.querySelectorAll<HTMLElement>(".subject-drawer__align-btn")) {
+          other.classList.toggle("subject-drawer__align-btn--active", other.dataset.align === align);
+        }
+        this.refreshComposePreview();
+        this.alignChangeCb?.(align);
+      });
+    }
+    for (const btn of slot.querySelectorAll<HTMLElement>(".subject-drawer__font-btn")) {
+      const fid = btn.dataset.fontId as TextFontId | undefined;
+      if (!fid) continue;
+      btn.addEventListener("click", () => {
+        this.composeFontId = fid;
+        for (const other of slot.querySelectorAll<HTMLElement>(".subject-drawer__font-btn")) {
+          other.classList.toggle("subject-drawer__font-btn--active", other.dataset.fontId === fid);
+        }
+        this.refreshComposePreview();
+        this.fontChangeCb?.(fid);
+      });
+    }
     this.refreshComposePreview();
   }
 
   private refreshComposePreview(): void {
     this.composePreviewLabel.textContent = this.composeText || "(empty)";
+    const fontEntry = TEXT_FONT_REGISTRY.find((f) => f.id === this.composeFontId) ?? TEXT_FONT_REGISTRY[0]!;
+    this.composePreviewLabel.style.fontFamily = fontEntry.cssFontFamily;
+    this.composePreviewLabel.style.textAlign = this.composeAlign;
     this.composePreviewEl.style.fontSize = `${0.8 * this.composeScale}rem`;
   }
 
@@ -107,7 +164,13 @@ export class SubjectDrawer {
 
   getComposePreviewCard(): { getSkin: () => SubjectSkin; el: HTMLElement } {
     return {
-      getSkin: () => ({ kind: "text", value: this.composeText, scale: this.composeScale }),
+      getSkin: () => ({
+        kind: "text",
+        value: this.composeText,
+        scale: this.composeScale,
+        fontId: this.composeFontId,
+        align: this.composeAlign,
+      }),
       el: this.composePreviewEl,
     };
   }
@@ -115,13 +178,22 @@ export class SubjectDrawer {
   setActiveSkin(skin: SubjectSkin | null): void {
     this.activeSkin = skin;
     if (skin?.kind === "text") {
-      const input = this.getComposeSlot().querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
+      const slot = this.getComposeSlot();
+      const input = slot.querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
       input.value = skin.value;
       this.composeText = skin.value;
       this.composeScale = skin.scale;
+      this.composeFontId = (skin.fontId as TextFontId | undefined) ?? "spaceMono";
+      this.composeAlign = skin.align ?? "center";
       const step = (Object.entries(SIZE_SCALE).find(([, v]) => v === skin.scale)?.[0] as SizeStep | undefined) ?? "medium";
-      for (const btn of this.getComposeSlot().querySelectorAll<HTMLElement>(".subject-drawer__size-btn")) {
+      for (const btn of slot.querySelectorAll<HTMLElement>(".subject-drawer__size-btn")) {
         btn.classList.toggle("subject-drawer__size-btn--active", btn.dataset.size === step);
+      }
+      for (const btn of slot.querySelectorAll<HTMLElement>(".subject-drawer__align-btn")) {
+        btn.classList.toggle("subject-drawer__align-btn--active", btn.dataset.align === this.composeAlign);
+      }
+      for (const btn of slot.querySelectorAll<HTMLElement>(".subject-drawer__font-btn")) {
+        btn.classList.toggle("subject-drawer__font-btn--active", btn.dataset.fontId === this.composeFontId);
       }
       this.refreshComposePreview();
     }
@@ -129,6 +201,14 @@ export class SubjectDrawer {
 
   onResize(cb: (scale: number) => void): void {
     this.resizeCb = cb;
+  }
+
+  onFontChange(cb: (fontId: TextFontId) => void): void {
+    this.fontChangeCb = cb;
+  }
+
+  onAlignChange(cb: (align: AlignStep) => void): void {
+    this.alignChangeCb = cb;
   }
 
   open(): void {

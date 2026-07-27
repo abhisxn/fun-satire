@@ -1,6 +1,24 @@
 import "@fontsource-variable/fraunces/standard-italic.css";
 import "@fontsource/space-mono/400.css";
 import "@fontsource/space-mono/700.css";
+import "@fontsource/barriecito/400.css";
+import "@fontsource/nabla/400.css";
+import "@fontsource/bungee-tint/400.css";
+import "@fontsource/unbounded/400.css";
+import "@fontsource/unbounded/700.css";
+import "@fontsource/space-grotesk/400.css";
+import "@fontsource/space-grotesk/700.css";
+import "@fontsource/bricolage-grotesque/400.css";
+import "@fontsource/bricolage-grotesque/700.css";
+import "@fontsource/tektur/400.css";
+import "@fontsource/tektur/700.css";
+import "@fontsource/orbitron/400.css";
+import "@fontsource/orbitron/700.css";
+import "@fontsource/syne-mono/400.css";
+import "@fontsource/pixelify-sans/400.css";
+import "@fontsource/pixelify-sans/700.css";
+import "@fontsource/doto/400.css";
+import "@fontsource/doto/700.css";
 import "./styles/global.css";
 import "./hud/hud.css";
 import "./hud/audioControl.css";
@@ -153,6 +171,24 @@ hud.onSubjectSkinChange((skin) => {
 hud.onSubjectResize((scale) => {
   if (activeSubjectSkin.kind !== "text") return;
   activeSubjectSkin = { ...activeSubjectSkin, scale };
+  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
+  if (subj) {
+    (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
+  }
+});
+
+hud.onSubjectFontChange((fontId) => {
+  if (activeSubjectSkin.kind !== "text") return;
+  activeSubjectSkin = { ...activeSubjectSkin, fontId };
+  const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
+  if (subj) {
+    (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;
+  }
+});
+
+hud.onSubjectAlignChange((align) => {
+  if (activeSubjectSkin.kind !== "text") return;
+  activeSubjectSkin = { ...activeSubjectSkin, align };
   const subj = subjectId !== null ? store.get(subjectId, { live: true }) : null;
   if (subj) {
     (subj.behavior.data as Record<string, unknown>).subjectSkin = activeSubjectSkin;

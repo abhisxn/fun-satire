@@ -41,5 +41,7 @@ export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInp
     scale: input.scale * subjectSkin.scale,
     colors: input.colors,
     rotation,
+    fontId: subjectSkin.fontId,
+    align: subjectSkin.align,
   });
 }

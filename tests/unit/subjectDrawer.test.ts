@@ -62,7 +62,7 @@ describe("SubjectDrawer compose row", () => {
     const drawer = new SubjectDrawer(root, { anchor: "right" });
     const preview = drawer.getComposePreviewCard();
     const skin = preview.getSkin();
-    expect(skin).toEqual({ kind: "text", value: "", scale: 1 });
+    expect(skin).toEqual({ kind: "text", value: "", scale: 1, fontId: "spaceMono", align: "center" });
   });
 
   it("typing into the compose input updates the preview's text value", () => {
@@ -72,7 +72,7 @@ describe("SubjectDrawer compose row", () => {
     input.value = "No Kings";
     input.dispatchEvent(new Event("input"));
     const skin = drawer.getComposePreviewCard().getSkin();
-    expect(skin).toEqual({ kind: "text", value: "No Kings", scale: 1 });
+    expect(skin).toEqual({ kind: "text", value: "No Kings", scale: 1, fontId: "spaceMono", align: "center" });
   });
 
   it("clicking small/large stepper buttons updates the preview's scale", () => {
