@@ -28,6 +28,17 @@ describe("boot/main integration smoke (T23)", () => {
     expect(main).toMatch(/engine\.start\(\)/);
   });
 
+  it("keeps normal startup while gating deterministic visual fixture readiness", () => {
+    const main = readFileSync(resolve(ROOT, "src/main.ts"), "utf8");
+    expect(main).toMatch(/readVisualFixture\(window\.location\.search\)/);
+    expect(main).toMatch(/visualFixture\s*\?\s*new Engine/);
+    expect(main).toMatch(/:\s*new Engine\(\)/);
+    expect(main).toMatch(/completeVisualFixtureBoot/);
+    expect(main).toMatch(/document\.fonts\.ready/);
+    expect(main).toMatch(/__FUN_SATIRE_VISUAL__/);
+    expect(main).toMatch(/failedAssets/);
+  });
+
   it("Renderer.draw calls drawCursor and computeCursorState so the custom cursor is visible", () => {
     const renderer = readFileSync(resolve(ROOT, "src/render/Renderer.ts"), "utf8");
     expect(renderer).toMatch(/drawCursor/);

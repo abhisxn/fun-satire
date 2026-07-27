@@ -69,6 +69,13 @@ import { AudioControl } from "./hud/AudioControl";
 import { startAmbientForMode, startTenseFiller } from "./audio/ambientBeds";
 import { startMusicBed } from "./audio/musicBed";
 import { startAmbientBedTrack } from "./audio/ambientBedTrack";
+import {
+  completeVisualFixtureBoot,
+  installVisualFixtureDocumentState,
+  readVisualFixture,
+  requiredAssetUrlsForVisualFixture,
+} from "./testing/visualFixture";
+import { applyEyesFixtureState } from "./testing/eyesFixtures";
 
 type LifecycleState = "alive" | "dying";
 type LocomotionState = "idle" | "flee" | "dragged";
@@ -277,10 +284,23 @@ hudRoot.dataset.layer = "hud";
 hudRoot.style.zIndex = "var(--z-hud)";
 
 const params = new URLSearchParams(window.location.search);
+let visualFixture = null;
+try {
+  visualFixture = readVisualFixture(window.location.search);
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  document.documentElement.dataset.visualReady = "error";
+  window.__FUN_SATIRE_VISUAL__ = { ready: false, error: message, failedAssets: [] };
+  throw error;
+}
+if (visualFixture) {
+  installVisualFixtureDocumentState(document, visualFixture);
+  window.__FUN_SATIRE_VISUAL__ = { ready: false, error: null, failedAssets: [] };
+}
 const seedParam = params.get("seed");
-const seed = seedParam && Number.isFinite(Number.parseInt(seedParam, 10))
+const seed = visualFixture?.seed ?? (seedParam && Number.isFinite(Number.parseInt(seedParam, 10))
   ? Number.parseInt(seedParam, 10)
-  : (Date.now() & 0xFFFFFFFF) >>> 0;
+  : (Date.now() & 0xFFFFFFFF) >>> 0);
 
 const rng = new Rng(seed);
 const store = new EntityStore();
@@ -292,14 +312,18 @@ const subjectManifestEntries = subjectManifest.entries.filter(
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 const imageAssets = getImageAssetCache();
-imageAssets.preload(AVATAR_ASSET_REGISTRY.map((e) => e.url));
+if (!visualFixture) void imageAssets.preload(AVATAR_ASSET_REGISTRY.map((e) => e.url));
 
 const hud = new Hud(hudRoot, stage);
 hud.setMode("eyes");
 hud.setPower("laserBurn");
+if (visualFixture) {
+  hud.setQuantity(visualFixture.quantity);
+  hudRoot.dataset.visualPanel = visualFixture.panel;
+}
 
-const audioEngine = new AudioEngine(new AudioContext());
-new AudioControl(document.body, audioEngine);
+const audioEngine = visualFixture ? null : new AudioEngine(new AudioContext());
+if (audioEngine) new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
@@ -309,7 +333,7 @@ hud.onModeChange((mode) => {
   powerCtrl.setPower(power);
   hud.setPower(power);
   currentMode = mode;
-  startAmbientForMode(audioEngine, mode);
+  if (audioEngine) startAmbientForMode(audioEngine, mode);
 });
 
 hud.onSubjectDrop((result: SubjectDropResult) => {
@@ -409,7 +433,17 @@ hud.onGridTool(() => {
   );
 });
 
-const engine = new Engine();
+let fixtureFrame: ((timestamp: number) => void) | null = null;
+const engine = visualFixture ? new Engine({
+  now: () => visualFixture.nowMs,
+  raf: (callback) => {
+    fixtureFrame = callback;
+    return 1;
+  },
+  caf: () => {
+    fixtureFrame = null;
+  },
+}) : new Engine();
 engine.events.on("tick", ({ phase, dt }) => {
   const nowMs = engine.getNow();
   if (phase === "pre-physics") {
@@ -426,18 +460,21 @@ engine.events.on("tick", ({ phase, dt }) => {
   }
   if (phase === "render") {
     const cursor = engine.cursor();
-    const ringT = Math.max(0, Math.min(1, powerCtrl.chargeT()));
+    const ringT = visualFixture?.attackProgress ?? Math.max(0, Math.min(1, powerCtrl.chargeT()));
     const inCooldown = effects.liveCount() > 0;
-    hud.setCharge(ringT, powerCtrl.isCharging());
+    hud.setCharge(ringT, visualFixture?.attackProgress !== null && visualFixture?.attackProgress !== undefined
+      ? true
+      : powerCtrl.isCharging());
     const cursorRingRadius = 12 + ringT * 14;
     const cursorRingOpacity = cursor.active ? 1 - ringT * 0.85 : 0;
     const hoverEntity = cursor.active
       ? queryNearestEye(store, { x: cursor.x, y: cursor.y }, 70)
       : null;
-    const reducedMotion =
+    const reducedMotion = visualFixture !== null || (
       typeof window !== "undefined" &&
       typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
     const subjectRenderInfos: Array<{
       id: EntityId;
       pos: { x: number; y: number };
@@ -475,7 +512,9 @@ engine.events.on("tick", ({ phase, dt }) => {
       pupilOffsets,
       cursorRingRadius,
       cursorRingOpacity,
-      chargeTargetId: powerCtrl.chargeTargetId(),
+      chargeTargetId: visualFixture?.attackProgress !== null && visualFixture?.attackProgress !== undefined
+        ? (store.ids()[0] ?? null)
+        : powerCtrl.chargeTargetId(),
       hoverEntityId: hoverEntity?.id ?? null,
       reducedMotion,
       nowMs: engine.getNow(),
@@ -516,7 +555,7 @@ const worldAPI = {
   },
 };
 
-const effects = new EffectSystem(particles, rng, worldAPI, audioEngine);
+const effects = new EffectSystem(particles, rng, worldAPI, audioEngine ?? { play: () => {} });
 effects.register(laserBurnEffect);
 effects.register(electricBurnEffect);
 effects.register(bugEatEffect);
@@ -528,6 +567,7 @@ const spawnInitialEyes = (): void => {
     rng,
     width: viewport.state.width,
     height: viewport.state.height,
+    count: visualFixture?.quantity,
     manifest: manifest.entries.filter((e): e is EyeManifestEntry => e.rig === "eye"),
   });
   for (const e of entities) {
@@ -722,15 +762,44 @@ viewport.onChange((s) => {
 });
 
 spawnInitialEyes();
+if (visualFixture) {
+  const eyes: Entity[] = [];
+  store.forEachAlive((entity) => {
+    if (entity.content.renderType === "eye") eyes.push(entity);
+  });
+  applyEyesFixtureState(eyes, pupilOffsets, viewport.state);
+}
 nextEntityId = Math.max(0, ...store.ids()) + 1;
-pointer.attach();
+if (!visualFixture) pointer.attach();
 engine.start();
 
 const unlockAudio = (): void => {
+  if (!audioEngine) return;
   audioEngine.unlock();
   void startMusicBed(audioEngine, "/audio/music-bed.mp3");
   void startAmbientBedTrack(audioEngine);
   startTenseFiller(audioEngine);
   startAmbientForMode(audioEngine, currentMode);
 };
-document.addEventListener("pointerdown", unlockAudio, { once: true });
+if (visualFixture) {
+  const config = visualFixture;
+  void completeVisualFixtureBoot({
+    assetUrls: requiredAssetUrlsForVisualFixture(config),
+    preload: (urls) => imageAssets.preload(urls),
+    fontsReady: document.fonts.ready,
+    renderOnce: () => {
+      const render = fixtureFrame;
+      if (!render) throw new Error("Visual fixture frame was not scheduled");
+      render(config.nowMs);
+    },
+  }).then(({ failedAssets }) => {
+    document.documentElement.dataset.visualReady = "true";
+    window.__FUN_SATIRE_VISUAL__ = { ready: true, error: null, failedAssets };
+  }).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    document.documentElement.dataset.visualReady = "error";
+    window.__FUN_SATIRE_VISUAL__ = { ready: false, error: message, failedAssets: [] };
+  });
+} else {
+  document.addEventListener("pointerdown", unlockAudio, { once: true });
+}
