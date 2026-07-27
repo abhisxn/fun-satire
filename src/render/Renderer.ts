@@ -7,6 +7,8 @@ import { drawPointedFinger } from "./drawers/drawPointedFinger";
 import { drawCursor, computeCursorState } from "./drawers/drawCursor";
 import { computeFieldLines, drawFieldLines } from "./drawers/drawFieldLines";
 import { computeGazeLines } from "./drawers/drawGazeLines";
+import { drawCollectiveEffectVisual } from "./drawers/drawCollectiveEffectVisual";
+import { selectCollectiveContributors } from "../effects/collectiveContributors";
 import { drawSubject } from "./drawers/drawSubject";
 import { computePupilOffset } from "./pupilTrack";
 import type { EyeBehavior, EyeBlinkTimer } from "../entities/behaviors/EyeBehavior";
@@ -212,39 +214,34 @@ export function renderFrame(opts: RenderFrameOptions): void {
 
   const effects = opts.effects;
   if (effects) {
+    const collectiveCrowd = crowdMembers.map((e) => ({ id: e.id, pos: e.physics.pos }));
     for (const effect of effects.liveEffects()) {
-      if (effect.defId !== "laserBurn") continue;
       const def = effects.getDef(effect.defId);
       if (!def) continue;
       const stage = def.stages[effect.stageIndex];
-      if (!stage?.id) continue;
+      if (!stage?.visual) continue;
       const elapsed = opts.nowMs - effect.stageStartedAtMs;
       const progress = stage.durationMs <= 0 ? 1 : Math.min(1, elapsed / stage.durationMs);
-
-      if (stage.id === "beam" && stage.visual) {
-        const opacity = stage.visual.opacity * (1 - progress);
-        ctx.save();
-        ctx.globalAlpha = opacity;
-        ctx.strokeStyle = stage.visual.color;
-        ctx.lineWidth = stage.visual.widthPx ?? 2;
-        ctx.beginPath();
-        ctx.moveTo(opts.width / 2, 0);
-        ctx.lineTo(effect.target.x, effect.target.y);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      if (stage.id === "glow" && stage.visual) {
-        const radius = (stage.visual.radiusPx ?? 40) + progress * 20;
-        const opacity = stage.visual.opacity * (1 - progress);
-        ctx.save();
-        ctx.globalAlpha = opacity;
-        ctx.fillStyle = stage.visual.color;
-        ctx.beginPath();
-        ctx.arc(effect.target.x, effect.target.y, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
+      const contributors = selectCollectiveContributors({
+        crowd: collectiveCrowd,
+        targetPos: effect.target,
+        archetype: stage.visual.archetype,
+        maxContributors: 16,
+        assistRadiusPx: opts.assistRadiusPx ?? 0,
+      });
+      const origin = stage.visual.archetype === "beam"
+        ? { x: opts.width / 2, y: 0 }
+        : undefined;
+      drawCollectiveEffectVisual(ctx, {
+        archetype: stage.visual.archetype,
+        visual: stage.visual,
+        contributors,
+        target: effect.target,
+        progress,
+        origin,
+        nowMs: opts.nowMs,
+        stageIndex: effect.stageIndex,
+      });
     }
   }
 
