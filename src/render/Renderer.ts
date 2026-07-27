@@ -18,6 +18,7 @@ import type { SubjectColors } from "../content/schema";
 import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 import type { HudMode } from "../hud/hudIcons";
 import type { Entity } from "../entities/Entity";
+import type { ImageAssetCache } from "./imageAssets";
 
 export type RenderEntitiesOptions = {
   store: EntityStore;
@@ -53,6 +54,7 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   } | null;
   chargeT?: number;
   assistRadiusPx?: number;
+  imageCache?: ImageAssetCache;
 };
 
 export type CrowdDrawOrderMember = { id: number; pos: { x: number; y: number } };
@@ -197,6 +199,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
       scale: opts.subject.scale,
       subjectSkin: opts.subject.subjectSkin,
       shadowIntensity,
+      imageCache: opts.imageCache,
     });
   }
 

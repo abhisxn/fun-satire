@@ -33,6 +33,8 @@ import { bugEatEffect } from "./effects/effectDefs/bugEat";
 import { Hud } from "./hud/Hud";
 import { createViewport } from "./render/CanvasUtils";
 import { renderFrame } from "./render/Renderer";
+import { getImageAssetCache } from "./render/imageAssets";
+import { AVATAR_ASSET_REGISTRY } from "./hud/avatarAssetRegistry";
 import * as FF from "./physics/ForceField";
 import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
@@ -121,6 +123,8 @@ const store = new EntityStore();
 const manifest = loadManifestFromText(JSON.stringify(eyesRoster));
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
+const imageAssets = getImageAssetCache();
+imageAssets.preload(AVATAR_ASSET_REGISTRY.map((e) => e.url));
 
 const hud = new Hud(hudRoot, stage);
 hud.setMode("eyes");
@@ -269,6 +273,7 @@ engine.events.on("tick", ({ phase, dt }) => {
       subject: subjectRenderInfo,
       chargeT: ringT,
       assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
+      imageCache: imageAssets,
     });
     void inCooldown;
   }

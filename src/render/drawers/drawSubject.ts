@@ -2,6 +2,8 @@
 import type { SubjectColors } from "../../content/schema";
 import type { SubjectSkin } from "../../hud/subjectSkinRegistry";
 import { getSubjectSkinEntry } from "../../hud/subjectSkinRegistry";
+import type { ImageAssetCache } from "../imageAssets";
+import { drawSubjectAvatar } from "./drawSubjectAvatar";
 import { drawSubjectText } from "./drawSubjectText";
 
 export type DrawSubjectInput = {
@@ -13,6 +15,7 @@ export type DrawSubjectInput = {
   seed?: number;
   rotation?: number;
   shadowIntensity?: number;
+  imageCache?: ImageAssetCache;
 };
 
 export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInput): void {
@@ -31,7 +34,17 @@ export function drawSubject(ctx: CanvasRenderingContext2D, input: DrawSubjectInp
     return;
   }
   if (subjectSkin.kind === "avatar") {
-    // Placeholder: real avatar drawer lands in Phase B Lane 2.
+    if (!input.imageCache) return;
+    drawSubjectAvatar(ctx, {
+      pos: input.pos,
+      sizePx: input.sizePx,
+      colors: input.colors,
+      scale: input.scale,
+      rotation,
+      shadowIntensity: input.shadowIntensity,
+      assetId: subjectSkin.assetId,
+      imageCache: input.imageCache,
+    });
     return;
   }
   drawSubjectText(ctx, {
