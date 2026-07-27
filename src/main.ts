@@ -32,15 +32,18 @@ import "./audio/cues/bugEatCues";
 import { Engine } from "./core/Engine";
 import { Rng } from "./core/Rng";
 import { EntityStore } from "./entities/EntityStore";
-import { spawnEyes, spawnOneCrowdMember, pickCrowdMemberToDespawn } from "./entities/EntityFactory";
+import { spawnEyes, spawnOneCrowdMember, pickCrowdMemberToDespawn, spawnSubject } from "./entities/EntityFactory";
 import { StateMachine, EyeBehavior, EyeBlinkTimer } from "./entities/behaviors";
 import { stepSubjectPhysics } from "./entities/behaviors/SubjectBehavior";
 import { loadManifestFromText } from "./content/manifestLoader";
-import type { EyeManifestEntry, SubjectColors } from "./content/schema";
+import type { EyeManifestEntry, SubjectColors, SubjectManifestEntry } from "./content/schema";
 import eyesRoster from "./content/manifests/eyes.roster.json";
+import subjectRoster from "./content/manifests/subject.roster.json";
 import { PointerTracker } from "./input/PointerTracker";
 import { DragController } from "./input/DragController";
 import { PowerController } from "./input/PowerController";
+import type { SubjectDropResult } from "./input/SubjectDragSource";
+import { queryNearestSubject } from "./entities/subjectQueries";
 import { ParticleSystem } from "./effects/ParticleSystem";
 import { EffectSystem, EASE_PROTEST } from "./effects/EffectSystem";
 import { RespawnScheduler } from "./effects/RespawnScheduler";
@@ -145,6 +148,53 @@ export function __resetSubjectCollectionForTests(): void {
   lockedSubjectId = null;
 }
 
+export type ApplySubjectDropInput = {
+  skin: SubjectSkin;
+  canvasPos: { x: number; y: number } | null;
+  nowMs: number;
+};
+
+/**
+ * Handles a drag/tap drop from the subject drawer. Spawns a new subject
+ * into the EntityStore + subjects Map at `canvasPos`. A null `canvasPos`
+ * (drop outside canvas, or touch tap on the card) is a no-op per Gate 2
+ * Option A (touch tap → spawn at center; drop outside → ignore).
+ */
+export function applySubjectDrop(input: ApplySubjectDropInput): EntityId | null {
+  const pos = input.canvasPos ?? {
+    x: viewport.state.width / 2,
+    y: viewport.state.height / 2,
+  };
+  const cursor = { x: pos.x, y: pos.y };
+  const entity = spawnSubject({
+    manifest: subjectManifestEntries,
+    cursor,
+    nextId: nextEntityId,
+    skin: input.skin,
+  });
+  if (!entity) return null;
+  nextEntityId += 1;
+  store.insert(entity);
+  spawnSubjectForCollection({ id: entity.id, skin: input.skin, nowMs: input.nowMs });
+  return entity.id;
+}
+
+/**
+ * Handles a canvas press. If a subject entity is under the cursor, toggles
+ * the lock on that subject. If no subject is under the cursor, the existing
+ * lock is preserved (so eyes/empty-press don't accidentally unlock).
+ */
+export function applyCanvasPress(_x: number, _y: number, hitSubjectId: EntityId | null): void {
+  if (hitSubjectId === null) return;
+  if (lockedSubjectId === hitSubjectId) {
+    unlockSubject();
+    hud.setCurrentSubjectId(null);
+    return;
+  }
+  lockSubject(hitSubjectId);
+  hud.setCurrentSubjectId(hitSubjectId);
+}
+
 /**
  * Finds the nearest live "eye" entity to `point` within `maxRange`,
  * explicitly ignoring the Subject entity (Subject is not eye-targetable —
@@ -199,6 +249,10 @@ const seed = seedParam && Number.isFinite(Number.parseInt(seedParam, 10))
 const rng = new Rng(seed);
 const store = new EntityStore();
 const manifest = loadManifestFromText(JSON.stringify(eyesRoster));
+const subjectManifest = loadManifestFromText(JSON.stringify(subjectRoster));
+const subjectManifestEntries = subjectManifest.entries.filter(
+  (e): e is SubjectManifestEntry => e.rig === "subject",
+);
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 const imageAssets = getImageAssetCache();
@@ -223,13 +277,8 @@ hud.onModeChange((mode) => {
   startAmbientForMode(audioEngine, mode);
 });
 
-hud.onSubjectSkinChange((skin) => {
-  activeSubjectSkin = skin;
-  subjects.forEach((rec) => {
-    const e = store.get(rec.id, { live: true });
-    if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = skin;
-  });
-  hud.setActiveSubjectSkin(skin);
+hud.onSubjectDrop((result: SubjectDropResult) => {
+  applySubjectDrop({ skin: result.skin, canvasPos: result.canvasPos, nowMs: engine.getNow() });
 });
 
 hud.onSubjectResize((scale) => {
@@ -504,8 +553,14 @@ const pointer: PointerTracker = new PointerTracker(stage, {
   press() {
     const cur = engine.cursor();
     if (!cur.active) return;
-    if (lockedSubjectId !== null) {
-      powerCtrl.tryPress(lockedSubjectId, cur.x, cur.y, engine.getNow());
+    const nearest = queryNearestSubject(store, { x: cur.x, y: cur.y });
+    const hitSubjectId = nearest ? nearest.id : null;
+    if (hitSubjectId !== null) {
+      applyCanvasPress(cur.x, cur.y, hitSubjectId);
+    }
+    const targetId = lockedSubjectId ?? hitSubjectId;
+    if (targetId !== null) {
+      powerCtrl.tryPress(targetId, cur.x, cur.y, engine.getNow());
       subjectPressOrigin = { x: cur.x, y: cur.y };
     }
     const eyeTarget = queryNearestEye(store, { x: cur.x, y: cur.y }, 70);

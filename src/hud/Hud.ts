@@ -1,7 +1,7 @@
 import { PALETTE } from "../config/tokens";
 import { hudIcons, HUD_TEAR_PATH, type HudMode, type HudPower } from "./hudIcons";
 import { SubjectDrawer } from "./SubjectDrawer";
-import { SubjectDragSource } from "../input/SubjectDragSource";
+import { SubjectDragSource, type SubjectDropResult } from "../input/SubjectDragSource";
 import type { SubjectSkin } from "./subjectSkinRegistry";
 import type { TextFontId } from "./textFontRegistry";
 
@@ -43,6 +43,7 @@ export class Hud {
   private dragStart = { x: 0, y: 0, ox: 0, oy: 0 };
   private modeChangeCb: ((mode: HudMode) => void) | null = null;
   private subjectSkinChangeCb: ((skin: SubjectSkin) => void) | null = null;
+  private subjectDropCb: ((result: SubjectDropResult) => void) | null = null;
   private quantityChangeCb: ((quantity: number) => void) | null = null;
   private repelChangeCb: ((multiplier: number) => void) | null = null;
   private attackPressCb: ((subjectId: number | null) => void) | null = null;
@@ -129,9 +130,10 @@ export class Hud {
     }
     const preview = this.drawer.getComposePreviewCard();
     this.dragSource.attachCard(preview.el, preview.getSkin);
-    this.dragSource.onDrop(({ skin }) => {
+    this.dragSource.onDrop((result) => {
       this.drawer.close();
-      this.subjectSkinChangeCb?.(skin);
+      this.subjectDropCb?.(result);
+      this.subjectSkinChangeCb?.(result.skin);
     });
     this.refreshIcons();
     this.wireControls();
@@ -325,6 +327,10 @@ export class Hud {
 
   onSubjectSkinChange(cb: (skin: SubjectSkin) => void): void {
     this.subjectSkinChangeCb = cb;
+  }
+
+  onSubjectDrop(cb: (result: SubjectDropResult) => void): void {
+    this.subjectDropCb = cb;
   }
 
   onSubjectResize(cb: (scale: number) => void): void {
