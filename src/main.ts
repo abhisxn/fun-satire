@@ -281,7 +281,7 @@ hud.onSubjectDrop((result: SubjectDropResult) => {
   applySubjectDrop({ skin: result.skin, canvasPos: result.canvasPos, nowMs: engine.getNow() });
 });
 
-hud.onSubjectResize((scale) => {
+hud.onSubjectResize((_subjectId, scale) => {
   if (activeSubjectSkin.kind !== "text") return;
   activeSubjectSkin = { ...activeSubjectSkin, scale };
   subjects.forEach((rec) => {
@@ -290,7 +290,7 @@ hud.onSubjectResize((scale) => {
   });
 });
 
-hud.onSubjectFontChange((fontId) => {
+hud.onSubjectFontChange((_subjectId, fontId) => {
   if (activeSubjectSkin.kind !== "text") return;
   activeSubjectSkin = { ...activeSubjectSkin, fontId };
   subjects.forEach((rec) => {
@@ -299,7 +299,7 @@ hud.onSubjectFontChange((fontId) => {
   });
 });
 
-hud.onSubjectAlignChange((align) => {
+hud.onSubjectAlignChange((_subjectId, align) => {
   if (activeSubjectSkin.kind !== "text") return;
   activeSubjectSkin = { ...activeSubjectSkin, align };
   subjects.forEach((rec) => {

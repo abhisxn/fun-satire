@@ -42,7 +42,6 @@ export class Hud {
   private placardOffset = { x: 0, y: 0 };
   private dragStart = { x: 0, y: 0, ox: 0, oy: 0 };
   private modeChangeCb: ((mode: HudMode) => void) | null = null;
-  private subjectSkinChangeCb: ((skin: SubjectSkin) => void) | null = null;
   private subjectDropCb: ((result: SubjectDropResult) => void) | null = null;
   private quantityChangeCb: ((quantity: number) => void) | null = null;
   private repelChangeCb: ((multiplier: number) => void) | null = null;
@@ -133,7 +132,6 @@ export class Hud {
     this.dragSource.onDrop((result) => {
       this.drawer.close();
       this.subjectDropCb?.(result);
-      this.subjectSkinChangeCb?.(result.skin);
     });
     this.refreshIcons();
     this.wireControls();
@@ -280,8 +278,8 @@ export class Hud {
     this.refreshIcons();
   }
 
-  setActiveSubjectSkin(skin: SubjectSkin): void {
-    this.drawer.setActiveSkin(skin);
+  setActiveSubjectSkin(subjectId: number | null, skin: SubjectSkin): void {
+    this.drawer.setActiveSkin(subjectId, skin);
   }
 
   setQuantity(quantity: number): void {
@@ -325,24 +323,24 @@ export class Hud {
     this.modeChangeCb = cb;
   }
 
-  onSubjectSkinChange(cb: (skin: SubjectSkin) => void): void {
-    this.subjectSkinChangeCb = cb;
-  }
-
   onSubjectDrop(cb: (result: SubjectDropResult) => void): void {
     this.subjectDropCb = cb;
   }
 
-  onSubjectResize(cb: (scale: number) => void): void {
+  onSubjectResize(cb: (subjectId: number | null, scale: number) => void): void {
     this.drawer.onResize(cb);
   }
 
-  onSubjectFontChange(cb: (fontId: TextFontId) => void): void {
+  onSubjectFontChange(cb: (subjectId: number | null, fontId: TextFontId) => void): void {
     this.drawer.onFontChange(cb);
   }
 
-  onSubjectAlignChange(cb: (align: "left" | "center" | "right") => void): void {
+  onSubjectAlignChange(cb: (subjectId: number | null, align: "left" | "center" | "right") => void): void {
     this.drawer.onAlignChange(cb);
+  }
+
+  onSubjectSkinChange(cb: (subjectId: number | null, skin: SubjectSkin) => void): void {
+    this.drawer.onSkinChange(cb);
   }
 
   onQuantityChange(cb: (quantity: number) => void): void {
