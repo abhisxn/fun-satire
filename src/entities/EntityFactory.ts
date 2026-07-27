@@ -1,6 +1,7 @@
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import { type Rng } from "../core/Rng";
 import type { EyeManifestEntry, EyeColors, SubjectManifestEntry } from "../content/schema";
+import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 
 export const ENTITY_FACTORY = Object.freeze({
   minSeparationPx: 64,
@@ -136,11 +137,14 @@ export type SpawnSubjectOpts = {
   manifest: readonly SubjectManifestEntry[];
   cursor: Vec2;
   nextId: number;
+  skin?: SubjectSkin;
 };
 
 export function spawnSubject(opts: SpawnSubjectOpts): Entity | null {
   const entry = opts.manifest[0];
   if (!entry) return null;
+  const subjectSkin: SubjectSkin =
+    opts.skin ?? { kind: "illustrated", id: entry.subjectSkin ?? "figure" };
   return {
     id: opts.nextId,
     content: {
@@ -159,6 +163,7 @@ export function spawnSubject(opts: SpawnSubjectOpts): Entity | null {
       data: {
         baseSizePx: entry.physics.baseSizePx,
         colors: entry.colors,
+        subjectSkin,
       },
     },
     lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },

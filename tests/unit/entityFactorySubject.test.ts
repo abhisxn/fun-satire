@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { spawnSubject } from "../../src/entities/EntityFactory";
 import type { SubjectManifestEntry } from "../../src/content/schema";
+import type { SubjectSkin } from "../../src/hud/subjectSkinRegistry";
 
 const entry: SubjectManifestEntry = {
   id: "subject-figure-01",
@@ -10,6 +11,12 @@ const entry: SubjectManifestEntry = {
   visual: { styleGuardrail: "flat-illustrated" },
   colors: { suit: "slate", shirt: "cream", outline: "ink" },
   physics: { baseSizePx: 96 },
+};
+
+const entryWithSkin: SubjectManifestEntry = {
+  ...entry,
+  id: "subject-with-skin",
+  subjectSkin: "lotus",
 };
 
 describe("entities/EntityFactory spawnSubject (T28)", () => {
@@ -31,5 +38,37 @@ describe("entities/EntityFactory spawnSubject (T28)", () => {
     expect(e!.lifecycle.dying).toBe(false);
     expect(e!.behavior.data.baseSizePx).toBe(96);
     expect((e!.behavior.data.colors as typeof entry.colors).suit).toBe("slate");
+  });
+
+  it("stamps opts.skin into behavior.data.subjectSkin when provided", () => {
+    const skin: SubjectSkin = { kind: "text", value: "x", scale: 1 };
+    const e = spawnSubject({
+      manifest: [entry],
+      cursor: { x: 0, y: 0 },
+      nextId: 1,
+      skin,
+    });
+    expect(e).not.toBeNull();
+    expect(e!.behavior.data.subjectSkin).toEqual(skin);
+  });
+
+  it("falls back to manifest entry's subjectSkin when opts.skin is omitted", () => {
+    const e = spawnSubject({
+      manifest: [entryWithSkin],
+      cursor: { x: 0, y: 0 },
+      nextId: 1,
+    });
+    expect(e).not.toBeNull();
+    expect(e!.behavior.data.subjectSkin).toEqual({ kind: "illustrated", id: "lotus" });
+  });
+
+  it("falls back to { kind: 'illustrated', id: 'figure' } when neither opts.skin nor entry.subjectSkin is set", () => {
+    const e = spawnSubject({
+      manifest: [entry],
+      cursor: { x: 0, y: 0 },
+      nextId: 1,
+    });
+    expect(e).not.toBeNull();
+    expect(e!.behavior.data.subjectSkin).toEqual({ kind: "illustrated", id: "figure" });
   });
 });
