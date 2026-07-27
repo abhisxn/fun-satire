@@ -37,6 +37,23 @@ const SVG_ATTRIBUTES = new Set([
   "stroke", "stroke-linecap", "stroke-linejoin", "stroke-width", "style", "type", "values",
   "viewBox", "width", "x", "x1", "x2", "y", "y1", "y2",
 ]);
+const INTERNAL_SVG_URL = "url\\(#[A-Za-z_][\\w:.-]*\\)";
+const PRESENTATION_GRAMMARS = new Map([
+  ["fill", new RegExp(`^(?:none|white|${INTERNAL_SVG_URL}|var\\(--fill-0, (?:#[0-9A-F]{6}|black|white)\\))$`)],
+  ["stroke", /^var\(--stroke-0, (?:#[0-9A-F]{6}|black)\)$/],
+  ["filter", new RegExp(`^${INTERNAL_SVG_URL}$`)],
+  ["mask", new RegExp(`^${INTERNAL_SVG_URL}$`)],
+  ["clip-path", new RegExp(`^${INTERNAL_SVG_URL}$`)],
+  ["stop-color", /^#[0-9A-F]{6}$/],
+  ["opacity", /^(?:0(?:\.\d+)?|1)$/],
+  ["flood-opacity", /^(?:0(?:\.\d+)?|1)$/],
+  ["stroke-width", /^\d+(?:\.\d+)?$/],
+  ["stroke-linecap", /^round$/],
+  ["stroke-linejoin", /^round$/],
+  ["fill-rule", /^evenodd$/],
+  ["clip-rule", /^evenodd$/],
+  ["color-interpolation-filters", /^sRGB$/],
+]);
 
 export function sha256(createHash, bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -152,6 +169,11 @@ export function assertSafeSvg(bytes) {
 
 function assertSafeSvgAttribute(name, value) {
   if (/^on/i.test(name)) throw new Error(`Unsafe SVG event attribute: ${name}`);
+  if (/[\\]|\/\*/.test(value)) throw new Error(`Unsafe SVG escaped or commented attribute value: ${name}`);
+  const presentationGrammar = PRESENTATION_GRAMMARS.get(name);
+  if (presentationGrammar && !presentationGrammar.test(value)) {
+    throw new Error(`Unsafe SVG presentation value: ${name}`);
+  }
   if (/(?:javascript\s*:|data\s*:|@import\b|expression\s*\(|behavior\s*:|-moz-binding\s*:)/i.test(value)) {
     throw new Error(`Unsafe SVG attribute value: ${name}`);
   }

@@ -83,6 +83,20 @@ describe("Figma asset manifest audit", () => {
     expect(() => assertSafeSvg(Buffer.from(svg))).toThrow(/unsafe svg|malformed xml/i);
   });
 
+  it.each([
+    '<svg xmlns="http://www.w3.org/2000/svg"><path fill="u\\72l(https://evil.example/a.svg#x)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path filter="u\\000072l(//evil.example/a.svg#x)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path fill="url(java\\61script:alert(1))" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path fill="u/**/rl(https://evil.example/a.svg#x)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path filter="url(java/**/script:alert(1))" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path clip-path="url( #safe-id)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path mask="url(\t#safe-id)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path stroke="url(#safe-id)" /></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path fill="var(--fill-1, white)" /></svg>',
+  ])("rejects escaped or noncanonical CSS presentation values", (svg) => {
+    expect(() => assertSafeSvg(Buffer.from(svg))).toThrow(/unsafe svg|malformed xml/i);
+  });
+
   it("accepts every committed Figma SVG through the XML allowlist", () => {
     const svgAssets = manifest.assets.filter((entry) => entry.format === "svg");
     expect(svgAssets).toHaveLength(77);
