@@ -96,19 +96,28 @@ export function assertSafeSvg(bytes) {
   const svg = bytes.toString("utf8");
   const unsafe = [
     /<\s*script\b/i,
+    /<\s*style\b/i,
     /<\s*foreignObject\b/i,
+    /<\s*(?:animate|set|animateMotion|animateTransform|discard)\b/i,
     /<\s*!DOCTYPE\b/i,
     /<\s*!ENTITY\b/i,
     /@import\b/i,
     /\son[a-z]+\s*=/i,
+    /javascript\s*:/i,
   ];
   if (unsafe.some((pattern) => pattern.test(svg))) throw new Error("Unsafe SVG executable content");
 
-  for (const match of svg.matchAll(/(?:href|xlink:href|src)\s*=\s*["']([^"']+)["']/gi)) {
-    if (!match[1].startsWith("#")) throw new Error("Unsafe SVG external reference");
+  for (const match of svg.matchAll(/(?:href|xlink:href|src)\s*=\s*(?:["']([^"']+)["']|([^\s>]+))/gi)) {
+    const value = match[1] ?? match[2];
+    if (!value.startsWith("#")) throw new Error("Unsafe SVG external reference");
   }
   for (const match of svg.matchAll(/url\(\s*["']?([^)'"\s]+)["']?\s*\)/gi)) {
     if (!match[1].startsWith("#")) throw new Error("Unsafe SVG external URL");
+  }
+  for (const match of svg.matchAll(/\bstyle\s*=\s*["']([^"']*)["']/gi)) {
+    if (/(?:url\s*\(|javascript\s*:|expression\s*\(|@import\b|behavior\s*:|-moz-binding\s*:)/i.test(match[1])) {
+      throw new Error("Unsafe SVG CSS mutation");
+    }
   }
 }
 
@@ -212,15 +221,56 @@ export function normalizeSceneReference(bytes) {
   const targetHeight = 663;
   const source = decodeRgbaPng(bytes);
   if (source.width === targetWidth && source.height === targetHeight) return bytes;
-  const pixels = Buffer.alloc(targetWidth * targetHeight * 4);
+  const pixels = resampleRgbaSrgb(source.pixels, source.width, source.height, targetWidth, targetHeight);
+  return encodeRgbaPng(source, targetWidth, targetHeight, pixels);
+}
+
+function srgbToLinear(value) {
+  const channel = value / 255;
+  return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+}
+
+function linearToSrgb(value) {
+  const channel = value <= 0.0031308 ? value * 12.92 : 1.055 * value ** (1 / 2.4) - 0.055;
+  return Math.round(Math.max(0, Math.min(1, channel)) * 255);
+}
+
+export function resampleRgbaSrgb(source, sourceWidth, sourceHeight, targetWidth, targetHeight) {
+  if (source.length !== sourceWidth * sourceHeight * 4) throw new Error("RGBA source dimensions do not match payload");
+  const output = Buffer.alloc(targetWidth * targetHeight * 4);
   for (let y = 0; y < targetHeight; y += 1) {
-    const sourceY = Math.floor(y * source.height / targetHeight);
+    const sourceY = (y + 0.5) * sourceHeight / targetHeight - 0.5;
+    const yFloor = Math.floor(sourceY);
+    const y0 = Math.max(0, Math.min(sourceHeight - 1, yFloor));
+    const y1 = Math.max(0, Math.min(sourceHeight - 1, yFloor + 1));
+    const yFraction = Math.max(0, Math.min(1, sourceY - yFloor));
     for (let x = 0; x < targetWidth; x += 1) {
-      const sourceX = Math.floor(x * source.width / targetWidth);
-      source.pixels.copy(pixels, (y * targetWidth + x) * 4, (sourceY * source.width + sourceX) * 4, (sourceY * source.width + sourceX + 1) * 4);
+      const sourceX = (x + 0.5) * sourceWidth / targetWidth - 0.5;
+      const xFloor = Math.floor(sourceX);
+      const x0 = Math.max(0, Math.min(sourceWidth - 1, xFloor));
+      const x1 = Math.max(0, Math.min(sourceWidth - 1, xFloor + 1));
+      const xFraction = Math.max(0, Math.min(1, sourceX - xFloor));
+      const samples = [
+        [x0, y0, (1 - xFraction) * (1 - yFraction)],
+        [x1, y0, xFraction * (1 - yFraction)],
+        [x0, y1, (1 - xFraction) * yFraction],
+        [x1, y1, xFraction * yFraction],
+      ];
+      let alpha = 0;
+      const linear = [0, 0, 0];
+      for (const [sampleX, sampleY, weight] of samples) {
+        const offset = (sampleY * sourceWidth + sampleX) * 4;
+        const sampleAlpha = source[offset + 3] / 255;
+        const alphaWeight = weight * sampleAlpha;
+        alpha += alphaWeight;
+        for (let channel = 0; channel < 3; channel += 1) linear[channel] += srgbToLinear(source[offset + channel]) * alphaWeight;
+      }
+      const outputOffset = (y * targetWidth + x) * 4;
+      for (let channel = 0; channel < 3; channel += 1) output[outputOffset + channel] = alpha > 0 ? linearToSrgb(linear[channel] / alpha) : 0;
+      output[outputOffset + 3] = Math.round(Math.max(0, Math.min(1, alpha)) * 255);
     }
   }
-  return encodeRgbaPng(source, targetWidth, targetHeight, pixels);
+  return output;
 }
 
 export function optimizePngLosslessly(bytes) {
@@ -268,6 +318,11 @@ export function validateManifest(manifest) {
     throw new Error("Approved-node inventory is incomplete or has drifted");
   }
 
+  const canonicalIds = canonicalizeAssets(manifest.assets).map((entry) => entry.id);
+  if (JSON.stringify(manifest.assets.map((entry) => entry.id)) !== JSON.stringify(canonicalIds)) {
+    throw new Error("Manifest assets are not in canonical asset order");
+  }
+
   for (const field of ["id", "destination", "sourceHash"]) {
     const values = manifest.assets.map((entry) => entry[field]);
     if (new Set(values).size !== values.length) throw new Error(`Duplicate asset ${field}`);
@@ -288,6 +343,12 @@ export function validateManifest(manifest) {
     }
     if (!Array.isArray(entry.requiredFor) || entry.requiredFor.length === 0 || entry.requiredFor.some((id) => !approvedIds.has(id))) {
       throw new Error(`${entry.id}: invalid approved-node requirement`);
+    }
+    const requiredFor = [...new Set(entry.requiredFor)].sort((left, right) => {
+      return APPROVED_SOURCE_NODES.findIndex((node) => node.id === left) - APPROVED_SOURCE_NODES.findIndex((node) => node.id === right);
+    });
+    if (JSON.stringify(entry.requiredFor) !== JSON.stringify(requiredFor)) {
+      throw new Error(`${entry.id}: requiredFor must be unique and canonically ordered`);
     }
     if (!(entry.width > 0) || !(entry.height > 0) || !(entry.byteLength > 0) || !(entry.sourceByteLength > 0) || !(entry.maxBytes > 0)) {
       throw new Error(`${entry.id}: invalid dimensions or payload provenance`);
@@ -371,8 +432,8 @@ function validateParityMapping(entry, sourceNode) {
       || mapping.normalizedDimensions.width * sourceDimensions.height !== mapping.normalizedDimensions.height * sourceDimensions.width
       || mapping.scaleX !== 0.796875
       || mapping.kind !== "full-scene-normalized"
-      || mapping.transform !== "full-crop-resample"
-      || mapping.resampling !== "nearest-neighbor") {
+      || mapping.transform !== "full-crop-resample-srgb"
+      || mapping.resampling !== "linear-light-bilinear-premultiplied-alpha") {
       throw new Error(`${entry.id}: invalid full-scene normalized mapping`);
     }
   } else if (!sameDimensions(provenance.originalCaptureDimensions, sourceDimensions)
@@ -382,6 +443,23 @@ function validateParityMapping(entry, sourceNode) {
     || mapping.transform !== "identity"
     || mapping.resampling !== "none") {
     throw new Error(`${entry.id}: component reference must use intrinsic identity mapping`);
+  }
+}
+
+export function validateGoldenInventory(manifest, goldenInventory) {
+  if (goldenInventory?.schemaVersion !== 1 || goldenInventory?.figmaFileKey !== manifest.figmaFile.key) {
+    throw new Error("Invalid reviewed golden inventory metadata");
+  }
+  const project = (entry) => ({
+    id: entry.id,
+    sourceNodeId: entry.nodeId,
+    sourceHash: entry.sourceHash,
+    role: entry.role,
+    requiredFor: entry.requiredFor,
+  });
+  const actual = manifest.assets.filter((entry) => entry.role !== "reference").map(project);
+  if (JSON.stringify(actual) !== JSON.stringify(goldenInventory.assets)) {
+    throw new Error("Figma non-reference assets drifted from the reviewed golden inventory");
   }
 }
 

@@ -122,8 +122,8 @@ describe("FIGMA_ASSETS", () => {
           sourceCrop: { x: 0, y: 0, width: 1280, height: 832 },
           scaleX: 0.796875,
           scaleY: 0.796875,
-          transform: "full-crop-resample",
-          resampling: "nearest-neighbor",
+          transform: "full-crop-resample-srgb",
+          resampling: "linear-light-bilinear-premultiplied-alpha",
           browserCapture: { width: 1020, height: 663, scale: 0.796875 },
         },
       });

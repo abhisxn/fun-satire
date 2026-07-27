@@ -44,15 +44,15 @@ export type FigmaParityMapping = Readonly<{
   captureCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
   scaleX: number;
   scaleY: number;
-  transform: "full-crop-resample" | "identity";
-  resampling: "nearest-neighbor" | "none";
+  transform: "full-crop-resample-srgb" | "identity";
+  resampling: "linear-light-bilinear-premultiplied-alpha" | "none";
   browserCapture: Readonly<{
     width: number;
     height: number;
     scale: number;
     sourceCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
-    transform: "full-crop-resample" | "identity";
-    resampling: "nearest-neighbor" | "none";
+    transform: "full-crop-resample-srgb" | "identity";
+    resampling: "linear-light-bilinear-premultiplied-alpha" | "none";
   }>;
 }>;
 
@@ -2545,13 +2545,13 @@ export const FIGMA_ASSETS = Object.freeze([
     "nodeId": "109:3669",
     "sourceHash": "9403e15a2fc71b00fbc0aebd649136f2f8d164f49814d456c8b9b2b8f88c2e7c",
     "sourceSha256": "9403e15a2fc71b00fbc0aebd649136f2f8d164f49814d456c8b9b2b8f88c2e7c",
-    "sha256": "32babf66ced5565ce65ba0eb16fc939823caab25f75d5b2312409dbccd1444dd",
+    "sha256": "d6407e7fc77a4f20653d5e0d5a492e166ae4451e8bbdca91df376c30fb117d0a",
     "format": "png",
     "url": "/assets/figma/references/reference-eyes-attack.png",
     "width": 1020,
     "height": 663,
     "sourceByteLength": 621485,
-    "byteLength": 698412,
+    "byteLength": 731727,
     "maxBytes": 4194304,
     "requiredFor": [
       "109:3669"
@@ -2590,8 +2590,8 @@ export const FIGMA_ASSETS = Object.freeze([
         },
         "scaleX": 0.796875,
         "scaleY": 0.796875,
-        "transform": "full-crop-resample",
-        "resampling": "nearest-neighbor",
+        "transform": "full-crop-resample-srgb",
+        "resampling": "linear-light-bilinear-premultiplied-alpha",
         "browserCapture": {
           "width": 1020,
           "height": 663,
@@ -2602,8 +2602,8 @@ export const FIGMA_ASSETS = Object.freeze([
             "width": 1280,
             "height": 832
           },
-          "transform": "full-crop-resample",
-          "resampling": "nearest-neighbor"
+          "transform": "full-crop-resample-srgb",
+          "resampling": "linear-light-bilinear-premultiplied-alpha"
         }
       }
     }
@@ -2614,13 +2614,13 @@ export const FIGMA_ASSETS = Object.freeze([
     "nodeId": "18:113",
     "sourceHash": "49e1f505732e9b8975932a2769f56067431907af4f4b6beb3795fd4e9bc6d9fa",
     "sourceSha256": "49e1f505732e9b8975932a2769f56067431907af4f4b6beb3795fd4e9bc6d9fa",
-    "sha256": "85c79803cbdc9616eeba2b573959362e4b2fde55e620dc811c831ad369aa423e",
+    "sha256": "6a758318e9eaf4fe0f41323f9cbfc7f0024ddcd57b7723f0d356bbcfb05a57c4",
     "format": "png",
     "url": "/assets/figma/references/reference-eyes-default.png",
     "width": 1020,
     "height": 663,
     "sourceByteLength": 413469,
-    "byteLength": 350071,
+    "byteLength": 378996,
     "maxBytes": 4194304,
     "requiredFor": [
       "18:113"
@@ -2659,8 +2659,8 @@ export const FIGMA_ASSETS = Object.freeze([
         },
         "scaleX": 0.796875,
         "scaleY": 0.796875,
-        "transform": "full-crop-resample",
-        "resampling": "nearest-neighbor",
+        "transform": "full-crop-resample-srgb",
+        "resampling": "linear-light-bilinear-premultiplied-alpha",
         "browserCapture": {
           "width": 1020,
           "height": 663,
@@ -2671,8 +2671,8 @@ export const FIGMA_ASSETS = Object.freeze([
             "width": 1280,
             "height": 832
           },
-          "transform": "full-crop-resample",
-          "resampling": "nearest-neighbor"
+          "transform": "full-crop-resample-srgb",
+          "resampling": "linear-light-bilinear-premultiplied-alpha"
         }
       }
     }

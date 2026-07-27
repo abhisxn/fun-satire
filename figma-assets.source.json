@@ -2771,7 +2771,7 @@
         "109:3669"
       ],
       "maxBytes": 4194304,
-      "optimization": "nearest-neighbor-full-crop-normalization",
+      "optimization": "linear-light-bilinear-srgb-full-crop-normalization",
       "provenance": {
         "fileKey": "oPAdd7oWLQVMTP1v6pJOW0",
         "pageNodeId": "0:1",
@@ -2806,8 +2806,8 @@
           },
           "scaleX": 0.796875,
           "scaleY": 0.796875,
-          "transform": "full-crop-resample",
-          "resampling": "nearest-neighbor",
+          "transform": "full-crop-resample-srgb",
+          "resampling": "linear-light-bilinear-premultiplied-alpha",
           "browserCapture": {
             "width": 1020,
             "height": 663,
@@ -2818,8 +2818,8 @@
               "width": 1280,
               "height": 832
             },
-            "transform": "full-crop-resample",
-            "resampling": "nearest-neighbor"
+            "transform": "full-crop-resample-srgb",
+            "resampling": "linear-light-bilinear-premultiplied-alpha"
           }
         }
       },
@@ -2827,8 +2827,8 @@
       "sourceByteLength": 621485,
       "width": 1020,
       "height": 663,
-      "byteLength": 698412,
-      "sha256": "32babf66ced5565ce65ba0eb16fc939823caab25f75d5b2312409dbccd1444dd"
+      "byteLength": 731727,
+      "sha256": "d6407e7fc77a4f20653d5e0d5a492e166ae4451e8bbdca91df376c30fb117d0a"
     },
     {
       "id": "reference-eyes-default",
@@ -2843,7 +2843,7 @@
         "18:113"
       ],
       "maxBytes": 4194304,
-      "optimization": "nearest-neighbor-full-crop-normalization",
+      "optimization": "linear-light-bilinear-srgb-full-crop-normalization",
       "provenance": {
         "fileKey": "oPAdd7oWLQVMTP1v6pJOW0",
         "pageNodeId": "0:1",
@@ -2878,8 +2878,8 @@
           },
           "scaleX": 0.796875,
           "scaleY": 0.796875,
-          "transform": "full-crop-resample",
-          "resampling": "nearest-neighbor",
+          "transform": "full-crop-resample-srgb",
+          "resampling": "linear-light-bilinear-premultiplied-alpha",
           "browserCapture": {
             "width": 1020,
             "height": 663,
@@ -2890,8 +2890,8 @@
               "width": 1280,
               "height": 832
             },
-            "transform": "full-crop-resample",
-            "resampling": "nearest-neighbor"
+            "transform": "full-crop-resample-srgb",
+            "resampling": "linear-light-bilinear-premultiplied-alpha"
           }
         }
       },
@@ -2899,8 +2899,8 @@
       "sourceByteLength": 413469,
       "width": 1020,
       "height": 663,
-      "byteLength": 350071,
-      "sha256": "85c79803cbdc9616eeba2b573959362e4b2fde55e620dc811c831ad369aa423e"
+      "byteLength": 378996,
+      "sha256": "6a758318e9eaf4fe0f41323f9cbfc7f0024ddcd57b7723f0d356bbcfb05a57c4"
     },
     {
       "id": "reference-filter-panel",
@@ -3608,6 +3608,6 @@
   "payloadBudgetBytes": 12582912,
   "exportProvenance": {
     "sourceVersion": "figma-dev-mode-mcp@1.0.0",
-    "capturedAt": "2026-07-27T21:37:14.430Z"
+    "capturedAt": "2026-07-27T21:47:56.699Z"
   }
 }

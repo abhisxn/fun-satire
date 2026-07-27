@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -10,13 +11,19 @@ import {
   dimensionsOf,
   normalizeSceneReference,
   optimizePngLosslessly,
+  resampleRgbaSrgb,
   safeOutputPath,
+  validateGoldenInventory,
   validateManifest,
   verifyNoUnlistedFiles,
 } from "../../scripts/figma-asset-audit.mjs";
 
 function cloneManifest(): typeof manifest {
   return structuredClone(manifest);
+}
+
+function reviewedGoldenInventory() {
+  return JSON.parse(readFileSync(resolve(__dirname, "../../figma-assets.golden.json"), "utf8"));
 }
 
 describe("Figma asset manifest audit", () => {
@@ -46,6 +53,16 @@ describe("Figma asset manifest audit", () => {
     "<svg><image src=\"https://evil.example/a.png\" /></svg>",
     "<svg><path fill=\"url(https://evil.example/a.svg#x)\" /></svg>",
     "<svg><style>@import 'https://evil.example/a.css';</style></svg>",
+    "<svg><animate attributeName=\"href\" values=\"#safe;javascript:alert(1)\" /></svg>",
+    "<svg><set attributeName=\"onclick\" to=\"alert(1)\" /></svg>",
+    "<svg><animateMotion path=\"M0 0\" /></svg>",
+    "<svg><animateTransform attributeName=\"transform\" /></svg>",
+    "<svg><discard begin=\"1s\" /></svg>",
+    "<svg><use href=\"javascript:alert(1)\" /></svg>",
+    "<svg><use xlink:href=\"//evil.example/a.svg#x\" /></svg>",
+    "<svg><image src=\"data:image/svg+xml;base64,WA==\" /></svg>",
+    "<svg><path style=\"fill:javascript:alert(1)\" /></svg>",
+    "<svg><path style=\"behavior:url(#x)\" /></svg>",
   ])("rejects unsafe SVG content", (svg) => {
     expect(() => assertSafeSvg(Buffer.from(svg))).toThrow(/unsafe svg/i);
   });
@@ -68,6 +85,39 @@ describe("Figma asset manifest audit", () => {
   it("sorts canonically regardless of manifest order", () => {
     expect(canonicalizeAssets([...manifest.assets].reverse()).map((asset) => asset.id))
       .toEqual(canonicalizeAssets(manifest.assets).map((asset) => asset.id));
+  });
+
+  it("requires committed canonical asset and requiredFor ordering", () => {
+    const reversed = cloneManifest();
+    reversed.assets.reverse();
+    expect(() => validateManifest(reversed)).toThrow(/canonical asset order/i);
+
+    const swapped = cloneManifest();
+    [swapped.assets[0], swapped.assets[1]] = [swapped.assets[1], swapped.assets[0]];
+    expect(() => validateManifest(swapped)).toThrow(/canonical asset order/i);
+
+    const repeated = cloneManifest();
+    repeated.assets.find((entry) => entry.requiredFor.length > 1)!.requiredFor.push("18:113");
+    expect(() => validateManifest(repeated)).toThrow(/requiredFor/i);
+
+    const reordered = cloneManifest();
+    reordered.assets.find((entry) => entry.requiredFor.length > 1)!.requiredFor.reverse();
+    expect(() => validateManifest(reordered)).toThrow(/requiredFor/i);
+  });
+
+  it("matches the independent reviewed non-reference inventory exactly", () => {
+    const golden = reviewedGoldenInventory();
+    expect(Object.keys(golden.assets[0])).toEqual(["id", "sourceNodeId", "sourceHash", "role", "requiredFor"]);
+    expect(() => validateGoldenInventory(manifest, golden)).not.toThrow();
+
+    for (const mutation of ["missing", "additional", "drift"] as const) {
+      const candidate = cloneManifest();
+      const nonReference = candidate.assets.find((entry) => entry.role !== "reference")!;
+      if (mutation === "missing") candidate.assets = candidate.assets.filter((entry) => entry.id !== nonReference.id);
+      if (mutation === "additional") candidate.assets.push({ ...nonReference, id: "eye-unreviewed", sourceHash: "f".repeat(40) });
+      if (mutation === "drift") nonReference.sourceHash = "e".repeat(40);
+      expect(() => validateGoldenInventory(candidate, golden)).toThrow(/golden inventory/i);
+    }
   });
 
   it("enforces payload budgets", () => {
@@ -125,6 +175,22 @@ describe("Figma asset manifest audit", () => {
     const source = readFileSync(resolve(__dirname, "../../public/assets/figma/references/reference-eyes-default.png"));
     const normalized = normalizeSceneReference(source);
     expect(dimensionsOf(normalized, "png")).toEqual({ width: 1020, height: 663 });
+  });
+
+  it("matches the reviewed linear-light sRGB pixel fixture", () => {
+    const source = Buffer.from([
+      255, 0, 0, 255, 0, 255, 0, 255,
+      0, 0, 255, 255, 255, 255, 255, 255,
+    ]);
+    const expected = Buffer.from([
+      255, 0, 0, 255, 188, 188, 0, 255, 0, 255, 0, 255,
+      188, 0, 188, 255, 188, 188, 188, 255, 188, 255, 188, 255,
+      0, 0, 255, 255, 188, 188, 255, 255, 255, 255, 255, 255,
+    ]);
+    const actual = resampleRgbaSrgb(source, 2, 2, 3, 3);
+    expect(actual).toEqual(expected);
+    expect(createHash("sha256").update(actual).digest("hex"))
+      .toBe("4a061ed773abed7341bba4d98987e77449e307b76e072f8f1287cd3d1ba2dc32");
   });
 
   it("rejects mismatched, cropped, or nonuniform parity mappings", () => {

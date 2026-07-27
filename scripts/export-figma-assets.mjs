@@ -12,12 +12,14 @@ import {
   normalizeSceneReference,
   optimizePngLosslessly,
   safeOutputPath,
+  validateGoldenInventory,
   validateManifest,
   verifyNoUnlistedFiles,
 } from "./figma-asset-audit.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifestPath = resolve(root, "figma-assets.source.json");
+const goldenInventoryPath = resolve(root, "figma-assets.golden.json");
 const outputRoot = resolve(root, "public/assets/figma");
 const registryPath = resolve(root, "src/assets/figmaAssetRegistry.ts");
 const eyeRegistryPath = resolve(root, "src/assets/eyeAssetRegistry.ts");
@@ -62,6 +64,9 @@ function prepareManifest(rawManifest) {
     .map((sourceEntry) => {
       const entry = { ...sourceEntry, ...(renames[sourceEntry.id] ?? {}) };
       entry.sourceKind = "figma-asset-endpoint";
+      entry.requiredFor = [...new Set(entry.requiredFor)].sort((left, right) => {
+        return APPROVED_SOURCE_NODES.findIndex((node) => node.id === left) - APPROVED_SOURCE_NODES.findIndex((node) => node.id === right);
+      });
       entry.destination = `public/assets/figma/${entry.category}/${entry.id}.${entry.format}`;
       entry.maxBytes = maxBytesFor(entry);
       entry.optimization = entry.id === "subject-lotus" ? "lossless-deflate" : "source-bytes";
@@ -108,8 +113,8 @@ function parityMappingFor(node, originalCaptureDimensions) {
   const isFullScene = node.id === "18:113" || node.id === "109:3669";
   const normalizedDimensions = isFullScene ? { width: 1020, height: 663 } : sourceDimensions;
   const scale = isFullScene ? 0.796875 : 1;
-  const transform = isFullScene ? "full-crop-resample" : "identity";
-  const resampling = isFullScene ? "nearest-neighbor" : "none";
+  const transform = isFullScene ? "full-crop-resample-srgb" : "identity";
+  const resampling = isFullScene ? "linear-light-bilinear-premultiplied-alpha" : "none";
   return {
     sourceDimensions,
     originalCaptureDimensions,
@@ -245,15 +250,15 @@ export type FigmaParityMapping = Readonly<{
   captureCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
   scaleX: number;
   scaleY: number;
-  transform: "full-crop-resample" | "identity";
-  resampling: "nearest-neighbor" | "none";
+  transform: "full-crop-resample-srgb" | "identity";
+  resampling: "linear-light-bilinear-premultiplied-alpha" | "none";
   browserCapture: Readonly<{
     width: number;
     height: number;
     scale: number;
     sourceCrop: Readonly<{ x: number; y: number; width: number; height: number }>;
-    transform: "full-crop-resample" | "identity";
-    resampling: "nearest-neighbor" | "none";
+    transform: "full-crop-resample-srgb" | "identity";
+    resampling: "linear-light-bilinear-premultiplied-alpha" | "none";
   }>;
 }>;
 
@@ -293,6 +298,7 @@ export function eyeAssetForEntity(entityId: string): EyeAssetEntry {
 }
 
 const sourceManifest = JSON.parse(await readFile(manifestPath, "utf8"));
+const goldenInventory = JSON.parse(await readFile(goldenInventoryPath, "utf8"));
 
 if (mode === "--write") {
   const manifest = prepareManifest(sourceManifest);
@@ -319,7 +325,7 @@ if (mode === "--write") {
     entry.sourceSha256 = digest(sourceBytes);
     entry.sourceByteLength = sourceBytes.length;
     const isNormalizedScene = entry.role === "reference" && entry.provenance.parityMapping.kind === "full-scene-normalized";
-    entry.optimization = isNormalizedScene ? "nearest-neighbor-full-crop-normalization" : entry.optimization;
+    entry.optimization = isNormalizedScene ? "linear-light-bilinear-srgb-full-crop-normalization" : entry.optimization;
     const outputBytes = isNormalizedScene
       ? normalizeSceneReference(sourceBytes)
       : entry.optimization === "lossless-deflate" ? optimizePngLosslessly(sourceBytes) : sourceBytes;
@@ -340,6 +346,7 @@ if (mode === "--write") {
     throw new Error("Figma asset inventory exceeds total payload budget");
   }
   validateManifest(manifest);
+  validateGoldenInventory(manifest, goldenInventory);
 
   await rm(outputRoot, { recursive: true, force: true });
   for (const entry of manifest.assets) {
@@ -356,6 +363,7 @@ if (mode === "--write") {
 } else {
   const manifest = sourceManifest;
   validateManifest(manifest);
+  validateGoldenInventory(manifest, goldenInventory);
   for (const entry of manifest.assets) {
     const bytes = await readFile(safeOutputPath(root, entry.destination));
     if (entry.format === "svg") assertSafeSvg(bytes);
