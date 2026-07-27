@@ -18,13 +18,31 @@ export function homeFor(cursor: Vec2): Vec2 {
 }
 
 /**
+ * Optional behavior-data for a Subject. Currently flags whether the
+ * subject is fixed at its drop point (`placed`) or following the cursor.
+ *
+ * `placed` and `isFollowing` are kept as parallel flags for future
+ * expansion (e.g. a "pick up again" interaction that flips a placed
+ * subject back into cursor-follow mode without respawning it).
+ */
+export type SubjectBehaviorData = {
+  placed?: boolean;
+  isFollowing?: boolean;
+};
+
+/**
  * Cursor-following steering for the Subject entity.
  *
  * Unlike EyeBehavior's locomotion (flee/drag away from the cursor), the
- * Subject eases toward a point derived from the current cursor position
- * each step (via homeFor), using the same spring-home + integrator
- * primitives eyes use for their home-seeking physics (see main.ts's
- * eye tick loop for the matching stateless call pattern).
+ * Subject eases toward its home point each step, using the same
+ * spring-home + integrator primitives eyes use for their home-seeking
+ * physics (see main.ts's eye tick loop for the matching stateless call
+ * pattern).
+ *
+ * When `data?.placed` is true, the home is held at the subject's
+ * initial drop point (whatever `physics.home` was passed in). When
+ * false/undefined, the home tracks the cursor via `homeFor` — the
+ * pre-existing cursor-follow behavior.
  *
  * Stateless: mutates the given physics struct in place, mirroring how
  * entity.physics.pos/vel/home on the shared Entity struct is the single
@@ -34,8 +52,11 @@ export function stepSubjectPhysics(
   physics: { pos: Vec2; vel: Vec2; home: Vec2 },
   cursor: Vec2,
   dtSeconds: number,
+  data?: SubjectBehaviorData,
 ): void {
-  physics.home = homeFor(cursor);
+  if (!data?.placed) {
+    physics.home = homeFor(cursor);
+  }
   const spring = computeSpring({
     pos: physics.pos,
     vel: physics.vel,

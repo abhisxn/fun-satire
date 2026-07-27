@@ -72,3 +72,53 @@ describe("entities/behaviors/SubjectBehavior", () => {
     expect(physics.home).toEqual(homeFor(cursor));
   });
 });
+
+describe("SubjectBehavior placed lifecycle", () => {
+  it("keeps a fixed home when behavior.data.placed is true (home does not track cursor)", () => {
+    const data: { placed: boolean } = { placed: true };
+    const placedHome: Vec2 = { x: 200, y: 150 };
+
+    const physics = {
+      pos: { x: placedHome.x, y: placedHome.y },
+      vel: { x: 0, y: 0 },
+      home: { x: placedHome.x, y: placedHome.y },
+    };
+
+    const cursor: Vec2 = { x: 800, y: 600 };
+    stepSubjectPhysics(physics, cursor, 1 / 60, data);
+
+    expect(physics.home.x).toBe(placedHome.x);
+    expect(physics.home.y).toBe(placedHome.y);
+  });
+
+  it("tracks cursor via homeFor when behavior.data.placed is false", () => {
+    const data: { placed: boolean } = { placed: false };
+    const physics = {
+      pos: { x: 0, y: 0 },
+      vel: { x: 0, y: 0 },
+      home: { x: 0, y: 0 },
+    };
+
+    const cursor: Vec2 = { x: 500, y: 400 };
+    stepSubjectPhysics(physics, cursor, 1 / 60, data);
+
+    const expected = homeFor(cursor);
+    expect(physics.home.x).toBe(expected.x);
+    expect(physics.home.y).toBe(expected.y);
+  });
+
+  it("defaults to cursor-follow when behavior.data is omitted (back-compat)", () => {
+    const physics = {
+      pos: { x: 0, y: 0 },
+      vel: { x: 0, y: 0 },
+      home: { x: 0, y: 0 },
+    };
+
+    const cursor: Vec2 = { x: 100, y: 200 };
+    stepSubjectPhysics(physics, cursor, 1 / 60);
+
+    const expected = homeFor(cursor);
+    expect(physics.home.x).toBe(expected.x);
+    expect(physics.home.y).toBe(expected.y);
+  });
+});
