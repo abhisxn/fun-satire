@@ -39,6 +39,12 @@ export const electricBurnEffect: EffectDef = {
     {
       durationMs: ELECTRIC_BURN.flashMs,
       easing: ELECTRIC_BURN.flashEase,
+      visual: {
+        archetype: "arc",
+        color: "#4de3ff",
+        opacity: 0.8,
+        jitterPx: 6,
+      },
       update: (ctx, t) => {
         ctx.entity.behavior.data.flashIntensity = t;
       },

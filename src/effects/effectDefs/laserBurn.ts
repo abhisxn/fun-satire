@@ -93,9 +93,10 @@ export const laserBurnEffect: EffectDef = {
       durationMs: LASER_BURN.beamMs,
       easing: EASE_OUT,
       visual: {
-        beamWidth: 8,
-        beamColor: PALETTE.coral,
-        beamOpacity: 0.9,
+        archetype: "beam",
+        color: "#ff3d7f",
+        opacity: 0.85,
+        widthPx: 2,
       },
       update: (_ctx, _t) => {
         // Beam fades out over duration — rendered by Renderer
@@ -106,9 +107,10 @@ export const laserBurnEffect: EffectDef = {
       durationMs: LASER_BURN.impactGlowMs,
       easing: EASE_OUT,
       visual: {
-        glowRadius: 40,
-        glowColor: PALETTE.coral,
-        glowOpacity: 0.6,
+        archetype: "glow",
+        color: "#ff3d7f",
+        opacity: 0.6,
+        radiusPx: 40,
       },
       update: (_ctx, _t) => {
         // Glow expands and fades — rendered by Renderer
