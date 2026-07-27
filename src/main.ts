@@ -241,6 +241,38 @@ hud.onRepelChange((multiplier) => {
   repelMultiplier = multiplier;
 });
 
+hud.onAttackPress((subjectId) => {
+  if (subjectId === null) return;
+  const cur = engine.cursor();
+  if (!cur.active) return;
+  powerCtrl.tryPress(subjectId, cur.x, cur.y, engine.getNow());
+});
+
+hud.onAttackRelease(() => {
+  powerCtrl.release(engine.getNow());
+});
+
+hud.onVisibilityToggle((visible) => {
+  void visible;
+});
+
+hud.onHandToolToggle((active) => {
+  void active;
+});
+
+hud.onTextTool(() => {
+  if (subjectId === null && subjectRespawnAtMs === null) {
+    subjectRespawnAtMs = engine.getNow();
+  }
+});
+
+hud.onGridTool(() => {
+  // Grid opens the existing subject browser drawer.
+  document.querySelector<HTMLElement>(".hud-placard__subject-toggle")?.dispatchEvent(
+    new MouseEvent("click", { bubbles: true }),
+  );
+});
+
 const engine = new Engine();
 engine.events.on("tick", ({ phase, dt }) => {
   const nowMs = engine.getNow();

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { Hud } from "../../src/hud/Hud";
 // @vitest-environment happy-dom
 
@@ -74,3 +74,139 @@ import { resolve } from "node:path";
 function readText(rel: string): string {
   return readFileSync(resolve(__dirname, "..", "..", rel), "utf8");
 }
+
+describe("hud/Hud (Phase C Lane 1 chrome)", () => {
+  let root: HTMLElement;
+  let hud: Hud;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="hud-root"></div>';
+    root = document.querySelector<HTMLElement>("#hud-root")!;
+    hud = new Hud(root);
+  });
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  const q = (sel: string): HTMLElement =>
+    root.querySelector<HTMLElement>(sel)!;
+
+  it("renders the new drag handle, visibility toggle, and chrome tool buttons", () => {
+    expect(q(".hud-placard__drag-handle")).not.toBeNull();
+    expect(q(".hud-visibility-toggle")).not.toBeNull();
+    expect(q(".hud-placard__tool--hand")).not.toBeNull();
+    expect(q(".hud-placard__tool--text")).not.toBeNull();
+    expect(q(".hud-placard__tool--grid")).not.toBeNull();
+  });
+
+  it("renders the ATTACK CTA with icon and label", () => {
+    const attack = q(".hud-placard__attack");
+    expect(attack).not.toBeNull();
+    expect(q(".hud-placard__attack-icon svg")).not.toBeNull();
+    expect(q(".hud-placard__attack-label").textContent).toBe("attack");
+  });
+
+  it("clicking-and-holding the ATTACK CTA calls onAttackPress with the current subject id", () => {
+    const onPress = vi.fn();
+    const onRelease = vi.fn();
+    hud.onAttackPress(onPress);
+    hud.onAttackRelease(onRelease);
+    hud.setCurrentSubjectId(42);
+
+    const attack = q(".hud-placard__attack");
+    attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(onPress).toHaveBeenCalledWith(42);
+    expect(attack.dataset.pressed).toBe("true");
+
+    attack.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
+    expect(onRelease).toHaveBeenCalledTimes(1);
+    expect(attack.dataset.pressed).toBe("false");
+  });
+
+  it("ATTACK press passes null when no subject is set", () => {
+    const onPress = vi.fn();
+    hud.onAttackPress(onPress);
+    hud.setCurrentSubjectId(null);
+
+    q(".hud-placard__attack").dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }),
+    );
+    expect(onPress).toHaveBeenCalledWith(null);
+  });
+
+  it("ATTACK release fires on pointercancel and on pointerleave while pressed", () => {
+    const onRelease = vi.fn();
+    hud.onAttackRelease(onRelease);
+    const attack = q(".hud-placard__attack");
+
+    attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
+    attack.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true, pointerId: 1 }));
+    expect(onRelease).toHaveBeenCalledTimes(1);
+
+    attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 2 }));
+    attack.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true, pointerId: 2 }));
+    expect(onRelease).toHaveBeenCalledTimes(2);
+  });
+
+  it("visibility toggle hides and shows the placard", () => {
+    const onToggle = vi.fn();
+    hud.onVisibilityToggle(onToggle);
+    const placard = q(".hud-placard");
+    const toggle = q(".hud-visibility-toggle");
+
+    expect(placard.dataset.hidden).toBeUndefined();
+    toggle.click();
+    expect(placard.dataset.hidden).toBe("true");
+    expect(hud.isHidden()).toBe(true);
+    expect(onToggle).toHaveBeenCalledWith(false);
+
+    toggle.click();
+    expect(placard.dataset.hidden).toBe("false");
+    expect(hud.isHidden()).toBe(false);
+    expect(onToggle).toHaveBeenCalledWith(true);
+  });
+
+  it("hand tool toggle fires callback and sets aria-pressed", () => {
+    const onToggle = vi.fn();
+    hud.onHandToolToggle(onToggle);
+    const hand = q(".hud-placard__tool--hand");
+
+    expect(hand.getAttribute("aria-pressed")).toBe("false");
+    hand.click();
+    expect(hand.getAttribute("aria-pressed")).toBe("true");
+    expect(hand.dataset.active).toBe("true");
+    expect(onToggle).toHaveBeenCalledWith(true);
+
+    hand.click();
+    expect(hand.getAttribute("aria-pressed")).toBe("false");
+    expect(onToggle).toHaveBeenCalledWith(false);
+  });
+
+  it("text and grid tool buttons fire their callbacks", () => {
+    const onText = vi.fn();
+    const onGrid = vi.fn();
+    hud.onTextTool(onText);
+    hud.onGridTool(onGrid);
+    q(".hud-placard__tool--text").click();
+    q(".hud-placard__tool--grid").click();
+    expect(onText).toHaveBeenCalledTimes(1);
+    expect(onGrid).toHaveBeenCalledTimes(1);
+  });
+
+  it("drag handle translates the placard via CSS custom properties", () => {
+    const handle = q(".hud-placard__drag-handle");
+    handle.dispatchEvent(new PointerEvent("pointerdown", {
+      bubbles: true, pointerId: 1, clientX: 100, clientY: 200,
+    }));
+    handle.dispatchEvent(new PointerEvent("pointermove", {
+      bubbles: true, pointerId: 1, clientX: 140, clientY: 230,
+    }));
+    const placard = q(".hud-placard");
+    expect(placard.style.getPropertyValue("--placard-x")).toBe("40px");
+    expect(placard.style.getPropertyValue("--placard-y")).toBe("30px");
+    handle.dispatchEvent(new PointerEvent("pointerup", {
+      bubbles: true, pointerId: 1, clientX: 140, clientY: 230,
+    }));
+  });
+});
