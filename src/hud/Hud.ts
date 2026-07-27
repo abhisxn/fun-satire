@@ -3,6 +3,7 @@ import { hudIcons, HUD_TEAR_PATH, type HudMode, type HudPower } from "./hudIcons
 import { SubjectDrawer } from "./SubjectDrawer";
 import { SubjectDragSource } from "../input/SubjectDragSource";
 import type { SubjectSkin } from "./subjectSkinRegistry";
+import type { TextFontId } from "./textFontRegistry";
 
 const MODE_CYCLE: readonly HudMode[] = ["eyes", "bugs", "pointedFinger"];
 const QTY_MIN = 1;
@@ -164,6 +165,14 @@ export class Hud {
 
   onSubjectResize(cb: (scale: number) => void): void {
     this.drawer.onResize(cb);
+  }
+
+  onSubjectFontChange(cb: (fontId: TextFontId) => void): void {
+    this.drawer.onFontChange(cb);
+  }
+
+  onSubjectAlignChange(cb: (align: "left" | "center" | "right") => void): void {
+    this.drawer.onAlignChange(cb);
   }
 
   onQuantityChange(cb: (quantity: number) => void): void {

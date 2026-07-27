@@ -2,6 +2,7 @@
 import { PALETTE, FONT } from "../../config/tokens";
 import type { SubjectColors } from "../../content/schema";
 import { paperCutEdgePath, withPaperCutShadow } from "../paperCut";
+import { getTextFontEntry, type TextFontId } from "../../hud/textFontRegistry";
 
 export type DrawSubjectTextInput = {
   pos: { x: number; y: number };
@@ -10,6 +11,8 @@ export type DrawSubjectTextInput = {
   scale: number;
   colors: SubjectColors;
   rotation: number;
+  fontId?: TextFontId | string;
+  align?: "left" | "center" | "right";
 };
 
 export const SUBJECT_TEXT_DRAW = Object.freeze({
@@ -41,6 +44,10 @@ export function drawSubjectText(ctx: CanvasRenderingContext2D, input: DrawSubjec
   const rx = s * (0.5 + SUBJECT_TEXT_DRAW.paddingXFraction);
   const ry = s * (0.28 + SUBJECT_TEXT_DRAW.paddingYFraction);
 
+  const fontEntry = getTextFontEntry(input.fontId);
+  const align = input.align ?? "center";
+  const fontFamily = fontEntry.id === "spaceMono" ? FONT.mono : fontEntry.cssFontFamily;
+
   ctx.save();
   ctx.translate(pos.x, pos.y);
   ctx.rotate(rotation);
@@ -56,10 +63,15 @@ export function drawSubjectText(ctx: CanvasRenderingContext2D, input: DrawSubjec
   ctx.fill();
 
   ctx.fillStyle = colorByName(colors.outline);
-  ctx.font = `700 ${Math.max(10, s * SUBJECT_TEXT_DRAW.fontSizeFraction)}px ${FONT.mono}`;
-  ctx.textAlign = "center";
+  ctx.font = `700 ${Math.max(10, s * SUBJECT_TEXT_DRAW.fontSizeFraction)}px ${fontFamily}`;
+  ctx.textAlign = align;
   ctx.textBaseline = "middle";
-  ctx.fillText(text, pos.x, pos.y);
+  const xOffset = align === "left"
+    ? -rx * 0.78
+    : align === "right"
+      ? rx * 0.78
+      : 0;
+  ctx.fillText(text, pos.x + xOffset, pos.y);
 
   ctx.restore();
 }
