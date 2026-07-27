@@ -10,6 +10,7 @@ import { computeGazeLines } from "./drawers/drawGazeLines";
 import { drawCollectiveEffectVisual } from "./drawers/drawCollectiveEffectVisual";
 import { selectCollectiveContributors } from "../effects/collectiveContributors";
 import { drawSubject } from "./drawers/drawSubject";
+import { drawLockIndicator } from "./drawers/drawLockIndicator";
 import { computePupilOffset } from "./pupilTrack";
 import type { EyeBehavior, EyeBlinkTimer } from "../entities/behaviors/EyeBehavior";
 import { PALETTE } from "../config/tokens";
@@ -44,17 +45,20 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   hudMode: HudMode;
   quantity: number;
   repelMultiplier: number;
-  subject?: {
-    id: number;
-    pos: { x: number; y: number };
-    sizePx: number;
-    colors: SubjectColors;
-    scale: number;
-    subjectSkin?: SubjectSkin;
-  } | null;
+  subject?: SubjectRenderInfo | null;
   chargeT?: number;
   assistRadiusPx?: number;
   imageCache?: ImageAssetCache;
+};
+
+export type SubjectRenderInfo = {
+  id: number;
+  pos: { x: number; y: number };
+  sizePx: number;
+  colors: SubjectColors;
+  scale: number;
+  subjectSkin?: SubjectSkin;
+  locked?: boolean;
 };
 
 export type CrowdDrawOrderMember = { id: number; pos: { x: number; y: number } };
@@ -201,6 +205,9 @@ export function renderFrame(opts: RenderFrameOptions): void {
       shadowIntensity,
       imageCache: opts.imageCache,
     });
+    if (opts.subject.locked) {
+      drawLockIndicator(ctx, { pos: opts.subject.pos, sizePx: opts.subject.sizePx });
+    }
   }
 
   if (cursor.active) {
