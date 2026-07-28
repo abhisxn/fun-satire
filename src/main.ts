@@ -290,7 +290,7 @@ export function queryNearestEye(
  */
 export function applySubjectSkinPatch(
   id: EntityId,
-  patch: { fontId?: string; scale?: number; align?: "left" | "center" | "right" },
+  patch: { value?: string; fontId?: string; scale?: number; align?: "left" | "center" | "right" },
 ): void {
   const rec = subjects.get(id);
   if (!rec || rec.skin.kind !== "text") return;
@@ -298,6 +298,10 @@ export function applySubjectSkinPatch(
   rec.skin = next;
   const e = store.get(id, { live: true });
   if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = next;
+}
+
+export function applySubjectTextChange(id: EntityId, value: string): void {
+  applySubjectSkinPatch(id, { value });
 }
 
 export function applySubjectFontChange(id: EntityId, fontId: string): void {
@@ -413,6 +417,13 @@ hud.onSubjectFontChange((subjectId, fontId) => {
 hud.onSubjectAlignChange((subjectId, align) => {
   if (subjectId === null) return;
   applySubjectAlignChange(subjectId, align);
+  const rec = subjects.get(subjectId);
+  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
+});
+
+hud.onSubjectTextChange((subjectId, kind, value) => {
+  if (subjectId === null || kind !== "value") return;
+  applySubjectTextChange(subjectId, value);
   const rec = subjects.get(subjectId);
   if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });

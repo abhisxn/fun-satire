@@ -186,6 +186,18 @@ describe("main.ts identity-aware formatting handlers (PR2 Lane 3)", () => {
     expect(listSubjectRecords().get(id1 as number)?.skin).toMatchObject({ align: "left" });
   });
 
+  it("applySubjectTextChange updates a text subject's value", async () => {
+    const id1 = applySubjectDrop({
+      skin: { kind: "text", value: "A", scale: 1 },
+      canvasPos: { x: 50, y: 50 },
+      nowMs: 1,
+    });
+
+    const { applySubjectTextChange } = await import("../../src/main");
+    applySubjectTextChange(id1 as number, "updated");
+    expect(listSubjectRecords().get(id1 as number)?.skin).toMatchObject({ value: "updated" });
+  });
+
   it("a formatting change for an unknown subjectId is a no-op", async () => {
     const id1 = applySubjectDrop({
       skin: { kind: "text", value: "A", scale: 1 },

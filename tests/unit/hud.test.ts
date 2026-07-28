@@ -304,4 +304,30 @@ describe("hud/Hud (Figma glass-pill HUD)", () => {
     const css = readText("src/hud/controlBar.css");
     expect(css).toMatch(/\.control-bar__mode-btn[\s\S]{0,160}?width:\s*46px[\s\S]{0,80}?height:\s*46px/);
   });
+
+  it("avatar gallery select triggers subject drop at viewport center, not null", () => {
+    const dropCb = vi.fn();
+    hud.onSubjectDrop(dropCb);
+    hud.setVisualFixturePanel("gallery");
+    const card = root.querySelector<HTMLButtonElement>('[data-avatar-card]')!;
+    card.click();
+    expect(dropCb).toHaveBeenCalledTimes(1);
+    const arg = dropCb.mock.calls[0][0];
+    expect(arg.canvasPos).not.toBeNull();
+    expect(typeof arg.canvasPos.x).toBe("number");
+    expect(typeof arg.canvasPos.y).toBe("number");
+    expect(arg.canvasPos.x).toBeGreaterThan(0);
+    expect(arg.canvasPos.y).toBeGreaterThan(0);
+  });
+
+  it("text composer value change fires onSubjectTextChange", () => {
+    const textCb = vi.fn();
+    hud.onSubjectTextChange(textCb);
+    hud.setLockedSubjectId(42);
+    hud.setVisualFixturePanel("text");
+    const textarea = root.querySelector<HTMLTextAreaElement>("[data-text-composer-value]")!;
+    textarea.value = "new text";
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(textCb).toHaveBeenCalledWith(42, "value", "new text");
+  });
 });

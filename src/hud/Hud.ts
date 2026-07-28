@@ -48,6 +48,13 @@ export class Hud {
   private subjectAlignChangeCb: ((subjectId: number | null, align: "left" | "center" | "right") => void) | null = null;
   private subjectSkinChangeCb: ((subjectId: number | null, skin: SubjectSkin) => void) | null = null;
   private subjectTextChangeCb: ((subjectId: number | null, kind: "value", value: string) => void) | null = null;
+
+  private getViewportCenter(): { x: number; y: number } {
+    return {
+      x: (window.innerWidth || document.documentElement.clientWidth || 1280) / 2,
+      y: (window.innerHeight || document.documentElement.clientHeight || 832) / 2,
+    };
+  }
   private overlayAnchor: HTMLElement;
   private overlayPanels: HTMLElement;
   private controlBar: ControlBar | null = null;
@@ -124,7 +131,7 @@ export class Hud {
       if (!asset) return;
       this.activeSubjectSkin = { kind: "avatar", assetId: asset.id };
       this.subjectSkinChangeCb?.(this.lockedSubjectId, this.activeSubjectSkin);
-      this.subjectDropCb?.({ skin: this.activeSubjectSkin, canvasPos: null });
+      this.subjectDropCb?.({ skin: this.activeSubjectSkin, canvasPos: this.getViewportCenter() });
     });
 
     this.textComposer = new TextSubjectComposer(this.overlayPanels, {
@@ -301,6 +308,10 @@ export class Hud {
 
   onSubjectSkinChange(cb: (subjectId: number | null, skin: SubjectSkin) => void): void {
     this.subjectSkinChangeCb = cb;
+  }
+
+  onSubjectTextChange(cb: (subjectId: number | null, kind: "value", value: string) => void): void {
+    this.subjectTextChangeCb = cb;
   }
 
   onQuantityChange(cb: (quantity: number) => void): void {
