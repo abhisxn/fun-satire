@@ -21,8 +21,8 @@ describe("scaffold cleanup (T2a)", () => {
     expect(exists("src/counter.ts")).toBe(false);
   });
 
-  it("removes the Vite starter assets directory", () => {
-    expect(isDir("src/assets")).toBe(false);
+  it("removes the Vite starter TypeScript asset from the approved assets directory", () => {
+    expect(exists("src/assets/typescript.svg")).toBe(false);
   });
 
   it("removes the Vite starter icons.svg from public", () => {
@@ -106,7 +106,12 @@ describe("scaffold cleanup (T2a)", () => {
     for (const top of ["src", "public"]) {
       if (isDir(top)) walk(top);
     }
-    const blocked = offenders.filter((p) => /(typescript|vite|hero|icons)/i.test(p));
+    const blocked = offenders.filter((path) => {
+      if (/\/(?:typescript|vite)\.svg$/i.test(path)) return true;
+      if (!path.endsWith(".svg")) return false;
+      const source = readText(path);
+      return /#646cff|vite logo|typescript logo/i.test(source);
+    });
     expect(blocked).toEqual([]);
   });
 

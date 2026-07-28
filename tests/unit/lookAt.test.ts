@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeLookAtAngle, computeLookAtRotation, LOOKAT_GAIN } from "../../src/physics/LookAt";
+import { computeLookAtAngle, computeLookAtRotation, computeLookAtDamping, LOOKAT_GAIN } from "../../src/physics/LookAt";
 
 describe("computeLookAtAngle", () => {
   it("returns 0 when the target is directly to the east", () => {
@@ -45,5 +45,40 @@ describe("computeLookAtRotation", () => {
     const eyes = Math.abs(computeLookAtRotation(from, to, "eyes"));
     const bugs = Math.abs(computeLookAtRotation(from, to, "bugs"));
     expect(bugs).toBeGreaterThan(eyes);
+  });
+
+  it("with no perEntityDamping argument, behaves identically to the base gain (backward compatible)", () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 10, y: 10 };
+    const fullAngle = computeLookAtAngle(from, to);
+    expect(computeLookAtRotation(from, to, "eyes", undefined)).toBeCloseTo(fullAngle * LOOKAT_GAIN.eyes, 6);
+  });
+
+  it("scales further by the optional perEntityDamping multiplier", () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 10, y: 10 };
+    const fullAngle = computeLookAtAngle(from, to);
+    expect(computeLookAtRotation(from, to, "eyes", 0.5)).toBeCloseTo(fullAngle * LOOKAT_GAIN.eyes * 0.5, 6);
+    expect(computeLookAtRotation(from, to, "eyes", 1.5)).toBeCloseTo(fullAngle * LOOKAT_GAIN.eyes * 1.5, 6);
+  });
+});
+
+describe("computeLookAtDamping", () => {
+  it("is deterministic: same id always returns the same value", () => {
+    expect(computeLookAtDamping(7)).toBe(computeLookAtDamping(7));
+    expect(computeLookAtDamping(42)).toBe(computeLookAtDamping(42));
+  });
+
+  it("stays within the [0.7, 1.3) organic-variance range", () => {
+    for (let id = 0; id < 200; id++) {
+      const damping = computeLookAtDamping(id);
+      expect(damping).toBeGreaterThanOrEqual(0.7);
+      expect(damping).toBeLessThan(1.3);
+    }
+  });
+
+  it("produces varied values across different ids (not a constant)", () => {
+    const values = new Set(Array.from({ length: 20 }, (_, i) => computeLookAtDamping(i)));
+    expect(values.size).toBeGreaterThan(10);
   });
 });

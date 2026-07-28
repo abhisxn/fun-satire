@@ -22,6 +22,8 @@ export type HudIcons = {
   move: string;
   textBox: string;
   attack: string;
+  filterLines: string;
+  filterKnob: string;
 };
 
 /**
@@ -97,4 +99,9 @@ export const hudIcons: HudIcons = {
 
   // ATTACK — crosshair / target
   attack: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8" fill="none" stroke="${I}" stroke-width="1.3"/><circle cx="12" cy="12" r="4" fill="none" stroke="${I}" stroke-width="1.3"/><circle cx="12" cy="12" r="1.4" fill="${C}"/><line x1="12" y1="1.5" x2="12" y2="5" stroke="${I}" stroke-width="1.3" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="22.5" stroke="${I}" stroke-width="1.3" stroke-linecap="round"/><line x1="1.5" y1="12" x2="5" y2="12" stroke="${I}" stroke-width="1.3" stroke-linecap="round"/><line x1="19" y1="12" x2="22.5" y2="12" stroke="${I}" stroke-width="1.3" stroke-linecap="round"/></svg>`,
+
+  // Filter — three sliders (lines + knobs)
+  filterLines: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="3" y1="6" x2="21" y2="6" stroke="${I}" stroke-width="1.4" stroke-linecap="round"/><circle cx="9" cy="6" r="2.2" fill="${CREAM}" stroke="${I}" stroke-width="1.4"/><line x1="3" y1="12" x2="21" y2="12" stroke="${I}" stroke-width="1.4" stroke-linecap="round"/><circle cx="15" cy="12" r="2.2" fill="${CREAM}" stroke="${I}" stroke-width="1.4"/><line x1="3" y1="18" x2="21" y2="18" stroke="${I}" stroke-width="1.4" stroke-linecap="round"/><circle cx="7" cy="18" r="2.2" fill="${CREAM}" stroke="${I}" stroke-width="1.4"/></svg>`,
+
+  filterKnob: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="6" fill="${CREAM}" stroke="${I}" stroke-width="1.4"/></svg>`,
 };

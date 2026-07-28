@@ -33,12 +33,12 @@ function makeCtx(): CanvasRenderingContext2D {
   } as unknown as CanvasRenderingContext2D;
 }
 
-function makeEyeEntity(id: number, rotation = 0): Entity {
+function makeEyeEntity(id: number, rotation = 0, assetId = "eye-compact-01"): Entity {
   return {
     id,
     content: { manifestId: "eye-1", rig: "eye", renderType: "eye" },
     physics: { pos: { x: 10, y: 10 }, vel: { x: 0, y: 0 }, home: { x: 10, y: 10 }, scale: 1, rotation },
-    behavior: { data: { shapeVariant: "almond", baseSizePx: 56 } },
+    behavior: { data: { shapeVariant: "almond", baseSizePx: 56, assetId } },
     lifecycle: { alive: true, dragged: false, dying: false, respawnAt: null },
   };
 }
@@ -116,5 +116,27 @@ describe("renderFrame rotation", () => {
 
     renderFrame(makeOptions({ ctx, store }));
     expect(rotateSpy).toHaveBeenCalledWith(0.75);
+  });
+
+  it("forwards the entity's assetId from data into the drawEye call", () => {
+    const drawEyeMock = drawEye as unknown as ReturnType<typeof vi.fn>;
+    const store = new EntityStore();
+    store.insert(makeEyeEntity(1, 0, "eye-large-03"));
+
+    renderFrame(makeOptions({ store }));
+
+    expect(drawEyeMock).toHaveBeenCalledTimes(1);
+    const passedInput = drawEyeMock.mock.calls[0]?.[1] as { assetId?: string };
+    expect(passedInput.assetId).toBe("eye-large-03");
+  });
+
+  it("throws a clear diagnostic when a required eye assetId is missing from the registry entirely", () => {
+    const store = new EntityStore();
+    // "eye-bogus-99" is not in EYE_ASSET_IDS / the registry; Renderer should fail fast.
+    store.insert(makeEyeEntity(1, 0, "eye-bogus-99"));
+
+    expect(() => renderFrame(makeOptions({ store }))).toThrow(
+      /eye asset "eye-bogus-99" is not registered/,
+    );
   });
 });

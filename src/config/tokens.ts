@@ -1,10 +1,8 @@
-export const PALETTE = Object.freeze({
-  cream: "#EDE7DD",
-  slate: "#5B7A8C",
-  sage: "#6D7A5E",
-  ink: "#2A2420",
-  coral: "#E8A9A0",
-} as const);
+import { CANVAS_ART, UI_TOKENS } from "./visualTokens";
+
+export { CANVAS_ART, UI_TOKENS } from "./visualTokens";
+
+export const PALETTE = CANVAS_ART;
 
 export type PaletteKey = keyof typeof PALETTE;
 
@@ -27,26 +25,17 @@ export function listAcceptedPaletteKeys(): readonly PaletteKey[] {
 }
 
 export const FONT = Object.freeze({
-  display: '"Fraunces Variable", "Fraunces", Georgia, serif',
-  mono: '"Space Mono", ui-monospace, "SFMono-Regular", monospace',
+  display: UI_TOKENS.typography.displayFamily,
+  mono: UI_TOKENS.typography.monoFamily,
 } as const);
 
-export const EASE = Object.freeze({
-  protest: "cubic-bezier(0.22, 1, 0.36, 1)",
-  charge: "cubic-bezier(0.32, 0.72, 0, 1)",
-  fade: "cubic-bezier(0.4, 0, 0.2, 1)",
-  spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-} as const);
+export const EASE = Object.freeze(UI_TOKENS.motion.ease);
 
-export const DURATION = Object.freeze({
-  fast: 120,
-  base: 200,
-  slow: 360,
-} as const);
+export const DURATION = Object.freeze(UI_TOKENS.motion.duration);
 
 export const MOTION = Object.freeze({
-  multiplier: 1,
-  reducedMultiplier: 0.4,
+  multiplier: UI_TOKENS.motion.multiplier,
+  reducedMultiplier: UI_TOKENS.motion.reducedMultiplier,
 } as const);
 
 export function motionScale(matchesReducedMotion: boolean): number {

@@ -1,14 +1,22 @@
-// tests/unit/drawBug.test.ts
 import { describe, it, expect, vi } from "vitest";
 import { drawBug, computeScuttleJitter, BUG_DRAW } from "../../src/render/drawers/drawBug";
+import type { ImageAssetCache } from "../../src/render/imageAssets";
+
+const fakeImage = () => ({ naturalWidth: 420, naturalHeight: 216 }) as HTMLImageElement;
+
+const fakeCache = (status: "ready" | "loading" = "ready"): ImageAssetCache =>
+  ({
+    get: () =>
+      status === "ready"
+        ? { status: "ready" as const, image: fakeImage() }
+        : { status: "loading" as const },
+  }) as unknown as ImageAssetCache;
 
 const fakeCtx = () =>
   new Proxy(
     {},
     { get: (_t, prop) => (typeof prop === "string" ? vi.fn() : undefined) },
   ) as unknown as CanvasRenderingContext2D;
-
-const colors = { sclera: "cream", iris: "sage", pupil: "ink", highlight: "cream", outline: "ink" } as const;
 
 describe("computeScuttleJitter", () => {
   it("is a pure, deterministic function of (id, timeMs)", () => {
@@ -33,35 +41,31 @@ describe("computeScuttleJitter", () => {
 });
 
 describe("drawBug", () => {
-  it("does not throw with a rotation applied", () => {
+  it("does not throw when imageCache is ready", () => {
     expect(() =>
-      drawBug(fakeCtx(), { pos: { x: 20, y: 20 }, sizePx: 40, colors, timeMs: 500, id: 5, rotation: 0.4 }),
+      drawBug(fakeCtx(), { pos: { x: 20, y: 20 }, sizePx: 40, timeMs: 500, id: 5, rotation: 0.4, imageCache: fakeCache() }),
     ).not.toThrow();
   });
 
-  it("defaults rotation to 0 when omitted", () => {
-    expect(() => drawBug(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 40, colors, timeMs: 0, id: 1 })).not.toThrow();
+  it("does not throw when imageCache is still loading", () => {
+    expect(() =>
+      drawBug(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 40, timeMs: 0, id: 1, imageCache: fakeCache("loading") }),
+    ).not.toThrow();
   });
-});
 
-// Design-system requirement: drawBug's body silhouette must use the shared
-// paperCut.ts utility (paperCutEdgePath + withPaperCutShadow), the same
-// treatment drawEye.ts/drawSubject*.ts use — not a bespoke ctx.ellipse fill.
-// withPaperCutShadow sets a fixed shadowColor ("rgba(42, 36, 32, 0.22)")
-// while active, so its presence during the draw call is a reliable signal
-// the shared utility ran.
-describe("paperCut.ts consistency (no bespoke edge/shadow styling)", () => {
-  it("drawBug applies the shared paper-cut shadow treatment to its body", () => {
-    const shadowColors: string[] = [];
+  it("does not throw when imageCache is omitted", () => {
+    expect(() =>
+      drawBug(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 40, timeMs: 0, id: 1 }),
+    ).not.toThrow();
+  });
+
+  it("calls drawImage when image is ready", () => {
+    const drawImage = vi.fn();
     const ctx = new Proxy(
-      {},
-      { get: (_t, prop) => (typeof prop === "string" ? vi.fn() : undefined) },
-    );
-    Object.defineProperty(ctx, "shadowColor", {
-      set: (v: string) => shadowColors.push(v),
-      get: () => "",
-    });
-    drawBug(ctx as unknown as CanvasRenderingContext2D, { pos: { x: 20, y: 20 }, sizePx: 40, colors, timeMs: 500, id: 5 });
-    expect(shadowColors).toContain("rgba(42, 36, 32, 0.22)");
+      { drawImage },
+      { get: (t, prop) => (typeof prop === "string" ? (t[prop as keyof typeof t] ?? vi.fn()) : undefined) },
+    ) as unknown as CanvasRenderingContext2D;
+    drawBug(ctx, { pos: { x: 10, y: 10 }, sizePx: 80, timeMs: 0, id: 1, rotation: 0, imageCache: fakeCache() });
+    expect(drawImage).toHaveBeenCalled();
   });
 });

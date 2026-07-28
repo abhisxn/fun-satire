@@ -55,6 +55,8 @@ import { createViewport } from "./render/CanvasUtils";
 import { renderFrame } from "./render/Renderer";
 import { getImageAssetCache } from "./render/imageAssets";
 import { AVATAR_ASSET_REGISTRY } from "./hud/avatarAssetRegistry";
+import { BUG_DRAW } from "./render/drawers/drawBug";
+import { FINGER_DRAW } from "./render/drawers/drawPointedFinger";
 import * as FF from "./physics/ForceField";
 import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
@@ -292,7 +294,11 @@ const subjectManifestEntries = subjectManifest.entries.filter(
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 const imageAssets = getImageAssetCache();
-imageAssets.preload(AVATAR_ASSET_REGISTRY.map((e) => e.url));
+imageAssets.preload([
+  ...AVATAR_ASSET_REGISTRY.map((e) => e.url),
+  BUG_DRAW.imageUrl,
+  FINGER_DRAW.imageUrl,
+]);
 
 const hud = new Hud(hudRoot, stage);
 hud.setMode("eyes");

@@ -1,8 +1,14 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { Hud } from "../../src/hud/Hud";
 // @vitest-environment happy-dom
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { Hud } from "../../src/hud/Hud";
 
-describe("hud/Hud (T22)", () => {
+function readText(rel: string): string {
+  return readFileSync(resolve(__dirname, "..", "..", rel), "utf8");
+}
+
+describe("hud/Hud (Figma glass-pill HUD)", () => {
   let root: HTMLElement;
   let hud: Hud;
 
@@ -15,35 +21,36 @@ describe("hud/Hud (T22)", () => {
     document.body.innerHTML = "";
   });
 
-  it("mounts a placard with the locked data-mode and data-power attributes", () => {
-    const placard = root.querySelector<HTMLElement>(".hud-placard");
-    expect(placard).not.toBeNull();
-    expect(placard?.dataset.mode).toBe("eyes");
-    expect(placard?.dataset.power).toBe("laserBurn");
+  const q = (sel: string): HTMLElement => root.querySelector<HTMLElement>(sel)!;
+
+  it("mounts control bar with locked data-mode and data-power", () => {
+    const bar = q(".control-bar");
+    expect(bar).not.toBeNull();
+    expect(bar.dataset.mode).toBe("eyes");
+    expect(bar.dataset.power).toBe("laserBurn");
   });
 
-  it("renders both SVG icons inside their hosts", () => {
-    const modeIcon = root.querySelector<HTMLElement>(".hud-placard__mode-icon svg");
-    const powerIcon = root.querySelector<HTMLElement>(".hud-placard__power-icon svg");
-    expect(modeIcon).not.toBeNull();
-    expect(powerIcon).not.toBeNull();
+  it("does not render the legacy paper-cut placard", () => {
+    expect(root.querySelector(".hud-placard")).toBeNull();
+    expect(root.querySelector(".subject-drawer")).toBeNull();
+    expect(root.querySelector(".hud-fixture-filter-panel")).toBeNull();
   });
 
-  it("setMode updates label and dataset.mode", () => {
-    hud.setMode("eyes");
-    expect(root.querySelector(".hud-placard__mode-label")!.textContent).toBe("eyes");
-    expect(root.querySelector(".hud-placard")!.dataset.mode).toBe("eyes");
+  it("setMode updates control-bar dataset.mode", () => {
+    hud.setMode("bugs");
+    expect(q(".control-bar").dataset.mode).toBe("bugs");
+    expect(q('[data-control-mode="bugs"]').getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("setPower updates label and dataset.power", () => {
-    hud.setPower("laserBurn");
-    expect(root.querySelector(".hud-placard__power-label")!.textContent).toBe("laser burn");
-    expect(root.querySelector(".hud-placard")!.dataset.power).toBe("laserBurn");
+  it("setPower updates control-bar dataset.power and label", () => {
+    hud.setPower("electricBurn");
+    expect(q(".control-bar").dataset.power).toBe("electricBurn");
+    expect(q("[data-control-power-label]").textContent?.toLowerCase()).toContain("shock");
   });
 
   it("setCharge clamps progress into [0,1] and updates data-visible", () => {
     hud.setCharge(2, true);
-    const charge = root.querySelector<HTMLElement>(".hud-placard__charge")!;
+    const charge = q(".hud-charge");
     expect(charge.dataset.visible).toBe("true");
     expect(charge.style.getPropertyValue("--charge")).toBe("1.000");
     hud.setCharge(-0.5, false);
@@ -51,14 +58,40 @@ describe("hud/Hud (T22)", () => {
     expect(charge.style.getPropertyValue("--charge")).toBe("0.000");
   });
 
-  it("uses only the locked palette colors in the rendered HTML", () => {
-    const html = root.innerHTML;
-    const banned = ["#aa3bff", "#646cff", "#ffffff", "#000000", "system-ui", "Inter"];
-    for (const b of banned) {
-      expect(html.toLowerCase()).not.toContain(b.toLowerCase());
-    }
-    expect(html).toContain("#EDE7DD");
-    expect(html).toContain("#2A2420");
+  it("materializes distinct default, filter, and gallery fixture panel DOM states", () => {
+    hud.setVisualFixturePanel("none");
+    expect(q(".filter-panel").hidden).toBe(true);
+    expect(q(".avatar-gallery").hidden).toBe(true);
+
+    hud.setVisualFixturePanel("filter");
+    expect(q(".filter-panel").hidden).toBe(false);
+    expect(q(".filter-panel").inert).toBe(false);
+    expect(q(".avatar-gallery").hidden).toBe(true);
+
+    hud.setVisualFixturePanel("gallery");
+    expect(q(".filter-panel").hidden).toBe(true);
+    expect(q(".avatar-gallery").hidden).toBe(false);
+    expect(root.querySelectorAll("[data-avatar-card]").length).toBeGreaterThan(0);
+  });
+
+  it("finishes entrance transitions without waiting on constructor RAF", async () => {
+    await hud.finishEntranceTransitions();
+    expect(q(".control-bar").classList.contains("hud-control-bar--ready")).toBe(true);
+  });
+
+  it("reflects a deterministic attack target, lock, CTA, and field charge state", () => {
+    hud.setVisualFixtureAttackState({
+      targetId: 42,
+      skin: { kind: "illustrated", id: "figure" },
+      progress: 0.68,
+    });
+
+    expect(hud.getCurrentSubjectId()).toBe(42);
+    expect(hud.getLockedSubjectId()).toBe(42);
+    expect((q("[data-control-attack]") as HTMLButtonElement).disabled).toBe(false);
+    const charge = q(".hud-charge");
+    expect(charge.dataset.visible).toBe("true");
+    expect(charge.style.getPropertyValue("--charge")).toBe("0.680");
   });
 
   it("does not animate width or top (GPU-safe only)", () => {
@@ -66,139 +99,90 @@ describe("hud/Hud (T22)", () => {
     const banned = /transition[^;]*(width|top|left|right|height)\s/;
     expect(banned.test(css)).toBe(false);
   });
-});
 
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
-function readText(rel: string): string {
-  return readFileSync(resolve(__dirname, "..", "..", rel), "utf8");
-}
-
-describe("hud/Hud (Phase C Lane 1 chrome)", () => {
-  let root: HTMLElement;
-  let hud: Hud;
-
-  beforeEach(() => {
-    document.body.innerHTML = '<div id="hud-root"></div>';
-    root = document.querySelector<HTMLElement>("#hud-root")!;
-    hud = new Hud(root);
-  });
-  afterEach(() => {
-    document.body.innerHTML = "";
+  it("anchors the control bar inside the overlay anchor", () => {
+    expect(q(".overlay-anchor .control-bar")).not.toBeNull();
   });
 
-  const q = (sel: string): HTMLElement =>
-    root.querySelector<HTMLElement>(sel)!;
-
-  it("renders the new drag handle, visibility toggle, and chrome tool buttons", () => {
-    expect(q(".hud-placard__drag-handle")).not.toBeNull();
-    expect(q(".hud-visibility-toggle")).not.toBeNull();
-    expect(q(".hud-placard__tool--hand")).not.toBeNull();
-    expect(q(".hud-placard__tool--text")).not.toBeNull();
-    expect(q(".hud-placard__tool--grid")).not.toBeNull();
+  it("mounts the filter and gallery panels inside the overlay panels container", () => {
+    expect(q(".overlay-panels .filter-panel")).not.toBeNull();
+    expect(q(".overlay-panels .avatar-gallery")).not.toBeNull();
   });
 
-  it("renders the ATTACK CTA with icon and label", () => {
-    const attack = q(".hud-placard__attack");
-    expect(attack).not.toBeNull();
-    expect(q(".hud-placard__attack-icon svg")).not.toBeNull();
-    expect(q(".hud-placard__attack-label").textContent).toBe("attack");
+  it("opens FilterPanel when the filter trigger is clicked", () => {
+    q('[data-control-trigger="filter"]').click();
+    expect(q(".filter-panel").hidden).toBe(false);
+    expect(q(".filter-panel").inert).toBe(false);
   });
 
-  it("clicking-and-holding the ATTACK CTA calls onAttackPress with the current subject id", () => {
+  it("opens AvatarGallery when the gallery trigger is clicked", () => {
+    q('[data-control-trigger="gallery"]').click();
+    expect(q(".avatar-gallery").hidden).toBe(false);
+    expect(q(".avatar-gallery").inert).toBe(false);
+  });
+
+  it("fires onTextTool when the text trigger is clicked", () => {
+    const onText = vi.fn();
+    hud.onTextTool(onText);
+    q('[data-control-trigger="text"]').click();
+    expect(onText).toHaveBeenCalledTimes(1);
+  });
+
+  it("propagates subject lock state to the attack button", () => {
+    const attack = q("[data-control-attack]") as HTMLButtonElement;
+    expect(attack.disabled).toBe(true);
+    hud.setCurrentSubjectId(7);
+    expect(attack.disabled).toBe(false);
+  });
+
+  it("fires onAttackPress/onAttackRelease through the attack button", () => {
     const onPress = vi.fn();
     const onRelease = vi.fn();
     hud.onAttackPress(onPress);
     hud.onAttackRelease(onRelease);
     hud.setCurrentSubjectId(42);
-
-    const attack = q(".hud-placard__attack");
+    const attack = q("[data-control-attack]")!;
     attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
-    expect(onPress).toHaveBeenCalledTimes(1);
     expect(onPress).toHaveBeenCalledWith(42);
-    expect(attack.dataset.pressed).toBe("true");
-
     attack.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
-    expect(onRelease).toHaveBeenCalledTimes(1);
-    expect(attack.dataset.pressed).toBe("false");
+    expect(onRelease).toHaveBeenCalled();
   });
 
-  it("ATTACK press is a no-op when no subject is set (CTA disabled)", () => {
+  it("ATTACK press is a no-op when no subject is set", () => {
     const onPress = vi.fn();
     hud.onAttackPress(onPress);
     hud.setCurrentSubjectId(null);
-
-    const attack = q(".hud-placard__attack");
-    expect(attack.dataset.disabled).toBe("true");
-
-    attack.dispatchEvent(
-      new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }),
-    );
+    const attack = q("[data-control-attack]") as HTMLButtonElement;
+    expect(attack.disabled).toBe(true);
+    attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
     expect(onPress).not.toHaveBeenCalled();
   });
 
-  it("ATTACK button is disabled by default (no subject locked)", () => {
-    const attack = q(".hud-placard__attack");
-    expect(attack.dataset.disabled).toBe("true");
-  });
-
-  it("ATTACK button becomes enabled when a subject is locked", () => {
-    const attack = q(".hud-placard__attack");
-    hud.setCurrentSubjectId(42);
-    expect(attack.dataset.disabled).toBe("false");
-  });
-
-  it("ATTACK button becomes disabled again when subject is unlocked", () => {
-    const attack = q(".hud-placard__attack");
-    hud.setCurrentSubjectId(42);
-    expect(attack.dataset.disabled).toBe("false");
-    hud.setCurrentSubjectId(null);
-    expect(attack.dataset.disabled).toBe("true");
-  });
-
-  it("ATTACK release fires on pointercancel and on pointerleave while pressed", () => {
-    const onRelease = vi.fn();
-    hud.onAttackRelease(onRelease);
-    hud.setCurrentSubjectId(7);
-    const attack = q(".hud-placard__attack");
-
-    attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
-    attack.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true, pointerId: 1 }));
-    expect(onRelease).toHaveBeenCalledTimes(1);
-
-    attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 2 }));
-    attack.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true, pointerId: 2 }));
-    expect(onRelease).toHaveBeenCalledTimes(2);
-  });
-
-  it("visibility toggle hides and shows the placard", () => {
+  it("visibility toggle hides and shows the control bar", () => {
     const onToggle = vi.fn();
     hud.onVisibilityToggle(onToggle);
-    const placard = q(".hud-placard");
     const toggle = q(".hud-visibility-toggle");
 
-    expect(placard.dataset.hidden).toBeUndefined();
+    expect(hud.isHidden()).toBe(false);
     toggle.click();
-    expect(placard.dataset.hidden).toBe("true");
     expect(hud.isHidden()).toBe(true);
+    expect(q(".control-bar").dataset.hidden).toBe("true");
     expect(onToggle).toHaveBeenCalledWith(false);
 
     toggle.click();
-    expect(placard.dataset.hidden).toBe("false");
     expect(hud.isHidden()).toBe(false);
+    expect(q(".control-bar").dataset.hidden).toBe("false");
     expect(onToggle).toHaveBeenCalledWith(true);
   });
 
-  it("hand tool toggle fires callback and sets aria-pressed", () => {
+  it("hand tool toggle fires callback and sets aria-pressed on ControlBar", () => {
     const onToggle = vi.fn();
     hud.onHandToolToggle(onToggle);
-    const hand = q(".hud-placard__tool--hand");
+    const hand = q("[data-control-hand]");
 
     expect(hand.getAttribute("aria-pressed")).toBe("false");
     hand.click();
     expect(hand.getAttribute("aria-pressed")).toBe("true");
-    expect(hand.dataset.active).toBe("true");
     expect(onToggle).toHaveBeenCalledWith(true);
 
     hand.click();
@@ -206,83 +190,144 @@ describe("hud/Hud (Phase C Lane 1 chrome)", () => {
     expect(onToggle).toHaveBeenCalledWith(false);
   });
 
-  it("text and grid tool buttons fire their callbacks", () => {
-    const onText = vi.fn();
-    const onGrid = vi.fn();
-    hud.onTextTool(onText);
-    hud.onGridTool(onGrid);
-    q(".hud-placard__tool--text").click();
-    q(".hud-placard__tool--grid").click();
-    expect(onText).toHaveBeenCalledTimes(1);
-    expect(onGrid).toHaveBeenCalledTimes(1);
+  it("setHandToolActive reflects only on ControlBar", () => {
+    hud.setHandToolActive(true);
+    expect(q("[data-control-hand]").getAttribute("aria-pressed")).toBe("true");
+    expect(hud.isHandToolActive()).toBe(true);
+    hud.setHandToolActive(false);
+    expect(q("[data-control-hand]").getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("drag handle translates the placard via CSS custom properties", () => {
-    const handle = q(".hud-placard__drag-handle");
-    handle.dispatchEvent(new PointerEvent("pointerdown", {
-      bubbles: true, pointerId: 1, clientX: 100, clientY: 200,
-    }));
-    handle.dispatchEvent(new PointerEvent("pointermove", {
-      bubbles: true, pointerId: 1, clientX: 140, clientY: 230,
-    }));
-    const placard = q(".hud-placard");
-    expect(placard.style.getPropertyValue("--placard-x")).toBe("40px");
-    expect(placard.style.getPropertyValue("--placard-y")).toBe("30px");
-    handle.dispatchEvent(new PointerEvent("pointerup", {
-      bubbles: true, pointerId: 1, clientX: 140, clientY: 230,
-    }));
-  });
-});
-
-describe("hud/Hud (PR2 Lane 3 identity binding + subject count)", () => {
-  let root: HTMLElement;
-  let hud: Hud;
-
-  beforeEach(() => {
-    document.body.innerHTML = '<div id="hud-root"></div>';
-    root = document.querySelector<HTMLElement>("#hud-root")!;
-    hud = new Hud(root);
-  });
-  afterEach(() => {
-    document.body.innerHTML = "";
+  it("cycles mode through mode buttons and fires onModeChange", () => {
+    const onModeChange = vi.fn();
+    hud.onModeChange(onModeChange);
+    q('[data-control-mode="bugs"]').click();
+    expect(onModeChange).toHaveBeenCalledWith("bugs");
+    expect(q('[data-control-mode="bugs"]').getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("setSubjectCount(n) renders a count indicator with the number", () => {
+  it("setSubjectCount stores count on the root dataset", () => {
     hud.setSubjectCount(3);
-    const count = root.querySelector<HTMLElement>(".hud-placard__subject-count");
-    expect(count).not.toBeNull();
-    expect(count?.textContent).toBe("3");
-  });
-
-  it("setSubjectCount(0) renders 0", () => {
+    expect(root.dataset.subjectCount).toBe("3");
+    expect(hud.getSubjectCount()).toBe(3);
     hud.setSubjectCount(0);
-    expect(root.querySelector<HTMLElement>(".hud-placard__subject-count")?.textContent).toBe("0");
+    expect(root.dataset.subjectCount).toBe("0");
   });
 
-  it("setLockedSubjectId(id) pre-populates the compose row with the locked subject's text skin", () => {
-    hud.setActiveSubjectSkin(7, { kind: "text", value: "Vote", scale: 1.35, fontId: "fraunces", align: "left" });
-    hud.setLockedSubjectId(7);
-    const input = root.querySelector<HTMLInputElement>(".subject-drawer__compose-input")!;
-    expect(input.value).toBe("Vote");
-    expect(root.querySelector('[data-size="large"]')?.classList.contains("subject-drawer__size-btn--active")).toBe(true);
+  it("setActiveSubjectSkin selects matching avatar in gallery", () => {
+    hud.setActiveSubjectSkin(7, { kind: "avatar", assetId: "frame-38" });
+    const card = root.querySelector<HTMLButtonElement>('[data-avatar-card="frame-38"]');
+    expect(card?.getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("setLockedSubjectId(null) does not throw and clears the active subject", () => {
+  it("setLockedSubjectId(null) clears lock without throwing", () => {
     hud.setActiveSubjectSkin(7, { kind: "text", value: "X", scale: 1 });
     hud.setLockedSubjectId(7);
     hud.setLockedSubjectId(null);
-    const resize = vi.fn();
-    hud.onSubjectResize(resize);
-    root.querySelector<HTMLElement>('[data-size="large"]')?.click();
-    expect(resize).not.toHaveBeenCalled();
+    expect(hud.getLockedSubjectId()).toBeNull();
   });
 
-  it("propagates identity through onSubjectResize to the callback", () => {
-    const cb = vi.fn();
-    hud.onSubjectResize(cb);
-    hud.setActiveSubjectSkin(42, { kind: "text", value: "Hi", scale: 1 });
+  it("mode-button click drives a 'mode' ControlEvent and locks the matching power", () => {
+    const events: unknown[] = [];
+    const onModeChange = vi.fn();
+    hud.onControlEvent((e) => events.push(e));
+    hud.onModeChange(onModeChange);
+    q('[data-control-mode="pointedFinger"]').click();
+    expect(onModeChange).toHaveBeenCalledWith("pointedFinger");
+    expect(q(".control-bar").dataset.power).toBe("electricBurn");
+    expect(events).toEqual([
+      { type: "mode", mode: "pointedFinger", power: "electricBurn" },
+    ]);
+  });
+
+  it("hand tool click drives a 'hand' ControlEvent and fires onHandToolToggle", () => {
+    const events: unknown[] = [];
+    const onHand = vi.fn();
+    hud.onControlEvent((e) => events.push(e));
+    hud.onHandToolToggle(onHand);
+    const hand = q("[data-control-hand]");
+    hand.click();
+    hand.click();
+    expect(onHand).toHaveBeenNthCalledWith(1, true);
+    expect(onHand).toHaveBeenNthCalledWith(2, false);
+    expect(events).toEqual([
+      { type: "hand", active: true },
+      { type: "hand", active: false },
+    ]);
+  });
+
+  it("attack pointer events drive 'attack-press' and 'attack-release' ControlEvents", () => {
+    const events: unknown[] = [];
+    hud.onControlEvent((e) => events.push(e));
+    hud.setCurrentSubjectId(99);
+    const attack = q("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointerup", opts));
+    expect(events).toEqual([
+      { type: "attack-press", subjectId: 99 },
+      { type: "attack-release" },
+    ]);
+  });
+
+  it("attack pointercancel drives 'attack-release' (no synthetic MouseEvent needed)", () => {
+    const events: unknown[] = [];
+    hud.onControlEvent((e) => events.push(e));
+    hud.setCurrentSubjectId(99);
+    const attack = q("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointercancel", opts));
+    expect(events).toEqual([
+      { type: "attack-press", subjectId: 99 },
+      { type: "attack-release" },
+    ]);
+  });
+
+  it("visibility toggle also drives a 'visibility' ControlEvent", () => {
+    const events: unknown[] = [];
+    const onToggle = vi.fn();
+    hud.onControlEvent((e) => events.push(e));
+    hud.onVisibilityToggle(onToggle);
+    const toggle = q(".hud-visibility-toggle");
+    toggle.click();
+    expect(events).toContainEqual({ type: "visibility", visible: false });
+    toggle.click();
+    expect(events).toContainEqual({ type: "visibility", visible: true });
+  });
+
+  it("attack button has a focus-visible outline rule defined in controlBar.css", () => {
+    expect(readText("src/hud/controlBar.css")).toMatch(/\.control-bar__attack:focus-visible/);
+  });
+
+  it("mode/trigger/hand buttons share a 46px well (Figma control.well token)", () => {
+    const css = readText("src/hud/controlBar.css");
+    expect(css).toMatch(/\.control-bar__mode-btn[\s\S]{0,160}?width:\s*46px[\s\S]{0,80}?height:\s*46px/);
+  });
+
+  it("avatar gallery select triggers subject drop at viewport center, not null", () => {
+    const dropCb = vi.fn();
+    hud.onSubjectDrop(dropCb);
+    hud.setVisualFixturePanel("gallery");
+    const card = root.querySelector<HTMLButtonElement>('[data-avatar-card]')!;
+    card.click();
+    expect(dropCb).toHaveBeenCalledTimes(1);
+    const arg = dropCb.mock.calls[0][0];
+    expect(arg.canvasPos).not.toBeNull();
+    expect(typeof arg.canvasPos.x).toBe("number");
+    expect(typeof arg.canvasPos.y).toBe("number");
+    expect(arg.canvasPos.x).toBeGreaterThan(0);
+    expect(arg.canvasPos.y).toBeGreaterThan(0);
+  });
+
+  it("text composer value change fires onSubjectTextChange", () => {
+    const textCb = vi.fn();
+    hud.onSubjectTextChange(textCb);
     hud.setLockedSubjectId(42);
-    root.querySelector<HTMLElement>('[data-size="small"]')?.click();
-    expect(cb).toHaveBeenCalledWith(42, 0.75);
+    hud.setVisualFixturePanel("text");
+    const textarea = root.querySelector<HTMLTextAreaElement>("[data-text-composer-value]")!;
+    textarea.value = "new text";
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(textCb).toHaveBeenCalledWith(42, "value", "new text");
   });
 });

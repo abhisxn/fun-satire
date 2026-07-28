@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="234.783" height="120" viewBox="0 0 234.783 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame 5" clip-path="url(#clip0_153_10925)">
+<mask id="mask0_153_10925" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="235" height="110">
+<path id="Ellipse 3" d="M117.391 -1.79348e-06C182.225 -4.62744e-06 234.783 54.7826 234.783 54.7826C234.783 54.7826 182.225 109.565 117.391 109.565C52.5579 109.565 -2.39462e-06 54.7826 -2.39462e-06 54.7826C-2.39462e-06 54.7826 52.5579 1.04048e-06 117.391 -1.79348e-06Z" fill="var(--fill-0, white)"/>
+</mask>
+<g mask="url(#mask0_153_10925)">
+<path id="Ellipse 1" d="M117.391 -1.79348e-06C182.225 -4.62744e-06 234.783 54.7826 234.783 54.7826C234.783 54.7826 182.225 109.565 117.391 109.565C52.5579 109.565 -2.39462e-06 54.7826 -2.39462e-06 54.7826C-2.39462e-06 54.7826 52.5579 1.04048e-06 117.391 -1.79348e-06Z" fill="var(--fill-0, white)"/>
+<circle id="Ellipse 2" cx="152.609" cy="61.7391" r="48.2609" fill="var(--fill-0, #38332F)"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_153_10925">
+<rect width="234.783" height="120" fill="white"/>
+</clipPath>
+</defs>
+</svg>

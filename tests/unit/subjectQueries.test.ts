@@ -70,32 +70,32 @@ describe("subjectQueries", () => {
   describe("queryNearestSubject", () => {
     it("returns null when the store has no entities", () => {
       const store = new EntityStore();
-      expect(queryNearestSubject(store, { x: 0, y: 0 })).toBeNull();
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, 100)).toBeNull();
     });
 
     it("returns null when no subjects exist (only non-subjects)", () => {
       const store = new EntityStore();
       store.insert(makeEntity(1, "eye", { x: 0, y: 0 }));
       store.insert(makeEntity(2, "bug", { x: 5, y: 5 }));
-      expect(queryNearestSubject(store, { x: 0, y: 0 })).toBeNull();
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, 100)).toBeNull();
     });
 
-    it("returns the only subject when one exists", () => {
+    it("returns the only subject when one exists within range", () => {
       const store = new EntityStore();
       const s = makeEntity(1, "subject", { x: 50, y: 50 });
       store.insert(makeEntity(2, "eye", { x: 0, y: 0 }));
       store.insert(s);
-      expect(queryNearestSubject(store, { x: 0, y: 0 })).toBe(s);
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, 100)).toBe(s);
     });
 
-    it("returns the nearest subject when multiple exist (ignores non-subjects)", () => {
+    it("returns the nearest subject when multiple exist within range", () => {
       const store = new EntityStore();
       const near = makeEntity(1, "subject", { x: 5, y: 5 });
       const far = makeEntity(2, "subject", { x: 100, y: 100 });
       store.insert(far);
       store.insert(makeEntity(3, "eye", { x: 1, y: 1 }));
       store.insert(near);
-      expect(queryNearestSubject(store, { x: 0, y: 0 })).toBe(near);
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, 50)).toBe(near);
     });
 
     it("uses squared distance for ranking (no Math.sqrt required)", () => {
@@ -104,7 +104,20 @@ describe("subjectQueries", () => {
       const b = makeEntity(2, "subject", { x: 6, y: 8 });
       store.insert(a);
       store.insert(b);
-      expect(queryNearestSubject(store, { x: 0, y: 0 })).toBe(a);
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, 20)).toBe(a);
+    });
+
+    it("returns null when the nearest subject is outside maxRange", () => {
+      const store = new EntityStore();
+      store.insert(makeEntity(1, "subject", { x: 200, y: 200 }));
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, 50)).toBeNull();
+    });
+
+    it("returns null for non-positive maxRange", () => {
+      const store = new EntityStore();
+      store.insert(makeEntity(1, "subject", { x: 10, y: 10 }));
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, 0)).toBeNull();
+      expect(queryNearestSubject(store, { x: 0, y: 0 }, -10)).toBeNull();
     });
   });
 });

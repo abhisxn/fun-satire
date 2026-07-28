@@ -120,10 +120,6 @@ export function renderFrame(opts: RenderFrameOptions): void {
   for (const { entity: e } of sortedCrowd) {
     eyePositions.push({ id: e.id, pos: e.physics.pos });
     const data = e.behavior.data as Record<string, unknown>;
-    const shapeVariant = (data.shapeVariant ?? "almond") as Parameters<typeof drawEye>[1]["shapeVariant"];
-    const colors = (data.colors ?? {
-      sclera: "cream", iris: "slate", pupil: "ink", highlight: "coral", outline: "ink",
-    }) as Parameters<typeof drawEye>[1]["colors"];
     const blinkTimer = opts.blinkTimers.get(e.id);
     const blinkScaleY = blinkTimer?.scaleY() ?? 1;
     const easedPrev = opts.pupilOffsets.get(e.id) ?? { x: 0, y: 0 };
@@ -148,39 +144,37 @@ export function renderFrame(opts: RenderFrameOptions): void {
         drawEye(ctx, {
           pos: e.physics.pos,
           sizePx,
-          shapeVariant,
-          colors,
           blinkScaleY,
           pupilOffset: { x: offset.x, y: offset.y },
         });
         ctx.restore();
         break;
       }
-      case "bugs":
+      case "bugs": {
+        const dx = cursor.x - e.physics.pos.x;
+        const dy = cursor.y - e.physics.pos.y;
+        const bugRotation = Math.atan2(dy, dx) + Math.PI;
         drawBug(ctx, {
           pos: e.physics.pos,
           sizePx,
-          colors,
           timeMs: opts.nowMs,
           id: e.id,
-          rotation,
-          shadowIntensity,
+          rotation: bugRotation,
+          imageCache: opts.imageCache,
         });
         break;
+      }
       case "pointedFinger": {
-        const fingerColors: SubjectColors = {
-          outline: colors.outline,
-          shirt: colors.sclera,
-          suit: colors.iris === "cream" ? "slate" : colors.iris,
-        };
+        const dx = cursor.x - e.physics.pos.x;
+        const dy = cursor.y - e.physics.pos.y;
+        const fingerRotation = Math.atan2(dy, dx) + Math.PI;
         drawPointedFinger(ctx, {
           pos: e.physics.pos,
           sizePx,
-          colors: fingerColors,
           timeMs: opts.nowMs,
           id: e.id,
-          rotation,
-          shadowIntensity,
+          rotation: fingerRotation,
+          imageCache: opts.imageCache,
         });
         break;
       }

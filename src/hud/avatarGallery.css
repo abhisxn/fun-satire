@@ -1,0 +1,121 @@
+.avatar-gallery {
+  position: absolute;
+  width: 284px;
+  max-height: 360px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  box-shadow: 0 12px 32px rgba(65, 52, 45, 0.16);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #2a2420;
+  padding: 14px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 70;
+  overflow-y: auto;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .avatar-gallery {
+    background: rgba(255, 255, 255, 0.92);
+  }
+}
+
+.avatar-gallery[hidden] {
+  display: none;
+}
+
+.avatar-gallery__label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6e625b;
+}
+
+.avatar-gallery__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.avatar-gallery__card {
+  width: 120px;
+  height: 120px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(42, 36, 32, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 140ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.avatar-gallery__card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 rgba(42, 36, 32, 0.12);
+}
+
+.avatar-gallery__card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(42, 36, 32, 0.42);
+}
+
+.avatar-gallery__card[aria-pressed="true"] {
+  border-color: #789866;
+  box-shadow: 0 3px 0 #567047, inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background: linear-gradient(180deg, #a8c892 0%, #789866 100%);
+}
+
+.avatar-gallery__tile {
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatar-gallery__art {
+  display: block;
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-gallery__card {
+    transition: none;
+  }
+}
+
+.avatar-gallery[data-variant="portrait-sheet"] {
+  left: 16px;
+  right: 16px;
+  bottom: calc(70px + 8px);
+  width: auto;
+  max-height: 60vh;
+  border-radius: 28px;
+}
+
+.avatar-gallery[data-variant="landscape-tray"] {
+  right: 16px;
+  top: 16px;
+  bottom: calc(70px + 8px);
+  width: 360px;
+  max-width: 60vw;
+  border-radius: 24px;
+}
