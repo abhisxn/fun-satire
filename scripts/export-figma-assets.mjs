@@ -280,6 +280,11 @@ export type EyeAssetEntry = Extract<RegisteredFigmaAsset, Readonly<{ role: "eye"
 export const EYE_ASSET_IDS = Object.freeze(${JSON.stringify(eyeIds, null, 2)} as const);
 
 const eyeAssetsById = new Map(FIGMA_ASSETS.filter((entry): entry is EyeAssetEntry => entry.role === "eye").map((entry) => [entry.id, entry]));
+
+export function getEyeAssetEntry(id: string): EyeAssetEntry | null {
+  return eyeAssetsById.get(id) ?? null;
+}
+
 export const EYE_ASSETS = Object.freeze(EYE_ASSET_IDS.map((id) => {
   const asset = eyeAssetsById.get(id);
   if (!asset) throw new Error(\`Missing golden eye asset: \${id}\`);

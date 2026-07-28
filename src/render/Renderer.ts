@@ -9,6 +9,7 @@ import { computeFieldLines, drawFieldLines } from "./drawers/drawFieldLines";
 import { computeGazeLines } from "./drawers/drawGazeLines";
 import { drawCollectiveEffectVisual } from "./drawers/drawCollectiveEffectVisual";
 import { selectCollectiveContributors } from "../effects/collectiveContributors";
+import { getEyeAssetEntry } from "../assets/eyeAssetRegistry";
 import { drawSubject } from "./drawers/drawSubject";
 import { drawLockIndicator } from "./drawers/drawLockIndicator";
 import { computePupilOffset } from "./pupilTrack";
@@ -139,6 +140,14 @@ export function renderFrame(opts: RenderFrameOptions): void {
     const rotation = e.physics.rotation ?? 0;
     const sizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
 
+    const assetId = data.assetId as Parameters<typeof drawEye>[1]["assetId"] | undefined;
+    if (assetId && !getEyeAssetEntry(assetId)) {
+      throw new Error(
+        `renderFrame: eye asset "${assetId}" is not registered (entity id=${e.id}, manifestId=${e.content.manifestId}). ` +
+          `Check src/assets/figmaAssetRegistry.ts and ensure the manifest's visual.assetId is one of EYE_ASSET_IDS.`,
+      );
+    }
+
     switch (opts.hudMode) {
       case "eyes": {
         ctx.save();
@@ -148,10 +157,12 @@ export function renderFrame(opts: RenderFrameOptions): void {
         drawEye(ctx, {
           pos: e.physics.pos,
           sizePx,
+          assetId,
           shapeVariant,
           colors,
           blinkScaleY,
           pupilOffset: { x: offset.x, y: offset.y },
+          imageCache: opts.imageCache,
         });
         ctx.restore();
         break;
