@@ -33,25 +33,22 @@ import { Rng } from "./core/Rng";
 import { EntityStore } from "./entities/EntityStore";
 import { spawnEyes, spawnOneCrowdMember, pickCrowdMemberToDespawn, spawnSubject } from "./entities/EntityFactory";
 import { StateMachine, EyeBehavior, EyeBlinkTimer } from "./entities/behaviors";
-import { stepSubjectPhysics } from "./entities/behaviors/SubjectBehavior";
 import { loadManifestFromText } from "./content/manifestLoader";
-import type { EyeManifestEntry, SubjectColors, SubjectManifestEntry } from "./content/schema";
+import type { EyeManifestEntry, SubjectManifestEntry } from "./content/schema";
 import eyesRoster from "./content/manifests/eyes.roster.json";
 import subjectRoster from "./content/manifests/subject.roster.json";
 import { PointerTracker } from "./input/PointerTracker";
 import { DragController } from "./input/DragController";
 import { PowerController } from "./input/PowerController";
 import type { SubjectDropResult } from "./input/SubjectDragSource";
-import { queryNearestSubject } from "./entities/subjectQueries";
 import { ParticleSystem } from "./effects/ParticleSystem";
-import { EffectSystem, EASE_PROTEST } from "./effects/EffectSystem";
+import { EffectSystem } from "./effects/EffectSystem";
 import { RespawnScheduler } from "./effects/RespawnScheduler";
 import { laserBurnEffect } from "./effects/effectDefs/laserBurn";
 import { electricBurnEffect } from "./effects/effectDefs/electricBurn";
 import { bugEatEffect } from "./effects/effectDefs/bugEat";
 import { Hud } from "./hud/Hud";
 import { createViewport } from "./render/CanvasUtils";
-import { renderFrame } from "./render/Renderer";
 import { getImageAssetCache } from "./render/imageAssets";
 import { AVATAR_ASSET_REGISTRY } from "./hud/avatarAssetRegistry";
 import { BUG_DRAW } from "./render/drawers/drawBug";
@@ -59,7 +56,6 @@ import { FINGER_DRAW } from "./render/drawers/drawPointedFinger";
 import * as FF from "./physics/ForceField";
 import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
-import { DURATION } from "./config/tokens";
 import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
 import type { SubjectSkin } from "./hud/subjectSkinRegistry";
 import { computeLookAtRotation } from "./physics/LookAt";
@@ -308,7 +304,7 @@ export function __getSubjectEntityForTests(id: EntityId): Entity | null {
 export function __stepSubjectUpdateForTests(
   cursor: { x: number; y: number; active: boolean },
   dt: number,
-  nowMs: number,
+  _nowMs: number,
 ): void {
   subjects.forEach((rec) => {
     const e = store.get(rec.id, { live: true });
@@ -490,9 +486,8 @@ hud.onRepelChange((multiplier) => {
 
 hud.onAttackPress((subjectId) => {
   if (subjectId === null) return;
-  const cur = engine.cursor();
-  if (!cur.active) return;
-  powerCtrl.tryPress(subjectId, cur.x, cur.y, engine.getNow());
+  // TODO: Replace with DraggableAvatar cursor tracking
+  void subjectId;
 });
 
 hud.onAttackRelease(() => {
@@ -519,88 +514,12 @@ hud.onGridTool(() => {
   );
 });
 
-const engine = visualFixture ? new Engine({ fixedTimestep: true, nowOverride: visualFixture.nowMs }) : new Engine();
-engine.events.on("tick", ({ phase, dt }) => {
+const engine = new Engine();
+engine.events.on("tick", ({ dt }) => {
   const nowMs = engine.getNow();
-  if (phase === "pre-physics") {
-    powerCtrl.tick({ cursor: engine.cursor(), dtMs: dt, nowMs });
-    effects.update(nowMs);
-    particles.update(dt);
-    particles.cull();
-    return;
-  }
-  if (phase === "post-physics") {
-    const respawned = respawn.tick(nowMs);
-    for (const id of respawned) respawnEntity(id);
-    return;
-  }
-  if (phase === "render") {
-    const cursor = engine.cursor();
-    const ringT = Math.max(0, Math.min(1, powerCtrl.chargeT()));
-    const inCooldown = effects.liveCount() > 0;
-    hud.setCharge(ringT, powerCtrl.isCharging());
-    const cursorRingRadius = 12 + ringT * 14;
-    const cursorRingOpacity = cursor.active ? 1 - ringT * 0.85 : 0;
-    const hoverEntity = cursor.active
-      ? queryNearestEye(store, { x: cursor.x, y: cursor.y }, 70)
-      : null;
-    const reducedMotion =
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const subjectRenderInfos: Array<{
-      id: EntityId;
-      pos: { x: number; y: number };
-      sizePx: number;
-      colors: SubjectColors;
-      scale: number;
-      subjectSkin?: SubjectSkin;
-      locked: boolean;
-    }> = [];
-    subjects.forEach((rec) => {
-      const e = store.get(rec.id, { live: true });
-      if (!e) return;
-      subjectRenderInfos.push({
-        id: e.id,
-        pos: e.physics.pos,
-        sizePx: (e.behavior.data as { baseSizePx: number }).baseSizePx,
-        colors: (e.behavior.data as { colors: SubjectColors }).colors,
-        scale: e.physics.scale,
-        subjectSkin: (e.behavior.data as { subjectSkin?: SubjectSkin }).subjectSkin,
-        locked: rec.locked,
-      });
-    });
-    hud.setSubjectCount(subjects.size);
-    renderFrame({
-      ctx,
-      store,
-      particles,
-      effects,
-      cursor,
-      rng,
-      width: viewport.state.width,
-      height: viewport.state.height,
-      behaviors,
-      blinkTimers,
-      pupilOffsets,
-      cursorRingRadius,
-      cursorRingOpacity,
-      chargeTargetId: powerCtrl.chargeTargetId(),
-      hoverEntityId: hoverEntity?.id ?? null,
-      reducedMotion,
-      nowMs: engine.getNow(),
-      hudMode: currentMode,
-      quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
-      repelMultiplier,
-      subjects: subjectRenderInfos,
-      lockedSubjectId,
-      chargeT: ringT,
-      assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
-      imageCache: imageAssets,
-    });
-    completedRenderCount += 1;
-    void inCooldown;
-  }
+  // TODO: Replace cursor-dependent logic with DraggableAvatar
+  void dt;
+  void nowMs;
 });
 
 const behaviors = new Map<EntityId, EyeBehavior>();
@@ -608,7 +527,6 @@ const blinkTimers = new Map<EntityId, EyeBlinkTimer>();
 const pupilOffsets = new Map<EntityId, { x: number; y: number }>();
 
 let nextEntityId = 1;
-const SUBJECT_ASSIST_RADIUS_PX = 140;
 
 const worldAPI = {
   getEntity: (id: EntityId) => store.get(id, { live: true }),
@@ -674,86 +592,35 @@ const installBehavior = (e: Entity): void => {
   behaviors.set(e.id, beh);
 };
 
-const respawnEntity = (id: EntityId): void => {
-  const entity = store.get(id, { live: true });
-  if (!entity) return;
-  const pos = respawn.samplePos();
-  entity.physics.pos = pos;
-  entity.physics.home = { ...pos };
-  entity.physics.scale = 1;
-  entity.physics.vel = { x: 0, y: 0 };
-  entity.lifecycle.alive = true;
-  entity.lifecycle.dying = false;
-  entity.lifecycle.dragged = false;
-  entity.lifecycle.respawnAt = null;
-  pupilOffsets.set(id, { x: 0, y: 0 });
-};
-
 const powerCtrl = new PowerController({ rng, worldAPI, effectSystem: effects, targetRadius: 70, cooldownMs: 800 });
 
 const dragCtrl = new DragController(store);
 
-const SUBJECT_DRAG_DEADZONE_PX = 12;
-let subjectPressOrigin: { x: number; y: number } | null = null;
-
 const pointer: PointerTracker = new PointerTracker(stage, {
-  setCursor(x: number, y: number) {
-    engine.setCursor(x, y);
+  setCursor(_x: number, _y: number) {
+    // TODO: Replace with DraggableAvatar cursor tracking
   },
   clearCursor() {
-    engine.clearCursor();
+    // TODO: Replace with DraggableAvatar cursor tracking
   },
   press() {
-    const cur = engine.cursor();
-    if (!cur.active) return;
-    const nearest = queryNearestSubject(store, { x: cur.x, y: cur.y });
-    const hitSubjectId = nearest ? nearest.id : null;
-    if (hitSubjectId !== null) {
-      applyCanvasPress(cur.x, cur.y, hitSubjectId);
-    }
-    const targetId = lockedSubjectId ?? hitSubjectId;
-    if (targetId !== null) {
-      powerCtrl.tryPress(targetId, cur.x, cur.y, engine.getNow());
-      subjectPressOrigin = { x: cur.x, y: cur.y };
-    }
-    const eyeTarget = queryNearestEye(store, { x: cur.x, y: cur.y }, 70);
-    if (eyeTarget) {
-      dragCtrl.tryStart(eyeTarget.id, cur.x, cur.y);
-    }
+    // TODO: Replace with DraggableAvatar interaction
   },
   release() {
     const now = engine.getNow();
     powerCtrl.release(now);
     dragCtrl.release(now);
-    subjectPressOrigin = null;
   },
 });
 
-engine.onTick("pre-physics", () => {
-  const cur = engine.cursor();
-  if (dragCtrl.draggedId() !== null) {
-    dragCtrl.move(cur.x, cur.y, engine.getNow());
-  }
+engine.onTick(() => {
+  // TODO: Replace with DraggableAvatar drag tracking
 });
 
-engine.onTick("pre-physics", (dt) => {
+engine.onTick((dt) => {
   const dtSec = Math.min(0.1, dt / 1000);
-  const cursor = engine.cursor();
-
-  if (
-    lockedSubjectId !== null &&
-    subjectPressOrigin &&
-    powerCtrl.isCharging() &&
-    powerCtrl.chargeTargetId() === lockedSubjectId
-  ) {
-    const dx = cursor.x - subjectPressOrigin.x;
-    const dy = cursor.y - subjectPressOrigin.y;
-    if (dx * dx + dy * dy > SUBJECT_DRAG_DEADZONE_PX * SUBJECT_DRAG_DEADZONE_PX) {
-      powerCtrl.cancel();
-      dragCtrl.tryStart(lockedSubjectId, cursor.x, cursor.y);
-      subjectPressOrigin = null;
-    }
-  }
+  // TODO: Replace cursor with DraggableAvatar position
+  const cursor = { x: 0, y: 0, active: false };
 
   // No-overlap separation (computed before integration so it feeds into acceleration)
   const crowdMembers: Array<{ id: number; pos: { x: number; y: number }; radiusPx: number }> = [];
@@ -792,18 +659,6 @@ engine.onTick("pre-physics", (dt) => {
     e.physics.pos = next.pos;
     e.physics.vel = next.vel;
   });
-
-  if (lockedSubjectId !== null && cursor.active) {
-    const subj = store.get(lockedSubjectId, { live: true });
-    if (subj && !subj.lifecycle.dragged) {
-      stepSubjectPhysics(subj.physics, cursor, dtSec);
-      const rec = subjects.get(lockedSubjectId);
-      if (rec && subj.physics.scale < 1) {
-        const elapsed = engine.getNow() - rec.spawnedAtMs;
-        subj.physics.scale = EASE_PROTEST(Math.min(1, elapsed / DURATION.slow));
-      }
-    }
-  }
 
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;

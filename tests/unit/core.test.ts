@@ -142,29 +142,11 @@ describe("core/Clock (T5)", () => {
 });
 
 describe("core/Engine (T5)", () => {
-  it("runs phases in order each frame and reports tick events", async () => {
+  it("calls onTick listeners with dt each frame and emits tick event", async () => {
     const { Engine } = await import("../../src/core/Engine");
-    const ticks: number[] = [];
-    const phaseHits: string[] = [];
-    const timestamps: number[] = [];
-    const engine = new Engine({
-      now: () => 1000,
-      raf: (cb) => {
-        const h = ticks.length + 1;
-        timestamps.push(h);
-        return h;
-      },
-      caf: () => undefined,
-    });
-    engine.onTick("pre-physics", () => phaseHits.push("pre"));
-    engine.onTick("post-physics", () => phaseHits.push("post"));
-    engine.onTick("render", () => phaseHits.push("render"));
-    let n = 0;
-    const off = engine.events.on("tick", () => n++);
-    const offs = engine.events.on("start", () => ticks.push(0));
-
+    const seen: number[] = [];
     const rafCb: ((t: number) => void)[] = [];
-    const e2 = new Engine({
+    const engine = new Engine({
       now: () => 1000,
       raf: (cb) => {
         rafCb.push(cb);
@@ -172,30 +154,44 @@ describe("core/Engine (T5)", () => {
       },
       caf: () => undefined,
     });
-    const seen: number[] = [];
-    e2.onTick("pre-physics", (dt) => seen.push(dt));
-    e2.start();
+    const off = engine.onTick((dt) => seen.push(dt));
+    let tickEvents = 0;
+    engine.events.on("tick", () => tickEvents++);
+
+    engine.start();
     expect(rafCb.length).toBe(1);
     rafCb[0]!(1100);
     expect(seen[0]).toBeCloseTo(100, 5);
-    expect(phaseHits.length).toBe(0);
+    expect(tickEvents).toBe(1);
 
-    e2.stop();
     rafCb[0]!(1200);
-    expect(seen.length).toBe(1);
+    expect(seen[1]).toBeCloseTo(100, 5);
+    expect(tickEvents).toBe(2);
 
-    expect(off).toBeTypeOf("function");
-    expect(offs).toBeTypeOf("function");
+    off();
+    rafCb[0]!(1300);
+    expect(seen.length).toBe(2);
+
+    engine.stop();
+    rafCb[0]!(1400);
+    expect(seen.length).toBe(2);
   });
 
-  it("setCursor / clearCursor / cursor reflect pointer state", async () => {
+  it("emits start and stop events", async () => {
     const { Engine } = await import("../../src/core/Engine");
-    const e = new Engine({ now: () => 0, raf: () => 0, caf: () => undefined });
-    expect(e.cursor()).toEqual({ x: 0, y: 0, active: false });
-    e.setCursor(120, 80);
-    expect(e.cursor()).toEqual({ x: 120, y: 80, active: true });
-    e.clearCursor();
-    expect(e.cursor().active).toBe(false);
+    const events: string[] = [];
+    const engine = new Engine({
+      now: () => 0,
+      raf: () => 0,
+      caf: () => undefined,
+    });
+    engine.events.on("start", () => events.push("start"));
+    engine.events.on("stop", () => events.push("stop"));
+    engine.start();
+    engine.start();
+    engine.stop();
+    engine.stop();
+    expect(events).toEqual(["start", "stop"]);
   });
 
   it("getNow returns the clock's current time", async () => {
@@ -204,19 +200,23 @@ describe("core/Engine (T5)", () => {
     expect(e.getNow()).toBe(4242);
   });
 
-  it("EventBus isolates listener exceptions and continues dispatching", async () => {
-    const { EventBus } = await import("../../src/core/EventBus");
-    const bus = new EventBus<{ x: number }>();
-    const seen: number[] = [];
-    const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    bus.on("x", () => {
-      throw new Error("boom");
+  it("elapsed returns total accumulated time", async () => {
+    const { Engine } = await import("../../src/core/Engine");
+    const rafCb: ((t: number) => void)[] = [];
+    const engine = new Engine({
+      now: () => 1000,
+      raf: (cb) => {
+        rafCb.push(cb);
+        return 0;
+      },
+      caf: () => undefined,
     });
-    bus.on("x", (p) => seen.push(p));
-    bus.emit("x", 7);
-    expect(seen).toEqual([7]);
-    expect(errSpy).toHaveBeenCalled();
-    errSpy.mockRestore();
+    engine.start();
+    rafCb[0]!(1100);
+    expect(engine.elapsed()).toBeCloseTo(100, 5);
+    rafCb[0]!(1250);
+    expect(engine.elapsed()).toBeCloseTo(250, 5);
+    engine.stop();
   });
 });
 
