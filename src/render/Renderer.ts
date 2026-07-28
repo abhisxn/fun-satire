@@ -20,6 +20,7 @@ import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 import type { HudMode } from "../hud/hudIcons";
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import type { ImageAssetCache } from "./imageAssets";
+import { getEyeAssetEntry } from "../assets/eyeAssetRegistry";
 
 export type SubjectRenderInfo = {
   id: EntityId;
@@ -134,9 +135,13 @@ export function renderFrame(opts: RenderFrameOptions): void {
 
     const rotation = e.physics.rotation ?? 0;
     const sizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
+    const assetId = data.assetId as string | undefined;
 
     switch (opts.hudMode) {
       case "eyes": {
+        if (assetId && !getEyeAssetEntry(assetId)) {
+          throw new Error(`renderFrame: eye asset "${assetId}" is not registered`);
+        }
         ctx.save();
         ctx.translate(e.physics.pos.x, e.physics.pos.y);
         ctx.rotate(rotation);
@@ -146,6 +151,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
           sizePx,
           blinkScaleY,
           pupilOffset: { x: offset.x, y: offset.y },
+          assetId,
         });
         ctx.restore();
         break;

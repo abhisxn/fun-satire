@@ -13,6 +13,7 @@ export type DrawEyeInput = {
   blinkScaleY: number;
   pupilOffset: { x: number; y: number };
   pupilColor?: string;
+  assetId?: string;
 };
 
 const almondPath = (
