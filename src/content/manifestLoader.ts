@@ -7,6 +7,7 @@ import type {
   EyeManifestEntry,
   SubjectManifestEntry,
 } from "./schema";
+import { EYE_ASSET_IDS, eyeAssetForEntity } from "../assets/eyeAssetRegistry";
 
 const SHAPE_VARIANTS = new Set([
   "almond",
@@ -69,6 +70,16 @@ const validateEyeEntry = (r: Record<string, unknown>, base: string, issues: Mani
       path: `${base}/visual/shapeVariant`,
       message: `must be one of ${[...SHAPE_VARIANTS].join(", ")}`,
     });
+  }
+  if (typeof v.assetId === "string") {
+    if (!(EYE_ASSET_IDS as readonly string[]).includes(v.assetId)) {
+      issues.push({
+        path: `${base}/visual/assetId`,
+        message: `must be one of ${EYE_ASSET_IDS.join(", ")}`,
+      });
+    }
+  } else {
+    (r as Record<string, unknown>).visual = { ...v, assetId: eyeAssetForEntity(r.id as string).id };
   }
 
   const c = (r.colors as Record<string, unknown> | undefined) ?? {};
