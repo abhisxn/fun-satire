@@ -53,6 +53,21 @@
   accent-color: var(--color-coral);
 }
 
+#hud-root[data-control-variant="tablet"] ~ .audio-control,
+#hud-root[data-control-variant="portrait-sheet"] ~ .audio-control,
+#hud-root[data-control-variant="landscape-tray"] ~ .audio-control {
+  right: 16px;
+  bottom: auto;
+  top: 64px;
+}
+
+#hud-root[data-control-variant="tablet"] ~ .audio-control .audio-control__toggle,
+#hud-root[data-control-variant="portrait-sheet"] ~ .audio-control .audio-control__toggle,
+#hud-root[data-control-variant="landscape-tray"] ~ .audio-control .audio-control__toggle {
+  width: 44px;
+  height: 44px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .audio-control {
     transition: none;

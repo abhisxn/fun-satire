@@ -37,3 +37,47 @@
   right: 50%;
   margin-right: -142px;
 }
+
+#hud-root[data-control-variant="tablet"] .filter-panel,
+#hud-root[data-control-variant="tablet"] .avatar-gallery {
+  bottom: calc(70px + 12px);
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .filter-panel,
+#hud-root[data-control-variant="portrait-sheet"] .avatar-gallery {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  margin-right: 0;
+  width: 100%;
+  max-width: none;
+  border-radius: 24px 24px 0 0;
+  max-height: 70vh;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .avatar-gallery {
+  max-height: 80vh;
+}
+
+#hud-root[data-control-variant="landscape-tray"] .filter-panel,
+#hud-root[data-control-variant="landscape-tray"] .avatar-gallery {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  left: auto;
+  margin-right: 0;
+  width: auto;
+  max-height: 100vh;
+  border-radius: 24px 0 0 24px;
+}
+
+#hud-root[data-control-variant="landscape-tray"] .filter-panel {
+  width: 180px;
+}
+
+#hud-root[data-control-variant="landscape-tray"] .avatar-gallery {
+  width: 320px;
+}
