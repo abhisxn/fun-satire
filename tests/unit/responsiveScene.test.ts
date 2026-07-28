@@ -50,6 +50,34 @@ describe("resolveScenePolicy", () => {
     });
   });
 
+  it("switches to desktop exactly at the 1200 px breakpoint", () => {
+    expect(resolveScenePolicy(1200, 832).controlVariant).toBe("desktop");
+    expect(resolveScenePolicy(1199, 832).controlVariant).not.toBe("desktop");
+  });
+
+  it("switches to tablet exactly at the 900 px breakpoint", () => {
+    expect(resolveScenePolicy(900, 700).controlVariant).toBe("tablet");
+    expect(resolveScenePolicy(899, 699).controlVariant).not.toBe("tablet");
+    expect(resolveScenePolicy(899, 699).controlVariant).not.toBe("desktop");
+  });
+
+  it("uses the phone/tablet floor at 700 px on the shorter edge", () => {
+    expect(resolveScenePolicy(700, 900).controlVariant).toBe("tablet");
+    expect(resolveScenePolicy(699, 900).controlVariant).not.toBe("tablet");
+    expect(resolveScenePolicy(699, 900).controlVariant).not.toBe("desktop");
+  });
+
+  it("classifies a small square viewport as a non-desktop sheet variant", () => {
+    const policy = resolveScenePolicy(699, 699);
+    expect(policy.controlVariant).not.toBe("desktop");
+    expect(policy.controlVariant).not.toBe("tablet");
+  });
+
+  it("never resolves phone viewports to desktop or tablet", () => {
+    expect(resolveScenePolicy(390, 844).controlVariant).toBe("portrait-sheet");
+    expect(resolveScenePolicy(844, 390).controlVariant).toBe("landscape-tray");
+  });
+
   it("is pure: no DOM/window access and no mutation across calls", () => {
     const a = resolveScenePolicy(1280, 832);
     const b = resolveScenePolicy(1280, 832);
