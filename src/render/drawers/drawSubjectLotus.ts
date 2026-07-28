@@ -1,6 +1,8 @@
 // src/render/drawers/drawSubjectLotus.ts
 import { PALETTE } from "../../config/tokens";
 import type { SubjectColors } from "../../content/schema";
+import { subjectAssetEntryFor } from "../../hud/subjectSkinRegistry";
+import type { ImageAssetCache } from "../imageAssets";
 import { paperCutEdgePath, withPaperCutShadow } from "../paperCut";
 
 export type DrawSubjectLotusInput = {
@@ -10,7 +12,23 @@ export type DrawSubjectLotusInput = {
   scale: number;
   rotation: number;
   shadowIntensity?: number;
+  imageCache?: ImageAssetCache;
 };
+
+export const SUBJECT_LOTUS_DRAW = Object.freeze({
+  minVisibleScale: 0.02,
+  // subject-lotus.png is 852 x 868 (near-square). Anchor slightly above the
+  // visual centerline to align the rendered artwork with the existing
+  // procedural petal cluster origin.
+  figmaEnvelope: Object.freeze({
+    sourceWidth: 852,
+    sourceHeight: 868,
+    widthRatio: 1,
+    heightRatio: 1,
+    anchorX: 0.5,
+    anchorY: 0.5,
+  }),
+} as const);
 
 function colorByName(k: string): string {
   switch (k) {
@@ -29,10 +47,12 @@ function colorByName(k: string): string {
   }
 }
 
-export function drawSubjectLotus(ctx: CanvasRenderingContext2D, input: DrawSubjectLotusInput): void {
-  const { pos, sizePx, colors, scale, rotation } = input;
-  const shadowIntensity = input.shadowIntensity ?? 1;
-  if (scale <= 0.02) return;
+function drawProceduralLotus(
+  ctx: CanvasRenderingContext2D,
+  input: DrawSubjectLotusInput,
+): void {
+  const { pos, sizePx, colors, scale, rotation, shadowIntensity } = input;
+  if (scale <= SUBJECT_LOTUS_DRAW.minVisibleScale) return;
   const s = sizePx * scale;
   const petalCount = 5;
   const petalLen = s * 0.48;
@@ -67,4 +87,40 @@ export function drawSubjectLotus(ctx: CanvasRenderingContext2D, input: DrawSubje
   ctx.fill();
 
   ctx.restore();
+}
+
+function tryDrawFigmaLotus(
+  ctx: CanvasRenderingContext2D,
+  input: DrawSubjectLotusInput,
+  image: HTMLImageElement,
+): void {
+  const { pos, sizePx, scale, rotation, shadowIntensity } = input;
+  if (scale <= SUBJECT_LOTUS_DRAW.minVisibleScale) return;
+  const side = sizePx * scale;
+  const dx = pos.x - side / 2;
+  const dy = pos.y - side / 2;
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+  ctx.rotate(rotation);
+  ctx.translate(-pos.x, -pos.y);
+  withPaperCutShadow(
+    ctx,
+    () => {
+      ctx.drawImage(image, dx, dy, side, side);
+    },
+    shadowIntensity,
+  );
+  ctx.restore();
+}
+
+export function drawSubjectLotus(ctx: CanvasRenderingContext2D, input: DrawSubjectLotusInput): void {
+  const entry = subjectAssetEntryFor("lotus");
+  if (entry && input.imageCache) {
+    const state = input.imageCache.get(entry.url);
+    if (state.status === "ready") {
+      tryDrawFigmaLotus(ctx, input, state.image);
+      return;
+    }
+  }
+  drawProceduralLotus(ctx, input);
 }
