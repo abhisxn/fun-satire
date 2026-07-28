@@ -181,6 +181,18 @@ export class CreatureGrid {
     return this.creatures.length;
   }
 
+  setCols(cols: number): void {
+    this.cols = cols;
+  }
+
+  setRows(rows: number): void {
+    this.rows = rows;
+  }
+
+  respawn(): void {
+    this.spawn(this.mode);
+  }
+
   getMode(): CreatureMode {
     return this.mode;
   }

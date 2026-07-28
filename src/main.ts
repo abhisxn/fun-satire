@@ -24,6 +24,22 @@ async function main(): Promise<void> {
   });
   await grid.init();
 
+  let resizeTimeout: number;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = window.setTimeout(() => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const cols = vw < 768 ? 8 : 12;
+      const rows = vh < 768 ? 6 : 8;
+
+      grid.setCols(cols);
+      grid.setRows(rows);
+      grid.respawn();
+    }, 200);
+  });
+
   const engine = new Engine();
   engine.onTick(() => {
     const center = avatar.getCenter();
