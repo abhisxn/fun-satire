@@ -9,7 +9,6 @@ import { computeFieldLines, drawFieldLines } from "./drawers/drawFieldLines";
 import { computeGazeLines } from "./drawers/drawGazeLines";
 import { drawCollectiveEffectVisual } from "./drawers/drawCollectiveEffectVisual";
 import { selectCollectiveContributors } from "../effects/collectiveContributors";
-import { getEyeAssetEntry } from "../assets/eyeAssetRegistry";
 import { drawSubject } from "./drawers/drawSubject";
 import { drawLockIndicator } from "./drawers/drawLockIndicator";
 import { computePupilOffset } from "./pupilTrack";
@@ -21,13 +20,6 @@ import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 import type { HudMode } from "../hud/hudIcons";
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import type { ImageAssetCache } from "./imageAssets";
-import { resolveCrowdMetrics, type ScenePolicy } from "./responsiveScene";
-
-const NO_SCALE_POLICY: ScenePolicy = Object.freeze({
-  crowdScale: 1,
-  targetCrowdCount: 0,
-  controlVariant: "desktop",
-});
 
 export type SubjectRenderInfo = {
   id: EntityId;
@@ -68,7 +60,6 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   chargeT?: number;
   assistRadiusPx?: number;
   imageCache?: ImageAssetCache;
-  scenePolicy?: ScenePolicy;
 };
 
 export type CrowdDrawOrderMember = { id: number; pos: { x: number; y: number } };
@@ -115,7 +106,6 @@ export function renderFrame(opts: RenderFrameOptions): void {
   drawFieldLines(ctx, lines, { stroke: PALETTE.slate, ink: PALETTE.ink });
 
   const shadowIntensity = computeShadowIntensity({ quantity: opts.quantity, repelMultiplier: opts.repelMultiplier });
-  const scenePolicy = opts.scenePolicy ?? NO_SCALE_POLICY;
   const eyePositions: Array<{ id: number; pos: { x: number; y: number } }> = [];
   const crowdMembers: Entity[] = [];
   store.forEachAlive((e) => {
@@ -130,10 +120,6 @@ export function renderFrame(opts: RenderFrameOptions): void {
   for (const { entity: e } of sortedCrowd) {
     eyePositions.push({ id: e.id, pos: e.physics.pos });
     const data = e.behavior.data as Record<string, unknown>;
-    const shapeVariant = (data.shapeVariant ?? "almond") as Parameters<typeof drawEye>[1]["shapeVariant"];
-    const colors = (data.colors ?? {
-      sclera: "cream", iris: "slate", pupil: "ink", highlight: "coral", outline: "ink",
-    }) as Parameters<typeof drawEye>[1]["colors"];
     const blinkTimer = opts.blinkTimers.get(e.id);
     const blinkScaleY = blinkTimer?.scaleY() ?? 1;
     const easedPrev = opts.pupilOffsets.get(e.id) ?? { x: 0, y: 0 };
@@ -147,17 +133,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
     opts.pupilOffsets.set(e.id, { x: offset.x, y: offset.y });
 
     const rotation = e.physics.rotation ?? 0;
-    const canonicalBaseSizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
-    const crowdMetrics = resolveCrowdMetrics(canonicalBaseSizePx, scenePolicy);
-    const sizePx = crowdMetrics.visualSizePx;
-
-    const assetId = data.assetId as Parameters<typeof drawEye>[1]["assetId"] | undefined;
-    if (assetId && !getEyeAssetEntry(assetId)) {
-      throw new Error(
-        `renderFrame: eye asset "${assetId}" is not registered (entity id=${e.id}, manifestId=${e.content.manifestId}). ` +
-          `Check src/assets/figmaAssetRegistry.ts and ensure the manifest's visual.assetId is one of EYE_ASSET_IDS.`,
-      );
-    }
+    const sizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
 
     switch (opts.hudMode) {
       case "eyes": {
@@ -168,41 +144,37 @@ export function renderFrame(opts: RenderFrameOptions): void {
         drawEye(ctx, {
           pos: e.physics.pos,
           sizePx,
-          assetId,
-          shapeVariant,
-          colors,
           blinkScaleY,
           pupilOffset: { x: offset.x, y: offset.y },
-          imageCache: opts.imageCache,
         });
         ctx.restore();
         break;
       }
-      case "bugs":
+      case "bugs": {
+        const dx = cursor.x - e.physics.pos.x;
+        const dy = cursor.y - e.physics.pos.y;
+        const bugRotation = Math.atan2(dy, dx) + Math.PI;
         drawBug(ctx, {
           pos: e.physics.pos,
           sizePx,
-          colors,
           timeMs: opts.nowMs,
           id: e.id,
-          rotation,
-          shadowIntensity,
+          rotation: bugRotation,
+          imageCache: opts.imageCache,
         });
         break;
+      }
       case "pointedFinger": {
-        const fingerColors: SubjectColors = {
-          outline: colors.outline,
-          shirt: colors.sclera,
-          suit: colors.iris === "cream" ? "slate" : colors.iris,
-        };
+        const dx = cursor.x - e.physics.pos.x;
+        const dy = cursor.y - e.physics.pos.y;
+        const fingerRotation = Math.atan2(dy, dx) + Math.PI;
         drawPointedFinger(ctx, {
           pos: e.physics.pos,
           sizePx,
-          colors: fingerColors,
           timeMs: opts.nowMs,
           id: e.id,
-          rotation,
-          shadowIntensity,
+          rotation: fingerRotation,
+          imageCache: opts.imageCache,
         });
         break;
       }
@@ -265,12 +237,16 @@ export function renderFrame(opts: RenderFrameOptions): void {
         maxContributors: 16,
         assistRadiusPx: opts.assistRadiusPx ?? 0,
       });
+      const origin = stage.visual.archetype === "beam"
+        ? { x: opts.width / 2, y: 0 }
+        : undefined;
       drawCollectiveEffectVisual(ctx, {
         archetype: stage.visual.archetype,
         visual: stage.visual,
         contributors,
         target: effect.target,
         progress,
+        origin,
         nowMs: opts.nowMs,
         stageIndex: effect.stageIndex,
       });

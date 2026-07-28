@@ -22,6 +22,7 @@ import "@fontsource/doto/700.css";
 import "./styles/global.css";
 import "./hud/hud.css";
 import "./hud/audioControl.css";
+import "./hud/subjectDrawer.css";
 import "./audio/cues/hudCues";
 import "./audio/cues/chargeRespawnCues";
 import "./audio/cues/laserBurnCues";
@@ -53,30 +54,23 @@ import { Hud } from "./hud/Hud";
 import { createViewport } from "./render/CanvasUtils";
 import { renderFrame } from "./render/Renderer";
 import { getImageAssetCache } from "./render/imageAssets";
-import { resolveCrowdMetrics, resolveScenePolicy } from "./render/responsiveScene";
 import { AVATAR_ASSET_REGISTRY } from "./hud/avatarAssetRegistry";
+import { BUG_DRAW } from "./render/drawers/drawBug";
+import { FINGER_DRAW } from "./render/drawers/drawPointedFinger";
 import * as FF from "./physics/ForceField";
 import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
 import { DURATION } from "./config/tokens";
 import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
 import type { SubjectSkin } from "./hud/subjectSkinRegistry";
-import { computeLookAtRotation, computeLookAtDamping } from "./physics/LookAt";
+import { computeLookAtRotation } from "./physics/LookAt";
 import { accumulateSeparation } from "./physics/ForceField";
-import type { Entity, EntityId, Vec2 } from "./entities/Entity";
+import type { Entity, EntityId } from "./entities/Entity";
 import { AudioEngine } from "./audio/AudioEngine";
 import { AudioControl } from "./hud/AudioControl";
 import { startAmbientForMode, startTenseFiller } from "./audio/ambientBeds";
 import { startMusicBed } from "./audio/musicBed";
 import { startAmbientBedTrack } from "./audio/ambientBedTrack";
-import {
-  collectVisibleFixtureResourceUrls,
-  completeVisualFixtureBoot,
-  installVisualFixtureDocumentState,
-  readVisualFixture,
-  requiredAssetUrlsForVisualFixture,
-} from "./testing/visualFixture";
-import { applyEyesFixtureState, materializeEyesAttackFixture } from "./testing/eyesFixtures";
 
 type LifecycleState = "alive" | "dying";
 type LocomotionState = "idle" | "flee" | "dragged";
@@ -156,58 +150,6 @@ export function __resetSubjectCollectionForTests(): void {
   lockedSubjectId = null;
 }
 
-function updateSubjects(
-  cursor: { x: number; y: number; active: boolean },
-  dtSec: number,
-  nowMs: number,
-): void {
-  subjects.forEach((rec) => {
-    const subj = store.get(rec.id, { live: true });
-    if (!subj || subj.lifecycle.dragged) return;
-    if (cursor.active) {
-      const behaviorData = subj.behavior.data as { placed?: boolean; isFollowing?: boolean };
-      stepSubjectPhysics(subj.physics, cursor, dtSec, behaviorData);
-    }
-    if (subj.physics.scale < 1) {
-      const elapsed = nowMs - rec.spawnedAtMs;
-      subj.physics.scale = EASE_PROTEST(Math.min(1, elapsed / DURATION.slow));
-    }
-  });
-}
-
-export function pickUnlockedSubjectTarget(
-  eyePos: Vec2,
-  subjectPositions: readonly { id: EntityId; pos: Vec2 }[],
-  assistRadiusPx: number,
-): { id: EntityId; pos: Vec2 } | null {
-  if (subjectPositions.length === 0 || assistRadiusPx <= 0) return null;
-  let best: { id: EntityId; pos: Vec2 } | null = null;
-  let bestDistSq = Infinity;
-  for (const s of subjectPositions) {
-    const dx = eyePos.x - s.pos.x;
-    const dy = eyePos.y - s.pos.y;
-    const distSq = dx * dx + dy * dy;
-    if (distSq < bestDistSq) {
-      bestDistSq = distSq;
-      best = s;
-    }
-  }
-  const radiusSq = assistRadiusPx * assistRadiusPx;
-  return bestDistSq <= radiusSq ? best : null;
-}
-
-export function __getSubjectEntityForTests(id: EntityId): Entity | undefined {
-  return store.get(id) ?? undefined;
-}
-
-export function __stepSubjectUpdateForTests(
-  cursor: { x: number; y: number; active: boolean },
-  dtSec: number,
-  nowMs: number,
-): void {
-  updateSubjects(cursor, dtSec, nowMs);
-}
-
 export type ApplySubjectDropInput = {
   skin: SubjectSkin;
   canvasPos: { x: number; y: number } | null;
@@ -217,11 +159,15 @@ export type ApplySubjectDropInput = {
 /**
  * Handles a drag/tap drop from the subject drawer. Spawns a new subject
  * into the EntityStore + subjects Map at `canvasPos`. A null `canvasPos`
- * (drop outside canvas, or touch tap on the card) is a no-op.
+ * (drop outside canvas, or touch tap on the card) is a no-op per Gate 2
+ * Option A (touch tap → spawn at center; drop outside → ignore).
  */
 export function applySubjectDrop(input: ApplySubjectDropInput): EntityId | null {
-  if (input.canvasPos === null) return null;
-  const cursor = { x: input.canvasPos.x, y: input.canvasPos.y };
+  const pos = input.canvasPos ?? {
+    x: viewport.state.width / 2,
+    y: viewport.state.height / 2,
+  };
+  const cursor = { x: pos.x, y: pos.y };
   const entity = spawnSubject({
     manifest: subjectManifestEntries,
     cursor,
@@ -290,7 +236,7 @@ export function queryNearestEye(
  */
 export function applySubjectSkinPatch(
   id: EntityId,
-  patch: { value?: string; fontId?: string; scale?: number; align?: "left" | "center" | "right" },
+  patch: { fontId?: string; scale?: number; align?: "left" | "center" | "right" },
 ): void {
   const rec = subjects.get(id);
   if (!rec || rec.skin.kind !== "text") return;
@@ -298,10 +244,6 @@ export function applySubjectSkinPatch(
   rec.skin = next;
   const e = store.get(id, { live: true });
   if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = next;
-}
-
-export function applySubjectTextChange(id: EntityId, value: string): void {
-  applySubjectSkinPatch(id, { value });
 }
 
 export function applySubjectFontChange(id: EntityId, fontId: string): void {
@@ -337,23 +279,10 @@ hudRoot.dataset.layer = "hud";
 hudRoot.style.zIndex = "var(--z-hud)";
 
 const params = new URLSearchParams(window.location.search);
-let visualFixture = null;
-try {
-  visualFixture = readVisualFixture(window.location.search);
-} catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  document.documentElement.dataset.visualReady = "error";
-  window.__FUN_SATIRE_VISUAL__ = { ready: false, error: message, failedAssets: [] };
-  throw error;
-}
-if (visualFixture) {
-  installVisualFixtureDocumentState(document, visualFixture);
-  window.__FUN_SATIRE_VISUAL__ = { ready: false, error: null, failedAssets: [] };
-}
 const seedParam = params.get("seed");
-const seed = visualFixture?.seed ?? (seedParam && Number.isFinite(Number.parseInt(seedParam, 10))
+const seed = seedParam && Number.isFinite(Number.parseInt(seedParam, 10))
   ? Number.parseInt(seedParam, 10)
-  : (Date.now() & 0xFFFFFFFF) >>> 0);
+  : (Date.now() & 0xFFFFFFFF) >>> 0;
 
 const rng = new Rng(seed);
 const store = new EntityStore();
@@ -365,35 +294,28 @@ const subjectManifestEntries = subjectManifest.entries.filter(
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 const imageAssets = getImageAssetCache();
-if (!visualFixture) void imageAssets.preload(AVATAR_ASSET_REGISTRY.map((e) => e.url));
+imageAssets.preload([
+  ...AVATAR_ASSET_REGISTRY.map((e) => e.url),
+  BUG_DRAW.imageUrl,
+  FINGER_DRAW.imageUrl,
+]);
 
 const hud = new Hud(hudRoot, stage);
 hud.setMode("eyes");
 hud.setPower("laserBurn");
-if (visualFixture) {
-  hud.setQuantity(visualFixture.quantity);
-  hud.setVisualFixturePanel(visualFixture.panel);
-}
 
-const audioEngine = visualFixture ? null : new AudioEngine(new AudioContext());
-if (audioEngine) new AudioControl(document.body, audioEngine);
+const audioEngine = new AudioEngine(new AudioContext());
+new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
-let scenePolicy = resolveScenePolicy(viewport.state.width, viewport.state.height);
 
-viewport.onChange((s) => {
-  respawn.setSize(s.width, s.height);
-  scenePolicy = resolveScenePolicy(s.width, s.height);
-  hud.setControlVariant(scenePolicy.controlVariant);
-});
-hud.setControlVariant(scenePolicy.controlVariant);
 hud.onModeChange((mode) => {
   const power = MODE_POWER_MAP[mode];
   powerCtrl.setPower(power);
   hud.setPower(power);
   currentMode = mode;
-  if (audioEngine) startAmbientForMode(audioEngine, mode);
+  startAmbientForMode(audioEngine, mode);
 });
 
 hud.onSubjectDrop((result: SubjectDropResult) => {
@@ -417,13 +339,6 @@ hud.onSubjectFontChange((subjectId, fontId) => {
 hud.onSubjectAlignChange((subjectId, align) => {
   if (subjectId === null) return;
   applySubjectAlignChange(subjectId, align);
-  const rec = subjects.get(subjectId);
-  if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
-});
-
-hud.onSubjectTextChange((subjectId, kind, value) => {
-  if (subjectId === null || kind !== "value") return;
-  applySubjectTextChange(subjectId, value);
   const rec = subjects.get(subjectId);
   if (rec) hud.setActiveSubjectSkin(subjectId, rec.skin);
 });
@@ -494,23 +409,13 @@ hud.onTextTool(() => {
 });
 
 hud.onGridTool(() => {
-  // Gallery opens via ControlBar gallery trigger inside Hud.
+  // Grid opens the existing subject browser drawer.
+  document.querySelector<HTMLElement>(".hud-placard__subject-toggle")?.dispatchEvent(
+    new MouseEvent("click", { bubbles: true }),
+  );
 });
 
-let fixtureFrame: ((timestamp: number) => void) | null = null;
-let fixtureAttackTargetId: EntityId | null = null;
-let completedRenderCount = 0;
-let fixtureRenderError: unknown = null;
-const engine = visualFixture ? new Engine({
-  now: () => visualFixture.nowMs,
-  raf: (callback) => {
-    fixtureFrame = callback;
-    return 1;
-  },
-  caf: () => {
-    fixtureFrame = null;
-  },
-}) : new Engine();
+const engine = new Engine();
 engine.events.on("tick", ({ phase, dt }) => {
   const nowMs = engine.getNow();
   if (phase === "pre-physics") {
@@ -527,21 +432,18 @@ engine.events.on("tick", ({ phase, dt }) => {
   }
   if (phase === "render") {
     const cursor = engine.cursor();
-    const ringT = visualFixture?.attackProgress ?? Math.max(0, Math.min(1, powerCtrl.chargeT()));
+    const ringT = Math.max(0, Math.min(1, powerCtrl.chargeT()));
     const inCooldown = effects.liveCount() > 0;
-    hud.setCharge(ringT, visualFixture?.attackProgress !== null && visualFixture?.attackProgress !== undefined
-      ? true
-      : powerCtrl.isCharging());
+    hud.setCharge(ringT, powerCtrl.isCharging());
     const cursorRingRadius = 12 + ringT * 14;
     const cursorRingOpacity = cursor.active ? 1 - ringT * 0.85 : 0;
     const hoverEntity = cursor.active
       ? queryNearestEye(store, { x: cursor.x, y: cursor.y }, 70)
       : null;
-    const reducedMotion = visualFixture !== null || (
+    const reducedMotion =
       typeof window !== "undefined" &&
       typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const subjectRenderInfos: Array<{
       id: EntityId;
       pos: { x: number; y: number };
@@ -565,41 +467,33 @@ engine.events.on("tick", ({ phase, dt }) => {
       });
     });
     hud.setSubjectCount(subjects.size);
-    fixtureRenderError = null;
-    try {
-      renderFrame({
-        ctx,
-        store,
-        particles,
-        effects,
-        cursor,
-        rng,
-        width: viewport.state.width,
-        height: viewport.state.height,
-        behaviors,
-        blinkTimers,
-        pupilOffsets,
-        cursorRingRadius,
-        cursorRingOpacity,
-        chargeTargetId: fixtureAttackTargetId ?? powerCtrl.chargeTargetId(),
-        hoverEntityId: hoverEntity?.id ?? null,
-        reducedMotion,
-        nowMs: engine.getNow(),
-        hudMode: currentMode,
-        quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
-        repelMultiplier,
-        subjects: subjectRenderInfos,
-        lockedSubjectId,
-        chargeT: ringT,
-        assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
-        imageCache: imageAssets,
-        scenePolicy,
-      });
-      completedRenderCount += 1;
-    } catch (error) {
-      fixtureRenderError = error;
-      throw error;
-    }
+    renderFrame({
+      ctx,
+      store,
+      particles,
+      effects,
+      cursor,
+      rng,
+      width: viewport.state.width,
+      height: viewport.state.height,
+      behaviors,
+      blinkTimers,
+      pupilOffsets,
+      cursorRingRadius,
+      cursorRingOpacity,
+      chargeTargetId: powerCtrl.chargeTargetId(),
+      hoverEntityId: hoverEntity?.id ?? null,
+      reducedMotion,
+      nowMs: engine.getNow(),
+      hudMode: currentMode,
+      quantity: (() => { let n = 0; store.forEachAlive((e) => { if (e.content.renderType === "eye") n++; }); return n; })(),
+      repelMultiplier,
+      subjects: subjectRenderInfos,
+      lockedSubjectId,
+      chargeT: ringT,
+      assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
+      imageCache: imageAssets,
+    });
     void inCooldown;
   }
 });
@@ -609,7 +503,6 @@ const blinkTimers = new Map<EntityId, EyeBlinkTimer>();
 const pupilOffsets = new Map<EntityId, { x: number; y: number }>();
 
 let nextEntityId = 1;
-const SUBJECT_HIT_RADIUS_PX = 56;
 const SUBJECT_ASSIST_RADIUS_PX = 140;
 
 const worldAPI = {
@@ -621,29 +514,15 @@ const worldAPI = {
     const e = store.get(id, { live: false });
     if (!e) return;
     if (e.content.renderType === "subject") {
-      if (visualFixture?.id === "eyes-attack") return;
-      const wasLocked = lockedSubjectId === id;
       store.remove(id);
       removeSubjectFromCollection(id);
-      if (wasLocked) {
-        hud.setCurrentSubjectId(null);
-        hud.setLockedSubjectId(null);
-      }
       return;
     }
     respawn.schedule(e, engine.getNow(), _delayMs);
   },
 };
 
-export function __getHudForTests(): Hud {
-  return hud;
-}
-
-export function __destroySubjectForTests(id: EntityId): void {
-  worldAPI.startRespawn(id, 0);
-}
-
-const effects = new EffectSystem(particles, rng, worldAPI, audioEngine ?? { play: () => {} });
+const effects = new EffectSystem(particles, rng, worldAPI, audioEngine);
 effects.register(laserBurnEffect);
 effects.register(electricBurnEffect);
 effects.register(bugEatEffect);
@@ -655,7 +534,6 @@ const spawnInitialEyes = (): void => {
     rng,
     width: viewport.state.width,
     height: viewport.state.height,
-    count: visualFixture?.quantity,
     manifest: manifest.entries.filter((e): e is EyeManifestEntry => e.rig === "eye"),
   });
   for (const e of entities) {
@@ -716,21 +594,14 @@ let subjectPressOrigin: { x: number; y: number } | null = null;
 const pointer: PointerTracker = new PointerTracker(stage, {
   setCursor(x: number, y: number) {
     engine.setCursor(x, y);
-    if (dragCtrl.draggedId() !== null) {
-      stage.style.cursor = "grabbing";
-    } else {
-      const hovering = queryNearestSubject(store, { x, y }, SUBJECT_HIT_RADIUS_PX);
-      stage.style.cursor = hovering ? "grab" : "";
-    }
   },
   clearCursor() {
     engine.clearCursor();
-    stage.style.cursor = "";
   },
   press() {
     const cur = engine.cursor();
     if (!cur.active) return;
-    const nearest = queryNearestSubject(store, { x: cur.x, y: cur.y }, SUBJECT_HIT_RADIUS_PX);
+    const nearest = queryNearestSubject(store, { x: cur.x, y: cur.y });
     const hitSubjectId = nearest ? nearest.id : null;
     if (hitSubjectId !== null) {
       applyCanvasPress(cur.x, cur.y, hitSubjectId);
@@ -784,12 +655,11 @@ engine.onTick("pre-physics", (dt) => {
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;
     if (e.lifecycle.dragged) return;
-    const baseSizePx = ((e.behavior.data as Record<string, unknown>).baseSizePx as number) ?? 56;
-    const { collisionRadiusPx } = resolveCrowdMetrics(baseSizePx * (e.physics.scale || 1), scenePolicy);
+    const baseSizePx = (e.behavior.data as Record<string, unknown>).baseSizePx as number ?? 56;
     crowdMembers.push({
       id: e.id,
       pos: e.physics.pos,
-      radiusPx: collisionRadiusPx,
+      radiusPx: baseSizePx * e.physics.scale * 0.5,
     });
   });
   const separationForces = accumulateSeparation(crowdMembers);
@@ -818,7 +688,17 @@ engine.onTick("pre-physics", (dt) => {
     e.physics.vel = next.vel;
   });
 
-  updateSubjects(cursor, dtSec, engine.getNow());
+  if (lockedSubjectId !== null && cursor.active) {
+    const subj = store.get(lockedSubjectId, { live: true });
+    if (subj && !subj.lifecycle.dragged) {
+      stepSubjectPhysics(subj.physics, cursor, dtSec);
+      const rec = subjects.get(lockedSubjectId);
+      if (rec && subj.physics.scale < 1) {
+        const elapsed = engine.getNow() - rec.spawnedAtMs;
+        subj.physics.scale = EASE_PROTEST(Math.min(1, elapsed / DURATION.slow));
+      }
+    }
+  }
 
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;
@@ -826,32 +706,15 @@ engine.onTick("pre-physics", (dt) => {
     if (beh) beh.tick(rng, engine.getNow());
   });
 
-  // Look-at rotation: eyes rotate toward the locked subject, or toward the
-  // same nearest-within-range subject that gaze lines would use when unlocked.
+  // Look-at rotation: eyes rotate toward the locked subject
   if (lockedSubjectId !== null) {
     const subj = store.get(lockedSubjectId, { live: true });
     if (subj) {
       store.forEachAlive((e) => {
         if (e.content.renderType !== "eye") return;
-        const damping = computeLookAtDamping(e.id);
-        e.physics.rotation = computeLookAtRotation(e.physics.pos, subj.physics.pos, currentMode, damping);
+        e.physics.rotation = computeLookAtRotation(e.physics.pos, subj.physics.pos, currentMode);
       });
     }
-  } else if (subjects.size > 0) {
-    const subjectPositions = Array.from(subjects.values())
-      .map((rec) => {
-        const e = store.get(rec.id, { live: true });
-        return e ? { id: rec.id, pos: e.physics.pos } : null;
-      })
-      .filter((s): s is { id: EntityId; pos: Vec2 } => s !== null);
-    store.forEachAlive((e) => {
-      if (e.content.renderType !== "eye") return;
-      const target = pickUnlockedSubjectTarget(e.physics.pos, subjectPositions, SUBJECT_ASSIST_RADIUS_PX);
-      const damping = computeLookAtDamping(e.id);
-      e.physics.rotation = target
-        ? computeLookAtRotation(e.physics.pos, target.pos, currentMode, damping)
-        : 0;
-    });
   } else {
     store.forEachAlive((e) => {
       if (e.content.renderType !== "eye") return;
@@ -862,84 +725,18 @@ engine.onTick("pre-physics", (dt) => {
 
 viewport.onChange((s) => {
   respawn.setSize(s.width, s.height);
-  scenePolicy = resolveScenePolicy(s.width, s.height);
-  hud.setControlVariant(scenePolicy.controlVariant);
 });
-hud.setControlVariant(scenePolicy.controlVariant);
 
 spawnInitialEyes();
-if (visualFixture) {
-  const eyes: Entity[] = [];
-  store.forEachAlive((entity) => {
-    if (entity.content.renderType === "eye") eyes.push(entity);
-  });
-  applyEyesFixtureState(eyes, pupilOffsets, viewport.state);
-}
 nextEntityId = Math.max(0, ...store.ids()) + 1;
-if (visualFixture?.id === "eyes-attack" && visualFixture.attackProgress !== null) {
-  const scenario = materializeEyesAttackFixture({
-    store,
-    effects,
-    subjectManifest: subjectManifestEntries,
-    nextId: nextEntityId++,
-    viewport: viewport.state,
-    nowMs: visualFixture.nowMs,
-    progress: visualFixture.attackProgress,
-  });
-  fixtureAttackTargetId = scenario.targetId;
-  const target = store.get(scenario.targetId, { live: true });
-  if (!target) throw new Error("Visual attack fixture target is unavailable");
-  const subjectSkin = (target.behavior.data as { subjectSkin: SubjectSkin }).subjectSkin;
-  spawnSubjectForCollection({
-    id: target.id,
-    skin: subjectSkin,
-    nowMs: visualFixture.nowMs,
-  });
-  lockSubject(target.id);
-  hud.setVisualFixtureAttackState({
-    targetId: target.id,
-    skin: subjectSkin,
-    progress: visualFixture.attackProgress,
-  });
-  engine.setCursor(viewport.state.width / 2, viewport.state.height / 2);
-}
-if (!visualFixture) pointer.attach();
+pointer.attach();
 engine.start();
 
 const unlockAudio = (): void => {
-  if (!audioEngine) return;
   audioEngine.unlock();
   void startMusicBed(audioEngine, "/audio/music-bed.mp3");
   void startAmbientBedTrack(audioEngine);
   startTenseFiller(audioEngine);
   startAmbientForMode(audioEngine, currentMode);
 };
-if (visualFixture) {
-  const config = visualFixture;
-  const assetUrls = [...new Set([
-    ...requiredAssetUrlsForVisualFixture(config),
-    ...collectVisibleFixtureResourceUrls(document),
-  ])];
-  void completeVisualFixtureBoot({
-    assetUrls,
-    preload: (urls) => imageAssets.preload(urls),
-    fontsReady: document.fonts.ready,
-    finishEntranceTransitions: () => hud.finishEntranceTransitions(),
-    renderOnce: () => {
-      const render = fixtureFrame;
-      if (!render) throw new Error("Visual fixture frame was not scheduled");
-      render(config.nowMs);
-    },
-    completedRenderCount: () => completedRenderCount,
-    renderError: () => fixtureRenderError,
-  }).then(({ failedAssets }) => {
-    document.documentElement.dataset.visualReady = "true";
-    window.__FUN_SATIRE_VISUAL__ = { ready: true, error: null, failedAssets };
-  }).catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error);
-    document.documentElement.dataset.visualReady = "error";
-    window.__FUN_SATIRE_VISUAL__ = { ready: false, error: message, failedAssets: [] };
-  });
-} else {
-  document.addEventListener("pointerdown", unlockAudio, { once: true });
-}
+document.addEventListener("pointerdown", unlockAudio, { once: true });
