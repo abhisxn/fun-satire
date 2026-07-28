@@ -47,6 +47,8 @@
 .avatar-gallery__card {
   width: 120px;
   height: 120px;
+  min-width: 44px;
+  min-height: 44px;
   border: 1px solid rgba(42, 36, 32, 0.16);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.6);
@@ -98,4 +100,22 @@
   .avatar-gallery__card {
     transition: none;
   }
+}
+
+.avatar-gallery[data-variant="portrait-sheet"] {
+  left: 16px;
+  right: 16px;
+  bottom: calc(70px + 8px);
+  width: auto;
+  max-height: 60vh;
+  border-radius: 28px;
+}
+
+.avatar-gallery[data-variant="landscape-tray"] {
+  right: 16px;
+  top: 16px;
+  bottom: calc(70px + 8px);
+  width: 360px;
+  max-width: 60vw;
+  border-radius: 24px;
 }

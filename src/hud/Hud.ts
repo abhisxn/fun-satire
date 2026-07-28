@@ -5,12 +5,14 @@ import { hudIcons, type HudMode, type HudPower } from "./hudIcons";
 import { ControlBar, type ControlBarPanelTrigger, type ControlEvent } from "./ControlBar";
 import { FilterPanel } from "./FilterPanel";
 import { AvatarGallery, type AvatarEntry } from "./AvatarGallery";
+import { TextSubjectComposer } from "./TextSubjectComposer";
 import { OverlayLayout, type OverlayPanelId } from "./OverlayLayout";
 import { AVATAR_ASSET_REGISTRY } from "./avatarAssetRegistry";
 import type { ControlVariant } from "../render/responsiveScene";
 import "./controlBar.css";
 import "./filterPanel.css";
 import "./avatarGallery.css";
+import "./textComposer.css";
 import "./overlayLayout.css";
 
 const QTY_MIN = 1;
@@ -45,11 +47,13 @@ export class Hud {
   private subjectFontChangeCb: ((subjectId: number | null, fontId: TextFontId) => void) | null = null;
   private subjectAlignChangeCb: ((subjectId: number | null, align: "left" | "center" | "right") => void) | null = null;
   private subjectSkinChangeCb: ((subjectId: number | null, skin: SubjectSkin) => void) | null = null;
+  private subjectTextChangeCb: ((subjectId: number | null, kind: "value", value: string) => void) | null = null;
   private overlayAnchor: HTMLElement;
   private overlayPanels: HTMLElement;
   private controlBar: ControlBar | null = null;
   private filterPanel: FilterPanel | null = null;
   private avatarGallery: AvatarGallery | null = null;
+  private textComposer: TextSubjectComposer | null = null;
   private overlay: OverlayLayout | null = null;
   private chargeEl: HTMLElement;
 
@@ -123,9 +127,23 @@ export class Hud {
       this.subjectDropCb?.({ skin: this.activeSubjectSkin, canvasPos: null });
     });
 
+    this.textComposer = new TextSubjectComposer(this.overlayPanels, {
+      initial: {
+        value: "look at me",
+        scale: 1,
+        fontId: "spaceMono",
+        align: "center",
+      },
+    });
+    this.textComposer.onValueChange((value) => this.subjectTextChangeCb?.(this.lockedSubjectId, "value", value));
+    this.textComposer.onScaleChange((scale) => this.subjectResizeCb?.(this.lockedSubjectId, scale));
+    this.textComposer.onFontChange((fontId) => this.subjectFontChangeCb?.(this.lockedSubjectId, fontId));
+    this.textComposer.onAlignChange((align) => this.subjectAlignChangeCb?.(this.lockedSubjectId, align));
+
     this.overlay = new OverlayLayout();
     this.overlay.register("filter", this.filterPanel.getRoot());
     this.overlay.register("gallery", this.avatarGallery.getRoot());
+    this.overlay.register("text", this.textComposer.getRoot());
     this.overlay.onClose(() => this.syncOverlayTriggers());
   }
 
@@ -203,6 +221,15 @@ export class Hud {
 
   setControlVariant(variant: ControlVariant): void {
     this.root.dataset.controlVariant = variant;
+    if (this.overlay) {
+      const overlayVariant =
+        variant === "portrait-sheet"
+          ? "portrait-sheet"
+          : variant === "landscape-tray"
+            ? "landscape-tray"
+            : "desktop-panel";
+      this.overlay.setVariant(overlayVariant);
+    }
   }
 
   async finishEntranceTransitions(): Promise<void> {
@@ -356,8 +383,11 @@ export class Hud {
     };
     const id = map[which];
     if (id === "text") {
+      const root = this.textComposer?.getRoot();
+      this.overlay.open("text", root ?? this.controlBar.getRoot());
+      this.textComposer?.focusInitial();
       this.textToolCb?.();
-      this.controlBar.setTriggerExpanded("text", false);
+      this.syncOverlayTriggers();
       return;
     }
     if (id === "gallery") {
