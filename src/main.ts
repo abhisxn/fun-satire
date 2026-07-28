@@ -61,7 +61,7 @@ import { integrate } from "./physics/Integrator";
 import { DURATION } from "./config/tokens";
 import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
 import type { SubjectSkin } from "./hud/subjectSkinRegistry";
-import { computeLookAtRotation } from "./physics/LookAt";
+import { computeLookAtRotation, computeLookAtDamping } from "./physics/LookAt";
 import { accumulateSeparation } from "./physics/ForceField";
 import type { Entity, EntityId, Vec2 } from "./entities/Entity";
 import { AudioEngine } from "./audio/AudioEngine";
@@ -716,9 +716,16 @@ let subjectPressOrigin: { x: number; y: number } | null = null;
 const pointer: PointerTracker = new PointerTracker(stage, {
   setCursor(x: number, y: number) {
     engine.setCursor(x, y);
+    if (dragCtrl.draggedId() !== null) {
+      stage.style.cursor = "grabbing";
+    } else {
+      const hovering = queryNearestSubject(store, { x, y }, SUBJECT_HIT_RADIUS_PX);
+      stage.style.cursor = hovering ? "grab" : "";
+    }
   },
   clearCursor() {
     engine.clearCursor();
+    stage.style.cursor = "";
   },
   press() {
     const cur = engine.cursor();
@@ -826,7 +833,8 @@ engine.onTick("pre-physics", (dt) => {
     if (subj) {
       store.forEachAlive((e) => {
         if (e.content.renderType !== "eye") return;
-        e.physics.rotation = computeLookAtRotation(e.physics.pos, subj.physics.pos, currentMode);
+        const damping = computeLookAtDamping(e.id);
+        e.physics.rotation = computeLookAtRotation(e.physics.pos, subj.physics.pos, currentMode, damping);
       });
     }
   } else if (subjects.size > 0) {
@@ -839,8 +847,9 @@ engine.onTick("pre-physics", (dt) => {
     store.forEachAlive((e) => {
       if (e.content.renderType !== "eye") return;
       const target = pickUnlockedSubjectTarget(e.physics.pos, subjectPositions, SUBJECT_ASSIST_RADIUS_PX);
+      const damping = computeLookAtDamping(e.id);
       e.physics.rotation = target
-        ? computeLookAtRotation(e.physics.pos, target.pos, currentMode)
+        ? computeLookAtRotation(e.physics.pos, target.pos, currentMode, damping)
         : 0;
     });
   } else {

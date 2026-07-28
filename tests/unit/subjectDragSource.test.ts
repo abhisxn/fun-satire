@@ -174,6 +174,43 @@ describe("SubjectDragSource", () => {
   });
 });
 
+describe("SubjectDragSource cursor affordance", () => {
+  it("sets cursor: grab on the attached card", () => {
+    const dropTarget = document.createElement("canvas");
+    document.body.appendChild(dropTarget);
+    const card = document.createElement("button");
+    document.body.appendChild(card);
+
+    const source = new SubjectDragSource({ dropTarget });
+    source.attachCard(card, () => ({ kind: "illustrated", id: "figure" }));
+
+    expect(card.style.cursor).toBe("grab");
+  });
+
+  it("sets cursor: grabbing on the drag ghost and restores body cursor after drop", () => {
+    const dropTarget = document.createElement("canvas");
+    Object.defineProperty(dropTarget, "getBoundingClientRect", {
+      value: () => ({ left: 100, right: 300, top: 100, bottom: 300, width: 200, height: 200, x: 100, y: 100, toJSON() {} }),
+    });
+    document.body.appendChild(dropTarget);
+    const card = document.createElement("button");
+    document.body.appendChild(card);
+
+    const source = new SubjectDragSource({ dropTarget });
+    source.attachCard(card, () => ({ kind: "illustrated", id: "figure" }));
+
+    firePointer(card, "pointerdown", 10, 10);
+    const ghost = document.querySelectorAll("body > *")[document.querySelectorAll("body > *").length - 1] as HTMLElement;
+    expect(ghost.style.cursor).toBe("grabbing");
+    expect(document.body.style.cursor).toBe("grabbing");
+
+    firePointer(window, "pointermove", 150, 150);
+    firePointer(window, "pointerup", 150, 150);
+
+    expect(document.body.style.cursor).toBe("");
+  });
+});
+
 describe("SubjectDragSource touch tap-to-select", () => {
   it("a bare touch pointerup on a card drops immediately with canvasPos: null", () => {
     const dropTarget = document.createElement("canvas");

@@ -244,3 +244,32 @@ describe("main.ts unlocked eye rotation targets the same subject as gaze lines",
     expect(target).toBeNull();
   });
 });
+
+describe("main.ts stage cursor affordance (grab/grabbing over a draggable subject)", () => {
+  it("shows a grab cursor when hovering within the subject hit radius", () => {
+    const stage = document.querySelector<HTMLCanvasElement>("#stage")!;
+    applySubjectDrop({ skin: SKIN, canvasPos: { x: 100, y: 100 }, nowMs: 0 });
+
+    stage.dispatchEvent(new PointerEvent("pointermove", { clientX: 110, clientY: 105, pointerType: "mouse", bubbles: true }));
+    expect(stage.style.cursor).toBe("grab");
+  });
+
+  it("shows no special cursor when hovering far from any subject", () => {
+    const stage = document.querySelector<HTMLCanvasElement>("#stage")!;
+    applySubjectDrop({ skin: SKIN, canvasPos: { x: 100, y: 100 }, nowMs: 0 });
+
+    stage.dispatchEvent(new PointerEvent("pointermove", { clientX: 900, clientY: 900, pointerType: "mouse", bubbles: true }));
+    expect(stage.style.cursor).toBe("");
+  });
+
+  it("clears the cursor on pointerleave", () => {
+    const stage = document.querySelector<HTMLCanvasElement>("#stage")!;
+    applySubjectDrop({ skin: SKIN, canvasPos: { x: 100, y: 100 }, nowMs: 0 });
+
+    stage.dispatchEvent(new PointerEvent("pointermove", { clientX: 110, clientY: 105, pointerType: "mouse", bubbles: true }));
+    expect(stage.style.cursor).toBe("grab");
+
+    stage.dispatchEvent(new PointerEvent("pointerleave", { clientX: 110, clientY: 105, pointerType: "mouse", bubbles: true }));
+    expect(stage.style.cursor).toBe("");
+  });
+});
