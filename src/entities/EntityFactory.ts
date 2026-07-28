@@ -64,11 +64,13 @@ const buildEntity = (
   behavior: {
     data: {
       shapeVariant: entry.visual.shapeVariant,
+      assetId: entry.visual.assetId,
       colors: paletteRef(entry),
       blinkIntervalMinMs: entry.behavior.blinkIntervalMinMs,
       blinkIntervalMaxMs: entry.behavior.blinkIntervalMaxMs,
       blinkDurationMs: entry.behavior.blinkDurationMs,
       pupilTrackMs: entry.behavior.pupilTrackMs,
+      baseSizePx: entry.physics.baseSizePx,
       sizeClass,
       sizeScale,
     },

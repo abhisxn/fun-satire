@@ -20,6 +20,7 @@ import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 import type { HudMode } from "../hud/hudIcons";
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import type { ImageAssetCache } from "./imageAssets";
+import { getEyeAssetEntry } from "../assets/eyeAssetRegistry";
 
 export type SubjectRenderInfo = {
   id: EntityId;
@@ -120,10 +121,6 @@ export function renderFrame(opts: RenderFrameOptions): void {
   for (const { entity: e } of sortedCrowd) {
     eyePositions.push({ id: e.id, pos: e.physics.pos });
     const data = e.behavior.data as Record<string, unknown>;
-    const shapeVariant = (data.shapeVariant ?? "almond") as Parameters<typeof drawEye>[1]["shapeVariant"];
-    const colors = (data.colors ?? {
-      sclera: "cream", iris: "slate", pupil: "ink", highlight: "coral", outline: "ink",
-    }) as Parameters<typeof drawEye>[1]["colors"];
     const blinkTimer = opts.blinkTimers.get(e.id);
     const blinkScaleY = blinkTimer?.scaleY() ?? 1;
     const easedPrev = opts.pupilOffsets.get(e.id) ?? { x: 0, y: 0 };
@@ -138,9 +135,13 @@ export function renderFrame(opts: RenderFrameOptions): void {
 
     const rotation = e.physics.rotation ?? 0;
     const sizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
+    const assetId = data.assetId as string | undefined;
 
     switch (opts.hudMode) {
       case "eyes": {
+        if (assetId && !getEyeAssetEntry(assetId)) {
+          throw new Error(`renderFrame: eye asset "${assetId}" is not registered`);
+        }
         ctx.save();
         ctx.translate(e.physics.pos.x, e.physics.pos.y);
         ctx.rotate(rotation);
@@ -148,39 +149,38 @@ export function renderFrame(opts: RenderFrameOptions): void {
         drawEye(ctx, {
           pos: e.physics.pos,
           sizePx,
-          shapeVariant,
-          colors,
           blinkScaleY,
           pupilOffset: { x: offset.x, y: offset.y },
+          assetId,
         });
         ctx.restore();
         break;
       }
-      case "bugs":
+      case "bugs": {
+        const dx = cursor.x - e.physics.pos.x;
+        const dy = cursor.y - e.physics.pos.y;
+        const bugRotation = Math.atan2(dy, dx) + Math.PI;
         drawBug(ctx, {
           pos: e.physics.pos,
           sizePx,
-          colors,
           timeMs: opts.nowMs,
           id: e.id,
-          rotation,
-          shadowIntensity,
+          rotation: bugRotation,
+          imageCache: opts.imageCache,
         });
         break;
+      }
       case "pointedFinger": {
-        const fingerColors: SubjectColors = {
-          outline: colors.outline,
-          shirt: colors.sclera,
-          suit: colors.iris === "cream" ? "slate" : colors.iris,
-        };
+        const dx = cursor.x - e.physics.pos.x;
+        const dy = cursor.y - e.physics.pos.y;
+        const fingerRotation = Math.atan2(dy, dx) + Math.PI;
         drawPointedFinger(ctx, {
           pos: e.physics.pos,
           sizePx,
-          colors: fingerColors,
           timeMs: opts.nowMs,
           id: e.id,
-          rotation,
-          shadowIntensity,
+          rotation: fingerRotation,
+          imageCache: opts.imageCache,
         });
         break;
       }

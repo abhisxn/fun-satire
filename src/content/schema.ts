@@ -1,4 +1,7 @@
 import type { PaletteKey } from "../config/tokens";
+import type { EYE_ASSET_IDS } from "../assets/eyeAssetRegistry";
+
+export type EyeAssetId = (typeof EYE_ASSET_IDS)[number];
 
 export type IllustratedSubjectId = "figure" | "lotus" | "scribe" | "herald" | "jester";
 
@@ -39,6 +42,7 @@ export type EyeManifestEntry = {
   visual: {
     styleGuardrail: "flat-illustrated";
     shapeVariant: ShapeVariant;
+    assetId: EyeAssetId;
   };
   colors: EyeColors;
   physics: EyePhysics;

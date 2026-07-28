@@ -81,6 +81,31 @@ describe("drawCollectiveEffectVisual / beam (variant D)", () => {
     expect(arcs.length).toBe(1);
   });
 
+  it("converges beam strokes from each contributor to the target when no fixed origin is supplied", () => {
+    const { ctx, calls } = makeRecordingCtx();
+    const contributors = [contrib(1, 100, 100), contrib(2, 300, 100)];
+    const target = { x: 200, y: 200 };
+    drawCollectiveEffectVisual(ctx, {
+      archetype: "beam",
+      visual: baseVisual("beam"),
+      contributors,
+      target,
+      progress: 0,
+      nowMs: 0,
+    });
+    const moves = calls.filter((c) => c.method === "moveTo");
+    const lines = calls.filter((c) => c.method === "lineTo");
+    expect(moves.length).toBe(contributors.length * 3);
+    expect(lines.length).toBe(contributors.length * 3);
+    for (let i = 0; i < contributors.length; i++) {
+      const c = contributors[i]!;
+      for (let j = 0; j < 3; j++) {
+        expect(moves[i * 3 + j]?.args).toEqual([c.pos.x, c.pos.y]);
+        expect(lines[i * 3 + j]?.args).toEqual([target.x, target.y]);
+      }
+    }
+  });
+
   it("does not invoke ctx.shadowBlur (layered-stroke technique, not shadow)", () => {
     const { ctx, calls } = makeRecordingCtx();
     drawCollectiveEffectVisual(ctx, {

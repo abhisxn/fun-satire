@@ -28,6 +28,32 @@ describe("boot/main integration smoke (T23)", () => {
     expect(main).toMatch(/engine\.start\(\)/);
   });
 
+  it("keeps normal startup while gating deterministic visual fixture readiness", () => {
+    const main = readFileSync(resolve(ROOT, "src/main.ts"), "utf8");
+    expect(main).toMatch(/readVisualFixture\(window\.location\.search\)/);
+    expect(main).toMatch(/visualFixture\s*\?\s*new Engine/);
+    expect(main).toMatch(/:\s*new Engine\(\)/);
+    expect(main).toMatch(/completeVisualFixtureBoot/);
+    expect(main).toMatch(/document\.fonts\.ready/);
+    expect(main).toMatch(/__FUN_SATIRE_VISUAL__/);
+    expect(main).toMatch(/failedAssets/);
+  });
+
+  it("materializes fixture panels, visible resources, attack state, and verified render completion", () => {
+    const main = readFileSync(resolve(ROOT, "src/main.ts"), "utf8");
+    expect(main).toMatch(/hud\.setVisualFixturePanel\(visualFixture\.panel\)/);
+    expect(main).toMatch(/materializeEyesAttackFixture/);
+    expect(main).toMatch(/spawnSubjectForCollection/);
+    expect(main).toMatch(/lockSubject\(/);
+    expect(main).toMatch(/hud\.setVisualFixtureAttackState/);
+    expect(main).toMatch(/spawnSubjectForCollection\(\{\s*id:\s*target\.id,\s*skin:\s*subjectSkin,\s*nowMs:\s*visualFixture\.nowMs,/);
+    expect(main).toMatch(/collectVisibleFixtureResourceUrls\(document\)/);
+    expect(main).toMatch(/finishEntranceTransitions:\s*\(\)\s*=>\s*hud\.finishEntranceTransitions\(\)/);
+    expect(main).toMatch(/completedRenderCount\s*\+=\s*1/);
+    expect(main).toMatch(/completedRenderCount:\s*\(\)\s*=>\s*completedRenderCount/);
+    expect(main).toMatch(/renderError:\s*\(\)\s*=>\s*fixtureRenderError/);
+  });
+
   it("Renderer.draw calls drawCursor and computeCursorState so the custom cursor is visible", () => {
     const renderer = readFileSync(resolve(ROOT, "src/render/Renderer.ts"), "utf8");
     expect(renderer).toMatch(/drawCursor/);

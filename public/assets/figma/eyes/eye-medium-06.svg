@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="180" height="92" viewBox="0 0 180 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame 18" clip-path="url(#clip0_153_10920)">
+<mask id="mask0_153_10920" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="180" height="84">
+<path id="Ellipse 3" d="M90 -4.29165e-06C139.706 -6.46435e-06 180 42 180 42C180 42 139.706 84 90 84C40.2944 84 -1.83588e-06 42 -1.83588e-06 42C-1.83588e-06 42 40.2944 -2.11895e-06 90 -4.29165e-06Z" fill="var(--fill-0, white)"/>
+</mask>
+<g mask="url(#mask0_153_10920)">
+<path id="Ellipse 1" d="M90 3.33774e-06C139.706 1.16504e-06 180 42 180 42C180 42 139.706 84 90 84C40.2944 84 1.83588e-06 42 1.83588e-06 42C1.83588e-06 42 40.2944 5.51044e-06 90 3.33774e-06Z" fill="var(--fill-0, white)"/>
+<circle id="Ellipse 2" cx="117" cy="55" r="37" fill="var(--fill-0, #596553)"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_153_10920">
+<rect width="180" height="92" fill="white"/>
+</clipPath>
+</defs>
+</svg>

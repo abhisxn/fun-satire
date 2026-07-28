@@ -56,6 +56,7 @@ export type DrawCollectiveEffectVisualInput = {
   origin?: { x: number; y: number };
   nowMs: number;
   stageIndex?: number;
+  reducedMotion?: boolean;
 };
 
 export function jitterHash(id: string, stageIndex: number, quantizedTimeMs: number): number {
@@ -89,29 +90,31 @@ function drawBeam(
   ctx.fill();
 
   for (const c of contributors) {
-    if (!origin) break;
+    const from = origin ?? c.pos;
+    const to = origin ? c.pos : target;
+
     ctx.globalAlpha = baseOpacity * cfg.outerAlpha;
     ctx.strokeStyle = cfg.outerColor;
     ctx.lineWidth = cfg.outerWidthPx;
     ctx.beginPath();
-    ctx.moveTo(origin.x, origin.y);
-    ctx.lineTo(c.pos.x, c.pos.y);
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
     ctx.stroke();
 
     ctx.globalAlpha = baseOpacity * cfg.middleAlpha;
     ctx.strokeStyle = cfg.middleColor;
     ctx.lineWidth = cfg.middleWidthPx;
     ctx.beginPath();
-    ctx.moveTo(origin.x, origin.y);
-    ctx.lineTo(c.pos.x, c.pos.y);
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
     ctx.stroke();
 
     ctx.globalAlpha = baseOpacity * cfg.innerAlpha;
     ctx.strokeStyle = cfg.innerColor;
     ctx.lineWidth = cfg.innerWidthPx;
     ctx.beginPath();
-    ctx.moveTo(origin.x, origin.y);
-    ctx.lineTo(c.pos.x, c.pos.y);
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
     ctx.stroke();
   }
 
@@ -126,11 +129,13 @@ function drawArc(
   progress: number,
   nowMs: number,
   stageIndex: number,
+  reducedMotion: boolean,
 ): void {
   const cfg = COLLECTIVE_EFFECT_VISUAL.arc;
   const baseOpacity = visual.opacity * (1 - progress);
   if (baseOpacity <= 0 || contributors.length === 0) return;
-  const amp = visual.jitterPx ?? 6;
+  const baseAmp = visual.jitterPx ?? 6;
+  const amp = reducedMotion ? 0 : baseAmp;
   const quantized = Math.floor(nowMs / cfg.jitterTimeQuantizeMs) * cfg.jitterTimeQuantizeMs;
 
   ctx.save();
@@ -269,12 +274,13 @@ export function drawCollectiveEffectVisual(
 ): void {
   const { archetype, visual, contributors, target, progress, origin, nowMs } = input;
   const stageIndex = input.stageIndex ?? 0;
+  const reducedMotion = input.reducedMotion ?? false;
   switch (archetype) {
     case "beam":
       drawBeam(ctx, visual, contributors, target, origin, progress);
       return;
     case "arc":
-      drawArc(ctx, visual, contributors, target, progress, nowMs, stageIndex);
+      drawArc(ctx, visual, contributors, target, progress, nowMs, stageIndex, reducedMotion);
       return;
     case "bite":
       drawBite(ctx, visual, contributors, target, progress);

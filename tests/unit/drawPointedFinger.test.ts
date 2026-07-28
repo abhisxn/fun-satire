@@ -1,13 +1,22 @@
 import { describe, it, expect, vi } from "vitest";
 import { drawPointedFinger, computePointShake, FINGER_DRAW } from "../../src/render/drawers/drawPointedFinger";
+import type { ImageAssetCache } from "../../src/render/imageAssets";
+
+const fakeImage = () => ({ naturalWidth: 405, naturalHeight: 171 }) as HTMLImageElement;
+
+const fakeCache = (status: "ready" | "loading" = "ready"): ImageAssetCache =>
+  ({
+    get: () =>
+      status === "ready"
+        ? { status: "ready" as const, image: fakeImage() }
+        : { status: "loading" as const },
+  }) as unknown as ImageAssetCache;
 
 const fakeCtx = () =>
   new Proxy(
     {},
     { get: (_t, prop) => (typeof prop === "string" ? vi.fn() : undefined) },
   ) as unknown as CanvasRenderingContext2D;
-
-const colors = { suit: "slate", shirt: "cream", outline: "ink" } as const;
 
 describe("computePointShake", () => {
   it("is a pure, deterministic function of (id, timeMs)", () => {
@@ -23,35 +32,31 @@ describe("computePointShake", () => {
 });
 
 describe("drawPointedFinger", () => {
-  it("does not throw with a rotation applied", () => {
+  it("does not throw when imageCache is ready", () => {
     expect(() =>
-      drawPointedFinger(fakeCtx(), { pos: { x: 5, y: 5 }, sizePx: 44, colors, timeMs: 300, id: 9, rotation: -0.5 }),
+      drawPointedFinger(fakeCtx(), { pos: { x: 5, y: 5 }, sizePx: 44, timeMs: 300, id: 9, rotation: -0.5, imageCache: fakeCache() }),
     ).not.toThrow();
   });
 
-  it("defaults rotation to 0 when omitted", () => {
-    expect(() => drawPointedFinger(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 44, colors, timeMs: 0, id: 1 })).not.toThrow();
+  it("does not throw when imageCache is still loading", () => {
+    expect(() =>
+      drawPointedFinger(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 44, timeMs: 0, id: 1, imageCache: fakeCache("loading") }),
+    ).not.toThrow();
   });
-});
 
-// Design-system requirement: drawPointedFinger's fist silhouette must use the
-// shared paperCut.ts utility (paperCutEdgePath + withPaperCutShadow), the
-// same treatment drawEye.ts/drawSubject*.ts/drawBug.ts use — not a bespoke
-// ctx.ellipse fill. withPaperCutShadow sets a fixed shadowColor
-// ("rgba(42, 36, 32, 0.22)") while active, so its presence during the draw
-// call is a reliable signal the shared utility ran.
-describe("paperCut.ts consistency (no bespoke edge/shadow styling)", () => {
-  it("drawPointedFinger applies the shared paper-cut shadow treatment to its fist", () => {
-    const shadowColors: string[] = [];
+  it("does not throw when imageCache is omitted", () => {
+    expect(() =>
+      drawPointedFinger(fakeCtx(), { pos: { x: 0, y: 0 }, sizePx: 44, timeMs: 0, id: 1 }),
+    ).not.toThrow();
+  });
+
+  it("calls drawImage when image is ready", () => {
+    const drawImage = vi.fn();
     const ctx = new Proxy(
-      {},
-      { get: (_t, prop) => (typeof prop === "string" ? vi.fn() : undefined) },
-    );
-    Object.defineProperty(ctx, "shadowColor", {
-      set: (v: string) => shadowColors.push(v),
-      get: () => "",
-    });
-    drawPointedFinger(ctx as unknown as CanvasRenderingContext2D, { pos: { x: 5, y: 5 }, sizePx: 44, colors, timeMs: 300, id: 9 });
-    expect(shadowColors).toContain("rgba(42, 36, 32, 0.22)");
+      { drawImage },
+      { get: (t, prop) => (typeof prop === "string" ? (t[prop as keyof typeof t] ?? vi.fn()) : undefined) },
+    ) as unknown as CanvasRenderingContext2D;
+    drawPointedFinger(ctx, { pos: { x: 5, y: 5 }, sizePx: 44, timeMs: 300, id: 9, rotation: 0, imageCache: fakeCache() });
+    expect(drawImage).toHaveBeenCalled();
   });
 });

@@ -22,7 +22,6 @@ import "@fontsource/doto/700.css";
 import "./styles/global.css";
 import "./hud/hud.css";
 import "./hud/audioControl.css";
-import "./hud/subjectDrawer.css";
 import "./audio/cues/hudCues";
 import "./audio/cues/chargeRespawnCues";
 import "./audio/cues/laserBurnCues";
@@ -55,6 +54,8 @@ import { createViewport } from "./render/CanvasUtils";
 import { renderFrame } from "./render/Renderer";
 import { getImageAssetCache } from "./render/imageAssets";
 import { AVATAR_ASSET_REGISTRY } from "./hud/avatarAssetRegistry";
+import { BUG_DRAW } from "./render/drawers/drawBug";
+import { FINGER_DRAW } from "./render/drawers/drawPointedFinger";
 import * as FF from "./physics/ForceField";
 import { compute as computeSpring } from "./physics/SpringHome";
 import { integrate } from "./physics/Integrator";
@@ -69,6 +70,8 @@ import { AudioControl } from "./hud/AudioControl";
 import { startAmbientForMode, startTenseFiller } from "./audio/ambientBeds";
 import { startMusicBed } from "./audio/musicBed";
 import { startAmbientBedTrack } from "./audio/ambientBedTrack";
+import { readVisualFixture, completeVisualFixtureBoot, collectVisibleFixtureResourceUrls, installVisualFixtureDocumentState } from "./testing/visualFixture";
+import { materializeEyesAttackFixture, applyEyesFixtureState } from "./testing/eyesFixtures";
 
 type LifecycleState = "alive" | "dying";
 type LocomotionState = "idle" | "flee" | "dragged";
@@ -282,7 +285,11 @@ const seed = seedParam && Number.isFinite(Number.parseInt(seedParam, 10))
   ? Number.parseInt(seedParam, 10)
   : (Date.now() & 0xFFFFFFFF) >>> 0;
 
-const rng = new Rng(seed);
+const visualFixture = readVisualFixture(window.location.search);
+let completedRenderCount = 0;
+let fixtureRenderError: unknown = null;
+
+const rng = visualFixture ? new Rng(visualFixture.seed) : new Rng(seed);
 const store = new EntityStore();
 const manifest = loadManifestFromText(JSON.stringify(eyesRoster));
 const subjectManifest = loadManifestFromText(JSON.stringify(subjectRoster));
@@ -292,7 +299,11 @@ const subjectManifestEntries = subjectManifest.entries.filter(
 const particles = new ParticleSystem(rng, 256);
 const viewport = createViewport(stage);
 const imageAssets = getImageAssetCache();
-imageAssets.preload(AVATAR_ASSET_REGISTRY.map((e) => e.url));
+imageAssets.preload([
+  ...AVATAR_ASSET_REGISTRY.map((e) => e.url),
+  BUG_DRAW.imageUrl,
+  FINGER_DRAW.imageUrl,
+]);
 
 const hud = new Hud(hudRoot, stage);
 hud.setMode("eyes");
@@ -409,7 +420,7 @@ hud.onGridTool(() => {
   );
 });
 
-const engine = new Engine();
+const engine = visualFixture ? new Engine({ fixedTimestep: true, nowOverride: visualFixture.nowMs }) : new Engine();
 engine.events.on("tick", ({ phase, dt }) => {
   const nowMs = engine.getNow();
   if (phase === "pre-physics") {
@@ -725,6 +736,51 @@ spawnInitialEyes();
 nextEntityId = Math.max(0, ...store.ids()) + 1;
 pointer.attach();
 engine.start();
+
+if (visualFixture) {
+  installVisualFixtureDocumentState(document, visualFixture);
+  hud.setVisualFixturePanel(visualFixture.panel);
+  const crowdMembers: Entity[] = [];
+  store.forEachAlive((e) => { if (e.content.renderType === "eye") crowdMembers.push(e); });
+  applyEyesFixtureState(crowdMembers, pupilOffsets, viewport.state);
+
+  let targetId: number | null = null;
+  if (visualFixture.attackProgress !== null) {
+    const result = materializeEyesAttackFixture({
+      store,
+      effects,
+      subjectManifest: subjectManifestEntries,
+      nextId: nextEntityId++,
+      viewport: viewport.state,
+      nowMs: visualFixture.nowMs,
+      progress: visualFixture.attackProgress,
+    });
+    targetId = result.targetId;
+    const subjectSkin: SubjectSkin = { kind: "avatar", assetId: "figure" };
+    spawnSubjectForCollection({ id: target.id, skin: subjectSkin, nowMs: visualFixture.nowMs });
+    lockSubject(target.id);
+    hud.setVisualFixtureAttackState({ progress: visualFixture.attackProgress, targetId: target.id });
+  }
+
+  const __FUN_SATIRE_VISUAL__ = { fixture: visualFixture, failedAssets: [] as string[] };
+  void document.fonts.ready.then(() => {
+    return completeVisualFixtureBoot({
+      assetUrls: collectVisibleFixtureResourceUrls(document),
+      preload: async (urls) => {
+        imageAssets.preload(urls);
+        return urls.map((url) => ({ url, status: "ready" as const }));
+      },
+      fontsReady: document.fonts.ready,
+      finishEntranceTransitions: () => hud.finishEntranceTransitions(),
+      renderOnce: () => { void 0; },
+      completedRenderCount: () => completedRenderCount,
+      renderError: () => fixtureRenderError,
+    }).then((status) => {
+      __FUN_SATIRE_VISUAL__.failedAssets = [...status.failedAssets];
+      (document.documentElement.dataset as Record<string, string>).visualReady = "complete";
+    });
+  });
+}
 
 const unlockAudio = (): void => {
   audioEngine.unlock();

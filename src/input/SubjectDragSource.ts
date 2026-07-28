@@ -37,6 +37,7 @@ export class SubjectDragSource {
   }
 
   attachCard(card: HTMLElement, getSkin: () => SubjectSkin): void {
+    card.style.cursor = "grab";
     card.addEventListener("pointerdown", (e: Event) => {
       const pe = e as PointerEvent;
       if (pe.pointerType === "touch") return;
@@ -56,9 +57,12 @@ export class SubjectDragSource {
     ghost.style.pointerEvents = "none";
     ghost.style.zIndex = "9999";
     ghost.style.opacity = "0.85";
+    ghost.style.cursor = "grabbing";
+    ghost.style.filter = "drop-shadow(0 1px 4px rgba(0,0,0,0.28))";
     ghost.style.left = `${startX - 24}px`;
     ghost.style.top = `${startY - 24}px`;
     document.body.appendChild(ghost);
+    document.body.style.cursor = "grabbing";
 
     const state: DragState = {
       getSkin,
@@ -69,6 +73,7 @@ export class SubjectDragSource {
       },
       onUp: (e) => {
         ghost.remove();
+        document.body.style.cursor = "";
         window.removeEventListener("pointermove", state.onMove);
         window.removeEventListener("pointerup", state.onUp);
         window.removeEventListener("pointercancel", state.onCancel);
@@ -84,6 +89,7 @@ export class SubjectDragSource {
       },
       onCancel: () => {
         ghost.remove();
+        document.body.style.cursor = "";
         window.removeEventListener("pointermove", state.onMove);
         window.removeEventListener("pointerup", state.onUp);
         window.removeEventListener("pointercancel", state.onCancel);

@@ -48,3 +48,15 @@ body {
   pointer-events: none;
   z-index: var(--z-hud);
 }
+
+#stage {
+  transform: none;
+  will-change: auto;
+}
+
+@media (max-width: 899px) {
+  #stage {
+    width: 100vw;
+    height: 100dvh;
+  }
+}

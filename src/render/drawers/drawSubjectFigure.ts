@@ -1,6 +1,8 @@
 // src/render/drawers/drawSubjectFigure.ts
 import { PALETTE } from "../../config/tokens";
 import type { SubjectColors } from "../../content/schema";
+import { subjectAssetEntryFor } from "../../hud/subjectSkinRegistry";
+import type { ImageAssetCache } from "../imageAssets";
 import { paperCutEdgePath, withPaperCutShadow } from "../paperCut";
 
 export type DrawSubjectFigureInput = {
@@ -10,6 +12,7 @@ export type DrawSubjectFigureInput = {
   scale: number;
   rotation: number;
   shadowIntensity?: number;
+  imageCache?: ImageAssetCache;
 };
 
 export const SUBJECT_DRAW = Object.freeze({
@@ -24,6 +27,15 @@ export const SUBJECT_DRAW = Object.freeze({
   collarHalfWidthPx: 3,
   collarNotchFraction: 0.35,
   paperCutSeed: 11,
+  // Visual envelope for the subject-elder-figure PNG (642 x 350 source).
+  figmaEnvelope: Object.freeze({
+    sourceWidth: 642,
+    sourceHeight: 350,
+    widthRatio: 642 / 350,
+    heightRatio: 1,
+    anchorX: 0.5,
+    anchorY: 0.55,
+  }),
 } as const);
 
 function colorByName(k: string): string {
@@ -41,9 +53,11 @@ function colorByName(k: string): string {
   }
 }
 
-export function drawSubjectFigure(ctx: CanvasRenderingContext2D, input: DrawSubjectFigureInput): void {
-  const { pos, sizePx, colors, scale, rotation } = input;
-  const shadowIntensity = input.shadowIntensity ?? 1;
+function drawProceduralFigure(
+  ctx: CanvasRenderingContext2D,
+  input: DrawSubjectFigureInput,
+): void {
+  const { pos, sizePx, colors, scale, rotation, shadowIntensity } = input;
   if (scale <= SUBJECT_DRAW.minVisibleScale) return;
 
   const headR = sizePx * SUBJECT_DRAW.headRadiusFraction * scale;
@@ -100,4 +114,42 @@ export function drawSubjectFigure(ctx: CanvasRenderingContext2D, input: DrawSubj
   ctx.fill();
 
   ctx.restore();
+}
+
+function tryDrawFigmaFigure(
+  ctx: CanvasRenderingContext2D,
+  input: DrawSubjectFigureInput,
+  image: HTMLImageElement,
+): void {
+  const { pos, sizePx, scale, rotation, shadowIntensity } = input;
+  if (scale <= SUBJECT_DRAW.minVisibleScale) return;
+  const env = SUBJECT_DRAW.figmaEnvelope;
+  const renderWidth = sizePx * scale * env.widthRatio;
+  const renderHeight = sizePx * scale * env.heightRatio;
+  const dx = pos.x - renderWidth / 2;
+  const dy = pos.y - renderHeight * (env.anchorY - 0.5) - renderHeight / 2;
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+  ctx.rotate(rotation);
+  ctx.translate(-pos.x, -pos.y);
+  withPaperCutShadow(
+    ctx,
+    () => {
+      ctx.drawImage(image, dx, dy, renderWidth, renderHeight);
+    },
+    shadowIntensity,
+  );
+  ctx.restore();
+}
+
+export function drawSubjectFigure(ctx: CanvasRenderingContext2D, input: DrawSubjectFigureInput): void {
+  const entry = subjectAssetEntryFor("figure");
+  if (entry && input.imageCache) {
+    const state = input.imageCache.get(entry.url);
+    if (state.status === "ready") {
+      tryDrawFigmaFigure(ctx, input, state.image);
+      return;
+    }
+  }
+  drawProceduralFigure(ctx, input);
 }
