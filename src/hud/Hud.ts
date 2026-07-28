@@ -7,6 +7,7 @@ import { FilterPanel } from "./FilterPanel";
 import { AvatarGallery, type AvatarEntry } from "./AvatarGallery";
 import { OverlayLayout, type OverlayPanelId } from "./OverlayLayout";
 import { AVATAR_ASSET_REGISTRY } from "./avatarAssetRegistry";
+import type { ControlVariant } from "../render/responsiveScene";
 import "./controlBar.css";
 import "./filterPanel.css";
 import "./avatarGallery.css";
@@ -202,6 +203,10 @@ export class Hud {
     this.setActiveSubjectSkin(input.targetId, input.skin);
     this.setLockedSubjectId(input.targetId);
     this.setCharge(input.progress, true);
+  }
+
+  setControlVariant(variant: ControlVariant): void {
+    this.root.dataset.controlVariant = variant;
   }
 
   async finishEntranceTransitions(): Promise<void> {

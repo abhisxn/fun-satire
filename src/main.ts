@@ -53,6 +53,7 @@ import { Hud } from "./hud/Hud";
 import { createViewport } from "./render/CanvasUtils";
 import { renderFrame } from "./render/Renderer";
 import { getImageAssetCache } from "./render/imageAssets";
+import { resolveCrowdMetrics, resolveScenePolicy } from "./render/responsiveScene";
 import { AVATAR_ASSET_REGISTRY } from "./hud/avatarAssetRegistry";
 import * as FF from "./physics/ForceField";
 import { compute as computeSpring } from "./physics/SpringHome";
@@ -327,7 +328,14 @@ if (audioEngine) new AudioControl(document.body, audioEngine);
 
 let currentMode: HudMode = "eyes";
 let repelMultiplier = 1;
+let scenePolicy = resolveScenePolicy(viewport.state.width, viewport.state.height);
 
+viewport.onChange((s) => {
+  respawn.setSize(s.width, s.height);
+  scenePolicy = resolveScenePolicy(s.width, s.height);
+  hud.setControlVariant(scenePolicy.controlVariant);
+});
+hud.setControlVariant(scenePolicy.controlVariant);
 hud.onModeChange((mode) => {
   const power = MODE_POWER_MAP[mode];
   powerCtrl.setPower(power);
@@ -526,6 +534,7 @@ engine.events.on("tick", ({ phase, dt }) => {
         chargeT: ringT,
         assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
         imageCache: imageAssets,
+        scenePolicy,
       });
       completedRenderCount += 1;
     } catch (error) {
@@ -695,11 +704,12 @@ engine.onTick("pre-physics", (dt) => {
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;
     if (e.lifecycle.dragged) return;
-    const baseSizePx = (e.behavior.data as Record<string, unknown>).baseSizePx as number ?? 56;
+    const baseSizePx = ((e.behavior.data as Record<string, unknown>).baseSizePx as number) ?? 56;
+    const { collisionRadiusPx } = resolveCrowdMetrics(baseSizePx * (e.physics.scale || 1), scenePolicy);
     crowdMembers.push({
       id: e.id,
       pos: e.physics.pos,
-      radiusPx: baseSizePx * e.physics.scale * 0.5,
+      radiusPx: collisionRadiusPx,
     });
   });
   const separationForces = accumulateSeparation(crowdMembers);
@@ -765,7 +775,10 @@ engine.onTick("pre-physics", (dt) => {
 
 viewport.onChange((s) => {
   respawn.setSize(s.width, s.height);
+  scenePolicy = resolveScenePolicy(s.width, s.height);
+  hud.setControlVariant(scenePolicy.controlVariant);
 });
+hud.setControlVariant(scenePolicy.controlVariant);
 
 spawnInitialEyes();
 if (visualFixture) {

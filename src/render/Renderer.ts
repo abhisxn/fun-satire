@@ -21,6 +21,13 @@ import type { SubjectSkin } from "../hud/subjectSkinRegistry";
 import type { HudMode } from "../hud/hudIcons";
 import type { Entity, EntityId, Vec2 } from "../entities/Entity";
 import type { ImageAssetCache } from "./imageAssets";
+import { resolveCrowdMetrics, type ScenePolicy } from "./responsiveScene";
+
+const NO_SCALE_POLICY: ScenePolicy = Object.freeze({
+  crowdScale: 1,
+  targetCrowdCount: 0,
+  controlVariant: "desktop",
+});
 
 export type SubjectRenderInfo = {
   id: EntityId;
@@ -61,6 +68,7 @@ export type RenderFrameOptions = RenderEntitiesOptions & {
   chargeT?: number;
   assistRadiusPx?: number;
   imageCache?: ImageAssetCache;
+  scenePolicy?: ScenePolicy;
 };
 
 export type CrowdDrawOrderMember = { id: number; pos: { x: number; y: number } };
@@ -107,6 +115,7 @@ export function renderFrame(opts: RenderFrameOptions): void {
   drawFieldLines(ctx, lines, { stroke: PALETTE.slate, ink: PALETTE.ink });
 
   const shadowIntensity = computeShadowIntensity({ quantity: opts.quantity, repelMultiplier: opts.repelMultiplier });
+  const scenePolicy = opts.scenePolicy ?? NO_SCALE_POLICY;
   const eyePositions: Array<{ id: number; pos: { x: number; y: number } }> = [];
   const crowdMembers: Entity[] = [];
   store.forEachAlive((e) => {
@@ -138,7 +147,9 @@ export function renderFrame(opts: RenderFrameOptions): void {
     opts.pupilOffsets.set(e.id, { x: offset.x, y: offset.y });
 
     const rotation = e.physics.rotation ?? 0;
-    const sizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
+    const canonicalBaseSizePx = ((data.baseSizePx as number) ?? 56) * (e.physics.scale || 1);
+    const crowdMetrics = resolveCrowdMetrics(canonicalBaseSizePx, scenePolicy);
+    const sizePx = crowdMetrics.visualSizePx;
 
     const assetId = data.assetId as Parameters<typeof drawEye>[1]["assetId"] | undefined;
     if (assetId && !getEyeAssetEntry(assetId)) {
