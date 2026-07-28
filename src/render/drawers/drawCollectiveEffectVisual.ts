@@ -56,6 +56,7 @@ export type DrawCollectiveEffectVisualInput = {
   origin?: { x: number; y: number };
   nowMs: number;
   stageIndex?: number;
+  reducedMotion?: boolean;
 };
 
 export function jitterHash(id: string, stageIndex: number, quantizedTimeMs: number): number {
@@ -126,11 +127,13 @@ function drawArc(
   progress: number,
   nowMs: number,
   stageIndex: number,
+  reducedMotion: boolean,
 ): void {
   const cfg = COLLECTIVE_EFFECT_VISUAL.arc;
   const baseOpacity = visual.opacity * (1 - progress);
   if (baseOpacity <= 0 || contributors.length === 0) return;
-  const amp = visual.jitterPx ?? 6;
+  const baseAmp = visual.jitterPx ?? 6;
+  const amp = reducedMotion ? 0 : baseAmp;
   const quantized = Math.floor(nowMs / cfg.jitterTimeQuantizeMs) * cfg.jitterTimeQuantizeMs;
 
   ctx.save();
@@ -269,12 +272,13 @@ export function drawCollectiveEffectVisual(
 ): void {
   const { archetype, visual, contributors, target, progress, origin, nowMs } = input;
   const stageIndex = input.stageIndex ?? 0;
+  const reducedMotion = input.reducedMotion ?? false;
   switch (archetype) {
     case "beam":
       drawBeam(ctx, visual, contributors, target, origin, progress);
       return;
     case "arc":
-      drawArc(ctx, visual, contributors, target, progress, nowMs, stageIndex);
+      drawArc(ctx, visual, contributors, target, progress, nowMs, stageIndex, reducedMotion);
       return;
     case "bite":
       drawBite(ctx, visual, contributors, target, progress);
