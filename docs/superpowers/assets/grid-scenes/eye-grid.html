@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eye Grid</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#CCBFB7}
+.wrap{position:absolute;pointer-events:none;will-change:transform}
+.wrap svg{display:block;width:100%;height:100%}
+#draggable{
+  position:absolute;
+  width:140px;
+  cursor:grab;
+  user-select:none;
+  -webkit-user-select:none;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+  transition:filter 0.15s;
+}
+#draggable:hover{filter:drop-shadow(0 1px 3px rgba(0,0,0,0.22))}
+#draggable.dragging{cursor:grabbing;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.28))}
+</style>
+</head>
+<body>
+
+<img id="draggable" src="../../../../../public/avatars/Designer%20(1).png" alt="Tax Tai">
+
+<script>
+const COLS=12,ROWS=8;
+const REPEL_R=180,REPEL_S=120,FOLLOW_S=0.02,DAMP=0.88;
+const NAT_W=115,NAT_H=57;
+const PUPIL_BASE_CX=40.25,PUPIL_BASE_CY=28.75;
+const EYE_CX=57.5,EYE_CY=26.83;
+const ELLIPSE_A=35,ELLIPSE_B=5;
+const PUPIL_COLORS=['#3D3229','#2D2520','#4A3528','#5C4033','#3D3229','#5B7B8A','#5B7B8A','#4A5E4A'];
+let svgMarkup='';
+const eyes=[];
+const W=window.innerWidth,H=window.innerHeight;
+const cellW=W/COLS,cellH=H/ROWS;
+let targetX=W/2-70,targetY=H/2-70;
+
+const draggable=document.getElementById('draggable');
+draggable.style.left=targetX+'px';
+draggable.style.top=targetY+'px';
+
+let dragging=false,dragOffX=0,dragOffY=0;
+
+draggable.addEventListener('mousedown',e=>{
+  dragging=true;
+  draggable.classList.add('dragging');
+  const rect=draggable.getBoundingClientRect();
+  dragOffX=e.clientX-rect.left;
+  dragOffY=e.clientY-rect.top;
+  e.preventDefault();
+});
+document.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  targetX=e.clientX-dragOffX;
+  targetY=e.clientY-dragOffY;
+  draggable.style.left=targetX+'px';
+  draggable.style.top=targetY+'px';
+});
+document.addEventListener('mouseup',()=>{
+  dragging=false;
+  draggable.classList.remove('dragging');
+});
+
+draggable.addEventListener('touchstart',e=>{
+  dragging=true;
+  draggable.classList.add('dragging');
+  const rect=draggable.getBoundingClientRect();
+  const t=e.touches[0];
+  dragOffX=t.clientX-rect.left;
+  dragOffY=t.clientY-rect.top;
+  e.preventDefault();
+},{passive:false});
+document.addEventListener('touchmove',e=>{
+  if(!dragging)return;
+  const t=e.touches[0];
+  targetX=t.clientX-dragOffX;
+  targetY=t.clientY-dragOffY;
+  draggable.style.left=targetX+'px';
+  draggable.style.top=targetY+'px';
+},{passive:false});
+document.addEventListener('touchend',()=>{
+  dragging=false;
+  draggable.classList.remove('dragging');
+});
+
+fetch('eye.svg').then(r=>r.text()).then(s=>{
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(s,'image/svg+xml');
+  const circle=doc.querySelector('circle');
+  if(circle){
+    circle.removeAttribute('transform');
+    circle.setAttribute('cx','40.25');
+    circle.setAttribute('cy','28.75');
+  }
+  svgMarkup=new XMLSerializer().serializeToString(doc);
+  init();
+});
+
+function init(){
+  for(let c=0;c<COLS;c++){
+    for(let r=0;r<ROWS;r++){
+      const hx=(c+0.5)*cellW,hy=(r+0.5)*cellH;
+      const baseScale=0.3+Math.pow(Math.random(),1.5)*0.45;
+      const distToEdge=Math.min(hx,W-hx,hy,H-hy);
+      const maxDist=Math.min(W/2,H/2);
+      const edgeFactor=1-(distToEdge/maxDist);
+      const scale=baseScale+edgeFactor*0.15;
+      const w=NAT_W*scale,h=NAT_H*scale;
+      const el=document.createElement('div');
+      el.className='wrap';
+      el.style.width=w+'px';
+      el.style.height=h+'px';
+      const uid=`e${c}_${r}`;
+      let markup=svgMarkup
+        .replace(/clip0_18_102/g,`clip_${uid}`)
+        .replace(/mask0_18_102/g,`mask_${uid}`);
+      el.innerHTML=markup;
+      const svg=el.querySelector('svg');
+      const pupil=svg.querySelector('circle');
+      pupil.setAttribute('fill',PUPIL_COLORS[Math.floor(Math.random()*PUPIL_COLORS.length)]);
+      document.body.appendChild(el);
+      eyes.push({el,pupil,hx,hy,x:hx,y:hy,vx:0,vy:0,scale,w,h,nextBlink:Date.now()+2000+Math.random()*4000,blinking:false,blinkStart:0,rotFactor:0.06+Math.random()*0.14});
+    }
+  }
+  tick();
+}
+
+function tick(){
+  const tx=targetX+70,ty=targetY+70;
+  for(const e of eyes){
+    const dx=e.x-tx,dy=e.y-ty;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    let fx=(e.hx-e.x)*FOLLOW_S;
+    let fy=(e.hy-e.y)*FOLLOW_S;
+    if(dist<REPEL_R){
+      const f=(1-dist/REPEL_R)*REPEL_S;
+      fx+=(dx/dist)*f;
+      fy+=(dy/dist)*f;
+    }
+    e.vx=(e.vx+fx)*DAMP;
+    e.vy=(e.vy+fy)*DAMP;
+    e.x+=e.vx;
+    e.y+=e.vy;
+    const angleRad=Math.atan2(ty-e.y,tx-e.x);
+    const fullAngle=angleRad*(180/Math.PI);
+    const rotation=fullAngle*e.rotFactor;
+    const tmx=tx-e.x,tmy=ty-e.y;
+    const td=Math.sqrt(tmx*tmx+tmy*tmy)||1;
+    const dirX=tmx/td;
+    const dirY=tmy/td;
+    const rotRad=rotation*(Math.PI/180);
+    const cos=Math.cos(-rotRad);
+    const sin=Math.sin(-rotRad);
+    const localDirX=dirX*cos-dirY*sin;
+    const localDirY=dirX*sin+dirY*cos;
+    const theta=Math.atan2(localDirY,localDirX);
+    const targetX2=EYE_CX+ELLIPSE_A*Math.cos(theta);
+    const targetY2=EYE_CY+ELLIPSE_B*Math.sin(theta);
+    const ox=targetX2-PUPIL_BASE_CX;
+    const oy=targetY2-PUPIL_BASE_CY;
+    const distFactor=Math.min(1,td/150);
+    e.pupil.setAttribute('cx',PUPIL_BASE_CX+ox*distFactor);
+    e.pupil.setAttribute('cy',PUPIL_BASE_CY+oy*distFactor);
+    const now=Date.now();
+    let scaleY=1;
+    if(!e.blinking&&now>e.nextBlink){
+      e.blinking=true;
+      e.blinkStart=now;
+    }
+    if(e.blinking){
+      const elapsed=now-e.blinkStart;
+      const blinkDuration=120;
+      if(elapsed<blinkDuration){
+        const half=blinkDuration/2;
+        if(elapsed<half){
+          scaleY=1-(elapsed/half)*0.95;
+        }else{
+          scaleY=0.05+((elapsed-half)/half)*0.95;
+        }
+      }else{
+        e.blinking=false;
+        e.nextBlink=now+2000+Math.random()*4000;
+      }
+    }
+    e.el.style.transform=`translate(${e.x-e.w/2}px,${e.y-e.h/2}px) rotate(${rotation}deg) scaleY(${scaleY})`;
+  }
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>

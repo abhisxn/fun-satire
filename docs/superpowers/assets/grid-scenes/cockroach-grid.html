@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cockroach Grid</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#CCBFB7}
+.wrap{position:absolute;pointer-events:none;transform-origin:center center;will-change:transform}
+.wrap img{display:block;width:100%;height:100%}
+#draggable{
+  position:absolute;
+  width:140px;
+  cursor:grab;
+  user-select:none;
+  -webkit-user-select:none;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+  transition:filter 0.15s;
+}
+#draggable:hover{filter:drop-shadow(0 1px 3px rgba(0,0,0,0.22))}
+#draggable.dragging{cursor:grabbing;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.28))}
+</style>
+</head>
+<body>
+
+<img id="draggable" src="../../../../../public/avatars/Designer%20(1).png" alt="Tax Tai">
+
+<script>
+const COLS=20,ROWS=12;
+const REPEL_R=180,REPEL_S=120,FOLLOW_S=0.02,DAMP=0.88;
+const NAT_W=420,NAT_H=216;
+const creatures=[];
+const W=window.innerWidth,H=window.innerHeight;
+const cellW=W/COLS,cellH=H/ROWS;
+let targetX=W/2-70,targetY=H/2-70;
+
+const draggable=document.getElementById('draggable');
+draggable.style.left=targetX+'px';
+draggable.style.top=targetY+'px';
+
+let dragging=false,dragOffX=0,dragOffY=0;
+
+draggable.addEventListener('mousedown',e=>{
+  dragging=true;
+  draggable.classList.add('dragging');
+  const rect=draggable.getBoundingClientRect();
+  dragOffX=e.clientX-rect.left;
+  dragOffY=e.clientY-rect.top;
+  e.preventDefault();
+});
+document.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  targetX=e.clientX-dragOffX;
+  targetY=e.clientY-dragOffY;
+  draggable.style.left=targetX+'px';
+  draggable.style.top=targetY+'px';
+});
+document.addEventListener('mouseup',()=>{
+  dragging=false;
+  draggable.classList.remove('dragging');
+});
+
+draggable.addEventListener('touchstart',e=>{
+  dragging=true;
+  draggable.classList.add('dragging');
+  const rect=draggable.getBoundingClientRect();
+  const t=e.touches[0];
+  dragOffX=t.clientX-rect.left;
+  dragOffY=t.clientY-rect.top;
+  e.preventDefault();
+},{passive:false});
+document.addEventListener('touchmove',e=>{
+  if(!dragging)return;
+  const t=e.touches[0];
+  targetX=t.clientX-dragOffX;
+  targetY=t.clientY-dragOffY;
+  draggable.style.left=targetX+'px';
+  draggable.style.top=targetY+'px';
+},{passive:false});
+document.addEventListener('touchend',()=>{
+  dragging=false;
+  draggable.classList.remove('dragging');
+});
+
+const img=new Image();
+img.src='cockroach.png';
+img.onload=init;
+
+function init(){
+  for(let c=0;c<COLS;c++){
+    for(let r=0;r<ROWS;r++){
+      const hx=(c+0.5)*cellW,hy=(r+0.5)*cellH;
+      const scale=0.08+Math.pow(Math.random(),1.5)*0.35;
+      const el=document.createElement('div');
+      el.className='wrap';
+      const w=NAT_W*scale,h=NAT_H*scale;
+      el.style.width=w+'px';
+      el.style.height=h+'px';
+      const im=new Image();
+      im.src='cockroach.png';
+      el.appendChild(im);
+      document.body.appendChild(el);
+      creatures.push({el,hx,hy,x:hx,y:hy,vx:0,vy:0,scale,w,h});
+    }
+  }
+  tick();
+}
+
+function tick(){
+  const tx=targetX+70,ty=targetY+70;
+  for(const c of creatures){
+    const dx=c.x-tx,dy=c.y-ty;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    let fx=(c.hx-c.x)*FOLLOW_S;
+    let fy=(c.hy-c.y)*FOLLOW_S;
+    if(dist<REPEL_R){
+      const f=(1-dist/REPEL_R)*REPEL_S;
+      fx+=(dx/dist)*f;
+      fy+=(dy/dist)*f;
+    }
+    c.vx=(c.vx+fx)*DAMP;
+    c.vy=(c.vy+fy)*DAMP;
+    c.x+=c.vx;
+    c.y+=c.vy;
+    const angle=Math.atan2(ty-c.y,tx-c.x)*(180/Math.PI)+180;
+    c.el.style.transform=`translate(${c.x-c.w/2}px,${c.y-c.h/2}px) rotate(${angle}deg)`;
+  }
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>
