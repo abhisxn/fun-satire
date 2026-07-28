@@ -226,4 +226,82 @@ describe("hud/Hud (Figma glass-pill HUD)", () => {
     hud.setLockedSubjectId(null);
     expect(hud.getLockedSubjectId()).toBeNull();
   });
+
+  it("mode-button click drives a 'mode' ControlEvent and locks the matching power", () => {
+    const events: unknown[] = [];
+    const onModeChange = vi.fn();
+    hud.onControlEvent((e) => events.push(e));
+    hud.onModeChange(onModeChange);
+    q('[data-control-mode="pointedFinger"]').click();
+    expect(onModeChange).toHaveBeenCalledWith("pointedFinger");
+    expect(q(".control-bar").dataset.power).toBe("electricBurn");
+    expect(events).toEqual([
+      { type: "mode", mode: "pointedFinger", power: "electricBurn" },
+    ]);
+  });
+
+  it("hand tool click drives a 'hand' ControlEvent and fires onHandToolToggle", () => {
+    const events: unknown[] = [];
+    const onHand = vi.fn();
+    hud.onControlEvent((e) => events.push(e));
+    hud.onHandToolToggle(onHand);
+    const hand = q("[data-control-hand]");
+    hand.click();
+    hand.click();
+    expect(onHand).toHaveBeenNthCalledWith(1, true);
+    expect(onHand).toHaveBeenNthCalledWith(2, false);
+    expect(events).toEqual([
+      { type: "hand", active: true },
+      { type: "hand", active: false },
+    ]);
+  });
+
+  it("attack pointer events drive 'attack-press' and 'attack-release' ControlEvents", () => {
+    const events: unknown[] = [];
+    hud.onControlEvent((e) => events.push(e));
+    hud.setCurrentSubjectId(99);
+    const attack = q("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointerup", opts));
+    expect(events).toEqual([
+      { type: "attack-press", subjectId: 99 },
+      { type: "attack-release" },
+    ]);
+  });
+
+  it("attack pointercancel drives 'attack-release' (no synthetic MouseEvent needed)", () => {
+    const events: unknown[] = [];
+    hud.onControlEvent((e) => events.push(e));
+    hud.setCurrentSubjectId(99);
+    const attack = q("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointercancel", opts));
+    expect(events).toEqual([
+      { type: "attack-press", subjectId: 99 },
+      { type: "attack-release" },
+    ]);
+  });
+
+  it("visibility toggle also drives a 'visibility' ControlEvent", () => {
+    const events: unknown[] = [];
+    const onToggle = vi.fn();
+    hud.onControlEvent((e) => events.push(e));
+    hud.onVisibilityToggle(onToggle);
+    const toggle = q(".hud-visibility-toggle");
+    toggle.click();
+    expect(events).toContainEqual({ type: "visibility", visible: false });
+    toggle.click();
+    expect(events).toContainEqual({ type: "visibility", visible: true });
+  });
+
+  it("attack button has a focus-visible outline rule defined in controlBar.css", () => {
+    expect(readText("src/hud/controlBar.css")).toMatch(/\.control-bar__attack:focus-visible/);
+  });
+
+  it("mode/trigger/hand buttons share a 46px well (Figma control.well token)", () => {
+    const css = readText("src/hud/controlBar.css");
+    expect(css).toMatch(/\.control-bar__mode-btn[\s\S]{0,160}?width:\s*46px[\s\S]{0,80}?height:\s*46px/);
+  });
 });

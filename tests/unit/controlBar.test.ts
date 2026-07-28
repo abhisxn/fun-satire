@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ControlBar } from "../../src/hud/ControlBar";
+import { ControlBar, type ControlEvent } from "../../src/hud/ControlBar";
 import type { HudMode, HudPower } from "../../src/hud/hudIcons";
 import visualTokens from "../../src/config/visualTokens.json";
 
@@ -133,5 +133,116 @@ describe("hud/ControlBar (Figma component contract)", () => {
     expect(root.dataset.hidden).toBe("true");
     bar.setHidden(false);
     expect(root.dataset.hidden).toBe("false");
+  });
+
+  it("mode buttons all have a 46px native well at the Figma control token", () => {
+    const well = visualTokens.ui.control.well;
+    expect(well).toBe(46);
+    for (const m of ["eyes", "bugs", "pointedFinger"] as const) {
+      const btn = host.querySelector<HTMLButtonElement>(`[data-control-mode="${m}"]`)!;
+      expect(btn.classList.contains("control-bar__mode-btn")).toBe(true);
+    }
+  });
+
+  it("power is read-only: there is no power selector in the DOM", () => {
+    expect(host.querySelector("[data-control-power]")).toBeNull();
+    expect(host.querySelector(".control-bar__power-select")).toBeNull();
+  });
+
+  it("setPower is reflected in the dataset and the power label without firing onModeChange", () => {
+    const cb = vi.fn();
+    bar.onModeChange(cb);
+    bar.setPower("bugEat");
+    expect(bar.getPower()).toBe("bugEat");
+    expect(host.querySelector(".control-bar")?.dataset.power).toBe("bugEat");
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it("attack button transitions through pointerdown→pointerup pair (no synthetic MouseEvent)", () => {
+    const events: string[] = [];
+    bar.onAttackPress(() => events.push("press"));
+    bar.onAttackRelease(() => events.push("release"));
+    bar.setCurrentSubjectId(7);
+    const attack = host.querySelector<HTMLButtonElement>("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointerup", opts));
+    expect(events).toEqual(["press", "release"]);
+  });
+
+  it("pointercancel fires attack release without pressing twice", () => {
+    const events: string[] = [];
+    bar.onAttackPress(() => events.push("press"));
+    bar.onAttackRelease(() => events.push("release"));
+    bar.setCurrentSubjectId(7);
+    const attack = host.querySelector<HTMLButtonElement>("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointercancel", opts));
+    expect(events).toEqual(["press", "release"]);
+  });
+
+  it("pointerleave after press also fires release (drag-off safety)", () => {
+    const events: string[] = [];
+    bar.onAttackPress(() => events.push("press"));
+    bar.onAttackRelease(() => events.push("release"));
+    bar.setCurrentSubjectId(7);
+    const attack = host.querySelector<HTMLButtonElement>("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointerleave", opts));
+    expect(events).toEqual(["press", "release"]);
+  });
+
+  it("attack press is a no-op when no subject is set (native disabled blocks pointerdown)", () => {
+    const onPress = vi.fn();
+    bar.onAttackPress(onPress);
+    const attack = host.querySelector<HTMLButtonElement>("[data-control-attack]")!;
+    expect(attack.disabled).toBe(true);
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it("emits a typed 'mode' ControlEvent with the new HudMode and the matching power", () => {
+    const events: ControlEvent[] = [];
+    bar.onControlEvent((e) => events.push(e));
+    host.querySelector<HTMLButtonElement>('[data-control-mode="pointedFinger"]')!.click();
+    expect(events).toEqual([{ type: "mode", mode: "pointedFinger", power: "electricBurn" }]);
+  });
+
+  it("emits typed 'panel' ControlEvent for filter/gallery/text triggers", () => {
+    const events: ControlEvent[] = [];
+    bar.onControlEvent((e) => events.push(e));
+    host.querySelector<HTMLButtonElement>('[data-control-trigger="filter"]')!.click();
+    host.querySelector<HTMLButtonElement>('[data-control-trigger="gallery"]')!.click();
+    host.querySelector<HTMLButtonElement>('[data-control-trigger="text"]')!.click();
+    expect(events.map((e) => e.type)).toEqual(["panel", "panel", "panel"]);
+  });
+
+  it("emits typed 'hand' ControlEvent with active boolean on hand tool click", () => {
+    const events: ControlEvent[] = [];
+    bar.onControlEvent((e) => events.push(e));
+    const hand = host.querySelector<HTMLButtonElement>("[data-control-hand]")!;
+    hand.click();
+    hand.click();
+    expect(events).toEqual([
+      { type: "hand", active: true },
+      { type: "hand", active: false },
+    ]);
+  });
+
+  it("emits typed 'attack-press'/'attack-release' ControlEvents on pointer events", () => {
+    const events: ControlEvent[] = [];
+    bar.onControlEvent((e) => events.push(e));
+    bar.setCurrentSubjectId(11);
+    const attack = host.querySelector<HTMLButtonElement>("[data-control-attack]")!;
+    const opts = { bubbles: true, pointerId: 1, pointerType: "mouse" } as PointerEventInit;
+    attack.dispatchEvent(new PointerEvent("pointerdown", opts));
+    attack.dispatchEvent(new PointerEvent("pointerup", opts));
+    expect(events).toEqual([
+      { type: "attack-press", subjectId: 11 },
+      { type: "attack-release" },
+    ]);
   });
 });

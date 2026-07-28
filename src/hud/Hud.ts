@@ -2,7 +2,7 @@ import type { SubjectDropResult } from "../input/SubjectDragSource";
 import type { SubjectSkin } from "./subjectSkinRegistry";
 import type { TextFontId } from "./textFontRegistry";
 import { hudIcons, type HudMode, type HudPower } from "./hudIcons";
-import { ControlBar, type ControlBarPanelTrigger } from "./ControlBar";
+import { ControlBar, type ControlBarPanelTrigger, type ControlEvent } from "./ControlBar";
 import { FilterPanel } from "./FilterPanel";
 import { AvatarGallery, type AvatarEntry } from "./AvatarGallery";
 import { OverlayLayout, type OverlayPanelId } from "./OverlayLayout";
@@ -40,6 +40,7 @@ export class Hud {
   private textToolCb: (() => void) | null = null;
   private gridToolCb: (() => void) | null = null;
   private visibilityToggleCb: ((visible: boolean) => void) | null = null;
+  private controlEventCb: ((event: ControlEvent) => void) | null = null;
   private subjectResizeCb: ((subjectId: number | null, scale: number) => void) | null = null;
   private subjectFontChangeCb: ((subjectId: number | null, fontId: TextFontId) => void) | null = null;
   private subjectAlignChangeCb: ((subjectId: number | null, align: "left" | "center" | "right") => void) | null = null;
@@ -98,13 +99,7 @@ export class Hud {
       this.filterPanel?.setQuantity(q);
       this.quantityChangeCb?.(q);
     });
-    this.controlBar.onAttackPress((id) => this.attackPressCb?.(id));
-    this.controlBar.onAttackRelease(() => this.attackReleaseCb?.());
-    this.controlBar.onHandToolToggle((active) => {
-      this.handToolActive = active;
-      this.handToolToggleCb?.(active);
-    });
-    this.controlBar.onPanelTrigger((which) => this.handlePanelTrigger(which));
+    this.controlBar.onControlEvent((event) => this.handleControlEvent(event));
 
     this.filterPanel = new FilterPanel(this.overlayPanels, {
       initialQuantity: this.quantity,
@@ -138,6 +133,7 @@ export class Hud {
     this.visibilityToggleBtn.addEventListener("click", () => {
       this.setHidden(!this.hidden_);
       this.visibilityToggleCb?.(!this.hidden_);
+      this.controlEventCb?.({ type: "visibility", visible: !this.hidden_ });
     });
   }
 
@@ -312,7 +308,46 @@ export class Hud {
     this.visibilityToggleCb = cb;
   }
 
-  private handlePanelTrigger(which: ControlBarPanelTrigger): void {
+  onControlEvent(cb: (event: ControlEvent) => void): void {
+    this.controlEventCb = cb;
+  }
+
+  private syncOverlayTriggers(): void {
+    if (!this.controlBar || !this.overlay) return;
+    const active = this.overlay.getActive();
+    this.controlBar.setTriggerExpanded("filter", active === "filter");
+    this.controlBar.setTriggerExpanded("gallery", active === "gallery");
+    this.controlBar.setTriggerExpanded("text", active === "text");
+  }
+
+  private handleControlEvent(event: ControlEvent): void {
+    this.controlEventCb?.(event);
+    switch (event.type) {
+      case "mode":
+        this.mode = event.mode;
+        this.power = event.power;
+        this.controlBar?.setPower(event.power);
+        this.modeChangeCb?.(event.mode);
+        return;
+      case "panel":
+        this.routePanelTrigger(event.panel);
+        return;
+      case "hand":
+        this.handToolActive = event.active;
+        this.handToolToggleCb?.(event.active);
+        return;
+      case "visibility":
+        return;
+      case "attack-press":
+        this.attackPressCb?.(event.subjectId);
+        return;
+      case "attack-release":
+        this.attackReleaseCb?.();
+        return;
+    }
+  }
+
+  private routePanelTrigger(which: ControlBarPanelTrigger): void {
     if (!this.overlay || !this.controlBar) return;
     const map: Record<ControlBarPanelTrigger, OverlayPanelId> = {
       filter: "filter",
@@ -331,14 +366,6 @@ export class Hud {
     const root = id === "filter" ? this.filterPanel?.getRoot() : this.avatarGallery?.getRoot();
     this.overlay.open(id, root ?? this.controlBar.getRoot());
     this.syncOverlayTriggers();
-  }
-
-  private syncOverlayTriggers(): void {
-    if (!this.controlBar || !this.overlay) return;
-    const active = this.overlay.getActive();
-    this.controlBar.setTriggerExpanded("filter", active === "filter");
-    this.controlBar.setTriggerExpanded("gallery", active === "gallery");
-    this.controlBar.setTriggerExpanded("text", active === "text");
   }
 }
 

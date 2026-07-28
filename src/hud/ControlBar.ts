@@ -1,5 +1,5 @@
 import { UI_TOKENS } from "../config/visualTokens";
-import { hudIcons, type HudMode, type HudPower } from "./hudIcons";
+import { hudIcons, MODE_POWER_MAP, type HudMode, type HudPower } from "./hudIcons";
 
 export type ControlBarOptions = {
   initialMode: HudMode;
@@ -8,6 +8,14 @@ export type ControlBarOptions = {
 };
 
 export type ControlBarPanelTrigger = "filter" | "gallery" | "text";
+
+export type ControlEvent =
+  | { type: "mode"; mode: HudMode; power: HudPower }
+  | { type: "panel"; panel: ControlBarPanelTrigger }
+  | { type: "hand"; active: boolean }
+  | { type: "visibility"; visible: boolean }
+  | { type: "attack-press"; subjectId: number | null }
+  | { type: "attack-release" };
 
 const QTY_MIN = 1;
 const QTY_MAX = 60;
@@ -48,6 +56,7 @@ export class ControlBar {
   private attackReleaseCb: (() => void) | null = null;
   private handToolToggleCb: ((active: boolean) => void) | null = null;
   private triggerCb: ((which: ControlBarPanelTrigger) => void) | null = null;
+  private controlEventCb: ((event: ControlEvent) => void) | null = null;
   private handActive = false;
 
   constructor(host: HTMLElement, opts: ControlBarOptions) {
@@ -169,6 +178,7 @@ export class ControlBar {
       this.handActive = !this.handActive;
       handBtn.setAttribute("aria-pressed", this.handActive ? "true" : "false");
       this.handToolToggleCb?.(this.handActive);
+      this.controlEventCb?.({ type: "hand", active: this.handActive });
     });
     root.appendChild(handBtn);
 
@@ -186,7 +196,12 @@ export class ControlBar {
     for (const [m, btn] of Object.entries(this.modeButtons) as [HudMode, HTMLButtonElement][]) {
       btn.setAttribute("aria-pressed", m === mode ? "true" : "false");
     }
+    const power = MODE_POWER_MAP[mode];
+    this.power = power;
+    this.root.dataset.power = power;
+    this.powerLabel.textContent = POWER_LABELS[power];
     this.modeChangeCb?.(mode);
+    this.controlEventCb?.({ type: "mode", mode, power });
   }
 
   getMode(): HudMode {
@@ -248,6 +263,7 @@ export class ControlBar {
 
   private handleTrigger(which: ControlBarPanelTrigger): void {
     this.triggerCb?.(which);
+    this.controlEventCb?.({ type: "panel", panel: which });
   }
 
   private wireAttack(btn: HTMLButtonElement): void {
@@ -255,10 +271,12 @@ export class ControlBar {
       e.preventDefault();
       if (btn.disabled) return;
       this.attackPressCb?.(this.currentSubjectId);
+      this.controlEventCb?.({ type: "attack-press", subjectId: this.currentSubjectId });
     };
     const release = (e: Event): void => {
       e.preventDefault();
       this.attackReleaseCb?.();
+      this.controlEventCb?.({ type: "attack-release" });
     };
     btn.addEventListener("pointerdown", press);
     btn.addEventListener("pointerup", release);
@@ -284,6 +302,7 @@ export class ControlBar {
   onAttackRelease(cb: () => void): void { this.attackReleaseCb = cb; }
   onHandToolToggle(cb: (active: boolean) => void): void { this.handToolToggleCb = cb; }
   onPanelTrigger(cb: (which: ControlBarPanelTrigger) => void): void { this.triggerCb = cb; }
+  onControlEvent(cb: (event: ControlEvent) => void): void { this.controlEventCb = cb; }
 
   destroy(): void {
     this.root.remove();
