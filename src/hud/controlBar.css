@@ -187,6 +187,116 @@
   text-align: center;
 }
 
+#hud-root[data-control-variant="tablet"] .control-bar,
+#hud-root[data-control-variant="landscape-tray"] .control-bar {
+  width: min(542px, calc(100vw - 32px));
+  gap: 4px;
+  padding: 0 10px;
+}
+
+#hud-root[data-control-variant="landscape-tray"] .control-bar {
+  width: auto;
+  align-self: flex-start;
+}
+
+#hud-root[data-control-variant="tablet"] .control-bar__mode-group,
+#hud-root[data-control-variant="tablet"] .control-bar__triggers,
+#hud-root[data-control-variant="tablet"] .control-bar__stepper,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__mode-group,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__triggers,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__stepper {
+  gap: 4px;
+}
+
+#hud-root[data-control-variant="tablet"] .control-bar__mode-btn,
+#hud-root[data-control-variant="tablet"] .control-bar__trigger,
+#hud-root[data-control-variant="tablet"] .control-bar__hand,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__mode-btn,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__trigger,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__hand {
+  width: 44px;
+  height: 44px;
+}
+
+#hud-root[data-control-variant="tablet"] .control-bar__qty-btn,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__qty-btn,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__qty-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+#hud-root[data-control-variant="tablet"] .control-bar__qty-value,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__qty-value,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__qty-value {
+  min-width: 1.2em;
+  font-size: 13px;
+}
+
+#hud-root[data-control-variant="tablet"] .control-bar__attack,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__attack,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__attack {
+  height: 44px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+#hud-root[data-control-variant="tablet"] .control-bar__power-label,
+#hud-root[data-control-variant="landscape-tray"] .control-bar__power-label,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__power-label {
+  display: none;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 70px;
+  border-radius: 24px 24px 0 0;
+  padding: 10px 12px;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar > * {
+  flex-shrink: 0;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__mode-group,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__triggers,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__stepper {
+  gap: 4px;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__mode-btn,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__trigger,
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__hand {
+  width: 44px;
+  height: 44px;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__mode-group {
+  order: 1;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__triggers {
+  order: 2;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__stepper {
+  order: 3;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__attack {
+  order: 4;
+}
+
+#hud-root[data-control-variant="portrait-sheet"] .control-bar__hand {
+  order: 5;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .control-bar__mode-btn,
   .control-bar__trigger,
