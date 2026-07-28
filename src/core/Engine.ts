@@ -1,11 +1,4 @@
 import { Clock } from "./Clock";
-import { EventBus } from "./EventBus";
-
-export type EngineEvents = {
-  tick: { dt: number };
-  start: void;
-  stop: void;
-};
 
 export type EngineOptions = {
   now?: () => number;
@@ -15,7 +8,6 @@ export type EngineOptions = {
 
 export class Engine {
   readonly clock: Clock;
-  readonly events: EventBus<EngineEvents>;
   private raf: number | null = null;
   private readonly nowFn: () => number;
   private readonly rafFn: (cb: (t: number) => void) => number;
@@ -25,7 +17,6 @@ export class Engine {
 
   constructor(opts: EngineOptions = {}) {
     this.clock = new Clock(opts.now?.() ?? performance.now());
-    this.events = new EventBus<EngineEvents>();
     this.nowFn = opts.now ?? (() => performance.now());
     this.rafFn =
       opts.raf ??
@@ -37,7 +28,6 @@ export class Engine {
   start(): void {
     if (this.running) return;
     this.running = true;
-    this.events.emit("start", undefined);
     this.scheduleFrame();
   }
 
@@ -48,7 +38,6 @@ export class Engine {
       this.cafFn(this.raf);
       this.raf = null;
     }
-    this.events.emit("stop", undefined);
   }
 
   onTick(cb: (dt: number) => void): () => void {
@@ -79,7 +68,6 @@ export class Engine {
         console.error(`Engine tick listener threw:`, err);
       }
     }
-    this.events.emit("tick", { dt });
     this.scheduleFrame();
   }
 }
