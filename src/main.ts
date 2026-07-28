@@ -22,7 +22,6 @@ import "@fontsource/doto/700.css";
 import "./styles/global.css";
 import "./hud/hud.css";
 import "./hud/audioControl.css";
-import "./hud/subjectDrawer.css";
 import "./audio/cues/hudCues";
 import "./audio/cues/chargeRespawnCues";
 import "./audio/cues/laserBurnCues";
@@ -428,10 +427,7 @@ hud.onTextTool(() => {
 });
 
 hud.onGridTool(() => {
-  // Grid opens the existing subject browser drawer.
-  document.querySelector<HTMLElement>(".hud-placard__subject-toggle")?.dispatchEvent(
-    new MouseEvent("click", { bubbles: true }),
-  );
+  // Gallery opens via ControlBar gallery trigger inside Hud.
 });
 
 let fixtureFrame: ((timestamp: number) => void) | null = null;

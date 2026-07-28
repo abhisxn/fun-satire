@@ -1,9 +1,7 @@
-import { PALETTE } from "../config/tokens";
-import { hudIcons, HUD_TEAR_PATH, type HudMode, type HudPower } from "./hudIcons";
-import { SubjectDrawer } from "./SubjectDrawer";
-import { SubjectDragSource, type SubjectDropResult } from "../input/SubjectDragSource";
+import type { SubjectDropResult } from "../input/SubjectDragSource";
 import type { SubjectSkin } from "./subjectSkinRegistry";
 import type { TextFontId } from "./textFontRegistry";
+import { hudIcons, type HudMode, type HudPower } from "./hudIcons";
 import { ControlBar, type ControlBarPanelTrigger } from "./ControlBar";
 import { FilterPanel } from "./FilterPanel";
 import { AvatarGallery, type AvatarEntry } from "./AvatarGallery";
@@ -14,48 +12,23 @@ import "./filterPanel.css";
 import "./avatarGallery.css";
 import "./overlayLayout.css";
 
-const MODE_CYCLE: readonly HudMode[] = ["eyes", "bugs", "pointedFinger"];
 const QTY_MIN = 1;
 const QTY_MAX = 60;
 
 export class Hud {
-  private placard: HTMLElement;
   private visibilityToggleBtn: HTMLButtonElement;
-  private label: HTMLElement;
-  private powerLabel: HTMLElement;
-  private qtyValue: HTMLElement;
-  private modeIconHost: HTMLElement;
-  private powerIconHost: HTMLElement;
-  private subjectToggle: HTMLElement;
-  private repelInput: HTMLInputElement;
-  private chargeRing: HTMLElement;
-  private subjectCountEl: HTMLElement;
-  private handToolBtn: HTMLElement;
-  private textToolBtn: HTMLElement;
-  private gridToolBtn: HTMLElement;
-  private attackBtn: HTMLElement;
-  private attackIconHost: HTMLElement;
-  private fixtureFilterPanel: HTMLElement | null = null;
   private readonly root: HTMLElement;
-  private readonly drawer: SubjectDrawer;
-  private readonly dragSource: SubjectDragSource;
   private mode: HudMode = "eyes";
   private power: HudPower = "laserBurn";
   private quantity = 20;
   private subjectCount = 0;
   private lockedSubjectId: number | null = null;
   private activeSubjectSkin: SubjectSkin | null = null;
-  private readonly powerLabels: Record<HudPower, string> = {
-    laserBurn: "laser burn",
-    electricBurn: "shock",
-    bugEat: "eat",
-  };
   private hidden_ = false;
   private currentSubjectId: number | null = null;
   private handToolActive = false;
-  private isDraggingPlacard = false;
-  private placardOffset = { x: 0, y: 0 };
-  private dragStart = { x: 0, y: 0, ox: 0, oy: 0 };
+  private chargeProgress = 0;
+  private chargeVisible = false;
   private modeChangeCb: ((mode: HudMode) => void) | null = null;
   private subjectDropCb: ((result: SubjectDropResult) => void) | null = null;
   private quantityChangeCb: ((quantity: number) => void) | null = null;
@@ -66,66 +39,23 @@ export class Hud {
   private textToolCb: (() => void) | null = null;
   private gridToolCb: (() => void) | null = null;
   private visibilityToggleCb: ((visible: boolean) => void) | null = null;
-  private entranceFrame: number | null = null;
+  private subjectResizeCb: ((subjectId: number | null, scale: number) => void) | null = null;
+  private subjectFontChangeCb: ((subjectId: number | null, fontId: TextFontId) => void) | null = null;
+  private subjectAlignChangeCb: ((subjectId: number | null, align: "left" | "center" | "right") => void) | null = null;
+  private subjectSkinChangeCb: ((subjectId: number | null, skin: SubjectSkin) => void) | null = null;
   private overlayAnchor: HTMLElement;
   private overlayPanels: HTMLElement;
   private controlBar: ControlBar | null = null;
   private filterPanel: FilterPanel | null = null;
   private avatarGallery: AvatarGallery | null = null;
   private overlay: OverlayLayout | null = null;
+  private chargeEl: HTMLElement;
 
-  constructor(root: HTMLElement, canvasDropTarget?: HTMLElement) {
+  constructor(root: HTMLElement, _canvasDropTarget?: HTMLElement) {
     this.root = root;
     root.dataset.layer = "hud";
     root.innerHTML = "";
-    this.placard = document.createElement("div");
-    this.placard.className = "hud-placard";
-    this.placard.dataset.mode = this.mode;
-    this.placard.dataset.power = this.power;
-    this.placard.setAttribute("aria-label", "Mode, subject browser, and active power");
-    this.placard.setAttribute("role", "status");
-    this.placard.innerHTML = `
-      <svg class="hud-placard__tear" viewBox="0 0 200 64" preserveAspectRatio="none" aria-hidden="true">
-        <path d="${HUD_TEAR_PATH}" fill="${PALETTE.cream}" stroke="${PALETTE.ink}" stroke-width="1"/>
-      </svg>
-      <div class="hud-placard__grain"></div>
-      <div class="hud-placard__inner">
-        <button type="button" class="hud-placard__drag-handle" aria-label="Reposition HUD" title="Drag to reposition">${hudIcons.dragHandle}</button>
-        <span class="hud-placard__divider" aria-hidden="true"></span>
-        <div class="hud-placard__chrome" role="group" aria-label="HUD tools">
-          <button type="button" class="hud-placard__tool hud-placard__tool--hand" aria-label="Hand tool" aria-pressed="false" title="Hand tool">${hudIcons.hand}</button>
-          <button type="button" class="hud-placard__tool hud-placard__tool--text" aria-label="Text subject" title="Quick text subject">${hudIcons.textBox}</button>
-          <button type="button" class="hud-placard__tool hud-placard__tool--grid" aria-label="Browse subjects" title="Browse subjects">${hudIcons.grid}</button>
-        </div>
-        <span class="hud-placard__divider" aria-hidden="true"></span>
-        <button type="button" class="hud-placard__attack" aria-label="Attack" title="Hold to attack">
-          <span class="hud-placard__attack-icon" aria-hidden="true">${hudIcons.attack}</span>
-          <span class="hud-placard__attack-label">attack</span>
-        </button>
-        <span class="hud-placard__divider" aria-hidden="true"></span>
-        <button type="button" class="hud-placard__mode-icon" aria-label="Cycle crowd mode"></button>
-        <span class="hud-placard__mode-label">eyes</span>
-        <span class="hud-placard__divider" aria-hidden="true"></span>
-        <button type="button" class="hud-placard__subject-toggle" aria-label="Browse subjects"></button>
-        <span class="hud-placard__divider" aria-hidden="true"></span>
-        <span class="hud-placard__power-icon" aria-hidden="true"></span>
-        <span class="hud-placard__power-label">laser burn</span>
-        <span class="hud-placard__charge" aria-hidden="true"></span>
-        <span class="hud-placard__divider" aria-hidden="true"></span>
-        <div class="hud-placard__qty" role="group" aria-label="Crowd quantity">
-          <button type="button" class="hud-placard__qty-dec" aria-label="Decrease quantity">-</button>
-          <span class="hud-placard__qty-value">20</span>
-          <button type="button" class="hud-placard__qty-inc" aria-label="Increase quantity">+</button>
-        </div>
-        <span class="hud-placard__divider" aria-hidden="true"></span>
-        <span class="hud-placard__subject-count" aria-label="Subject count">0</span>
-        <div class="hud-placard__repel-track" role="group" aria-label="Repel strength">
-          <label class="hud-placard__repel-label" for="hud-repel-input">repel</label>
-          <input id="hud-repel-input" class="hud-placard__repel-input" type="range" min="0" max="2" step="0.05" value="1" />
-        </div>
-      </div>
-    `;
-    root.appendChild(this.placard);
+
     this.visibilityToggleBtn = document.createElement("button");
     this.visibilityToggleBtn.type = "button";
     this.visibilityToggleBtn.className = "hud-visibility-toggle";
@@ -133,46 +63,22 @@ export class Hud {
     this.visibilityToggleBtn.setAttribute("title", "Show/hide HUD");
     this.visibilityToggleBtn.innerHTML = hudIcons.visibilityOn;
     root.appendChild(this.visibilityToggleBtn);
+
     this.overlayAnchor = document.createElement("div");
     this.overlayAnchor.className = "overlay-anchor";
     root.appendChild(this.overlayAnchor);
     this.overlayPanels = document.createElement("div");
     this.overlayPanels.className = "overlay-panels";
     root.appendChild(this.overlayPanels);
-    this.label = this.placard.querySelector<HTMLElement>(".hud-placard__mode-label")!;
-    this.powerLabel = this.placard.querySelector<HTMLElement>(".hud-placard__power-label")!;
-    this.qtyValue = this.placard.querySelector<HTMLElement>(".hud-placard__qty-value")!;
-    this.modeIconHost = this.placard.querySelector<HTMLElement>(".hud-placard__mode-icon")!;
-    this.powerIconHost = this.placard.querySelector<HTMLElement>(".hud-placard__power-icon")!;
-    this.subjectToggle = this.placard.querySelector<HTMLElement>(".hud-placard__subject-toggle")!;
-    this.repelInput = this.placard.querySelector<HTMLInputElement>(".hud-placard__repel-input")!;
-    this.chargeRing = this.placard.querySelector<HTMLElement>(".hud-placard__charge")!;
-    this.subjectCountEl = this.placard.querySelector<HTMLElement>(".hud-placard__subject-count")!;
-    this.handToolBtn = this.placard.querySelector<HTMLElement>(".hud-placard__tool--hand")!;
-    this.textToolBtn = this.placard.querySelector<HTMLElement>(".hud-placard__tool--text")!;
-    this.gridToolBtn = this.placard.querySelector<HTMLElement>(".hud-placard__tool--grid")!;
-    this.attackBtn = this.placard.querySelector<HTMLElement>(".hud-placard__attack")!;
-    this.attackIconHost = this.placard.querySelector<HTMLElement>(".hud-placard__attack-icon")!;
-    this.subjectToggle.innerHTML = hudIcons.subjectToggleIcon;
-    this.drawer = new SubjectDrawer(root, { anchor: "right" });
-    this.dragSource = new SubjectDragSource({ dropTarget: canvasDropTarget ?? root });
-    for (const { skin, el } of this.drawer.getCardElements()) {
-      this.dragSource.attachCard(el, () => skin);
-    }
-    const preview = this.drawer.getComposePreviewCard();
-    this.dragSource.attachCard(preview.el, preview.getSkin);
-    this.dragSource.onDrop((result) => {
-      this.drawer.close();
-      this.subjectDropCb?.(result);
-    });
-    this.refreshIcons();
-    this.wireControls();
-    this.attackBtn.dataset.disabled = this.currentSubjectId === null ? "true" : "false";
+
+    this.chargeEl = document.createElement("span");
+    this.chargeEl.className = "hud-charge";
+    this.chargeEl.setAttribute("aria-hidden", "true");
+    this.chargeEl.dataset.visible = "false";
+    this.overlayAnchor.appendChild(this.chargeEl);
+
     this.installFocusedComponents();
-    this.entranceFrame = requestAnimationFrame(() => {
-      this.entranceFrame = null;
-      this.placard.classList.add("hud-placard--ready");
-    });
+    this.wireVisibilityToggle();
   }
 
   private installFocusedComponents(): void {
@@ -182,11 +88,21 @@ export class Hud {
       initialQuantity: this.quantity,
     });
     this.controlBar.getRoot().classList.add("hud-control-bar");
-    this.controlBar.onModeChange((mode) => this.modeChangeCb?.(mode));
-    this.controlBar.onQuantityChange((q) => this.quantityChangeCb?.(q));
+    this.controlBar.onModeChange((mode) => {
+      this.mode = mode;
+      this.modeChangeCb?.(mode);
+    });
+    this.controlBar.onQuantityChange((q) => {
+      this.quantity = q;
+      this.filterPanel?.setQuantity(q);
+      this.quantityChangeCb?.(q);
+    });
     this.controlBar.onAttackPress((id) => this.attackPressCb?.(id));
     this.controlBar.onAttackRelease(() => this.attackReleaseCb?.());
-    this.controlBar.onHandToolToggle((active) => this.handToolToggleCb?.(active));
+    this.controlBar.onHandToolToggle((active) => {
+      this.handToolActive = active;
+      this.handToolToggleCb?.(active);
+    });
     this.controlBar.onPanelTrigger((which) => this.handlePanelTrigger(which));
 
     this.filterPanel = new FilterPanel(this.overlayPanels, {
@@ -201,12 +117,13 @@ export class Hud {
 
     this.avatarGallery = new AvatarGallery(this.overlayPanels, {
       avatars: avatarRegistryEntries(),
-      cardCount: 10,
+      cardCount: Math.max(10, AVATAR_ASSET_REGISTRY.length),
     });
     this.avatarGallery.onSelect((id) => {
       const asset = AVATAR_ASSET_REGISTRY.find((a) => a.id === id);
       if (!asset) return;
       this.activeSubjectSkin = { kind: "avatar", assetId: asset.id };
+      this.subjectSkinChangeCb?.(this.lockedSubjectId, this.activeSubjectSkin);
       this.subjectDropCb?.({ skin: this.activeSubjectSkin, canvasPos: null });
     });
 
@@ -216,52 +133,6 @@ export class Hud {
     this.overlay.onClose(() => this.syncOverlayTriggers());
   }
 
-  private wireControls(): void {
-    this.modeIconHost.addEventListener("click", () => {
-      const idx = MODE_CYCLE.indexOf(this.mode);
-      const next = MODE_CYCLE[(idx + 1) % MODE_CYCLE.length]!;
-      this.setMode(next);
-      this.modeChangeCb?.(next);
-    });
-    this.subjectToggle.addEventListener("click", () => {
-      this.drawer.toggle();
-    });
-    this.placard.querySelector<HTMLElement>(".hud-placard__qty-inc")!.addEventListener("click", () => {
-      if (this.quantity >= QTY_MAX) return;
-      this.setQuantity(this.quantity + 1);
-      this.quantityChangeCb?.(this.quantity);
-    });
-    this.placard.querySelector<HTMLElement>(".hud-placard__qty-dec")!.addEventListener("click", () => {
-      if (this.quantity <= QTY_MIN) return;
-      this.setQuantity(this.quantity - 1);
-      this.quantityChangeCb?.(this.quantity);
-    });
-    this.repelInput.addEventListener("input", () => {
-      const v = Math.max(0, Math.min(2, Number.parseFloat(this.repelInput.value)));
-      this.repelChangeCb?.(v);
-    });
-
-    this.wireChrome();
-    this.wireVisibilityToggle();
-    this.wireDragHandle();
-    this.wireAttack();
-  }
-
-  private wireChrome(): void {
-    this.handToolBtn.addEventListener("click", () => {
-      this.handToolActive = !this.handToolActive;
-      this.handToolBtn.dataset.active = this.handToolActive ? "true" : "false";
-      this.handToolBtn.setAttribute("aria-pressed", this.handToolActive ? "true" : "false");
-      this.handToolToggleCb?.(this.handToolActive);
-    });
-    this.textToolBtn.addEventListener("click", () => {
-      this.textToolCb?.();
-    });
-    this.gridToolBtn.addEventListener("click", () => {
-      this.gridToolCb?.();
-    });
-  }
-
   private wireVisibilityToggle(): void {
     this.visibilityToggleBtn.addEventListener("click", () => {
       this.setHidden(!this.hidden_);
@@ -269,114 +140,37 @@ export class Hud {
     });
   }
 
-  private wireDragHandle(): void {
-    const handle = this.placard.querySelector<HTMLElement>(".hud-placard__drag-handle")!;
-    handle.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      this.isDraggingPlacard = true;
-      this.dragStart = { x: e.clientX, y: e.clientY, ox: this.placardOffset.x, oy: this.placardOffset.y };
-      handle.setPointerCapture(e.pointerId);
-    });
-    handle.addEventListener("pointermove", (e) => {
-      if (!this.isDraggingPlacard) return;
-      const dx = e.clientX - this.dragStart.x;
-      const dy = e.clientY - this.dragStart.y;
-      this.placardOffset = { x: this.dragStart.ox + dx, y: this.dragStart.oy + dy };
-      this.applyPlacardOffset();
-    });
-    const endDrag = (e: PointerEvent): void => {
-      if (!this.isDraggingPlacard) return;
-      this.isDraggingPlacard = false;
-      try { handle.releasePointerCapture(e.pointerId); } catch { /* not captured */ }
-    };
-    handle.addEventListener("pointerup", endDrag);
-    handle.addEventListener("pointercancel", endDrag);
-  }
-
-  private applyPlacardOffset(): void {
-    this.placard.style.setProperty("--placard-x", `${this.placardOffset.x}px`);
-    this.placard.style.setProperty("--placard-y", `${this.placardOffset.y}px`);
-  }
-
-  private wireAttack(): void {
-    const press = (e: Event): void => {
-      e.preventDefault();
-      if (this.attackBtn.dataset.disabled === "true") return;
-      this.attackBtn.dataset.pressed = "true";
-      this.attackPressCb?.(this.currentSubjectId);
-    };
-    const release = (e: Event): void => {
-      e.preventDefault();
-      this.attackBtn.dataset.pressed = "false";
-      this.attackReleaseCb?.();
-    };
-    this.attackBtn.addEventListener("pointerdown", press);
-    this.attackBtn.addEventListener("pointerup", release);
-    this.attackBtn.addEventListener("pointercancel", release);
-    this.attackBtn.addEventListener("pointerleave", (e) => {
-      if (this.attackBtn.dataset.pressed === "true") release(e);
-    });
-    this.attackBtn.addEventListener("keydown", (e) => {
-      if (e.key === " " || e.key === "Enter") {
-        e.preventDefault();
-        press(e);
-      }
-    });
-    this.attackBtn.addEventListener("keyup", (e) => {
-      if (e.key === " " || e.key === "Enter") {
-        e.preventDefault();
-        release(e);
-      }
-    });
-    this.attackBtn.addEventListener("blur", () => {
-      if (this.attackBtn.dataset.pressed === "true") {
-        this.attackBtn.dataset.pressed = "false";
-        this.attackReleaseCb?.();
-      }
-    });
-  }
-
-  private refreshIcons(): void {
-    this.modeIconHost.innerHTML = hudIcons.modeIcon[this.mode];
-    this.powerIconHost.innerHTML = hudIcons.powerIcon[this.power];
-    if (this.attackIconHost) this.attackIconHost.innerHTML = hudIcons.attack;
-    this.visibilityToggleBtn.innerHTML = this.hidden_ ? hudIcons.visibilityOff : hudIcons.visibilityOn;
-  }
-
   setMode(mode: HudMode): void {
     this.mode = mode;
-    this.placard.dataset.mode = mode;
-    this.label.textContent = mode;
     this.controlBar?.setMode(mode);
-    this.refreshIcons();
   }
 
   setPower(power: HudPower): void {
     this.power = power;
-    this.placard.dataset.power = power;
-    this.powerLabel.textContent = this.powerLabels[power];
     this.controlBar?.setPower(power);
-    this.refreshIcons();
   }
 
   setActiveSubjectSkin(subjectId: number | null, skin: SubjectSkin): void {
     this.activeSubjectSkin = skin;
-    this.drawer.setActiveSkin(subjectId, skin);
+    if (subjectId !== null) this.lockedSubjectId = subjectId;
+    if (skin.kind === "avatar") {
+      this.avatarGallery?.setSelected(skin.assetId);
+    }
   }
 
   setSubjectCount(n: number): void {
     this.subjectCount = Math.max(0, Math.round(n));
-    this.subjectCountEl.textContent = String(this.subjectCount);
+    this.root.dataset.subjectCount = String(this.subjectCount);
+  }
+
+  getSubjectCount(): number {
+    return this.subjectCount;
   }
 
   setLockedSubjectId(id: number | null): void {
     this.lockedSubjectId = id;
     if (id === null) {
-      this.drawer.setActiveSkin(null, null);
-      return;
-    }
-    if (this.activeSubjectSkin) {
-      this.drawer.setActiveSkin(id, this.activeSubjectSkin);
+      this.activeSubjectSkin = null;
     }
   }
 
@@ -386,47 +180,17 @@ export class Hud {
 
   setQuantity(quantity: number): void {
     this.quantity = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(quantity)));
-    this.qtyValue.textContent = String(this.quantity);
     this.controlBar?.setQuantity(this.quantity);
     this.filterPanel?.setQuantity(this.quantity);
-    const fixtureQuantity = this.fixtureFilterPanel?.querySelector<HTMLOutputElement>("[data-fixture-quantity]");
-    if (fixtureQuantity) fixtureQuantity.value = String(this.quantity);
   }
 
   setVisualFixturePanel(panel: "none" | "filter" | "gallery"): void {
-    const fixtureFilterPanel = this.ensureFixtureFilterPanel();
-    const filterOpen = panel === "filter";
-    fixtureFilterPanel.hidden = !filterOpen;
-    fixtureFilterPanel.setAttribute("aria-hidden", filterOpen ? "false" : "true");
-    if (panel === "gallery") this.drawer.open();
-    else this.drawer.close();
-    this.subjectToggle.setAttribute("aria-expanded", panel === "gallery" ? "true" : "false");
-
     if (panel === "none") {
       this.overlay?.close();
     } else if (!this.overlay?.isOpen(panel)) {
       this.overlay?.open(panel, this.controlBar?.getRoot() ?? null);
     }
     this.syncOverlayTriggers();
-  }
-
-  private ensureFixtureFilterPanel(): HTMLElement {
-    if (this.fixtureFilterPanel) return this.fixtureFilterPanel;
-    const panel = document.createElement("section");
-    panel.className = "hud-fixture-filter-panel";
-    panel.dataset.visualFixturePanel = "filter";
-    panel.setAttribute("role", "dialog");
-    panel.setAttribute("aria-label", "Crowd filters");
-    panel.setAttribute("aria-hidden", "true");
-    panel.hidden = true;
-    panel.innerHTML = `
-      <strong>Filter crowd</strong>
-      <span>quantity <output data-fixture-quantity>${this.quantity}</output></span>
-      <span>repel <output data-fixture-repel>1</output></span>
-    `;
-    this.root.appendChild(panel);
-    this.fixtureFilterPanel = panel;
-    return panel;
   }
 
   setVisualFixtureAttackState(input: Readonly<{
@@ -441,26 +205,25 @@ export class Hud {
   }
 
   async finishEntranceTransitions(): Promise<void> {
-    if (this.entranceFrame !== null) {
-      cancelAnimationFrame(this.entranceFrame);
-      this.entranceFrame = null;
-    }
-    this.placard.classList.add("hud-placard--ready");
-    this.drawer.finishEntranceTransitions();
+    this.controlBar?.getRoot().classList.add("hud-control-bar--ready");
     await Promise.resolve();
   }
 
   setCharge(progress: number, visible: boolean): void {
-    const p = Math.max(0, Math.min(1, progress));
-    this.chargeRing.style.setProperty("--charge", p.toFixed(3));
-    this.chargeRing.dataset.visible = visible ? "true" : "false";
+    this.chargeProgress = Math.max(0, Math.min(1, progress));
+    this.chargeVisible = visible;
+    this.chargeEl.style.setProperty("--charge", this.chargeProgress.toFixed(3));
+    this.chargeEl.dataset.visible = visible ? "true" : "false";
+  }
+
+  getCharge(): { progress: number; visible: boolean } {
+    return { progress: this.chargeProgress, visible: this.chargeVisible };
   }
 
   setHidden(hidden: boolean): void {
     this.hidden_ = hidden;
-    this.placard.dataset.hidden = hidden ? "true" : "false";
     this.controlBar?.setHidden(hidden);
-    this.refreshIcons();
+    this.visibilityToggleBtn.innerHTML = hidden ? hudIcons.visibilityOff : hudIcons.visibilityOn;
   }
 
   isHidden(): boolean {
@@ -469,9 +232,6 @@ export class Hud {
 
   setCurrentSubjectId(id: number | null): void {
     this.currentSubjectId = id;
-    if (this.attackBtn) {
-      this.attackBtn.dataset.disabled = id === null ? "true" : "false";
-    }
     this.controlBar?.setCurrentSubjectId(id);
   }
 
@@ -481,11 +241,11 @@ export class Hud {
 
   setHandToolActive(active: boolean): void {
     this.handToolActive = active;
-    if (this.handToolBtn) {
-      this.handToolBtn.dataset.active = active ? "true" : "false";
-      this.handToolBtn.setAttribute("aria-pressed", active ? "true" : "false");
-    }
     this.controlBar?.setHandToolActive(active);
+  }
+
+  isHandToolActive(): boolean {
+    return this.handToolActive;
   }
 
   onModeChange(cb: (mode: HudMode) => void): void {
@@ -497,19 +257,22 @@ export class Hud {
   }
 
   onSubjectResize(cb: (subjectId: number | null, scale: number) => void): void {
-    this.drawer.onResize(cb);
+    this.subjectResizeCb = cb;
+    void this.subjectResizeCb;
   }
 
   onSubjectFontChange(cb: (subjectId: number | null, fontId: TextFontId) => void): void {
-    this.drawer.onFontChange(cb);
+    this.subjectFontChangeCb = cb;
+    void this.subjectFontChangeCb;
   }
 
   onSubjectAlignChange(cb: (subjectId: number | null, align: "left" | "center" | "right") => void): void {
-    this.drawer.onAlignChange(cb);
+    this.subjectAlignChangeCb = cb;
+    void this.subjectAlignChangeCb;
   }
 
   onSubjectSkinChange(cb: (subjectId: number | null, skin: SubjectSkin) => void): void {
-    this.drawer.onSkinChange(cb);
+    this.subjectSkinChangeCb = cb;
   }
 
   onQuantityChange(cb: (quantity: number) => void): void {
@@ -556,6 +319,9 @@ export class Hud {
       this.textToolCb?.();
       this.controlBar.setTriggerExpanded("text", false);
       return;
+    }
+    if (id === "gallery") {
+      this.gridToolCb?.();
     }
     const root = id === "filter" ? this.filterPanel?.getRoot() : this.avatarGallery?.getRoot();
     this.overlay.open(id, root ?? this.controlBar.getRoot());
