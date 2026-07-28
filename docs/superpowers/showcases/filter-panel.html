@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter Panel — Numbers & Repel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.86);
+      --glass-elevation: 0 12px 32px rgba(65, 52, 45, 0.16);
+      --text-primary: #2a2420;
+      --text-muted: #6e625b;
+      --value-bg: #ffffff;
+      --divider: rgba(42, 36, 32, 0.12);
+      --btn-hover: #e8a9a0;
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-protest: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      min-height: 100dvh;
+      overflow: hidden;
+      background: linear-gradient(145deg, #cdc0b8 0%, #aa988e 50%, #8a7a70 100%);
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Film grain overlay */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+    }
+
+    /* ============================================
+       FILTER PANEL — Double-Bezel Architecture
+       ============================================ */
+    .filter-panel {
+      position: relative;
+      width: 139px;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      box-shadow: var(--glass-elevation);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: panel-entrance 0.7s var(--ease-smooth) forwards;
+      opacity: 0;
+    }
+
+    @keyframes panel-entrance {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .filter-panel { background: rgba(255, 255, 255, 0.92); }
+    }
+
+    /* ============================================
+       SECTIONS
+       ============================================ */
+    .filter-panel__section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-panel__label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    /* ============================================
+       STEPPER ROW
+       ============================================ */
+    .filter-panel__stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-panel__qty-btn {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: background 120ms var(--ease-protest),
+                  transform 140ms var(--ease-spring);
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .filter-panel__qty-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text-primary);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .filter-panel__qty-btn:hover {
+      background: var(--btn-hover);
+    }
+
+    .filter-panel__qty-btn:active {
+      transform: scale(0.88);
+    }
+
+    .filter-panel__qty-btn:focus-visible {
+      box-shadow: 0 0 0 2px rgba(42, 36, 32, 0.42);
+    }
+
+    /* Value display — white rounded box */
+    .filter-panel__qty-value {
+      min-width: 43px;
+      height: 24px;
+      padding: 0 6px;
+      text-align: center;
+      font-family: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-primary);
+      background: var(--value-bg);
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6),
+                  0 1px 2px rgba(42, 36, 32, 0.06);
+    }
+
+    /* ============================================
+       DIVIDER
+       ============================================ */
+    .filter-panel__divider {
+      width: 100%;
+      height: 1px;
+      background: var(--divider);
+      border: none;
+      margin: 2px 0;
+    }
+
+    /* ============================================
+       REPEL SLIDER
+       ============================================ */
+    .filter-panel__repel {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      height: 2px;
+      background: var(--text-muted);
+      border-radius: 1px;
+      outline: none;
+      cursor: pointer;
+      margin: 4px 0;
+    }
+
+    .filter-panel__repel::-webkit-slider-thumb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid var(--text-primary);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(42, 36, 32, 0.18);
+      transition: transform 160ms var(--ease-spring),
+                  box-shadow 160ms var(--ease-protest);
+    }
+
+    .filter-panel__repel::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 2px 8px rgba(42, 36, 32, 0.24);
+    }
+
+    .filter-panel__repel::-webkit-slider-thumb:active {
+      transform: scale(1.05);
+    }
+
+    .filter-panel__repel::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid var(--text-primary);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(42, 36, 32, 0.18);
+    }
+
+    .filter-panel__repel::-moz-range-track {
+      height: 2px;
+      background: var(--text-muted);
+      border-radius: 1px;
+      border: none;
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 340px) {
+      .filter-panel {
+        width: calc(100vw - 32px);
+        max-width: 139px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .filter-panel,
+      .filter-panel__qty-btn,
+      .filter-panel__repel::-webkit-slider-thumb {
+        animation: none;
+        transition: none;
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="filter-panel" role="dialog" aria-label="Crowd filters">
+    <!-- NUMBERS Section -->
+    <div class="filter-panel__section" data-filter-section="numbers">
+      <span class="filter-panel__label">Numbers</span>
+      <div class="filter-panel__stepper">
+        <button class="filter-panel__qty-btn" data-filter-qty="dec" aria-label="Decrease quantity" type="button">
+          <svg viewBox="0 0 14 14" aria-hidden="true">
+            <line x1="2" y1="7" x2="12" y2="7" />
+          </svg>
+        </button>
+        <output class="filter-panel__qty-value" data-filter-qty-value="">60</output>
+        <button class="filter-panel__qty-btn" data-filter-qty="inc" aria-label="Increase quantity" type="button">
+          <svg viewBox="0 0 14 14" aria-hidden="true">
+            <line x1="7" y1="2" x2="7" y2="12" />
+            <line x1="2" y1="7" x2="12" y2="7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <hr class="filter-panel__divider" />
+
+    <!-- REPEL Section -->
+    <div class="filter-panel__section" data-filter-section="repel">
+      <label class="filter-panel__label" for="filter-repel">Repel</label>
+      <input
+        class="filter-panel__repel"
+        id="filter-repel"
+        type="range"
+        min="0"
+        max="2"
+        step="0.05"
+        value="1"
+        data-filter-repel=""
+      />
+    </div>
+  </div>
+
+  <script>
+    const QTY_MIN = 10;
+    const QTY_MAX = 220;
+    const QTY_STEP = 10;
+    let quantity = 60;
+
+    const qtyValue = document.querySelector('[data-filter-qty-value]');
+    const decBtn = document.querySelector('[data-filter-qty="dec"]');
+    const incBtn = document.querySelector('[data-filter-qty="inc"]');
+
+    function updateQuantity(delta) {
+      const next = quantity + delta * QTY_STEP;
+      if (next < QTY_MIN || next > QTY_MAX) return;
+      quantity = next;
+      qtyValue.textContent = String(quantity);
+    }
+
+    decBtn.addEventListener('click', () => updateQuantity(-1));
+    incBtn.addEventListener('click', () => updateQuantity(1));
+
+    // Keyboard support
+    decBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); updateQuantity(-1); }
+    });
+    incBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); updateQuantity(1); }
+    });
+  </script>
+</body>
+</html>
