@@ -1,7 +1,13 @@
 // @vitest-environment happy-dom
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { AvatarGallery } from "../../src/hud/AvatarGallery";
 import visualTokens from "../../src/config/visualTokens.json";
+
+function readText(rel: string): string {
+  return readFileSync(resolve(__dirname, "..", "..", rel), "utf8");
+}
 
 describe("hud/AvatarGallery (Figma 284-wide scrolling glass panel)", () => {
   let host: HTMLElement;
@@ -87,5 +93,23 @@ describe("hud/AvatarGallery (Figma 284-wide scrolling glass panel)", () => {
     const card = host.querySelector<HTMLButtonElement>('[data-avatar-card="elder-figure"]')!;
     card.click();
     expect(cb).toHaveBeenCalledWith("elder-figure");
+  });
+
+  it("starts closed: hidden + inert and aria-hidden reflects state", () => {
+    const root = host.querySelector<HTMLElement>(".avatar-gallery")!;
+    expect(root.hidden).toBe(true);
+    expect(root.inert || root.getAttribute("inert") !== null).toBe(true);
+    gallery.setOpen(true);
+    expect(root.hidden).toBe(false);
+    expect(root.inert).toBe(false);
+    gallery.setOpen(false);
+    expect(root.hidden).toBe(true);
+    expect(root.inert || root.getAttribute("inert") !== null).toBe(true);
+  });
+
+  it("every card is at least 44px square (Figma touch minimum)", () => {
+    const css = readText("src/hud/avatarGallery.css");
+    expect(css).toMatch(/\.avatar-gallery__card[\s\S]{0,200}?min-width:\s*44px/);
+    expect(css).toMatch(/\.avatar-gallery__card[\s\S]{0,200}?min-height:\s*44px/);
   });
 });

@@ -49,18 +49,30 @@
 }
 
 .filter-panel__qty-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 8px;
   border: 1px solid rgba(42, 36, 32, 0.16);
   background: rgba(255, 255, 255, 0.7);
   color: #2a2420;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background 120ms cubic-bezier(0.22, 1, 0.36, 1),
               transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.filter-panel__qty-btn__glyph {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
 }
 
 .filter-panel__qty-btn:hover {
@@ -120,4 +132,29 @@
   .filter-panel__repel::-webkit-slider-thumb {
     transition: none;
   }
+}
+
+.filter-panel[data-variant="portrait-sheet"] {
+  left: 16px;
+  right: 16px;
+  bottom: calc(70px + 8px);
+  width: auto;
+  height: auto;
+  max-height: 60vh;
+  border-radius: 28px;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.filter-panel[data-variant="landscape-tray"] {
+  right: 16px;
+  top: 16px;
+  bottom: calc(70px + 8px);
+  width: 320px;
+  max-width: 60vw;
+  height: auto;
+  border-radius: 24px;
+  overflow-y: auto;
 }

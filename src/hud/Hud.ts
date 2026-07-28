@@ -2,15 +2,17 @@ import type { SubjectDropResult } from "../input/SubjectDragSource";
 import type { SubjectSkin } from "./subjectSkinRegistry";
 import type { TextFontId } from "./textFontRegistry";
 import { hudIcons, type HudMode, type HudPower } from "./hudIcons";
-import { ControlBar, type ControlBarPanelTrigger } from "./ControlBar";
+import { ControlBar, type ControlBarPanelTrigger, type ControlEvent } from "./ControlBar";
 import { FilterPanel } from "./FilterPanel";
 import { AvatarGallery, type AvatarEntry } from "./AvatarGallery";
+import { TextSubjectComposer } from "./TextSubjectComposer";
 import { OverlayLayout, type OverlayPanelId } from "./OverlayLayout";
 import { AVATAR_ASSET_REGISTRY } from "./avatarAssetRegistry";
 import type { ControlVariant } from "../render/responsiveScene";
 import "./controlBar.css";
 import "./filterPanel.css";
 import "./avatarGallery.css";
+import "./textComposer.css";
 import "./overlayLayout.css";
 
 const QTY_MIN = 1;
@@ -40,15 +42,18 @@ export class Hud {
   private textToolCb: (() => void) | null = null;
   private gridToolCb: (() => void) | null = null;
   private visibilityToggleCb: ((visible: boolean) => void) | null = null;
+  private controlEventCb: ((event: ControlEvent) => void) | null = null;
   private subjectResizeCb: ((subjectId: number | null, scale: number) => void) | null = null;
   private subjectFontChangeCb: ((subjectId: number | null, fontId: TextFontId) => void) | null = null;
   private subjectAlignChangeCb: ((subjectId: number | null, align: "left" | "center" | "right") => void) | null = null;
   private subjectSkinChangeCb: ((subjectId: number | null, skin: SubjectSkin) => void) | null = null;
+  private subjectTextChangeCb: ((subjectId: number | null, kind: "value", value: string) => void) | null = null;
   private overlayAnchor: HTMLElement;
   private overlayPanels: HTMLElement;
   private controlBar: ControlBar | null = null;
   private filterPanel: FilterPanel | null = null;
   private avatarGallery: AvatarGallery | null = null;
+  private textComposer: TextSubjectComposer | null = null;
   private overlay: OverlayLayout | null = null;
   private chargeEl: HTMLElement;
 
@@ -98,13 +103,7 @@ export class Hud {
       this.filterPanel?.setQuantity(q);
       this.quantityChangeCb?.(q);
     });
-    this.controlBar.onAttackPress((id) => this.attackPressCb?.(id));
-    this.controlBar.onAttackRelease(() => this.attackReleaseCb?.());
-    this.controlBar.onHandToolToggle((active) => {
-      this.handToolActive = active;
-      this.handToolToggleCb?.(active);
-    });
-    this.controlBar.onPanelTrigger((which) => this.handlePanelTrigger(which));
+    this.controlBar.onControlEvent((event) => this.handleControlEvent(event));
 
     this.filterPanel = new FilterPanel(this.overlayPanels, {
       initialQuantity: this.quantity,
@@ -128,9 +127,23 @@ export class Hud {
       this.subjectDropCb?.({ skin: this.activeSubjectSkin, canvasPos: null });
     });
 
+    this.textComposer = new TextSubjectComposer(this.overlayPanels, {
+      initial: {
+        value: "look at me",
+        scale: 1,
+        fontId: "spaceMono",
+        align: "center",
+      },
+    });
+    this.textComposer.onValueChange((value) => this.subjectTextChangeCb?.(this.lockedSubjectId, "value", value));
+    this.textComposer.onScaleChange((scale) => this.subjectResizeCb?.(this.lockedSubjectId, scale));
+    this.textComposer.onFontChange((fontId) => this.subjectFontChangeCb?.(this.lockedSubjectId, fontId));
+    this.textComposer.onAlignChange((align) => this.subjectAlignChangeCb?.(this.lockedSubjectId, align));
+
     this.overlay = new OverlayLayout();
     this.overlay.register("filter", this.filterPanel.getRoot());
     this.overlay.register("gallery", this.avatarGallery.getRoot());
+    this.overlay.register("text", this.textComposer.getRoot());
     this.overlay.onClose(() => this.syncOverlayTriggers());
   }
 
@@ -138,6 +151,7 @@ export class Hud {
     this.visibilityToggleBtn.addEventListener("click", () => {
       this.setHidden(!this.hidden_);
       this.visibilityToggleCb?.(!this.hidden_);
+      this.controlEventCb?.({ type: "visibility", visible: !this.hidden_ });
     });
   }
 
@@ -207,6 +221,15 @@ export class Hud {
 
   setControlVariant(variant: ControlVariant): void {
     this.root.dataset.controlVariant = variant;
+    if (this.overlay) {
+      const overlayVariant =
+        variant === "portrait-sheet"
+          ? "portrait-sheet"
+          : variant === "landscape-tray"
+            ? "landscape-tray"
+            : "desktop-panel";
+      this.overlay.setVariant(overlayVariant);
+    }
   }
 
   async finishEntranceTransitions(): Promise<void> {
@@ -312,25 +335,8 @@ export class Hud {
     this.visibilityToggleCb = cb;
   }
 
-  private handlePanelTrigger(which: ControlBarPanelTrigger): void {
-    if (!this.overlay || !this.controlBar) return;
-    const map: Record<ControlBarPanelTrigger, OverlayPanelId> = {
-      filter: "filter",
-      gallery: "gallery",
-      text: "text",
-    };
-    const id = map[which];
-    if (id === "text") {
-      this.textToolCb?.();
-      this.controlBar.setTriggerExpanded("text", false);
-      return;
-    }
-    if (id === "gallery") {
-      this.gridToolCb?.();
-    }
-    const root = id === "filter" ? this.filterPanel?.getRoot() : this.avatarGallery?.getRoot();
-    this.overlay.open(id, root ?? this.controlBar.getRoot());
-    this.syncOverlayTriggers();
+  onControlEvent(cb: (event: ControlEvent) => void): void {
+    this.controlEventCb = cb;
   }
 
   private syncOverlayTriggers(): void {
@@ -339,6 +345,57 @@ export class Hud {
     this.controlBar.setTriggerExpanded("filter", active === "filter");
     this.controlBar.setTriggerExpanded("gallery", active === "gallery");
     this.controlBar.setTriggerExpanded("text", active === "text");
+  }
+
+  private handleControlEvent(event: ControlEvent): void {
+    this.controlEventCb?.(event);
+    switch (event.type) {
+      case "mode":
+        this.mode = event.mode;
+        this.power = event.power;
+        this.controlBar?.setPower(event.power);
+        this.modeChangeCb?.(event.mode);
+        return;
+      case "panel":
+        this.routePanelTrigger(event.panel);
+        return;
+      case "hand":
+        this.handToolActive = event.active;
+        this.handToolToggleCb?.(event.active);
+        return;
+      case "visibility":
+        return;
+      case "attack-press":
+        this.attackPressCb?.(event.subjectId);
+        return;
+      case "attack-release":
+        this.attackReleaseCb?.();
+        return;
+    }
+  }
+
+  private routePanelTrigger(which: ControlBarPanelTrigger): void {
+    if (!this.overlay || !this.controlBar) return;
+    const map: Record<ControlBarPanelTrigger, OverlayPanelId> = {
+      filter: "filter",
+      gallery: "gallery",
+      text: "text",
+    };
+    const id = map[which];
+    if (id === "text") {
+      const root = this.textComposer?.getRoot();
+      this.overlay.open("text", root ?? this.controlBar.getRoot());
+      this.textComposer?.focusInitial();
+      this.textToolCb?.();
+      this.syncOverlayTriggers();
+      return;
+    }
+    if (id === "gallery") {
+      this.gridToolCb?.();
+    }
+    const root = id === "filter" ? this.filterPanel?.getRoot() : this.avatarGallery?.getRoot();
+    this.overlay.open(id, root ?? this.controlBar.getRoot());
+    this.syncOverlayTriggers();
   }
 }
 

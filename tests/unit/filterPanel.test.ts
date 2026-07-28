@@ -1,7 +1,13 @@
 // @vitest-environment happy-dom
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { FilterPanel } from "../../src/hud/FilterPanel";
 import visualTokens from "../../src/config/visualTokens.json";
+
+function readText(rel: string): string {
+  return readFileSync(resolve(__dirname, "..", "..", rel), "utf8");
+}
 
 describe("hud/FilterPanel (Figma 139×170 glass satellite)", () => {
   let host: HTMLElement;
@@ -90,5 +96,24 @@ describe("hud/FilterPanel (Figma 139×170 glass satellite)", () => {
   it("setQuantity updates the display and is reflected back to consumers", () => {
     panel.setQuantity(33);
     expect(host.querySelector("[data-filter-qty-value]")?.textContent?.trim()).toBe("33");
+  });
+
+  it("every interactive control is at least the 44px touch minimum", () => {
+    const css = readText("src/hud/filterPanel.css");
+    expect(css).toMatch(/\.filter-panel__qty-btn[\s\S]{0,200}?min-width:\s*44px/);
+    expect(css).toMatch(/\.filter-panel__qty-btn[\s\S]{0,200}?min-height:\s*44px/);
+    expect(css).toMatch(/\.filter-panel__repel[\s\S]{0,200}?width:\s*100%/);
+  });
+
+  it("opens/closes with hidden and inert mirroring", () => {
+    const root = host.querySelector<HTMLElement>(".filter-panel")!;
+    expect(root.hidden).toBe(true);
+    expect(root.inert || root.getAttribute("inert") !== null).toBe(true);
+    panel.setOpen(true);
+    expect(root.hidden).toBe(false);
+    expect(root.inert).toBe(false);
+    panel.setOpen(false);
+    expect(root.hidden).toBe(true);
+    expect(root.inert || root.getAttribute("inert") !== null).toBe(true);
   });
 });
