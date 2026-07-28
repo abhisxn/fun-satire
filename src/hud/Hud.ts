@@ -67,6 +67,8 @@ export class Hud {
   private gridToolCb: (() => void) | null = null;
   private visibilityToggleCb: ((visible: boolean) => void) | null = null;
   private entranceFrame: number | null = null;
+  private overlayAnchor: HTMLElement;
+  private overlayPanels: HTMLElement;
   private controlBar: ControlBar | null = null;
   private filterPanel: FilterPanel | null = null;
   private avatarGallery: AvatarGallery | null = null;
@@ -131,6 +133,12 @@ export class Hud {
     this.visibilityToggleBtn.setAttribute("title", "Show/hide HUD");
     this.visibilityToggleBtn.innerHTML = hudIcons.visibilityOn;
     root.appendChild(this.visibilityToggleBtn);
+    this.overlayAnchor = document.createElement("div");
+    this.overlayAnchor.className = "overlay-anchor";
+    root.appendChild(this.overlayAnchor);
+    this.overlayPanels = document.createElement("div");
+    this.overlayPanels.className = "overlay-panels";
+    root.appendChild(this.overlayPanels);
     this.label = this.placard.querySelector<HTMLElement>(".hud-placard__mode-label")!;
     this.powerLabel = this.placard.querySelector<HTMLElement>(".hud-placard__power-label")!;
     this.qtyValue = this.placard.querySelector<HTMLElement>(".hud-placard__qty-value")!;
@@ -168,13 +176,12 @@ export class Hud {
   }
 
   private installFocusedComponents(): void {
-    this.controlBar = new ControlBar(this.root, {
+    this.controlBar = new ControlBar(this.overlayAnchor, {
       initialMode: this.mode,
       initialPower: this.power,
       initialQuantity: this.quantity,
     });
     this.controlBar.getRoot().classList.add("hud-control-bar");
-    this.root.appendChild(this.controlBar.getRoot());
     this.controlBar.onModeChange((mode) => this.modeChangeCb?.(mode));
     this.controlBar.onQuantityChange((q) => this.quantityChangeCb?.(q));
     this.controlBar.onAttackPress((id) => this.attackPressCb?.(id));
@@ -182,7 +189,7 @@ export class Hud {
     this.controlBar.onHandToolToggle((active) => this.handToolToggleCb?.(active));
     this.controlBar.onPanelTrigger((which) => this.handlePanelTrigger(which));
 
-    this.filterPanel = new FilterPanel(this.root, {
+    this.filterPanel = new FilterPanel(this.overlayPanels, {
       initialQuantity: this.quantity,
       initialRepel: 1,
     });
@@ -192,7 +199,7 @@ export class Hud {
     });
     this.filterPanel.onRepelChange((m) => this.repelChangeCb?.(m));
 
-    this.avatarGallery = new AvatarGallery(this.root, {
+    this.avatarGallery = new AvatarGallery(this.overlayPanels, {
       avatars: avatarRegistryEntries(),
       cardCount: 10,
     });
@@ -348,6 +355,7 @@ export class Hud {
     this.power = power;
     this.placard.dataset.power = power;
     this.powerLabel.textContent = this.powerLabels[power];
+    this.controlBar?.setPower(power);
     this.refreshIcons();
   }
 
@@ -393,6 +401,13 @@ export class Hud {
     if (panel === "gallery") this.drawer.open();
     else this.drawer.close();
     this.subjectToggle.setAttribute("aria-expanded", panel === "gallery" ? "true" : "false");
+
+    if (panel === "none") {
+      this.overlay?.close();
+    } else if (!this.overlay?.isOpen(panel)) {
+      this.overlay?.open(panel, this.controlBar?.getRoot() ?? null);
+    }
+    this.syncOverlayTriggers();
   }
 
   private ensureFixtureFilterPanel(): HTMLElement {
@@ -444,6 +459,7 @@ export class Hud {
   setHidden(hidden: boolean): void {
     this.hidden_ = hidden;
     this.placard.dataset.hidden = hidden ? "true" : "false";
+    this.controlBar?.setHidden(hidden);
     this.refreshIcons();
   }
 
@@ -456,6 +472,7 @@ export class Hud {
     if (this.attackBtn) {
       this.attackBtn.dataset.disabled = id === null ? "true" : "false";
     }
+    this.controlBar?.setCurrentSubjectId(id);
   }
 
   getCurrentSubjectId(): number | null {
@@ -468,6 +485,7 @@ export class Hud {
       this.handToolBtn.dataset.active = active ? "true" : "false";
       this.handToolBtn.setAttribute("aria-pressed", active ? "true" : "false");
     }
+    this.controlBar?.setHandToolActive(active);
   }
 
   onModeChange(cb: (mode: HudMode) => void): void {

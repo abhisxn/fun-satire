@@ -326,3 +326,82 @@ describe("hud/Hud (PR2 Lane 3 identity binding + subject count)", () => {
     expect(cb).toHaveBeenCalledWith(42, 0.75);
   });
 });
+
+describe("hud/Hud (Figma glass-pill HUD visible)", () => {
+  let root: HTMLElement;
+  let hud: Hud;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="hud-root"></div>';
+    root = document.querySelector<HTMLElement>("#hud-root")!;
+    hud = new Hud(root);
+  });
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  const q = (sel: string): HTMLElement => root.querySelector<HTMLElement>(sel)!;
+
+  it("renders the new glass-pill control bar and hides the legacy placard", () => {
+    expect(q(".control-bar")).not.toBeNull();
+    expect(q(".hud-placard")).not.toBeNull();
+    const css = readText("src/hud/hud.css");
+    expect(css).toMatch(/\.hud-placard\s*\{[^}]*display:\s*none/s);
+  });
+
+  it("anchors the control bar inside the overlay anchor", () => {
+    expect(q(".overlay-anchor .control-bar")).not.toBeNull();
+  });
+
+  it("mounts the filter and gallery panels inside the overlay panels container", () => {
+    expect(q(".overlay-panels .filter-panel")).not.toBeNull();
+    expect(q(".overlay-panels .avatar-gallery")).not.toBeNull();
+  });
+
+  it("opens the new FilterPanel when the filter trigger is clicked", () => {
+    q('[data-control-trigger="filter"]').click();
+    expect(q(".filter-panel").hidden).toBe(false);
+    expect(q(".filter-panel").inert).toBe(false);
+  });
+
+  it("opens the new AvatarGallery when the gallery trigger is clicked", () => {
+    q('[data-control-trigger="gallery"]').click();
+    expect(q(".avatar-gallery").hidden).toBe(false);
+    expect(q(".avatar-gallery").inert).toBe(false);
+  });
+
+  it("fires onTextTool when the text trigger is clicked", () => {
+    const onText = vi.fn();
+    hud.onTextTool(onText);
+    q('[data-control-trigger="text"]').click();
+    expect(onText).toHaveBeenCalledTimes(1);
+  });
+
+  it("propagates subject lock state to the new attack button", () => {
+    const attack = q("[data-control-attack]") as HTMLButtonElement;
+    expect(attack.disabled).toBe(true);
+    hud.setCurrentSubjectId(7);
+    expect(attack.disabled).toBe(false);
+  });
+
+  it("fires onAttackPress/onAttackRelease through the new attack button", () => {
+    const onPress = vi.fn();
+    const onRelease = vi.fn();
+    hud.onAttackPress(onPress);
+    hud.onAttackRelease(onRelease);
+    hud.setCurrentSubjectId(42);
+    const attack = q("[data-control-attack]")!;
+    attack.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
+    expect(onPress).toHaveBeenCalledWith(42);
+    attack.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
+    expect(onRelease).toHaveBeenCalled();
+  });
+
+  it("cycles mode through the new mode buttons and fires onModeChange", () => {
+    const onModeChange = vi.fn();
+    hud.onModeChange(onModeChange);
+    q('[data-control-mode="bugs"]').click();
+    expect(onModeChange).toHaveBeenCalledWith("bugs");
+    expect(q('[data-control-mode="bugs"]').getAttribute("aria-pressed")).toBe("true");
+  });
+});

@@ -10,7 +10,7 @@
 
 .hud-placard {
   position: relative;
-  display: block;
+  display: none;
   margin: 0 auto 18px;
   width: min(820px, calc(100vw - 32px));
   height: 64px;
