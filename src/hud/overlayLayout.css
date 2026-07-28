@@ -1,0 +1,39 @@
+.overlay-anchor {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  pointer-events: none;
+  z-index: 60;
+}
+
+.overlay-anchor > * {
+  pointer-events: auto;
+}
+
+.overlay-panels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 70;
+}
+
+.overlay-panels > * {
+  pointer-events: auto;
+}
+
+.filter-panel {
+  bottom: calc(70px + 8px);
+  right: 50%;
+  margin-right: -71px;
+}
+
+.avatar-gallery {
+  bottom: calc(70px + 8px);
+  right: 50%;
+  margin-right: -142px;
+}

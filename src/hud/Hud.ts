@@ -4,6 +4,15 @@ import { SubjectDrawer } from "./SubjectDrawer";
 import { SubjectDragSource, type SubjectDropResult } from "../input/SubjectDragSource";
 import type { SubjectSkin } from "./subjectSkinRegistry";
 import type { TextFontId } from "./textFontRegistry";
+import { ControlBar, type ControlBarPanelTrigger } from "./ControlBar";
+import { FilterPanel } from "./FilterPanel";
+import { AvatarGallery, type AvatarEntry } from "./AvatarGallery";
+import { OverlayLayout, type OverlayPanelId } from "./OverlayLayout";
+import { AVATAR_ASSET_REGISTRY } from "./avatarAssetRegistry";
+import "./controlBar.css";
+import "./filterPanel.css";
+import "./avatarGallery.css";
+import "./overlayLayout.css";
 
 const MODE_CYCLE: readonly HudMode[] = ["eyes", "bugs", "pointedFinger"];
 const QTY_MIN = 1;
@@ -58,6 +67,10 @@ export class Hud {
   private gridToolCb: (() => void) | null = null;
   private visibilityToggleCb: ((visible: boolean) => void) | null = null;
   private entranceFrame: number | null = null;
+  private controlBar: ControlBar | null = null;
+  private filterPanel: FilterPanel | null = null;
+  private avatarGallery: AvatarGallery | null = null;
+  private overlay: OverlayLayout | null = null;
 
   constructor(root: HTMLElement, canvasDropTarget?: HTMLElement) {
     this.root = root;
@@ -147,10 +160,53 @@ export class Hud {
     this.refreshIcons();
     this.wireControls();
     this.attackBtn.dataset.disabled = this.currentSubjectId === null ? "true" : "false";
+    this.installFocusedComponents();
     this.entranceFrame = requestAnimationFrame(() => {
       this.entranceFrame = null;
       this.placard.classList.add("hud-placard--ready");
     });
+  }
+
+  private installFocusedComponents(): void {
+    this.controlBar = new ControlBar(this.root, {
+      initialMode: this.mode,
+      initialPower: this.power,
+      initialQuantity: this.quantity,
+    });
+    this.controlBar.getRoot().classList.add("hud-control-bar");
+    this.root.appendChild(this.controlBar.getRoot());
+    this.controlBar.onModeChange((mode) => this.modeChangeCb?.(mode));
+    this.controlBar.onQuantityChange((q) => this.quantityChangeCb?.(q));
+    this.controlBar.onAttackPress((id) => this.attackPressCb?.(id));
+    this.controlBar.onAttackRelease(() => this.attackReleaseCb?.());
+    this.controlBar.onHandToolToggle((active) => this.handToolToggleCb?.(active));
+    this.controlBar.onPanelTrigger((which) => this.handlePanelTrigger(which));
+
+    this.filterPanel = new FilterPanel(this.root, {
+      initialQuantity: this.quantity,
+      initialRepel: 1,
+    });
+    this.filterPanel.onQuantityChange((q) => {
+      this.setQuantity(q);
+      this.quantityChangeCb?.(q);
+    });
+    this.filterPanel.onRepelChange((m) => this.repelChangeCb?.(m));
+
+    this.avatarGallery = new AvatarGallery(this.root, {
+      avatars: avatarRegistryEntries(),
+      cardCount: 10,
+    });
+    this.avatarGallery.onSelect((id) => {
+      const asset = AVATAR_ASSET_REGISTRY.find((a) => a.id === id);
+      if (!asset) return;
+      this.activeSubjectSkin = { kind: "avatar", assetId: asset.id };
+      this.subjectDropCb?.({ skin: this.activeSubjectSkin, canvasPos: null });
+    });
+
+    this.overlay = new OverlayLayout();
+    this.overlay.register("filter", this.filterPanel.getRoot());
+    this.overlay.register("gallery", this.avatarGallery.getRoot());
+    this.overlay.onClose(() => this.syncOverlayTriggers());
   }
 
   private wireControls(): void {
@@ -284,6 +340,7 @@ export class Hud {
     this.mode = mode;
     this.placard.dataset.mode = mode;
     this.label.textContent = mode;
+    this.controlBar?.setMode(mode);
     this.refreshIcons();
   }
 
@@ -322,6 +379,8 @@ export class Hud {
   setQuantity(quantity: number): void {
     this.quantity = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(quantity)));
     this.qtyValue.textContent = String(this.quantity);
+    this.controlBar?.setQuantity(this.quantity);
+    this.filterPanel?.setQuantity(this.quantity);
     const fixtureQuantity = this.fixtureFilterPanel?.querySelector<HTMLOutputElement>("[data-fixture-quantity]");
     if (fixtureQuantity) fixtureQuantity.value = String(this.quantity);
   }
@@ -466,4 +525,38 @@ export class Hud {
   onVisibilityToggle(cb: (visible: boolean) => void): void {
     this.visibilityToggleCb = cb;
   }
+
+  private handlePanelTrigger(which: ControlBarPanelTrigger): void {
+    if (!this.overlay || !this.controlBar) return;
+    const map: Record<ControlBarPanelTrigger, OverlayPanelId> = {
+      filter: "filter",
+      gallery: "gallery",
+      text: "text",
+    };
+    const id = map[which];
+    if (id === "text") {
+      this.textToolCb?.();
+      this.controlBar.setTriggerExpanded("text", false);
+      return;
+    }
+    const root = id === "filter" ? this.filterPanel?.getRoot() : this.avatarGallery?.getRoot();
+    this.overlay.open(id, root ?? this.controlBar.getRoot());
+    this.syncOverlayTriggers();
+  }
+
+  private syncOverlayTriggers(): void {
+    if (!this.controlBar || !this.overlay) return;
+    const active = this.overlay.getActive();
+    this.controlBar.setTriggerExpanded("filter", active === "filter");
+    this.controlBar.setTriggerExpanded("gallery", active === "gallery");
+    this.controlBar.setTriggerExpanded("text", active === "text");
+  }
+}
+
+function avatarRegistryEntries(): readonly AvatarEntry[] {
+  return AVATAR_ASSET_REGISTRY.map((entry) => ({
+    id: entry.id,
+    label: entry.label,
+    url: entry.url,
+  }));
 }
