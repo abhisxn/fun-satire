@@ -164,10 +164,8 @@ export type ApplySubjectDropInput = {
  * Option A (touch tap → spawn at center; drop outside → ignore).
  */
 export function applySubjectDrop(input: ApplySubjectDropInput): EntityId | null {
-  const pos = input.canvasPos ?? {
-    x: viewport.state.width / 2,
-    y: viewport.state.height / 2,
-  };
+  if (input.canvasPos === null) return null;
+  const pos = input.canvasPos;
   const cursor = { x: pos.x, y: pos.y };
   const entity = spawnSubject({
     manifest: subjectManifestEntries,
@@ -259,6 +257,81 @@ export function applySubjectAlignChange(id: EntityId, align: "left" | "center" |
   applySubjectSkinPatch(id, { align });
 }
 
+export function applySubjectTextChange(id: EntityId, value: string): void {
+  const rec = subjects.get(id);
+  if (!rec || rec.skin.kind !== "text") return;
+  const next: SubjectSkin = { ...rec.skin, value };
+  rec.skin = next;
+  const e = store.get(id, { live: true });
+  if (e) (e.behavior.data as Record<string, unknown>).subjectSkin = next;
+}
+
+export function pickUnlockedSubjectTarget(
+  eyePos: { x: number; y: number },
+  subjectList: Array<{ id: EntityId; pos: { x: number; y: number } }>,
+  assistRadiusPx: number,
+): { id: EntityId; pos: { x: number; y: number } } | null {
+  let nearest: { id: EntityId; pos: { x: number; y: number } } | null = null;
+  let nearestDist = Infinity;
+  for (const s of subjectList) {
+    const dx = s.pos.x - eyePos.x;
+    const dy = s.pos.y - eyePos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < nearestDist && dist <= assistRadiusPx) {
+      nearest = s;
+      nearestDist = dist;
+    }
+  }
+  return nearest;
+}
+
+export function __getHudForTests(): Hud {
+  return hud;
+}
+
+export function __destroySubjectForTests(id: EntityId): void {
+  const e = store.get(id, { live: true });
+  if (!e) return;
+  const wasLocked = lockedSubjectId === id;
+  store.remove(id);
+  removeSubjectFromCollection(id);
+  if (wasLocked) {
+    hud.setLockedSubjectId(null);
+    hud.setCurrentSubjectId(null);
+  }
+}
+
+export function __getSubjectEntityForTests(id: EntityId): Entity | null {
+  return store.get(id, { live: true });
+}
+
+export function __stepSubjectUpdateForTests(
+  cursor: { x: number; y: number; active: boolean },
+  dt: number,
+  nowMs: number,
+): void {
+  subjects.forEach((rec) => {
+    const e = store.get(rec.id, { live: true });
+    if (!e) return;
+    const target = rec.locked ? e.physics.pos : cursor;
+    const dx = target.x - e.physics.pos.x;
+    const dy = target.y - e.physics.pos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 0.1 && !rec.locked) {
+      const speed = 200;
+      const moveX = (dx / dist) * speed * dt;
+      const moveY = (dy / dist) * speed * dt;
+      e.physics.pos.x += moveX;
+      e.physics.pos.y += moveY;
+    }
+    if (e.physics.scale < 1) {
+      e.physics.scale = 1;
+    }
+  });
+}
+
+const SUBJECT_HIT_RADIUS_PX = 60;
+
 const stage = document.querySelector<HTMLCanvasElement>("#stage");
 const hudRoot = document.querySelector<HTMLElement>("#hud-root");
 
@@ -267,6 +340,32 @@ if (!stage || !hudRoot) {
 }
 stage.dataset.layer = "canvas";
 stage.style.zIndex = "var(--z-canvas)";
+
+const updateStageCursor = (clientX: number, clientY: number): void => {
+  const rect = stage.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  let nearSubject = false;
+  subjects.forEach((rec) => {
+    const e = store.get(rec.id, { live: true });
+    if (!e) return;
+    const dx = e.physics.pos.x - x;
+    const dy = e.physics.pos.y - y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist <= SUBJECT_HIT_RADIUS_PX) {
+      nearSubject = true;
+    }
+  });
+  stage.style.cursor = nearSubject ? "grab" : "";
+};
+
+stage.addEventListener("pointermove", (e: PointerEvent) => {
+  updateStageCursor(e.clientX, e.clientY);
+});
+
+stage.addEventListener("pointerleave", () => {
+  stage.style.cursor = "";
+});
 
 const ctx = stage.getContext("2d");
 if (!ctx) throw new Error("Fun Satire: 2D canvas context unavailable.");
@@ -499,6 +598,7 @@ engine.events.on("tick", ({ phase, dt }) => {
       assistRadiusPx: SUBJECT_ASSIST_RADIUS_PX,
       imageCache: imageAssets,
     });
+    completedRenderCount += 1;
     void inCooldown;
   }
 });
@@ -756,8 +856,9 @@ if (visualFixture) {
       progress: visualFixture.attackProgress,
     });
     targetId = result.targetId;
+    const target = { id: targetId };
     const subjectSkin: SubjectSkin = { kind: "avatar", assetId: "figure" };
-    spawnSubjectForCollection({ id: target.id, skin: subjectSkin, nowMs: visualFixture.nowMs });
+    spawnSubjectForCollection({ id: target.id, skin: subjectSkin, nowMs: visualFixture.nowMs, });
     lockSubject(target.id);
     hud.setVisualFixtureAttackState({ progress: visualFixture.attackProgress, targetId: target.id });
   }
