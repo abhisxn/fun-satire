@@ -63,7 +63,7 @@ import { MODE_POWER_MAP, type HudMode } from "./hud/hudIcons";
 import type { SubjectSkin } from "./hud/subjectSkinRegistry";
 import { computeLookAtRotation } from "./physics/LookAt";
 import { accumulateSeparation } from "./physics/ForceField";
-import type { Entity, EntityId } from "./entities/Entity";
+import type { Entity, EntityId, Vec2 } from "./entities/Entity";
 import { AudioEngine } from "./audio/AudioEngine";
 import { AudioControl } from "./hud/AudioControl";
 import { startAmbientForMode, startTenseFiller } from "./audio/ambientBeds";
@@ -156,6 +156,58 @@ export function __resetSubjectCollectionForTests(): void {
   lockedSubjectId = null;
 }
 
+function updateSubjects(
+  cursor: { x: number; y: number; active: boolean },
+  dtSec: number,
+  nowMs: number,
+): void {
+  subjects.forEach((rec) => {
+    const subj = store.get(rec.id, { live: true });
+    if (!subj || subj.lifecycle.dragged) return;
+    if (cursor.active) {
+      const behaviorData = subj.behavior.data as { placed?: boolean; isFollowing?: boolean };
+      stepSubjectPhysics(subj.physics, cursor, dtSec, behaviorData);
+    }
+    if (subj.physics.scale < 1) {
+      const elapsed = nowMs - rec.spawnedAtMs;
+      subj.physics.scale = EASE_PROTEST(Math.min(1, elapsed / DURATION.slow));
+    }
+  });
+}
+
+export function pickUnlockedSubjectTarget(
+  eyePos: Vec2,
+  subjectPositions: readonly { id: EntityId; pos: Vec2 }[],
+  assistRadiusPx: number,
+): { id: EntityId; pos: Vec2 } | null {
+  if (subjectPositions.length === 0 || assistRadiusPx <= 0) return null;
+  let best: { id: EntityId; pos: Vec2 } | null = null;
+  let bestDistSq = Infinity;
+  for (const s of subjectPositions) {
+    const dx = eyePos.x - s.pos.x;
+    const dy = eyePos.y - s.pos.y;
+    const distSq = dx * dx + dy * dy;
+    if (distSq < bestDistSq) {
+      bestDistSq = distSq;
+      best = s;
+    }
+  }
+  const radiusSq = assistRadiusPx * assistRadiusPx;
+  return bestDistSq <= radiusSq ? best : null;
+}
+
+export function __getSubjectEntityForTests(id: EntityId): Entity | undefined {
+  return store.get(id) ?? undefined;
+}
+
+export function __stepSubjectUpdateForTests(
+  cursor: { x: number; y: number; active: boolean },
+  dtSec: number,
+  nowMs: number,
+): void {
+  updateSubjects(cursor, dtSec, nowMs);
+}
+
 export type ApplySubjectDropInput = {
   skin: SubjectSkin;
   canvasPos: { x: number; y: number } | null;
@@ -165,15 +217,11 @@ export type ApplySubjectDropInput = {
 /**
  * Handles a drag/tap drop from the subject drawer. Spawns a new subject
  * into the EntityStore + subjects Map at `canvasPos`. A null `canvasPos`
- * (drop outside canvas, or touch tap on the card) is a no-op per Gate 2
- * Option A (touch tap → spawn at center; drop outside → ignore).
+ * (drop outside canvas, or touch tap on the card) is a no-op.
  */
 export function applySubjectDrop(input: ApplySubjectDropInput): EntityId | null {
-  const pos = input.canvasPos ?? {
-    x: viewport.state.width / 2,
-    y: viewport.state.height / 2,
-  };
-  const cursor = { x: pos.x, y: pos.y };
+  if (input.canvasPos === null) return null;
+  const cursor = { x: input.canvasPos.x, y: input.canvasPos.y };
   const entity = spawnSubject({
     manifest: subjectManifestEntries,
     cursor,
@@ -550,6 +598,7 @@ const blinkTimers = new Map<EntityId, EyeBlinkTimer>();
 const pupilOffsets = new Map<EntityId, { x: number; y: number }>();
 
 let nextEntityId = 1;
+const SUBJECT_HIT_RADIUS_PX = 56;
 const SUBJECT_ASSIST_RADIUS_PX = 140;
 
 const worldAPI = {
@@ -562,13 +611,26 @@ const worldAPI = {
     if (!e) return;
     if (e.content.renderType === "subject") {
       if (visualFixture?.id === "eyes-attack") return;
+      const wasLocked = lockedSubjectId === id;
       store.remove(id);
       removeSubjectFromCollection(id);
+      if (wasLocked) {
+        hud.setCurrentSubjectId(null);
+        hud.setLockedSubjectId(null);
+      }
       return;
     }
     respawn.schedule(e, engine.getNow(), _delayMs);
   },
 };
+
+export function __getHudForTests(): Hud {
+  return hud;
+}
+
+export function __destroySubjectForTests(id: EntityId): void {
+  worldAPI.startRespawn(id, 0);
+}
 
 const effects = new EffectSystem(particles, rng, worldAPI, audioEngine ?? { play: () => {} });
 effects.register(laserBurnEffect);
@@ -650,7 +712,7 @@ const pointer: PointerTracker = new PointerTracker(stage, {
   press() {
     const cur = engine.cursor();
     if (!cur.active) return;
-    const nearest = queryNearestSubject(store, { x: cur.x, y: cur.y });
+    const nearest = queryNearestSubject(store, { x: cur.x, y: cur.y }, SUBJECT_HIT_RADIUS_PX);
     const hitSubjectId = nearest ? nearest.id : null;
     if (hitSubjectId !== null) {
       applyCanvasPress(cur.x, cur.y, hitSubjectId);
@@ -738,17 +800,7 @@ engine.onTick("pre-physics", (dt) => {
     e.physics.vel = next.vel;
   });
 
-  if (lockedSubjectId !== null && cursor.active) {
-    const subj = store.get(lockedSubjectId, { live: true });
-    if (subj && !subj.lifecycle.dragged) {
-      stepSubjectPhysics(subj.physics, cursor, dtSec);
-      const rec = subjects.get(lockedSubjectId);
-      if (rec && subj.physics.scale < 1) {
-        const elapsed = engine.getNow() - rec.spawnedAtMs;
-        subj.physics.scale = EASE_PROTEST(Math.min(1, elapsed / DURATION.slow));
-      }
-    }
-  }
+  updateSubjects(cursor, dtSec, engine.getNow());
 
   store.forEachAlive((e) => {
     if (e.content.renderType !== "eye") return;
@@ -756,7 +808,8 @@ engine.onTick("pre-physics", (dt) => {
     if (beh) beh.tick(rng, engine.getNow());
   });
 
-  // Look-at rotation: eyes rotate toward the locked subject
+  // Look-at rotation: eyes rotate toward the locked subject, or toward the
+  // same nearest-within-range subject that gaze lines would use when unlocked.
   if (lockedSubjectId !== null) {
     const subj = store.get(lockedSubjectId, { live: true });
     if (subj) {
@@ -765,6 +818,20 @@ engine.onTick("pre-physics", (dt) => {
         e.physics.rotation = computeLookAtRotation(e.physics.pos, subj.physics.pos, currentMode);
       });
     }
+  } else if (subjects.size > 0) {
+    const subjectPositions = Array.from(subjects.values())
+      .map((rec) => {
+        const e = store.get(rec.id, { live: true });
+        return e ? { id: rec.id, pos: e.physics.pos } : null;
+      })
+      .filter((s): s is { id: EntityId; pos: Vec2 } => s !== null);
+    store.forEachAlive((e) => {
+      if (e.content.renderType !== "eye") return;
+      const target = pickUnlockedSubjectTarget(e.physics.pos, subjectPositions, SUBJECT_ASSIST_RADIUS_PX);
+      e.physics.rotation = target
+        ? computeLookAtRotation(e.physics.pos, target.pos, currentMode)
+        : 0;
+    });
   } else {
     store.forEachAlive((e) => {
       if (e.content.renderType !== "eye") return;

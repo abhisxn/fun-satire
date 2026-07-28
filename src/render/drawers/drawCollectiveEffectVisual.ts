@@ -89,29 +89,31 @@ function drawBeam(
   ctx.fill();
 
   for (const c of contributors) {
-    if (!origin) break;
+    const from = origin ?? c.pos;
+    const to = origin ? c.pos : target;
+
     ctx.globalAlpha = baseOpacity * cfg.outerAlpha;
     ctx.strokeStyle = cfg.outerColor;
     ctx.lineWidth = cfg.outerWidthPx;
     ctx.beginPath();
-    ctx.moveTo(origin.x, origin.y);
-    ctx.lineTo(c.pos.x, c.pos.y);
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
     ctx.stroke();
 
     ctx.globalAlpha = baseOpacity * cfg.middleAlpha;
     ctx.strokeStyle = cfg.middleColor;
     ctx.lineWidth = cfg.middleWidthPx;
     ctx.beginPath();
-    ctx.moveTo(origin.x, origin.y);
-    ctx.lineTo(c.pos.x, c.pos.y);
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
     ctx.stroke();
 
     ctx.globalAlpha = baseOpacity * cfg.innerAlpha;
     ctx.strokeStyle = cfg.innerColor;
     ctx.lineWidth = cfg.innerWidthPx;
     ctx.beginPath();
-    ctx.moveTo(origin.x, origin.y);
-    ctx.lineTo(c.pos.x, c.pos.y);
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
     ctx.stroke();
   }
 

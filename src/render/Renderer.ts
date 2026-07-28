@@ -265,16 +265,12 @@ export function renderFrame(opts: RenderFrameOptions): void {
         maxContributors: 16,
         assistRadiusPx: opts.assistRadiusPx ?? 0,
       });
-      const origin = stage.visual.archetype === "beam"
-        ? { x: opts.width / 2, y: 0 }
-        : undefined;
       drawCollectiveEffectVisual(ctx, {
         archetype: stage.visual.archetype,
         visual: stage.visual,
         contributors,
         target: effect.target,
         progress,
-        origin,
         nowMs: opts.nowMs,
         stageIndex: effect.stageIndex,
       });

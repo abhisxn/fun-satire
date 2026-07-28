@@ -13,6 +13,10 @@ import {
   clearLockedSubjectIf,
   __resetSubjectCollectionForTests,
   type SubjectRecord,
+  applySubjectDrop,
+  applyCanvasPress,
+  __getHudForTests,
+  __destroySubjectForTests,
 } from "../../src/main";
 import type { SubjectSkin } from "../../src/hud/subjectSkinRegistry";
 
@@ -112,5 +116,46 @@ describe("main.ts subject collection (PR2 Task 1)", () => {
     __resetSubjectCollectionForTests();
     expect(listSubjectRecords().size).toBe(0);
     expect(getLockedSubjectId()).toBeNull();
+  });
+});
+
+describe("main.ts subject collection destruction clears HUD target state", () => {
+  beforeEach(() => {
+    __resetSubjectCollectionForTests();
+  });
+
+  it("destroying the locked subject clears current and locked HUD target state", () => {
+    const id = applySubjectDrop({ skin: SKIN_A, canvasPos: { x: 100, y: 100 }, nowMs: 0 });
+    expect(id).not.toBeNull();
+
+    applyCanvasPress(100, 100, id as number);
+    expect(getLockedSubjectId()).toBe(id);
+
+    const hud = __getHudForTests();
+    expect(hud.getLockedSubjectId()).toBe(id);
+    expect(hud.getCurrentSubjectId()).toBe(id);
+
+    __destroySubjectForTests(id as number);
+
+    expect(getLockedSubjectId()).toBeNull();
+    expect(hud.getLockedSubjectId()).toBeNull();
+    expect(hud.getCurrentSubjectId()).toBeNull();
+  });
+
+  it("destroying an unlocked subject does not clear the HUD lock", () => {
+    const id1 = applySubjectDrop({ skin: SKIN_A, canvasPos: { x: 100, y: 100 }, nowMs: 0 });
+    const id2 = applySubjectDrop({ skin: SKIN_B, canvasPos: { x: 200, y: 200 }, nowMs: 1 });
+    expect(id1).not.toBeNull();
+    expect(id2).not.toBeNull();
+
+    applyCanvasPress(100, 100, id1 as number);
+    expect(getLockedSubjectId()).toBe(id1);
+
+    __destroySubjectForTests(id2 as number);
+
+    expect(getLockedSubjectId()).toBe(id1);
+    const hud = __getHudForTests();
+    expect(hud.getLockedSubjectId()).toBe(id1);
+    expect(hud.getCurrentSubjectId()).toBe(id1);
   });
 });

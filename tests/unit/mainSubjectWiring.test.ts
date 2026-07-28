@@ -8,7 +8,12 @@ import {
   listSubjectRecords,
   getLockedSubjectId,
   __resetSubjectCollectionForTests,
+  __getSubjectEntityForTests,
+  __stepSubjectUpdateForTests,
+  pickUnlockedSubjectTarget,
 } from "../../src/main";
+import { DURATION } from "../../src/config/tokens";
+import { computeGazeLines } from "../../src/render/drawers/drawGazeLines";
 import type { SubjectSkin } from "../../src/hud/subjectSkinRegistry";
 import type { Vec2 } from "../../src/entities/Entity";
 
@@ -31,10 +36,43 @@ describe("main.ts subject drop + lock wiring (PR2 Task 5)", () => {
     expect(rec?.locked).toBe(false);
   });
 
-  it("applySubjectDrop with canvasPos: null (touch tap on card) spawns at canvas center per Gate 2 Option A", () => {
+  it("applySubjectDrop with canvasPos: null is a no-op (outside drop / touch tap)", () => {
     const id = applySubjectDrop({ skin: SKIN, canvasPos: null, nowMs: 1000 });
+    expect(id).toBeNull();
+    expect(listSubjectRecords().size).toBe(0);
+  });
+
+  it("a newly dropped unlocked subject reaches visible scale after spawn easing", () => {
+    const id = applySubjectDrop({ skin: SKIN, canvasPos: { x: 100, y: 100 }, nowMs: 0 });
     expect(id).not.toBeNull();
-    expect(listSubjectRecords().size).toBe(1);
+
+    const e0 = __getSubjectEntityForTests(id as number);
+    expect(e0?.physics.scale).toBe(0);
+
+    __stepSubjectUpdateForTests({ x: 0, y: 0, active: false }, 1 / 60, DURATION.slow);
+
+    const e1 = __getSubjectEntityForTests(id as number);
+    expect(e1?.physics.scale).toBe(1);
+  });
+
+  it("a placed subject that gets locked stays at its drop point instead of following the cursor", () => {
+    const dropPos: Vec2 = { x: 120, y: 80 };
+    const id = applySubjectDrop({ skin: SKIN, canvasPos: dropPos, nowMs: 0 });
+    expect(id).not.toBeNull();
+
+    applyCanvasPress(dropPos.x, dropPos.y, id as number);
+    expect(getLockedSubjectId()).toBe(id);
+
+    const cursorFar = { x: 900, y: 700, active: true };
+    for (let i = 0; i < 120; i++) {
+      __stepSubjectUpdateForTests(cursorFar, 1 / 60, i * (1000 / 60));
+    }
+
+    const e = __getSubjectEntityForTests(id as number);
+    expect(e?.physics.home.x).toBeCloseTo(dropPos.x, 0);
+    expect(e?.physics.home.y).toBeCloseTo(dropPos.y, 0);
+    expect(e?.physics.pos.x).toBeCloseTo(dropPos.x, 0);
+    expect(e?.physics.pos.y).toBeCloseTo(dropPos.y, 0);
   });
 
   it("two successive drops spawn two distinct subjects in the Map", () => {
@@ -160,5 +198,37 @@ describe("main.ts identity-aware formatting handlers (PR2 Lane 3)", () => {
     applySubjectFontChange(9999, "fraunces");
 
     expect(listSubjectRecords().get(id1 as number)?.skin).toEqual(before);
+  });
+});
+
+describe("main.ts unlocked eye rotation targets the same subject as gaze lines", () => {
+  it("pickUnlockedSubjectTarget matches the target selected by computeGazeLines for each eye", () => {
+    const eyePos = { x: 50, y: 50 };
+    const nearSubject = { id: 1, pos: { x: 60, y: 60 } };
+    const farSubject = { id: 2, pos: { x: 500, y: 500 } };
+    const subjects = [nearSubject, farSubject];
+    const assistRadiusPx = 140;
+
+    const gazeLines = computeGazeLines({
+      eyes: [{ id: 7, pos: eyePos }],
+      subjects,
+      lockedSubjectId: null,
+      assistRadiusPx,
+      chargeT: 0,
+    });
+    expect(gazeLines.length).toBe(1);
+    expect(gazeLines[0]!.x2).toBe(nearSubject.pos.x);
+    expect(gazeLines[0]!.y2).toBe(nearSubject.pos.y);
+
+    const target = pickUnlockedSubjectTarget(eyePos, subjects, assistRadiusPx);
+    expect(target).not.toBeNull();
+    expect(target?.id).toBe(nearSubject.id);
+  });
+
+  it("pickUnlockedSubjectTarget returns null when the nearest subject is outside assist radius", () => {
+    const eyePos = { x: 50, y: 50 };
+    const farSubject = { id: 2, pos: { x: 500, y: 500 } };
+    const target = pickUnlockedSubjectTarget(eyePos, [farSubject], 140);
+    expect(target).toBeNull();
   });
 });

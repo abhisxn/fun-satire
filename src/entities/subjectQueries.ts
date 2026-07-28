@@ -21,9 +21,12 @@ const distSq = (a: Vec2, b: Vec2): number => {
 export const queryNearestSubject = (
   store: EntityStore,
   pos: Vec2,
+  maxRange: number,
 ): Entity | null => {
+  if (Number.isNaN(maxRange) || maxRange <= 0) return null;
+  const maxSq = Number.isFinite(maxRange) ? maxRange * maxRange : Infinity;
   let best: Entity | null = null;
-  let bestDist = Infinity;
+  let bestDist = maxSq;
   store.forEach((e) => {
     if (!isSubject(e)) return;
     const d = distSq(e.physics.pos, pos);
