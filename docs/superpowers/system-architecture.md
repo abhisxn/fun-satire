@@ -4,116 +4,111 @@
 - **Language**: TypeScript 5.x+, ES2022+ target.
 - **Strictness**: `erasableSyntaxOnly` (no parameter properties/enums), `verbatimModuleSyntax` (explicit `import type`), `noUnusedLocals`.
 - **Modularity**: Every module is a pure export; side effects are reserved exclusively for `src/main.ts`.
-- **Immutability**: `Entity.content` is Readonly. State snapshots via `structuredClone` by default in `EntityStore.get()`.
 - **Physics**: Semi-implicit Euler integration (`v += a*dt; p += v*dt`).
 
 ## 2. Architectural Decision Records (ADR)
 
 ### ADR 001: Component-as-Data (Registry Pattern)
-- **Status**: Accepted.
+- **Status**: Superseded — replaced by DOM-first creature rendering (ADR 011).
 - **Context**: The app must grow from v1 (eyes) to v3 (caricatures) without engine changes.
-- **Decision**: Subjects are defined in JSON manifests. `renderType` and `rig` keys index into registries for behaviors and drawers.
-- **Consequence**: Adding a new creature is purely additive (new behavior + drawer + registry entry).
+- **Decision**: Subjects were defined in JSON manifests. `renderType` and `rig` keys indexed into registries for behaviors and drawers.
+- **Consequence**: Superseded by the simplified DOM-first approach where creatures are plain objects in an array, rendered as DOM elements.
 
-### ADR 002: Shared Physics & Rendering Math (Single Source of Truth)
-- **Status**: Accepted.
-- **Context**: Visual field lines must match the real force field.
-- **Decision**: `ForceField.ts` exports a pure `compute` and `sampleAlongRay`. `Integrator` and `drawFieldLines` both import this module.
-- **Consequence**: Visuals never drift from the physical feel.
+### ADR 002: Shared Physics Math (Single Source of Truth)
+- **Status**: Accepted (updated).
+- **Context**: Creature motion must feel consistent and visually match the force model.
+- **Decision**: A single physics module computes repulsion from the draggable avatar, spring-toward-home attraction, and velocity damping. All creature updates use the same force calculation.
+- **Consequence**: Visuals never drift from the physical feel. Simpler than the previous multi-force-field model — one repulsion source, one spring target per creature, uniform damping.
 
 ### ADR 003: Staged Effect System
-- **Status**: Accepted.
+- **Status**: Deferred.
 - **Context**: Cathartic destruction effects need precise timing and easing.
-- **Decision**: `EffectSystem` uses a staged timeline (`EffectDef`). Each stage has a duration and easing. `update(t)` advances through stage windows to handle time-jumps.
-- **Consequence**: Complex effects like `laserBurn` are easily authored as pure data sequences.
+- **Decision**: `EffectSystem` used a staged timeline (`EffectDef`). Each stage had a duration and easing.
+- **Consequence**: Deferred — the simplified architecture removes burn/destroy effects pending future re-introduction.
 
-### ADR 004: DOM HUD vs Canvas HUD
-- **Status**: Accepted.
-- **Context**: "Paper-cut" visual requires irregular edges and smooth type.
-- **Decision**: Use DOM for the HUD (`Hud.ts`) with SVG masks for the torn-paper edge.
-- **Consequence**: Optimal type rendering, accessibility (aria-labels), and GPU-safe transitions without per-frame canvas repaints for static UI.
+### ADR 004: DOM HUD
+- **Status**: Accepted (updated).
+- **Context**: UI controls need smooth type, accessibility, and GPU-safe transitions.
+- **Decision**: A single consolidated `Hud.ts` component owns all UI: mode selector, skin gallery, quantity/repel sliders. Popover for filters, slide-in panel for gallery.
+- **Consequence**: Optimal type rendering, accessibility (aria-labels), and GPU-safe transitions. All HUD logic in one component instead of 18+ scattered files.
 
 ### ADR 005: Mode-locked power pairing (v2)
-- **Status**: Accepted — `docs/superpowers/specs/2026-07-25-fun-satire-v2-expansion-design.md` §2a.
-- **Context**: v1 selected `HudMode` (crowd type) and `HudPower` (attack) independently via separate controls — `1`/`2`/`3` keyboard shortcuts bound to `switchPower()`, unrelated to the mode selector. This meant illegal-feeling combinations were reachable (e.g. `bugs` mode charging `laserBurn`).
-- **Decision**: Each `HudMode` locks to exactly one `HudPower` (`eyes`→`laserBurn`, `pointedFinger`→`electricBurn`, `bugs`→`bugEat`), fixed at content-authoring time via a `Record<HudMode, HudPower>` lookup. The mode selector becomes the only power control; the power placard stays on screen as a read-only reflection, not a click target. The `1`/`2`/`3` keyboard listener and `switchPower()` are removed, not left as a redundant path.
-- **Consequence**: Simpler player-facing model (one control instead of two), but it's a real UX reversal — reintroducing independent power selection later means undoing this removal, not just adding a control back. Nothing in the v2 spec's open questions proposes making the mapping player-configurable.
+- **Status**: Deferred.
+- **Context**: v2 design locked each HudMode to exactly one HudPower.
+- **Decision**: Each `HudMode` would lock to exactly one `HudPower` via a fixed lookup.
+- **Consequence**: Deferred — powers subsystem is not part of the simplified architecture.
 
-### ADR 006: Pairwise crowd separation as a deliberate `ForceField.ts` exception (v2)
-- **Status**: Accepted — `docs/superpowers/specs/2026-07-25-fun-satire-v2-expansion-design.md` §4.
-- **Context**: The v1-fix spec established a "never touch `Engine.ts`/`StateMachine.ts`/`EntityStore.ts`/`ForceField.ts`" discipline for registry-pattern extensions, to keep new content additive-only. v2's quantity/repel controls (§3) make crowd-member overlap visible and unacceptable at higher quantities or low repel strength, and cursor→entity repulsion (`ForceField.compute`) has no mechanism to prevent member-to-member overlap.
-- **Decision**: `ForceField.ts` gains a pairwise minimum-separation term (`computeSeparation`/`accumulateSeparation`) — the one spec-mandated exception to the never-touch rule. Cost-bounded as O(n²), acceptable at v2's crowd sizes (tens, not hundreds); spatial partitioning is explicitly deferred as YAGNI until quantity ranges grow.
-- **Consequence**: `ForceField.ts` is no longer strictly closed to extension — any future exception now has one precedent to point to, which raises the risk of the "never touch" rule eroding by accumulation. Enforced procedurally via the v2 orchestration plan's forbidden-files gate (`ForceField.ts` diff must be non-empty for this phase, and reviewed as the *only* sanctioned change to that file).
+### ADR 006: Pairwise crowd separation
+- **Status**: Deferred.
+- **Context**: v2's quantity/repel controls made crowd-member overlap visible at higher quantities.
+- **Decision**: `ForceField.ts` would gain a pairwise minimum-separation term.
+- **Consequence**: Deferred — the simplified physics model uses uniform repulsion from the avatar without pairwise separation.
 
 ### ADR 007: Canvas + imperative TypeScript over HTMX
-- **Status**: Accepted (v1, retroactively documented).
-- **Context**: The original project brief asked for an explicit architecture/stack decision between HTMX and JavaScript. The core mechanic is a 60fps physics simulation — a crowd of entities integrated every frame (position/velocity from cursor-driven force fields) and rendered continuously.
-- **Decision**: Vite + TypeScript + Canvas, with all rendering and physics driven by an in-process `requestAnimationFrame` loop (`Engine.ts`). HTMX was rejected: its model is server-round-trip-driven DOM swaps, which cannot deliver sub-frame-latency, client-side control over a continuously-integrated physics loop.
-- **Consequence**: The entire engine/physics/render pipeline runs client-side with no server round-trips on the interaction path; the DOM is reserved for the HUD only (see ADR 004), not for entity rendering.
+- **Status**: Superseded — replaced by DOM-first creature rendering (ADR 011).
+- **Context**: The original project brief asked for an architecture/stack decision between HTMX and JavaScript.
+- **Decision**: Vite + TypeScript + Canvas, with all rendering driven by a `requestAnimationFrame` loop.
+- **Consequence**: Superseded. Creatures are now DOM elements (div + img/svg) positioned via CSS transforms in a RAF loop. HTMX remains rejected for the same reasons. The DOM is now used for both creatures and HUD.
 
 ### ADR 008: Content guardrail — schema-enforced `styleGuardrail: 'flat-illustrated'`
-- **Status**: Accepted (v1, retroactively documented).
-- **Context**: v3's real-figure roster (ministers, CJI, national agencies, Godi Media hosts/logos) carries likeness/defamation risk if rendered photoreal or as doctored real photographs. The project needs a durable rule, not a one-off spec note, since it governs every subject added from v1 onward.
-- **Decision**: Every subject manifest must declare `visual.styleGuardrail: 'flat-illustrated'`; manifest validation (`content/schema.ts`, `content/manifestLoader.ts`) rejects any entry missing or misusing it. This is a structural authoring-pipeline/schema gate, not a runtime image-content check — the guarantee comes from what's allowed into a manifest, not from inspecting pixels.
-- **Consequence**: All subjects, including any future real-figure caricatures, are constrained to flat, paper-craft-style, satirical illustration — never photoreal, never doctored photos, no hate iconography. Adding a subject that violates this fails validation before it can render.
+- **Status**: Deferred.
+- **Context**: v3's real-figure roster carries likeness/defamation risk if rendered photoreal.
+- **Decision**: Every subject manifest would declare `visual.styleGuardrail: 'flat-illustrated'`.
+- **Consequence**: Deferred — content manifest system is not part of the simplified architecture.
 
-### ADR 009: Curated avatar sticker guardrail (`styleGuardrail: 'curated-avatar'`)
-- **Status**: Accepted (PR1 — premium visual & collective attack overhaul).
-- **Context**: PR1 added an avatar image pipeline to `SubjectSkin`, letting a subject display a curated pre-authored illustrated sticker instead of the procedural `flat-illustrated` drawer path. The same likeness/defamation risk that motivated ADR 008 applies: photoreal images, doctored photographs, or hate iconography must not enter the subject roster through the new image path.
-- **Decision**: Widen `SubjectManifestEntry.visual.styleGuardrail` to admit `curated-avatar` alongside `flat-illustrated`. A `curated-avatar` entry must carry a registered `assetId` from `AVATAR_ASSET_REGISTRY`. `manifestLoader.ts` validates the schema shape and a non-empty `assetId`; human curation-time review enforces that the asset is a cartoon/caricature illustration — never photoreal, never a doctored photograph, never hate iconography. The runtime loads only assets that pass both gates.
-- **Consequence**: Avatar subjects are gated by the same structural authoring pipeline as procedural subjects; the engine never loads arbitrary unreviewed images.
+### ADR 009: Curated avatar sticker guardrail
+- **Status**: Deferred.
+- **Context**: Avatar image pipeline needed likeness/defamation safeguards.
+- **Decision**: `styleGuardrail` would admit `curated-avatar` alongside `flat-illustrated` with a registered `assetId`.
+- **Consequence**: Deferred — content manifest system is not part of the simplified architecture.
 
 ### ADR 010: Multi-subject targeting (PR2)
-- **Status**: Accepted — `docs/superpowers/plans/2026-07-...` (phase C integration).
-- **Context**: PR1 introduced a single `Subject` entity that was swapped in/out of the crowd via a "merge eyes into subject" lifecycle. Only one subject could exist at a time, and its arrival/destruction was coupled to the eyes-to-subject transition. PR2 needs N subjects coexisting with distributed gaze, each with its own identity, skin, and lock state, while preserving the cathartic "attack one target" flow.
-- **Decision**: Replace the singleton with a `Map<EntityId, SubjectRecord>` collection (`subjects` in `EntityStore`). Add a separate `lockedSubjectId: EntityId | null` pointer that names the currently-targeted subject for power delivery and HUD display. Placement is drag-to-canvas (not swap); locking is explicit tap-to-lock on an in-canvas subject (or auto-lock on first placement if empty). The HUD renders the locked subject's identity (name, skin) and its attack CTA; other subjects in the collection render with distributed `SubjectBehavior` gaze but are not attackable until locked. Destroyed subjects are removed from the map with no auto-respawn — the collection shrinks permanently unless the user places more.
-- **Consequence**: Drag-to-place replaces the old swap mechanic. Tap-to-lock makes targeting intentional, not positional. Gaze is distributed across all members of the collection. The HUD is identity-aware (shows locked subject's name/skin/CTA). The eyes→subject merge pipeline is retired; eyes and subjects now share the canvas as peer entity types. No simultaneous multi-lock: exactly one `lockedSubjectId` exists at any time, simplifying power-routing logic in `PowerController`.
-- **Rejected alternatives**:
-  - **Multiple simultaneous locks**: Would require `PowerController` to split damage across N targets or queue attacks. Rejected — breaks the singular cathartic "aim at one person" feel; adds queue/state-complexity for marginal gain.
-  - **Global active-skin mutation on all subjects**: Would change every subject's appearance when the skin selector changes. Rejected — each subject retains the skin it was placed with, preserving individual identity in a multi-target scene.
+- **Status**: Superseded — replaced by draggable avatar model (ADR 011).
+- **Context**: PR2 needed N subjects coexisting with distributed gaze and tap-to-lock targeting.
+- **Decision**: A `Map<EntityId, SubjectRecord>` collection with a `lockedSubjectId` pointer for power delivery.
+- **Consequence**: Superseded. The repulsion source is now a single draggable avatar (Tax Tai PNG), not a subject collection. Creatures face away from the avatar via `atan2 + 180°` rotation.
+
+### ADR 011: DOM-first creature rendering
+- **Status**: Accepted.
+- **Context**: Canvas rendering required a full engine/physics/render pipeline with drawers, ImageAssetCache, and per-frame canvas repaints for every creature. The creature count is small (tens, not hundreds), making DOM viable and simpler.
+- **Decision**: Creatures are rendered as DOM elements (div containers with img or svg children). Position and rotation are applied via CSS `transform: translate() rotate()`. A lightweight RAF loop updates transforms directly — no virtual DOM, no framework. The Entity/EntityStore/EntityFactory ECS is replaced by a simple array of creature objects.
+- **Consequence**: Eliminates the entire `render/` module (Renderer, CanvasUtils, drawers), the ECS layer (Entity, EntityFactory, EntityStore, StateMachine), and the content manifest pipeline. Adding a new creature type means adding a new creature factory function, not a new drawer + behavior + registry entry.
+
+### ADR 012: Simplified physics (repulsion + spring + damping)
+- **Status**: Accepted.
+- **Context**: The previous physics model had multiple force fields, SpringHome per-entity, LookAt toward cursor/subject, and pairwise separation — four interacting subsystems. The simplified architecture needs creatures to flee from a draggable avatar and return home when undisturbed.
+- **Decision**: Three forces, computed per-creature per-frame: (1) repulsion from the draggable avatar position, (2) spring attraction toward each creature's home position, (3) velocity damping. Rotation is `atan2(creature - avatar) + 180°` so creatures face away from the avatar. No pairwise separation, no multi-target gaze, no cursor-driven force fields.
+- **Consequence**: Physics is a single function with three terms. No ForceField.ts, no Integrator.ts, no SpringHome.ts, no LookAt.ts as separate modules — consolidated into one physics update. Easier to reason about, test, and tune.
+
+### ADR 013: Consolidated HUD component
+- **Status**: Accepted.
+- **Context**: The v1 HUD was spread across 18+ files (Hud.ts, mode/skin/quantity/repel controls, OverlayLayout, multiple panel components). This made HUD changes require touching many files.
+- **Decision**: A single `Hud.ts` component owns all UI state and rendering. Filter UI uses a popover pattern. Skin/creature gallery uses a slide-in panel. No OverlayLayout or separate panel components.
+- **Consequence**: All HUD logic in one file. Adding a control means editing Hud.ts, not creating a new component + wiring it into a layout. Trade-off: Hud.ts will grow larger, but it stays cohesive since all UI concerns are inherently coupled.
 
 ## 3. Core Definitions
 
 | Term | Definition |
 |---|---|
-| **Entity** | A discrete interactive subject (Eye, Finger). Consists of identity (Content), physical state (Physics), and behavior (StateMachine). |
-| **Power** | A user-armed tool (Laser Burn). Tracks charge/cooldown; triggers an Effect. |
-| **Effect** | A visual sequence (Particle burst, Scale shrink) mapped to an Entity's lifecycle. |
-| **ForceField** | The cursor-driven repulsion/attraction field math. |
-| **Integrator** | The physics step that updates Position/Velocity from Acceleration. |
-| **Registry** | A map of string IDs to Drawer or Behavior factories. |
-| **SubjectCollection** | `Map<EntityId, SubjectRecord>` in EntityStore holding all placed subjects. |
-| **LockedSubject** | The single `lockedSubjectId` entry in the collection that receives power and drives the HUD. |
+| **Creature** | A simple object with position, velocity, home position, rotation, and visual config. Rendered as a DOM element. |
+| **Avatar** | The draggable repulsion source (Tax Tai PNG). Creatures flee from its position. |
+| **Physics** | Single update function: repulsion from avatar + spring toward home + velocity damping. |
+| **Hud** | Consolidated DOM component owning all UI: mode, skin gallery, quantity, repel controls. |
+| **Home position** | Each creature's rest position. Spring force pulls creatures back when avatar moves away. |
 
 ## 4. System Relationships (Data Flow)
 
 ```mermaid
 graph TD
-  User[User Cursor] --> Pointer[PointerTracker]
-  Pointer --> Engine[Engine]
-  Pointer --> Drag[DragController]
-  Pointer --> Power[PowerController]
-  Pointer --> HUD[HUD (identity-aware)]
+  User[User Pointer] --> Drag[Avatar Drag]
+  User --> HUD[Hud Component]
 
-  Engine -->|Tick pre-physics| Power
-  Engine -->|Tick pre-physics| Effects[EffectSystem]
-  Engine -->|Tick pre-physics| Physics[ForceField/SpringHome/Integrator]
-  Engine -->|Tick render| Renderer
+  Drag -->|Avatar position| Physics[Physics Update]
+  HUD -->|Quantity / Repel / Skin| CreatureArray[Creature Array]
 
-  Power -->|Targets lockedSubjectId| Effects
-  Effects -->|Spawn| Particles[ParticleSystem]
-  Effects -->|Kill / Remove from map| Store[EntityStore]
-  Effects -->|Collective contributors| Renderer
+  Physics -->|Repulsion + Spring + Damping| CreatureArray
+  CreatureArray -->|Position + Rotation| RAF[RAF Loop]
+  RAF -->|CSS transform| DOM[DOM Creature Elements]
 
-  Store -->|Holds subjects Map| Subjects[SubjectCollection]
-  Store -->|Holds eyes/bugs| Entities[Eye/Bug/PointedFinger]
-  Subjects -->|lockedSubjectId| HUD
-  Subjects -->|Distributed gaze| Renderer
-
-  Renderer -->|Query| Store
-  Renderer -->|Draw| Drawers[Eye/FieldLines/Cursor/Subject/Avatar/CollectiveEffect]
-  Renderer -->|Draw| Particles
-  Drawers -->|Assets| ImageAssetCache[ImageAssetCache]
-
-  Audio[AudioEngine] -->|Ambient + SFX| Output[Audio Output]
+  Avatar -->|Draggable img| DOM
 ```

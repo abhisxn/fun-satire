@@ -1,6 +1,6 @@
 # Fun Satire — Agent Instructions
 
-Interactive canvas app: cursor-driven crowd with three modes (eyes, bugs, pointedFinger), physics-based force fields with no-overlap separation, look-at rotation, staged burn/destroy effects, and a DOM HUD with mode/skin/quantity/repel controls. Vite + TypeScript, vitest for tests.
+Interactive DOM app: draggable-avatar-driven crowd with three creature modes (eyes, bugs, pointedFinger), simple repulsion + spring + damping physics, and a consolidated DOM HUD with filter and gallery panels. Vite + TypeScript, vitest for tests.
 
 **Full architecture, ADRs, and data-flow diagram**: [docs/superpowers/system-architecture.md](docs/superpowers/system-architecture.md) — read that before making structural changes. This file only covers conventions and pointers.
 
@@ -10,26 +10,24 @@ Interactive canvas app: cursor-driven crowd with three modes (eyes, bugs, pointe
 
 - TypeScript 5.x+, ES2022+, `erasableSyntaxOnly`, `verbatimModuleSyntax` (`import type` required), `noUnusedLocals`.
 - Every module is a pure export; side effects live only in `src/main.ts`.
-- `Entity.content` is `Readonly`; `EntityStore.get()` snapshots via `structuredClone` by default.
-- Physics: semi-implicit Euler (`v += a*dt; p += v*dt`).
-- New creature types are added via registries (`Registry` maps string IDs → Drawer/Behavior factories) — see ADR 001. Adding content should be additive, not require engine changes.
-- `ForceField.ts` is otherwise closed to extension — ADR 006 is the one sanctioned exception (pairwise separation). Any new touch to `ForceField.ts`, `Engine.ts`, `StateMachine.ts`, or `EntityStore.ts` should be treated as a deliberate, reviewed exception, not a routine edit.
+- Creatures are plain objects managed in arrays by `CreatureGrid`; no ECS or entity store.
+- Physics: simple repulsion + spring + damping. Semi-implicit Euler (`v += a*dt; p += v*dt`).
+- New creature types are added as modules in `src/creatures/` (e.g. `EyeCreature.ts`, `BugCreature.ts`). Adding content should be additive, not require engine changes.
+- `ForceField.ts` and `Integrator.ts` are closed to casual edits. Any change to `ForceField.ts`, `Engine.ts`, or `CreatureGrid.ts` should be treated as a deliberate, reviewed exception.
 
 ## Layout
 
 ```text
 src/
-  core/       Engine (RAF loop), Clock, EventBus, Rng
-  physics/    ForceField, Integrator, SpringHome, LookAt
-  entities/   Entity, EntityFactory, EntityStore, behaviors/ (StateMachine, EyeBehavior, SubjectBehavior)
-  effects/    EffectSystem (staged timeline), ParticleSystem, RespawnScheduler, effectDefs/
-  powers/     PowerController-triggered effects (laserBurn, ...)
-  input/      PointerTracker, DragController, PowerController
-  render/     Renderer, CanvasUtils, paperCut, pupilTrack, drawers/ (drawEye, drawBug, drawPointedFinger, drawSubject*, drawCursor, drawFieldLines, drawGazeLines)
-  content/    manifestLoader, schema, manifests/ (*.roster.json — content-as-data)
-  hud/        Hud (DOM-based, SVG-masked paper-cut edges — ADR 004), mode/skin/quantity/repel controls, mode/skin/quantity/repel controls, mode/skin/quantity/repel controls
-  config/     tokens.ts
-tests/unit/   vitest — one file per module/feature, run via `npm test`
+  core/          Engine (RAF loop), Clock, Rng
+  physics/       ForceField (repulsion), Integrator (spring + damping)
+  creatures/     CreatureGrid, creaturePhysics, creatureTypes, DraggableAvatar,
+                 EyeCreature, BugCreature, CockroachCreature, FingerCreature
+  input/         PointerTracker
+  hud/           Hud (consolidated DOM HUD), FilterPanel, GalleryPanel (+ CSS)
+  config/        tokens.ts, visualTokens.ts, visualTokens.json
+  main.ts        sole side-effect entry point
+tests/unit/      vitest — one file per module/feature, run via `npm test`
 docs/superpowers/
   system-architecture.md   ADRs, core definitions, data-flow diagram
   specs/                   active (in-progress) per-feature design specs

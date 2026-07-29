@@ -142,7 +142,7 @@ describe("core/Clock (T5)", () => {
 });
 
 describe("core/Engine (T5)", () => {
-  it("calls onTick listeners with dt each frame and emits tick event", async () => {
+  it("calls onTick listeners with dt each frame", async () => {
     const { Engine } = await import("../../src/core/Engine");
     const seen: number[] = [];
     const rafCb: ((t: number) => void)[] = [];
@@ -155,18 +155,14 @@ describe("core/Engine (T5)", () => {
       caf: () => undefined,
     });
     const off = engine.onTick((dt) => seen.push(dt));
-    let tickEvents = 0;
-    engine.events.on("tick", () => tickEvents++);
 
     engine.start();
     expect(rafCb.length).toBe(1);
     rafCb[0]!(1100);
     expect(seen[0]).toBeCloseTo(100, 5);
-    expect(tickEvents).toBe(1);
 
     rafCb[0]!(1200);
     expect(seen[1]).toBeCloseTo(100, 5);
-    expect(tickEvents).toBe(2);
 
     off();
     rafCb[0]!(1300);
@@ -177,21 +173,22 @@ describe("core/Engine (T5)", () => {
     expect(seen.length).toBe(2);
   });
 
-  it("emits start and stop events", async () => {
+  it("start and stop are idempotent", async () => {
     const { Engine } = await import("../../src/core/Engine");
-    const events: string[] = [];
+    const rafCb: ((t: number) => void)[] = [];
     const engine = new Engine({
       now: () => 0,
-      raf: () => 0,
+      raf: (cb) => {
+        rafCb.push(cb);
+        return 0;
+      },
       caf: () => undefined,
     });
-    engine.events.on("start", () => events.push("start"));
-    engine.events.on("stop", () => events.push("stop"));
     engine.start();
     engine.start();
+    expect(rafCb.length).toBe(1);
     engine.stop();
     engine.stop();
-    expect(events).toEqual(["start", "stop"]);
   });
 
   it("getNow returns the clock's current time", async () => {
@@ -220,37 +217,4 @@ describe("core/Engine (T5)", () => {
   });
 });
 
-describe("core/EventBus (T5)", () => {
-  it("emits payloads in subscription order and supports unsubscribe", async () => {
-    const { EventBus } = await import("../../src/core/EventBus");
-    const bus = new EventBus<{ punch: { n: number }; wink: void }>();
-    const received: number[] = [];
-    const off = bus.on("punch", (p) => received.push(p.n));
-    bus.emit("punch", { n: 1 });
-    bus.emit("punch", { n: 2 });
-    off();
-    bus.emit("punch", { n: 3 });
-    expect(received).toEqual([1, 2]);
-  });
 
-  it("returns the listener count after subscribe/unsubscribe", async () => {
-    const { EventBus } = await import("../../src/core/EventBus");
-    const bus = new EventBus<{ tick: number }>();
-    const offA = bus.on("tick", () => undefined);
-    const offB = bus.on("tick", () => undefined);
-    expect(bus.listenerCount("tick")).toBe(2);
-    offA();
-    expect(bus.listenerCount("tick")).toBe(1);
-    offB();
-    expect(bus.listenerCount("tick")).toBe(0);
-  });
-
-  it("removing all listeners for an event yields zero count", async () => {
-    const { EventBus } = await import("../../src/core/EventBus");
-    const bus = new EventBus<{ ping: void }>();
-    bus.on("ping", () => undefined);
-    bus.on("ping", () => undefined);
-    bus.clear("ping");
-    expect(bus.listenerCount("ping")).toBe(0);
-  });
-});
