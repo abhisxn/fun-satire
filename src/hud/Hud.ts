@@ -78,6 +78,8 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLEl
 export class Hud {
   private readonly root: HTMLElement;
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
+  private settingsBtn: HTMLButtonElement | null = null;
+  private galleryBtn: HTMLButtonElement | null = null;
   private activeMode: CreatureMode = "eyes";
 
   private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
@@ -106,8 +108,10 @@ export class Hud {
 
     root.appendChild(this.buildAttackBtn());
     root.appendChild(this.buildUtilityBtn("hud-btn--cockroach", "Cockroach Mode", SVG_COCKROACH));
-    root.appendChild(this.buildUtilityBtn("hud-btn--settings", "Settings", SVG_SETTINGS));
-    root.appendChild(this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY));
+    this.settingsBtn = this.buildUtilityBtn("hud-btn--settings", "Settings", SVG_SETTINGS);
+    root.appendChild(this.settingsBtn);
+    this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
+    root.appendChild(this.galleryBtn);
 
     this.setActiveMode("eyes");
   }
@@ -147,6 +151,16 @@ export class Hud {
 
   getRoot(): HTMLElement {
     return this.root;
+  }
+
+  getSettingsButton(): HTMLElement {
+    if (!this.settingsBtn) throw new Error("Settings button not initialized");
+    return this.settingsBtn;
+  }
+
+  getGalleryButton(): HTMLElement {
+    if (!this.galleryBtn) throw new Error("Gallery button not initialized");
+    return this.galleryBtn;
   }
 
   private buildDragHandle(): HTMLElement {

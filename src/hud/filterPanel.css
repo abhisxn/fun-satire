@@ -1,23 +1,38 @@
-.filter-panel {
-  position: absolute;
+:root {
+  --filter-glass-bg: rgba(255, 255, 255, 0.7);
+  --filter-glass-border: rgba(255, 255, 255, 0.86);
+  --filter-glass-elevation: 0 12px 32px rgba(65, 52, 45, 0.16);
+  --filter-text-primary: #2a2420;
+  --filter-text-muted: #6e625b;
+  --filter-value-bg: #ffffff;
+  --filter-divider: rgba(42, 36, 32, 0.12);
+  --filter-btn-hover: #e8a9a0;
+  --filter-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --filter-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.filter-panel-popover {
+  position: fixed;
   width: 139px;
-  height: 170px;
+  padding: 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: var(--filter-glass-bg);
+  border: 1px solid var(--filter-glass-border);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  box-shadow: 0 12px 32px rgba(65, 52, 45, 0.16);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  color: #2a2420;
-  padding: 16px;
-  box-sizing: border-box;
-  display: flex;
+  box-shadow: var(--filter-glass-elevation);
+  color: var(--filter-text-primary);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  display: none;
   flex-direction: column;
   gap: 10px;
-  z-index: 70;
-  animation: filter-panel-entrance 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
+  box-sizing: border-box;
+  z-index: 1001;
+}
+
+.filter-panel-popover.open {
+  display: flex;
+  animation: filter-panel-entrance 0.7s var(--filter-ease-smooth) forwards;
 }
 
 @keyframes filter-panel-entrance {
@@ -26,13 +41,9 @@
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .filter-panel {
+  .filter-panel-popover {
     background: rgba(255, 255, 255, 0.92);
   }
-}
-
-.filter-panel[hidden] {
-  display: none;
 }
 
 .filter-panel__section {
@@ -46,12 +57,9 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6e625b;
+  color: var(--filter-text-muted);
 }
 
-/* ============================================
-   STEPPER
-   ============================================ */
 .filter-panel__stepper {
   display: inline-flex;
   align-items: center;
@@ -66,14 +74,14 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: #2a2420;
+  color: var(--filter-text-primary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  transition: background 120ms cubic-bezier(0.22, 1, 0.36, 1),
-              transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background 120ms var(--filter-ease-smooth),
+              transform 140ms var(--filter-ease-spring);
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -89,7 +97,7 @@
 }
 
 .filter-panel__qty-btn:hover {
-  background: #e8a9a0;
+  background: var(--filter-btn-hover);
 }
 
 .filter-panel__qty-btn:active {
@@ -100,7 +108,6 @@
   box-shadow: 0 0 0 2px rgba(42, 36, 32, 0.42);
 }
 
-/* Value display — white rounded box */
 .filter-panel__qty-value {
   min-width: 43px;
   height: 24px;
@@ -109,8 +116,8 @@
   font-family: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
   font-size: 12px;
   font-weight: 400;
-  color: #2a2420;
-  background: #ffffff;
+  color: var(--filter-text-primary);
+  background: var(--filter-value-bg);
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
@@ -120,26 +127,20 @@
               0 1px 2px rgba(42, 36, 32, 0.06);
 }
 
-/* ============================================
-   DIVIDER
-   ============================================ */
 .filter-panel__divider {
   width: 100%;
   height: 1px;
-  background: rgba(42, 36, 32, 0.12);
+  background: var(--filter-divider);
   border: none;
   margin: 2px 0;
 }
 
-/* ============================================
-   REPEL SLIDER
-   ============================================ */
 .filter-panel__repel {
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
   height: 2px;
-  background: #6e625b;
+  background: var(--filter-text-muted);
   border-radius: 1px;
   outline: none;
   cursor: pointer;
@@ -153,11 +154,11 @@
   height: 18px;
   border-radius: 50%;
   background: #ffffff;
-  border: 1.5px solid #2a2420;
+  border: 1.5px solid var(--filter-text-primary);
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(42, 36, 32, 0.18);
-  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 160ms var(--filter-ease-spring),
+              box-shadow 160ms var(--filter-ease-smooth);
 }
 
 .filter-panel__repel::-webkit-slider-thumb:hover {
@@ -174,55 +175,31 @@
   height: 18px;
   border-radius: 50%;
   background: #ffffff;
-  border: 1.5px solid #2a2420;
+  border: 1.5px solid var(--filter-text-primary);
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(42, 36, 32, 0.18);
 }
 
 .filter-panel__repel::-moz-range-track {
   height: 2px;
-  background: #6e625b;
+  background: var(--filter-text-muted);
   border-radius: 1px;
   border: none;
 }
 
-/* ============================================
-   RESPONSIVE VARIANTS
-   ============================================ */
-.filter-panel[data-variant="portrait-sheet"] {
-  left: 16px;
-  right: 16px;
-  bottom: calc(70px + 8px);
-  width: auto;
-  height: auto;
-  max-height: 60vh;
-  border-radius: 28px;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+@media (max-width: 340px) {
+  .filter-panel-popover {
+    width: calc(100vw - 32px);
+    max-width: 139px;
+  }
 }
 
-.filter-panel[data-variant="landscape-tray"] {
-  right: 16px;
-  top: 16px;
-  bottom: calc(70px + 8px);
-  width: 320px;
-  max-width: 60vw;
-  height: auto;
-  border-radius: 24px;
-  overflow-y: auto;
-}
-
-/* ============================================
-   REDUCED MOTION
-   ============================================ */
 @media (prefers-reduced-motion: reduce) {
-  .filter-panel,
+  .filter-panel-popover,
   .filter-panel__qty-btn,
   .filter-panel__repel::-webkit-slider-thumb {
     animation: none;
     transition: none;
+    opacity: 1;
   }
-  .filter-panel { opacity: 1; }
 }
