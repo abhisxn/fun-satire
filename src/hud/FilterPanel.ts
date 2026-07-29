@@ -1,12 +1,8 @@
-import { UI_TOKENS } from "../config/visualTokens";
+import "./filterPanel.css";
 
-export type FilterPanelOptions = {
-  initialQuantity: number;
-  initialRepel: number;
-};
-
-const QTY_MIN = 1;
-const QTY_MAX = 60;
+const QTY_MIN = 10;
+const QTY_MAX = 220;
+const QTY_STEP = 10;
 const REPEL_MIN = 0;
 const REPEL_MAX = 2;
 const REPEL_STEP = 0.05;
@@ -20,23 +16,25 @@ export class FilterPanel {
   private readonly repelInput: HTMLInputElement;
   private quantity: number;
   private repel: number;
+  private anchorButton: HTMLElement | null = null;
+  private isOpen = false;
 
   private quantityChangeCb: ((quantity: number) => void) | null = null;
   private repelChangeCb: ((multiplier: number) => void) | null = null;
 
-  constructor(host: HTMLElement, opts: FilterPanelOptions) {
-    this.quantity = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(opts.initialQuantity)));
-    this.repel = Math.max(REPEL_MIN, Math.min(REPEL_MAX, opts.initialRepel));
+  private boundOnDocumentClick: ((e: MouseEvent) => void) | null = null;
+  private boundOnKeyDown: ((e: KeyboardEvent) => void) | null = null;
 
-    const root = document.createElement("section");
-    root.className = "filter-panel";
+  constructor(initialQuantity = 60, initialRepel = 1) {
+    this.quantity = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(initialQuantity / QTY_STEP) * QTY_STEP));
+    this.repel = Math.max(REPEL_MIN, Math.min(REPEL_MAX, initialRepel));
+
+    const root = document.createElement("div");
+    root.className = "filter-panel-popover";
     root.setAttribute("role", "dialog");
     root.setAttribute("aria-label", "Crowd filters");
-    root.id = "filter-panel";
-    root.dataset.targetWidth = String(UI_TOKENS.panel.filter.width);
-    root.dataset.targetHeight = String(UI_TOKENS.panel.filter.height);
-    root.hidden = true;
-    root.inert = true;
+    root.style.position = "fixed";
+    root.style.display = "none";
     this.root = root;
 
     const numbers = document.createElement("div");
@@ -44,7 +42,7 @@ export class FilterPanel {
     numbers.dataset.filterSection = "numbers";
     const numbersLabel = document.createElement("span");
     numbersLabel.className = "filter-panel__label";
-    numbersLabel.textContent = "NUMBERS";
+    numbersLabel.textContent = "Numbers";
     const numbersRow = document.createElement("div");
     numbersRow.className = "filter-panel__stepper";
     const dec = document.createElement("button");
@@ -79,7 +77,7 @@ export class FilterPanel {
     repel.dataset.filterSection = "repel";
     const repelLabel = document.createElement("label");
     repelLabel.className = "filter-panel__label";
-    repelLabel.textContent = "REPEL";
+    repelLabel.textContent = "Repel";
     const range = document.createElement("input");
     range.type = "range";
     range.className = "filter-panel__repel";
@@ -98,26 +96,42 @@ export class FilterPanel {
     repel.append(repelLabel, range);
     this.repelInput = range;
     root.appendChild(repel);
+  }
 
-    host.appendChild(root);
+  attachTo(settingsButton: HTMLElement): void {
+    this.anchorButton = settingsButton;
+    document.body.appendChild(this.root);
+  }
+
+  open(): void {
+    if (this.isOpen || !this.anchorButton) return;
+    this.isOpen = true;
+    this.root.style.display = "block";
+    this.updatePosition();
+    this.addEventListeners();
+  }
+
+  close(): void {
+    if (!this.isOpen) return;
+    this.isOpen = false;
+    this.root.style.display = "none";
+    this.removeEventListeners();
+  }
+
+  toggle(): void {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
   }
 
   getRoot(): HTMLElement {
     return this.root;
   }
 
-  setOpen(open: boolean): void {
-    this.root.hidden = !open;
-    if (open) this.root.inert = false;
-    else this.root.inert = true;
-  }
-
-  isOpen(): boolean {
-    return !this.root.hidden;
-  }
-
   setQuantity(quantity: number): void {
-    const clamped = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(quantity)));
+    const clamped = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(quantity / QTY_STEP) * QTY_STEP));
     this.quantity = clamped;
     this.qtyValue.textContent = String(clamped);
   }
@@ -137,16 +151,81 @@ export class FilterPanel {
   }
 
   private stepQuantity(delta: number): void {
-    const next = this.quantity + delta;
+    const next = this.quantity + delta * QTY_STEP;
     if (next < QTY_MIN || next > QTY_MAX) return;
     this.setQuantity(next);
     this.quantityChangeCb?.(this.quantity);
   }
 
-  onQuantityChange(cb: (quantity: number) => void): void { this.quantityChangeCb = cb; }
-  onRepelChange(cb: (multiplier: number) => void): void { this.repelChangeCb = cb; }
+  onQuantityChange(cb: (quantity: number) => void): void {
+    this.quantityChangeCb = cb;
+  }
+
+  onRepelChange(cb: (multiplier: number) => void): void {
+    this.repelChangeCb = cb;
+  }
+
+  private updatePosition(): void {
+    if (!this.anchorButton) return;
+
+    const buttonRect = this.anchorButton.getBoundingClientRect();
+    const panelRect = this.root.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let top = buttonRect.top - panelRect.height - 8;
+    let left = buttonRect.left + buttonRect.width / 2 - panelRect.width / 2;
+
+    if (top < 8) {
+      top = buttonRect.bottom + 8;
+    }
+
+    if (top + panelRect.height > viewportHeight - 8) {
+      top = viewportHeight - panelRect.height - 8;
+    }
+
+    if (left < 8) {
+      left = 8;
+    }
+
+    if (left + panelRect.width > viewportWidth - 8) {
+      left = viewportWidth - panelRect.width - 8;
+    }
+
+    this.root.style.top = `${top}px`;
+    this.root.style.left = `${left}px`;
+  }
+
+  private addEventListeners(): void {
+    this.boundOnDocumentClick = (e: MouseEvent) => {
+      if (!this.root.contains(e.target as Node) && !this.anchorButton?.contains(e.target as Node)) {
+        this.close();
+      }
+    };
+
+    this.boundOnKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        this.close();
+      }
+    };
+
+    document.addEventListener("click", this.boundOnDocumentClick, true);
+    document.addEventListener("keydown", this.boundOnKeyDown);
+  }
+
+  private removeEventListeners(): void {
+    if (this.boundOnDocumentClick) {
+      document.removeEventListener("click", this.boundOnDocumentClick, true);
+      this.boundOnDocumentClick = null;
+    }
+    if (this.boundOnKeyDown) {
+      document.removeEventListener("keydown", this.boundOnKeyDown);
+      this.boundOnKeyDown = null;
+    }
+  }
 
   destroy(): void {
+    this.close();
     this.root.remove();
   }
 }

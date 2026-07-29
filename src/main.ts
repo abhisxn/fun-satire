@@ -1,6 +1,9 @@
 import { Engine } from "./core/Engine";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { DraggableAvatar } from "./creatures/DraggableAvatar";
+import { Hud } from "./hud/Hud";
+import { FilterPanel } from "./hud/FilterPanel";
+import { GalleryPanel } from "./hud/GalleryPanel";
 
 async function main(): Promise<void> {
   const container = document.getElementById("stage");
@@ -23,6 +26,33 @@ async function main(): Promise<void> {
     mode: "eyes",
   });
   await grid.init();
+
+  const hud = new Hud();
+  const hudRoot = document.getElementById("hud-root");
+  if (!hudRoot) throw new Error("Missing #hud-root container");
+  hud.attachTo(hudRoot);
+
+  const filterPanel = new FilterPanel();
+  const galleryPanel = new GalleryPanel();
+
+  filterPanel.attachTo(hud.getSettingsButton());
+  galleryPanel.attachTo(hud.getGalleryButton());
+
+  filterPanel.onQuantityChange((qty) => {
+    grid.setQuantity(qty);
+  });
+
+  filterPanel.onRepelChange((value) => {
+    grid.setRepelMultiplier(value);
+  });
+
+  hud.getSettingsButton().addEventListener("click", () => {
+    galleryPanel.close();
+  });
+
+  hud.getGalleryButton().addEventListener("click", () => {
+    filterPanel.close();
+  });
 
   let resizeTimeout: number;
   window.addEventListener("resize", () => {

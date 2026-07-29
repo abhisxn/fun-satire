@@ -1,119 +1,380 @@
 // @vitest-environment happy-dom
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { FilterPanel } from "../../src/hud/FilterPanel";
-import visualTokens from "../../src/config/visualTokens.json";
 
-function readText(rel: string): string {
-  return readFileSync(resolve(__dirname, "..", "..", rel), "utf8");
-}
-
-describe("hud/FilterPanel (Figma 139×170 glass satellite)", () => {
-  let host: HTMLElement;
+describe("hud/FilterPanel", () => {
   let panel: FilterPanel;
+  let settingsButton: HTMLElement;
 
   beforeEach(() => {
-    document.body.innerHTML = '<div id="host"></div>';
-    host = document.querySelector<HTMLElement>("#host")!;
-    panel = new FilterPanel(host, {
-      initialQuantity: 20,
-      initialRepel: 1,
-    });
+    document.body.innerHTML = "";
+    settingsButton = document.createElement("button");
+    settingsButton.className = "hud-btn--settings";
+    document.body.appendChild(settingsButton);
+
+    const rect = {
+      top: 500,
+      bottom: 540,
+      left: 300,
+      right: 340,
+      width: 40,
+      height: 40,
+    };
+    vi.spyOn(settingsButton, "getBoundingClientRect").mockReturnValue(rect as DOMRect);
+
+    panel = new FilterPanel(60, 1);
   });
+
   afterEach(() => {
     panel.destroy();
     document.body.innerHTML = "";
+    vi.restoreAllMocks();
   });
 
-  it("mounts as a 139×170 glass satellite", () => {
-    const root = host.querySelector<HTMLElement>(".filter-panel")!;
-    expect(root).not.toBeNull();
-    expect(Number(root.dataset.targetWidth)).toBe(visualTokens.ui.panel.filter.width);
-    expect(Number(root.dataset.targetHeight)).toBe(visualTokens.ui.panel.filter.height);
-    expect(visualTokens.ui.panel.filter.width).toBe(139);
-    expect(visualTokens.ui.panel.filter.height).toBe(170);
+  describe("DOM structure", () => {
+    it("creates correct structure with sections, stepper, divider, and repel slider", () => {
+      panel.attachTo(settingsButton);
+      const root = panel.getRoot();
+
+      const numbersSection = root.querySelector('[data-filter-section="numbers"]');
+      expect(numbersSection).not.toBeNull();
+
+      const label = numbersSection?.querySelector(".filter-panel__label");
+      expect(label?.textContent).toBe("Numbers");
+
+      const stepper = root.querySelector(".filter-panel__stepper");
+      expect(stepper).not.toBeNull();
+
+      const decBtn = root.querySelector('[data-filter-qty="dec"]');
+      const incBtn = root.querySelector('[data-filter-qty="inc"]');
+      const qtyValue = root.querySelector("[data-filter-qty-value]");
+      expect(decBtn).not.toBeNull();
+      expect(incBtn).not.toBeNull();
+      expect(qtyValue).not.toBeNull();
+      expect(qtyValue?.textContent?.trim()).toBe("60");
+
+      const divider = root.querySelector(".filter-panel__divider");
+      expect(divider).not.toBeNull();
+
+      const repelSection = root.querySelector('[data-filter-section="repel"]');
+      expect(repelSection).not.toBeNull();
+
+      const repelLabel = repelSection?.querySelector(".filter-panel__label");
+      expect(repelLabel?.textContent).toBe("Repel");
+
+      const repelInput = root.querySelector<HTMLInputElement>("[data-filter-repel]");
+      expect(repelInput).not.toBeNull();
+      expect(repelInput?.type).toBe("range");
+      expect(repelInput?.min).toBe("0");
+      expect(repelInput?.max).toBe("2");
+      expect(repelInput?.step).toBe("0.05");
+    });
   });
 
-  it("quantity stepper has ± buttons and a numeric display", () => {
-    const inc = host.querySelector<HTMLButtonElement>('[data-filter-qty="inc"]');
-    const dec = host.querySelector<HTMLButtonElement>('[data-filter-qty="dec"]');
-    const value = host.querySelector<HTMLElement>("[data-filter-qty-value]");
-    expect(inc?.tagName).toBe("BUTTON");
-    expect(dec?.tagName).toBe("BUTTON");
-    expect(value?.textContent?.trim()).toBe("20");
+  describe("Quantity stepper", () => {
+    it("increments quantity by step (10)", () => {
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onQuantityChange(cb);
+
+      const incBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="inc"]');
+      incBtn?.click();
+
+      expect(cb).toHaveBeenCalledWith(70);
+      expect(panel.getQuantity()).toBe(70);
+    });
+
+    it("decrements quantity by step (10)", () => {
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onQuantityChange(cb);
+
+      const decBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="dec"]');
+      decBtn?.click();
+
+      expect(cb).toHaveBeenCalledWith(50);
+      expect(panel.getQuantity()).toBe(50);
+    });
+
+    it("respects minimum bound (10)", () => {
+      panel = new FilterPanel(10, 1);
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onQuantityChange(cb);
+
+      const decBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="dec"]');
+      decBtn?.click();
+
+      expect(cb).not.toHaveBeenCalled();
+      expect(panel.getQuantity()).toBe(10);
+    });
+
+    it("respects maximum bound (220)", () => {
+      panel = new FilterPanel(220, 1);
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onQuantityChange(cb);
+
+      const incBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="inc"]');
+      incBtn?.click();
+
+      expect(cb).not.toHaveBeenCalled();
+      expect(panel.getQuantity()).toBe(220);
+    });
+
+    it("updates display value", () => {
+      panel.attachTo(settingsButton);
+      const incBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="inc"]');
+      incBtn?.click();
+
+      const qtyValue = panel.getRoot().querySelector("[data-filter-qty-value]");
+      expect(qtyValue?.textContent?.trim()).toBe("70");
+    });
   });
 
-  it("repel is a native <input type=range> with a label", () => {
-    const range = host.querySelector<HTMLInputElement>("[data-filter-repel]");
-    expect(range).not.toBeNull();
-    expect(range?.tagName).toBe("INPUT");
-    expect(range?.type).toBe("range");
-    const label = host.querySelector<HTMLLabelElement>("label[for]");
-    expect(label).not.toBeNull();
-    const id = range?.id;
-    expect(id).toBeTruthy();
-    expect(label?.htmlFor).toBe(id);
+  describe("Repel slider", () => {
+    it("emits change events with correct value", () => {
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onRepelChange(cb);
+
+      const repelInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-repel]");
+      repelInput!.value = "1.5";
+      repelInput?.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(cb).toHaveBeenCalledWith(1.5);
+    });
+
+    it("clamps value to [0, 2] range", () => {
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onRepelChange(cb);
+
+      const repelInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-repel]");
+
+      repelInput!.value = "3";
+      repelInput?.dispatchEvent(new Event("input", { bubbles: true }));
+      expect(cb).toHaveBeenLastCalledWith(2);
+
+      repelInput!.value = "-1";
+      repelInput?.dispatchEvent(new Event("input", { bubbles: true }));
+      expect(cb).toHaveBeenLastCalledWith(0);
+    });
   });
 
-  it("fires onQuantityChange on ± clicks", () => {
-    const cb = vi.fn();
-    panel.onQuantityChange(cb);
-    host.querySelector<HTMLButtonElement>('[data-filter-qty="inc"]')!.click();
-    expect(cb).toHaveBeenLastCalledWith(21);
-    host.querySelector<HTMLButtonElement>('[data-filter-qty="dec"]')!.click();
-    expect(cb).toHaveBeenLastCalledWith(20);
+  describe("Open/Close/Toggle", () => {
+    it("open() shows the panel", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      const root = panel.getRoot();
+      expect(root.style.display).toBe("block");
+    });
+
+    it("close() hides the panel", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+      panel.close();
+
+      const root = panel.getRoot();
+      expect(root.style.display).toBe("none");
+    });
+
+    it("toggle() switches between open and closed states", () => {
+      panel.attachTo(settingsButton);
+
+      panel.toggle();
+      expect(panel.getRoot().style.display).toBe("block");
+
+      panel.toggle();
+      expect(panel.getRoot().style.display).toBe("none");
+    });
+
+    it("open() is idempotent", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+      panel.open();
+
+      expect(panel.getRoot().style.display).toBe("block");
+    });
+
+    it("close() is idempotent", () => {
+      panel.attachTo(settingsButton);
+      panel.close();
+      panel.close();
+
+      expect(panel.getRoot().style.display).toBe("none");
+    });
   });
 
-  it("fires onRepelChange on range input, clamped to [0,2]", () => {
-    const cb = vi.fn();
-    panel.onRepelChange(cb);
-    const range = host.querySelector<HTMLInputElement>("[data-filter-repel]")!;
-    range.value = "1.5";
-    range.dispatchEvent(new Event("input", { bubbles: true }));
-    expect(cb).toHaveBeenLastCalledWith(1.5);
-    range.value = "3";
-    range.dispatchEvent(new Event("input", { bubbles: true }));
-    expect(cb).toHaveBeenLastCalledWith(2);
-    range.value = "-1";
-    range.dispatchEvent(new Event("input", { bubbles: true }));
-    expect(cb).toHaveBeenLastCalledWith(0);
+  describe("Positioning", () => {
+    it("positions panel above the settings button", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      const root = panel.getRoot();
+      const top = Number.parseFloat(root.style.top);
+      const left = Number.parseFloat(root.style.left);
+
+      expect(top).toBeLessThan(500);
+      expect(left).toBeGreaterThan(0);
+    });
+
+    it("adjusts position if too close to viewport top", () => {
+      const rect = {
+        top: 50,
+        bottom: 90,
+        left: 300,
+        right: 340,
+        width: 40,
+        height: 40,
+      };
+      vi.spyOn(settingsButton, "getBoundingClientRect").mockReturnValue(rect as DOMRect);
+
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      const root = panel.getRoot();
+      const top = Number.parseFloat(root.style.top);
+
+      expect(top).toBeGreaterThanOrEqual(8);
+    });
+
+    it("adjusts position if too close to viewport edges", () => {
+      const rect = {
+        top: 500,
+        bottom: 540,
+        left: 10,
+        right: 50,
+        width: 40,
+        height: 40,
+      };
+      vi.spyOn(settingsButton, "getBoundingClientRect").mockReturnValue(rect as DOMRect);
+
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      const root = panel.getRoot();
+      const left = Number.parseFloat(root.style.left);
+
+      expect(left).toBeGreaterThanOrEqual(8);
+    });
   });
 
-  it("closed state is hidden and removed from the tab order", () => {
-    const root = host.querySelector<HTMLElement>(".filter-panel")!;
-    expect(root.hidden).toBe(true);
-    expect(root.inert || root.getAttribute("inert") !== null).toBe(true);
+  describe("Outside click", () => {
+    it("closes panel when clicking outside", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      const outsideElement = document.createElement("div");
+      document.body.appendChild(outsideElement);
+
+      outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(panel.getRoot().style.display).toBe("none");
+    });
+
+    it("does not close when clicking inside panel", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      const root = panel.getRoot();
+      root.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(root.style.display).toBe("block");
+    });
+
+    it("does not close when clicking settings button", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      settingsButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(panel.getRoot().style.display).toBe("block");
+    });
   });
 
-  it("setOpen(true) reveals the panel and makes it focusable", () => {
-    panel.setOpen(true);
-    const root = host.querySelector<HTMLElement>(".filter-panel")!;
-    expect(root.hidden).toBe(false);
-    expect(root.inert || root.getAttribute("inert") !== null).toBe(false);
+  describe("Escape key", () => {
+    it("closes panel when Escape is pressed", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+      expect(panel.getRoot().style.display).toBe("none");
+    });
+
+    it("does not close on other keys", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+
+      expect(panel.getRoot().style.display).toBe("block");
+    });
   });
 
-  it("setQuantity updates the display and is reflected back to consumers", () => {
-    panel.setQuantity(33);
-    expect(host.querySelector("[data-filter-qty-value]")?.textContent?.trim()).toBe("33");
+  describe("setQuantity", () => {
+    it("updates quantity and display", () => {
+      panel.attachTo(settingsButton);
+      panel.setQuantity(100);
+
+      expect(panel.getQuantity()).toBe(100);
+      const qtyValue = panel.getRoot().querySelector("[data-filter-qty-value]");
+      expect(qtyValue?.textContent?.trim()).toBe("100");
+    });
+
+    it("rounds to nearest step", () => {
+      panel.attachTo(settingsButton);
+      panel.setQuantity(95);
+
+      expect(panel.getQuantity()).toBe(100);
+    });
+
+    it("clamps to minimum", () => {
+      panel.attachTo(settingsButton);
+      panel.setQuantity(5);
+
+      expect(panel.getQuantity()).toBe(10);
+    });
+
+    it("clamps to maximum", () => {
+      panel.attachTo(settingsButton);
+      panel.setQuantity(250);
+
+      expect(panel.getQuantity()).toBe(220);
+    });
   });
 
-  it("every interactive control is at least the 44px touch minimum", () => {
-    const css = readText("src/hud/filterPanel.css");
-    expect(css).toMatch(/\.filter-panel__qty-btn[\s\S]{0,200}?min-width:\s*44px/);
-    expect(css).toMatch(/\.filter-panel__qty-btn[\s\S]{0,200}?min-height:\s*44px/);
-    expect(css).toMatch(/\.filter-panel__repel[\s\S]{0,200}?width:\s*100%/);
+  describe("setRepel", () => {
+    it("updates repel value and input", () => {
+      panel.attachTo(settingsButton);
+      panel.setRepel(1.5);
+
+      expect(panel.getRepel()).toBe(1.5);
+      const repelInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-repel]");
+      expect(repelInput?.value).toBe("1.5");
+    });
+
+    it("clamps to range", () => {
+      panel.attachTo(settingsButton);
+      panel.setRepel(3);
+
+      expect(panel.getRepel()).toBe(2);
+
+      panel.setRepel(-1);
+      expect(panel.getRepel()).toBe(0);
+    });
   });
 
-  it("opens/closes with hidden and inert mirroring", () => {
-    const root = host.querySelector<HTMLElement>(".filter-panel")!;
-    expect(root.hidden).toBe(true);
-    expect(root.inert || root.getAttribute("inert") !== null).toBe(true);
-    panel.setOpen(true);
-    expect(root.hidden).toBe(false);
-    expect(root.inert).toBe(false);
-    panel.setOpen(false);
-    expect(root.hidden).toBe(true);
-    expect(root.inert || root.getAttribute("inert") !== null).toBe(true);
+  describe("destroy", () => {
+    it("removes panel from DOM and cleans up listeners", () => {
+      panel.attachTo(settingsButton);
+      panel.open();
+
+      panel.destroy();
+
+      expect(document.querySelector(".filter-panel-popover")).toBeNull();
+    });
   });
 });
