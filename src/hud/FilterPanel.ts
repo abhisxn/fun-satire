@@ -11,6 +11,9 @@ const REPEL_MIN = 0;
 const REPEL_MAX = 2;
 const REPEL_STEP = 0.05;
 
+const SVG_MINUS = `<svg viewBox="0 0 14 14" aria-hidden="true"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const SVG_PLUS = `<svg viewBox="0 0 14 14" aria-hidden="true"><line x1="7" y1="2" x2="7" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+
 export class FilterPanel {
   private readonly root: HTMLElement;
   private readonly qtyValue: HTMLElement;
@@ -43,13 +46,13 @@ export class FilterPanel {
     numbersLabel.className = "filter-panel__label";
     numbersLabel.textContent = "NUMBERS";
     const numbersRow = document.createElement("div");
-    numbersRow.className = "filter-panel__row";
+    numbersRow.className = "filter-panel__stepper";
     const dec = document.createElement("button");
     dec.type = "button";
     dec.className = "filter-panel__qty-btn";
     dec.dataset.filterQty = "dec";
     dec.setAttribute("aria-label", "Decrease quantity");
-    dec.textContent = "−";
+    dec.innerHTML = SVG_MINUS;
     const value = document.createElement("output");
     value.className = "filter-panel__qty-value";
     value.dataset.filterQtyValue = "";
@@ -59,13 +62,17 @@ export class FilterPanel {
     inc.className = "filter-panel__qty-btn";
     inc.dataset.filterQty = "inc";
     inc.setAttribute("aria-label", "Increase quantity");
-    inc.textContent = "+";
+    inc.innerHTML = SVG_PLUS;
     dec.addEventListener("click", () => this.stepQuantity(-1));
     inc.addEventListener("click", () => this.stepQuantity(1));
     numbersRow.append(dec, value, inc);
     numbers.append(numbersLabel, numbersRow);
     this.qtyValue = value;
     root.appendChild(numbers);
+
+    const divider = document.createElement("hr");
+    divider.className = "filter-panel__divider";
+    root.appendChild(divider);
 
     const repel = document.createElement("div");
     repel.className = "filter-panel__section";
