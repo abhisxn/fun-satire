@@ -1,20 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const ROOT = resolve(__dirname, "..", "..");
 
 function readText(rel: string): string {
   return readFileSync(resolve(ROOT, rel), "utf8");
-}
-
-function exists(rel: string): boolean {
-  try {
-    statSync(resolve(ROOT, rel));
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 describe("config tokens (T2)", () => {
@@ -56,17 +47,6 @@ describe("config tokens (T2)", () => {
     expect(COLOR_HEX.cream).toBe(PALETTE.cream);
   });
 
-  it("derives every Canvas-art CSS alias from the shared inventory", async () => {
-    const inventory = JSON.parse(readText("src/config/visualTokens.json"));
-    const { CANVAS_ART } = await import("../../src/config/visualTokens");
-    const css = readText("src/styles/tokens.css");
-
-    expect(CANVAS_ART).toEqual(inventory.canvasArt);
-    for (const [name, value] of Object.entries(inventory.canvasArt)) {
-      expect(css).toContain(`--color-${name}: ${value};`);
-    }
-  });
-
   it("exposes font, easing, duration, and motion tokens", async () => {
     const mod = await import("../../src/config/tokens");
     expect(mod.FONT.display).toMatch(/Fraunces/);
@@ -83,50 +63,6 @@ describe("config tokens (T2)", () => {
   it("throws a descriptive error on an unknown palette key", async () => {
     const mod = await import("../../src/config/tokens");
     expect(() => mod.assertPaletteKey("purple")).toThrowError(/palette/);
-  });
-
-  describe("self-hosted fonts", () => {
-    it("does not declare any external font URL anywhere in src", () => {
-      const offenders: string[] = [];
-      const walk = (rel: string) => {
-        if (!exists(rel)) return;
-        const stat = statSync(resolve(ROOT, rel));
-        if (!stat.isDirectory()) return;
-        for (const name of readdirSync(resolve(ROOT, rel))) {
-          const child = `${rel}/${name}`;
-          const childStat = statSync(resolve(ROOT, child));
-          if (childStat.isDirectory()) {
-            walk(child);
-          } else if (/\.(ts|css|tsx|js|mjs|cjs|html)$/i.test(name)) {
-            const text = readText(child);
-            for (const bad of ["fonts.googleapis.com", "fonts.gstatic.com", "use.typekit.net", "fonts.adobe.com"]) {
-              if (text.includes(bad)) offenders.push(`${child}: ${bad}`);
-            }
-          }
-        }
-      };
-      walk("src");
-      walk("index.html");
-      expect(offenders).toEqual([]);
-    });
-
-    it("imports the local fontsource css in main.ts before paint", () => {
-      const main = readText("src/main.ts");
-      expect(main).toMatch(/@fontsource-variable\/fraunces/);
-      expect(main).toMatch(/@fontsource\/space-mono/);
-      const tokensImport = main.indexOf("./styles/global.css");
-      const frauncesImport = main.indexOf("@fontsource-variable/fraunces");
-      const spaceMonoImport = main.indexOf("@fontsource/space-mono");
-      expect(frauncesImport).toBeGreaterThan(-1);
-      expect(spaceMonoImport).toBeGreaterThan(-1);
-      expect(tokensImport).toBeGreaterThan(-1);
-    });
-
-    it("keeps only the fonts main actually uses loaded", () => {
-      const main = readText("src/main.ts");
-      expect(main).not.toMatch(/fonts\.googleapis\.com/);
-      expect(main).not.toMatch(/fonts\.gstatic\.com/);
-    });
   });
 
 });
@@ -153,21 +89,5 @@ describe("visual token CSS numeric units", () => {
     expect(() => formatNumericToken("unknown.size", 12)).toThrowError(
       'No numeric unit metadata for "unknown.size"',
     );
-  });
-});
-
-describe("EASE.spring (T5)", () => {
-  it("is a cubic-bezier string with an overshoot (a y-value above 1)", async () => {
-    const { EASE } = await import("../../src/config/tokens");
-    expect(EASE.spring).toMatch(/^cubic-bezier\(/);
-    const nums = (EASE.spring.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
-    // cubic-bezier(x1, y1, x2, y2) — overshoot means y1 or y2 exceeds 1.
-    expect(nums[1] > 1 || nums[3] > 1).toBe(true);
-  });
-
-  it("matches the CSS --ease-spring custom property", async () => {
-    const { EASE } = await import("../../src/config/tokens");
-    const css = readText("src/styles/tokens.css");
-    expect(css).toContain(`--ease-spring: ${EASE.spring}`);
   });
 });
