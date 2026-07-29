@@ -1,0 +1,259 @@
+import "./hud.css";
+import type { CreatureMode } from "../creatures/creatureTypes";
+
+const SVG_DRAG_HANDLE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M9.5 5C9.5 6.10455 8.60455 7 7.5 7C6.39545 7 5.5 6.10455 5.5 5C5.5 3.89543 6.39545 3 7.5 3C8.60455 3 9.5 3.89543 9.5 5ZM7.5 14C8.60455 14 9.5 13.1046 9.5 12C9.5 10.8954 8.60455 10 7.5 10C6.39545 10 5.5 10.8954 5.5 12C5.5 13.1046 6.39545 14 7.5 14ZM7.5 21C8.60455 21 9.5 20.1046 9.5 19C9.5 17.8954 8.60455 17 7.5 17C6.39545 17 5.5 17.8954 5.5 19C5.5 20.1046 6.39545 21 7.5 21Z" fill="#2a1f1a"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M18.5 5C18.5 6.10455 17.6046 7 16.5 7C15.3954 7 14.5 6.10455 14.5 5C14.5 3.89543 15.3954 3 16.5 3C17.6046 3 18.5 3.89543 18.5 5ZM16.5 14C17.6046 14 18.5 13.1046 18.5 12C18.5 10.8954 17.6046 10 16.5 10C15.3954 10 14.5 10.8954 14.5 12C14.5 13.1046 15.3954 14 16.5 14ZM16.5 21C17.6046 21 18.5 20.1046 18.5 19C18.5 17.8954 17.6046 17 16.5 17C15.3954 17 14.5 17.8954 14.5 19C14.5 20.1046 15.3954 21 16.5 21Z" fill="#2a1f1a"/>
+</svg>`;
+
+const SVG_EYE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 7C8.33741 7 5.07932 8.95853 3 12C5.07932 15.0415 8.33741 17 12 17C15.6626 17 18.9207 15.0415 21 12C18.9207 8.95853 15.6626 7 12 7Z" stroke="#2a1f1a" stroke-linecap="round"/>
+  <circle cx="12" cy="12" r="3" stroke="#2a1f1a" stroke-linecap="round"/>
+</svg>`;
+
+const SVG_BUG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M5 2C7.63612 2 10.0643 2.86783 12 4.32634M19 2C16.3639 2 13.9357 2.86783 12 4.32634M12 4.32634C9.29033 6.36796 7.54545 9.56698 7.54545 13.1632C7.54545 16.7594 9.29033 19.9584 12 22C14.7097 19.9584 16.4545 16.7594 16.4545 13.1632C16.4545 9.56698 14.7097 6.36796 12 4.32634Z" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M12 13C12 13 15 11.2091 15 9C15 6.79086 12 5 12 5C12 5 9 6.79086 9 9C9 11.2091 12 13 12 13ZM12 13V21.5" stroke="#2a1f1a" stroke-linecap="round"/>
+</svg>`;
+
+const SVG_HAND = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M16 13.5V11.3333C16 10.597 16.6716 10 17.5 10C18.3284 10 19 10.597 19 11.3333V14.5" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M10 12L10 9.09091C10 8.48842 10.6716 8 11.5 8C12.3284 8 13 8.48842 13 9.09091V12" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M7 14L7 3.24138C7 2.55578 7.67157 2 8.5 2C9.32843 2 10 2.55578 10 3.24138V12.5" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M16 13.5V10.3636C16 9.61052 15.3284 9 14.5 9C13.6716 9 13 9.61052 13 10.3636L13 12.5" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M19 14.2767C19 18.6011 17.1943 22 11.7864 22C7.19799 22 5.56206 18.8789 4.25646 14.9425C3.777 13.4969 3.98603 13.0519 4.74791 12.4217C5.49493 11.8038 6.71372 11.9179 7.20517 12.4219" stroke="#2a1f1a"/>
+</svg>`;
+
+const SVG_COCKROACH = `<svg width="35" height="67" viewBox="0 0 35 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip0_18_109)">
+    <path d="M22.2671 48.6146L29.7734 46.9925L25.2696 61L27 65M22.2671 38.6045L29.5 37.5L33.5 44M24.1437 31.0957L28.5 28.5L33.5 29.5" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
+    <path d="M13.2329 48.6146L5.7266 46.9925L10.2304 61L8.5 65M13.2329 38.6045L6 37.5L2 44M11.3563 31.0957L7 28.5L2 29.5" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
+    <path d="M26.0014 30.345C26.0014 35.9415 26.8143 61.4961 17.7633 61.4961C8.71226 61.4961 9.5252 35.9415 9.5252 30.345C9.5252 24.7484 13.2135 20.2115 17.7633 20.2114C22.3131 20.2114 26.0014 24.7484 26.0014 30.345Z" fill="#5D4949"/>
+    <path d="M20.7657 21.7128C21.7666 14.3316 25.1945 -0.130604 30.8993 1.07041" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
+    <path d="M14.3854 21.7128C13.3845 14.3316 9.95665 -0.130604 4.25186 1.07041" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
+  </g>
+  <defs>
+    <clipPath id="clip0_18_109">
+      <rect width="35" height="67" fill="white"/>
+    </clipPath>
+  </defs>
+</svg>`;
+
+const SVG_GALLERY = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M5 7C5 5.89543 5.89543 5 7 5H11V9C11 10.1046 10.1046 11 9 11H5V7Z" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 5H17C18.1046 5 19 5.89543 19 7V11H15C13.8954 11 13 10.1046 13 9V5Z" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 15C13 13.8954 13.8954 13 15 13H19V17C19 18.1046 18.1046 19 17 19H13V15Z" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5 13H9C10.1046 13 11 13.8954 11 15V19H7C5.89543 19 5 18.1046 5 17V13Z" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+const SVG_SETTINGS = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M3 12L21 12" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M3 6L21 6" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M3 18L21 18" stroke="#2a1f1a" stroke-linecap="round"/>
+  <circle cx="7" cy="12" r="2" fill="white" stroke="#2a1f1a" stroke-linecap="round"/>
+  <circle cx="16" cy="6" r="2" fill="white" stroke="#2a1f1a" stroke-linecap="round"/>
+  <circle cx="13" cy="18" r="2" fill="white" stroke="#2a1f1a" stroke-linecap="round"/>
+</svg>`;
+
+interface ModeBtnDef {
+  readonly mode: CreatureMode;
+  readonly cssClass: string;
+  readonly tooltip: string;
+  readonly ariaLabel: string;
+  readonly svg: string;
+}
+
+const MODE_BTNS: readonly ModeBtnDef[] = [
+  { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", svg: SVG_EYE },
+  { mode: "bugs", cssClass: "hud-btn--bug", tooltip: "Bug Mode", ariaLabel: "Bug Mode", svg: SVG_BUG },
+  { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", svg: SVG_HAND },
+];
+
+function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  return node;
+}
+
+export class Hud {
+  private readonly root: HTMLElement;
+  private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
+  private activeMode: CreatureMode = "eyes";
+
+  private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
+  private attackPressCb: (() => void) | null = null;
+  private attackReleaseCb: (() => void) | null = null;
+
+  private isDragging = false;
+  private dragOffsetX = 0;
+  private dragOffsetY = 0;
+  private boundOnPointerMove: ((e: PointerEvent) => void) | null = null;
+  private boundOnPointerUp: ((e: PointerEvent) => void) | null = null;
+
+  constructor() {
+    const root = el("div", "premium-hud");
+    root.setAttribute("role", "toolbar");
+    root.setAttribute("aria-label", "Game controls");
+    this.root = root;
+
+    root.appendChild(this.buildDragHandle());
+
+    for (const def of MODE_BTNS) {
+      const btn = this.buildModeBtn(def);
+      this.modeBtnEls.set(def.mode, btn);
+      root.appendChild(btn);
+    }
+
+    root.appendChild(this.buildAttackBtn());
+    root.appendChild(this.buildUtilityBtn("hud-btn--cockroach", "Cockroach Mode", SVG_COCKROACH));
+    root.appendChild(this.buildUtilityBtn("hud-btn--settings", "Settings", SVG_SETTINGS));
+    root.appendChild(this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY));
+
+    this.setActiveMode("eyes");
+  }
+
+  attachTo(container: HTMLElement): void {
+    container.appendChild(this.root);
+  }
+
+  setActiveMode(mode: CreatureMode): void {
+    this.activeMode = mode;
+    for (const [m, btn] of this.modeBtnEls) {
+      btn.classList.toggle("active", m === mode);
+      btn.setAttribute("aria-pressed", String(m === mode));
+    }
+  }
+
+  getActiveMode(): CreatureMode {
+    return this.activeMode;
+  }
+
+  onModeChange(cb: (mode: CreatureMode) => void): void {
+    this.modeChangeCb = cb;
+  }
+
+  onAttackPress(cb: () => void): void {
+    this.attackPressCb = cb;
+  }
+
+  onAttackRelease(cb: () => void): void {
+    this.attackReleaseCb = cb;
+  }
+
+  destroy(): void {
+    this.detachDragListeners();
+    this.root.remove();
+  }
+
+  getRoot(): HTMLElement {
+    return this.root;
+  }
+
+  private buildDragHandle(): HTMLElement {
+    const handle = el("div", "hud-drag-handle");
+    handle.setAttribute("aria-label", "Drag to move");
+    handle.setAttribute("role", "separator");
+    handle.innerHTML = SVG_DRAG_HANDLE;
+
+    handle.addEventListener("pointerdown", (e: PointerEvent) => {
+      e.preventDefault();
+      this.startDrag(e);
+    });
+
+    return handle;
+  }
+
+  private buildModeBtn(def: ModeBtnDef): HTMLButtonElement {
+    const btn = el("button", `hud-btn ${def.cssClass}`);
+    btn.type = "button";
+    btn.dataset.tooltip = def.tooltip;
+    btn.setAttribute("aria-label", def.ariaLabel);
+    btn.setAttribute("aria-pressed", "false");
+    btn.innerHTML = def.svg;
+
+    btn.addEventListener("click", () => {
+      this.activeMode = def.mode;
+      this.setActiveMode(def.mode);
+      this.modeChangeCb?.(def.mode);
+    });
+
+    return btn;
+  }
+
+  private buildAttackBtn(): HTMLButtonElement {
+    const btn = el("button", "hud-attack");
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Attack");
+
+    const span = el("span");
+    span.textContent = "Attack";
+    btn.appendChild(span);
+
+    btn.addEventListener("pointerdown", (e: PointerEvent) => {
+      e.preventDefault();
+      this.attackPressCb?.();
+    });
+
+    btn.addEventListener("pointerup", () => {
+      this.attackReleaseCb?.();
+    });
+
+    btn.addEventListener("pointerleave", () => {
+      if (this.attackPressCb) this.attackReleaseCb?.();
+    });
+
+    return btn;
+  }
+
+  private buildUtilityBtn(cssClass: string, tooltip: string, svg: string): HTMLButtonElement {
+    const btn = el("button", `hud-btn ${cssClass}`);
+    btn.type = "button";
+    btn.dataset.tooltip = tooltip;
+    btn.setAttribute("aria-label", tooltip);
+    btn.innerHTML = svg;
+    return btn;
+  }
+
+  private startDrag(e: PointerEvent): void {
+    const rect = this.root.getBoundingClientRect();
+    this.isDragging = true;
+    this.dragOffsetX = e.clientX - rect.left;
+    this.dragOffsetY = e.clientY - rect.top;
+
+    this.root.style.bottom = "";
+    this.root.style.left = `${rect.left}px`;
+    this.root.style.top = `${rect.top}px`;
+    this.root.style.transform = "none";
+    this.root.classList.add("hud--dragging");
+
+    this.boundOnPointerMove = (ev: PointerEvent) => this.onPointerMove(ev);
+    this.boundOnPointerUp = () => this.stopDrag();
+    document.addEventListener("pointermove", this.boundOnPointerMove);
+    document.addEventListener("pointerup", this.boundOnPointerUp);
+  }
+
+  private onPointerMove(e: PointerEvent): void {
+    if (!this.isDragging) return;
+    const x = e.clientX - this.dragOffsetX;
+    const y = e.clientY - this.dragOffsetY;
+    this.root.style.left = `${x}px`;
+    this.root.style.top = `${y}px`;
+  }
+
+  private stopDrag(): void {
+    this.isDragging = false;
+    this.root.classList.remove("hud--dragging");
+    this.detachDragListeners();
+  }
+
+  private detachDragListeners(): void {
+    if (this.boundOnPointerMove) {
+      document.removeEventListener("pointermove", this.boundOnPointerMove);
+      this.boundOnPointerMove = null;
+    }
+    if (this.boundOnPointerUp) {
+      document.removeEventListener("pointerup", this.boundOnPointerUp);
+      this.boundOnPointerUp = null;
+    }
+  }
+}

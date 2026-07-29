@@ -1,70 +1,494 @@
-#hud-root {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: var(--z-hud);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+/* ============================================
+   PREMIUM HUD — Fun Satire
+   Glass-morphism toolbar with magnetic interactions
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+
+/* ============================================
+   CSS Custom Properties
+   ============================================ */
+:root {
+  --hud-glass-bg: rgba(255, 255, 255, 0.7);
+  --hud-glass-border: rgba(255, 255, 255, 0.9);
+  --hud-shadow-outer: 0px 24px 40px rgba(97, 86, 80, 0.25);
+  --hud-shadow-inner: 0px 4px 0px rgba(255, 255, 255, 1);
+  --hud-icon-size: 32px;
+  --hud-btn-size: 46px;
+  --hud-btn-gap: 12px;
+  --hud-padding-v: 12px;
+  --hud-padding-h: 24px;
+  --hud-attack-from: #de7666;
+  --hud-attack-to: #e9975d;
+  --hud-attack-border: #a74333;
+  --hud-attack-shadow: 0px 4px 0px #b75040;
+  --hud-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --hud-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hud-visibility-toggle {
+/* ============================================
+   HUD Container — Glassmorphism
+   ============================================ */
+.premium-hud {
   position: fixed;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--hud-btn-gap);
+  padding: var(--hud-padding-v) var(--hud-padding-h) var(--hud-padding-v) var(--hud-padding-v);
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 82px;
+  box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
+  z-index: 1000;
+  animation: hud-slide-up 0.8s var(--hud-ease-spring) forwards;
+}
+
+.premium-hud:hover {
+  transform: translateX(-50%) translateY(-2px);
+  transition: transform 0.6s var(--hud-ease-spring);
+}
+
+/* ============================================
+   Drag Handle — Grip Icon
+   ============================================ */
+.hud-drag-handle {
+  width: 24px;
+  height: 24px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.2px solid var(--color-ink);
-  border-radius: 50%;
-  background: var(--color-cream);
-  color: var(--color-ink);
-  cursor: pointer;
-  pointer-events: auto;
-  z-index: calc(var(--z-hud) + 1);
+  opacity: 0.4;
+  cursor: grab;
+  transition: opacity 0.3s var(--hud-ease-smooth);
+  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  opacity: 0;
+  animation-delay: 0.05s;
+}
+
+.hud-drag-handle:hover {
   opacity: 0.7;
-  transition: opacity 160ms var(--ease-protest),
-              transform 160ms var(--ease-spring),
-              background-color 120ms var(--ease-protest);
-  box-shadow: 0 1px 3px rgba(42, 36, 32, 0.18);
 }
 
-.hud-visibility-toggle:hover {
+.hud-drag-handle:active {
+  cursor: grabbing;
   opacity: 1;
-  transform: scale(1.08);
-  background: var(--color-coral);
 }
 
-.hud-visibility-toggle:active {
-  transform: scale(0.92);
+.hud-drag-handle svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
 }
 
-.hud-charge {
-  position: absolute;
-  top: -28px;
-  right: 18px;
-  width: 22px;
-  height: 22px;
+/* ============================================
+   HUD Button Base
+   ============================================ */
+.hud-btn {
+  position: relative;
+  width: var(--hud-btn-size);
+  height: var(--hud-btn-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   border-radius: 50%;
-  border: 1.5px solid var(--color-coral);
-  background: conic-gradient(var(--color-coral) calc(var(--charge, 0) * 1turn), transparent 0);
-  transform: scale(0.7);
+  transition: all 0.5s var(--hud-ease-spring);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  opacity: 0;
+}
+
+.hud-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+  opacity: 0;
+  transition: opacity 0.4s var(--hud-ease-smooth);
+}
+
+.hud-btn:hover::before {
+  opacity: 1;
+}
+
+.hud-btn:hover {
+  transform: scale(1.08);
+}
+
+.hud-btn:active {
+  transform: scale(0.95);
+  transition-duration: 0.15s;
+}
+
+.hud-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(97, 86, 80, 0.3);
+}
+
+.hud-btn svg {
+  width: var(--hud-icon-size);
+  height: var(--hud-icon-size);
+  transition: transform 0.5s var(--hud-ease-spring);
+  pointer-events: none;
+}
+
+.hud-btn:hover svg {
+  transform: translateY(-1px);
+}
+
+.hud-btn:active svg {
+  transform: translateY(0) scale(0.92);
+  transition-duration: 0.15s;
+}
+
+/* ============================================
+   Mode Buttons — Active Gradients
+   ============================================ */
+.hud-btn--eye,
+.hud-btn--bug,
+.hud-btn--hand {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 30px;
+  box-shadow: none;
+  transition: all 0.4s var(--hud-ease-spring);
+}
+
+.hud-btn--eye.active {
+  background: linear-gradient(180deg, #f78d8d 0%, #e26790 100%);
+  border: 1px solid #a02b4d;
+  box-shadow: 0px 4px 0px #a02b4d;
+}
+
+.hud-btn--bug.active {
+  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
+  border: 1px solid #226591;
+  box-shadow: 0px 4px 0px #226591;
+}
+
+.hud-btn--hand.active {
+  background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
+  border: 1px solid #228b20;
+  box-shadow: 0px 4px 0px #228b20;
+}
+
+.hud-btn--eye:hover,
+.hud-btn--bug:hover,
+.hud-btn--hand:hover {
+  transform: scale(1.08) translateY(-2px);
+}
+
+.hud-btn--eye.active:hover {
+  box-shadow: 0px 6px 0px #a02b4d, 0px 8px 16px rgba(160, 43, 77, 0.3);
+}
+
+.hud-btn--bug.active:hover {
+  box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
+}
+
+.hud-btn--hand.active:hover {
+  box-shadow: 0px 6px 0px #228b20, 0px 8px 16px rgba(34, 139, 32, 0.3);
+}
+
+.hud-btn--eye.active:active,
+.hud-btn--bug.active:active,
+.hud-btn--hand.active:active {
+  transform: scale(0.95) translateY(2px);
+  transition-duration: 0.1s;
+}
+
+.hud-btn--eye.active:active {
+  box-shadow: 0px 2px 0px #a02b4d;
+}
+
+.hud-btn--bug.active:active {
+  box-shadow: 0px 2px 0px #226591;
+}
+
+.hud-btn--hand.active:active {
+  box-shadow: 0px 2px 0px #228b20;
+}
+
+/* ============================================
+   Utility Buttons — Ellipse Backgrounds
+   ============================================ */
+.hud-btn--cockroach,
+.hud-btn--gallery,
+.hud-btn--settings {
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 70%);
+  border-radius: 50%;
+}
+
+/* ============================================
+   Attack Button — Gradient & Interactions
+   ============================================ */
+.hud-attack {
+  position: relative;
+  height: 39px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--hud-attack-from) 0%, var(--hud-attack-to) 100%);
+  border: 1px solid var(--hud-attack-border);
+  border-radius: 12px;
+  box-shadow: var(--hud-attack-shadow);
+  color: white;
+  font-family: "Bungee", cursive;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.4s var(--hud-ease-spring);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  opacity: 0;
+}
+
+.hud-attack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s var(--hud-ease-smooth);
+}
+
+.hud-attack::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s var(--hud-ease-spring), height 0.6s var(--hud-ease-spring);
+}
+
+.hud-attack:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 0px #b75040, 0px 8px 20px rgba(183, 80, 64, 0.4);
+}
+
+.hud-attack:hover::before {
+  opacity: 1;
+}
+
+.hud-attack:active {
+  transform: translateY(2px);
+  box-shadow: 0px 2px 0px #b75040;
+  transition-duration: 0.1s;
+}
+
+.hud-attack:active::after {
+  width: 200px;
+  height: 200px;
+  transition-duration: 0.3s;
+}
+
+.hud-attack:focus-visible {
+  box-shadow: var(--hud-attack-shadow), 0 0 0 3px rgba(222, 118, 102, 0.4);
+}
+
+.hud-attack span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   Tooltips — Pseudo-element with Fade-in
+   ============================================ */
+.hud-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0px 8px 16px rgba(97, 86, 80, 0.2);
+  color: #2a1f1a;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: transform var(--duration-fast) var(--ease-protest),
-              opacity var(--duration-fast) var(--ease-protest);
+  transition: all 0.4s var(--hud-ease-spring);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.hud-charge[data-visible="true"] {
-  transform: scale(1);
+.hud-btn[data-tooltip]:hover::after {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
+/* ============================================
+   Animations — Entrance & Button Pop
+   ============================================ */
+@keyframes hud-slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes hud-btn-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   Staggered Entrance Delays
+   ============================================ */
+.hud-btn:nth-child(2) { animation-delay: 0.1s; }
+.hud-btn:nth-child(3) { animation-delay: 0.15s; }
+.hud-btn:nth-child(4) { animation-delay: 0.2s; }
+.hud-attack { animation-delay: 0.3s; }
+.hud-btn:nth-child(6) { animation-delay: 0.35s; }
+.hud-btn:nth-child(7) { animation-delay: 0.4s; }
+.hud-btn:nth-child(8) { animation-delay: 0.45s; }
+
+/* ============================================
+   Responsive — Tablet (768px)
+   ============================================ */
+@media (max-width: 768px) {
+  .premium-hud {
+    bottom: 24px;
+    padding: 10px 16px 10px 10px;
+    gap: 8px;
+  }
+
+  .hud-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .hud-btn svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .hud-drag-handle {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hud-drag-handle svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hud-attack {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .hud-btn[data-tooltip]::after {
+    display: none;
+  }
+}
+
+/* ============================================
+   Responsive — Mobile (380px)
+   ============================================ */
+@media (max-width: 380px) {
+  .premium-hud {
+    bottom: 16px;
+    padding: 8px 12px 8px 8px;
+    gap: 6px;
+    border-radius: 60px;
+  }
+
+  .hud-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hud-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .hud-drag-handle {
+    width: 18px;
+    height: 18px;
+  }
+
+  .hud-drag-handle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .hud-attack {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+}
+
+/* ============================================
+   Reduced Motion — Accessibility
+   ============================================ */
 @media (prefers-reduced-motion: reduce) {
-  .hud-visibility-toggle,
-  .hud-charge {
+  .premium-hud,
+  .hud-drag-handle,
+  .hud-btn,
+  .hud-attack {
+    animation: none;
+    opacity: 1;
+  }
+
+  .premium-hud:hover,
+  .hud-btn:hover,
+  .hud-btn:active,
+  .hud-attack:hover,
+  .hud-attack:active {
+    transition: none;
+  }
+
+  .hud-btn:hover svg,
+  .hud-btn:active svg {
+    transition: none;
+  }
+
+  .hud-btn[data-tooltip]::after {
+    transition: none;
+  }
+
+  .hud-attack::after {
     transition: none;
   }
 }
