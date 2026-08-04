@@ -45,6 +45,9 @@ export function createEyeCreature(
   el.innerHTML = markup;
 
   const svg = el.querySelector('svg');
+  svg!.style.display = 'block';
+  svg!.style.width = '100%';
+  svg!.style.height = '100%';
   const pupil = svg!.querySelector('circle') as SVGCircleElement;
   pupil.setAttribute('fill', PUPIL_COLORS[Math.floor(Math.random() * PUPIL_COLORS.length)]);
 

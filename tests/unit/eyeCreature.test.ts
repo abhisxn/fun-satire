@@ -36,6 +36,14 @@ describe('EyeCreature', () => {
       expect(circle).not.toBeNull();
     });
 
+    it('stretches the injected SVG to fill the scaled wrapper (not its native size)', () => {
+      const eye = createEyeCreature(0, 0, 2, TEST_SVG, 'test2b');
+
+      const svg = eye.el.querySelector('svg');
+      expect(svg!.style.width).toBe('100%');
+      expect(svg!.style.height).toBe('100%');
+    });
+
     it('assigns random pupil color', () => {
       const eye = createEyeCreature(0, 0, 1, TEST_SVG, 'test3');
 
