@@ -53,9 +53,7 @@ describe('CreatureGrid', () => {
 
     config = {
       container,
-      cols: 3,
-      rows: 2,
-      mode: 'bugs',
+      mode: 'cockroach',
     };
   });
 
@@ -63,41 +61,41 @@ describe('CreatureGrid', () => {
     it('stores config values', () => {
       const grid = new CreatureGrid(config);
       expect(grid.getCreatureCount()).toBe(0);
-      expect(grid.getMode()).toBe('bugs');
+      expect(grid.getMode()).toBe('cockroach');
     });
   });
 
   describe('spawn', () => {
-    it('creates creatures in grid (cols * rows count)', () => {
+    it('creates creatures in grid (mode-specific cols * rows count)', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(grid.getCreatureCount()).toBe(6);
+      grid.spawn('cockroach');
+      expect(grid.getCreatureCount()).toBe(240);
     });
 
     it('appends creature elements to container', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(container.children.length).toBe(6);
+      grid.spawn('cockroach');
+      expect(container.children.length).toBe(240);
     });
 
     it('creates eyes mode creatures', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('eyes');
-      expect(grid.getCreatureCount()).toBe(6);
+      expect(grid.getCreatureCount()).toBe(96);
       expect(grid.getMode()).toBe('eyes');
     });
 
     it('creates pointedFinger mode creatures', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('pointedFinger');
-      expect(grid.getCreatureCount()).toBe(6);
+      expect(grid.getCreatureCount()).toBe(240);
       expect(grid.getMode()).toBe('pointedFinger');
     });
 
     it('creates cockroach mode creatures', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('cockroach');
-      expect(grid.getCreatureCount()).toBe(6);
+      expect(grid.getCreatureCount()).toBe(240);
       expect(grid.getMode()).toBe('cockroach');
     });
   });
@@ -105,26 +103,26 @@ describe('CreatureGrid', () => {
   describe('switchMode', () => {
     it('clears old creatures and creates new ones', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(grid.getCreatureCount()).toBe(6);
+      grid.spawn('cockroach');
+      expect(grid.getCreatureCount()).toBe(240);
 
       grid.switchMode('eyes');
-      expect(grid.getCreatureCount()).toBe(6);
+      expect(grid.getCreatureCount()).toBe(96);
       expect(grid.getMode()).toBe('eyes');
     });
 
     it('does nothing when switching to same mode', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
+      grid.spawn('cockroach');
       const initialCount = grid.getCreatureCount();
 
-      grid.switchMode('bugs');
+      grid.switchMode('cockroach');
       expect(grid.getCreatureCount()).toBe(initialCount);
     });
 
     it('removes old creature elements from container', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
+      grid.spawn('cockroach');
       const firstChild = container.children[0];
 
       grid.switchMode('pointedFinger');
@@ -135,46 +133,46 @@ describe('CreatureGrid', () => {
   describe('setQuantity', () => {
     it('adds creatures when target > current', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(grid.getCreatureCount()).toBe(6);
+      grid.spawn('cockroach');
+      expect(grid.getCreatureCount()).toBe(240);
 
-      grid.setQuantity(10);
-      expect(grid.getCreatureCount()).toBe(10);
+      grid.setQuantity(250);
+      expect(grid.getCreatureCount()).toBe(250);
     });
 
     it('removes creatures when target < current', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(grid.getCreatureCount()).toBe(6);
+      grid.spawn('cockroach');
+      expect(grid.getCreatureCount()).toBe(240);
 
-      grid.setQuantity(3);
-      expect(grid.getCreatureCount()).toBe(3);
+      grid.setQuantity(200);
+      expect(grid.getCreatureCount()).toBe(200);
     });
 
     it('does nothing when target === current', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(grid.getCreatureCount()).toBe(6);
+      grid.spawn('cockroach');
+      expect(grid.getCreatureCount()).toBe(240);
 
-      grid.setQuantity(6);
-      expect(grid.getCreatureCount()).toBe(6);
+      grid.setQuantity(240);
+      expect(grid.getCreatureCount()).toBe(240);
     });
 
     it('appends new creature elements to container when adding', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
+      grid.spawn('cockroach');
       const initialChildren = container.children.length;
 
-      grid.setQuantity(8);
-      expect(container.children.length).toBe(8);
+      grid.setQuantity(250);
+      expect(container.children.length).toBe(250);
       expect(container.children.length).toBeGreaterThan(initialChildren);
     });
 
     it('removes creature elements from container when removing', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      grid.setQuantity(3);
-      expect(container.children.length).toBe(3);
+      grid.spawn('cockroach');
+      grid.setQuantity(200);
+      expect(container.children.length).toBe(200);
     });
   });
 
@@ -186,32 +184,32 @@ describe('CreatureGrid', () => {
 
     it('returns correct count after spawn', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(grid.getCreatureCount()).toBe(6);
+      grid.spawn('cockroach');
+      expect(grid.getCreatureCount()).toBe(240);
     });
 
     it('returns correct count after setQuantity', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      grid.setQuantity(12);
-      expect(grid.getCreatureCount()).toBe(12);
+      grid.spawn('cockroach');
+      grid.setQuantity(300);
+      expect(grid.getCreatureCount()).toBe(300);
     });
   });
 
   describe('getMode', () => {
     it('returns initial mode from config', () => {
       const grid = new CreatureGrid(config);
-      expect(grid.getMode()).toBe('bugs');
+      expect(grid.getMode()).toBe('cockroach');
     });
 
     it('returns updated mode after switchMode', () => {
       const grid = new CreatureGrid(config);
-      grid.switchMode('cockroach');
-      expect(grid.getMode()).toBe('cockroach');
+      grid.switchMode('eyes');
+      expect(grid.getMode()).toBe('eyes');
     });
 
     it('returns all valid modes', () => {
-      const modes: CreatureMode[] = ['eyes', 'bugs', 'pointedFinger', 'cockroach'];
+      const modes: CreatureMode[] = ['eyes', 'pointedFinger', 'cockroach'];
       const grid = new CreatureGrid(config);
 
       for (const mode of modes) {
@@ -222,12 +220,6 @@ describe('CreatureGrid', () => {
   });
 
   describe('update', () => {
-    it('does not throw for bugs mode', () => {
-      const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
-      expect(() => grid.update(400, 300)).not.toThrow();
-    });
-
     it('does not throw for eyes mode', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('eyes');
@@ -248,7 +240,7 @@ describe('CreatureGrid', () => {
 
     it('updates creature positions', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
+      grid.spawn('cockroach');
 
       const creatures = (grid as unknown as { creatures: Array<{ x: number; y: number; hx: number; hy: number }> }).creatures;
       const creature = creatures[0];
@@ -265,7 +257,7 @@ describe('CreatureGrid', () => {
   describe('setRepelMultiplier', () => {
     it('updates physics params', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
+      grid.spawn('cockroach');
 
       grid.setRepelMultiplier(2);
 
@@ -275,7 +267,7 @@ describe('CreatureGrid', () => {
 
     it('scales repel strength linearly', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
+      grid.spawn('cockroach');
 
       grid.setRepelMultiplier(0.5);
       const physicsParams = (grid as unknown as { physicsParams: { repelStrength: number } }).physicsParams;
@@ -284,7 +276,7 @@ describe('CreatureGrid', () => {
 
     it('handles zero multiplier', () => {
       const grid = new CreatureGrid(config);
-      grid.spawn('bugs');
+      grid.spawn('cockroach');
 
       grid.setRepelMultiplier(0);
       const physicsParams = (grid as unknown as { physicsParams: { repelStrength: number } }).physicsParams;

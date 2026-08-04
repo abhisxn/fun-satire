@@ -11,11 +11,6 @@ const SVG_EYE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xml
   <circle cx="12" cy="12" r="3" stroke="#2a1f1a" stroke-linecap="round"/>
 </svg>`;
 
-const SVG_BUG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M5 2C7.63612 2 10.0643 2.86783 12 4.32634M19 2C16.3639 2 13.9357 2.86783 12 4.32634M12 4.32634C9.29033 6.36796 7.54545 9.56698 7.54545 13.1632C7.54545 16.7594 9.29033 19.9584 12 22C14.7097 19.9584 16.4545 16.7594 16.4545 13.1632C16.4545 9.56698 14.7097 6.36796 12 4.32634Z" stroke="#2a1f1a" stroke-linecap="round"/>
-  <path d="M12 13C12 13 15 11.2091 15 9C15 6.79086 12 5 12 5C12 5 9 6.79086 9 9C9 11.2091 12 13 12 13ZM12 13V21.5" stroke="#2a1f1a" stroke-linecap="round"/>
-</svg>`;
-
 const SVG_HAND = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M16 13.5V11.3333C16 10.597 16.6716 10 17.5 10C18.3284 10 19 10.597 19 11.3333V14.5" stroke="#2a1f1a" stroke-linecap="round"/>
   <path d="M10 12L10 9.09091C10 8.48842 10.6716 8 11.5 8C12.3284 8 13 8.48842 13 9.09091V12" stroke="#2a1f1a" stroke-linecap="round"/>
@@ -24,7 +19,13 @@ const SVG_HAND = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xm
   <path d="M19 14.2767C19 18.6011 17.1943 22 11.7864 22C7.19799 22 5.56206 18.8789 4.25646 14.9425C3.777 13.4969 3.98603 13.0519 4.74791 12.4217C5.49493 11.8038 6.71372 11.9179 7.20517 12.4219" stroke="#2a1f1a"/>
 </svg>`;
 
-const SVG_COCKROACH = `<svg width="35" height="67" viewBox="0 0 35 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+const SVG_COCKROACH = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="24" height="24" fill="white"/>
+<path d="M5 2C7.63612 2 10.0643 2.86783 12 4.32634M19 2C16.3639 2 13.9357 2.86783 12 4.32634M12 4.32634C9.29033 6.36796 7.54545 9.56698 7.54545 13.1632C7.54545 16.7594 9.29033 19.9584 12 22C14.7097 19.9584 16.4545 16.7594 16.4545 13.1632C16.4545 9.56698 14.7097 6.36796 12 4.32634Z" stroke="#2a1f1a" stroke-linecap="round"/>
+<path d="M12 13C12 13 15 11.2091 15 9C15 6.79086 12 5 12 5C12 5 9 6.79086 9 9C9 11.2091 12 13 12 13ZM12 13V21.5" stroke="#2a1f1a" stroke-linecap="round"/>
+</svg>`;
+
+const SVG_BUG = `<svg width="35" height="67" viewBox="0 0 35 67" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g clip-path="url(#clip0_18_109)">
     <path d="M22.2671 48.6146L29.7734 46.9925L25.2696 61L27 65M22.2671 38.6045L29.5 37.5L33.5 44M24.1437 31.0957L28.5 28.5L33.5 29.5" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
     <path d="M13.2329 48.6146L5.7266 46.9925L10.2304 61L8.5 65M13.2329 38.6045L6 37.5L2 44M11.3563 31.0957L7 28.5L2 29.5" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
@@ -65,7 +66,6 @@ interface ModeBtnDef {
 
 const MODE_BTNS: readonly ModeBtnDef[] = [
   { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", svg: SVG_EYE },
-  { mode: "bugs", cssClass: "hud-btn--bug", tooltip: "Bug Mode", ariaLabel: "Bug Mode", svg: SVG_BUG },
   { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", svg: SVG_HAND },
 ];
 
@@ -80,11 +80,15 @@ export class Hud {
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
+  private cockroachBtn: HTMLButtonElement | null = null;
+  private bugModeBtn: HTMLButtonElement | null = null;
   private activeMode: CreatureMode = "eyes";
+  private bugModeActive = false;
 
   private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
   private attackPressCb: (() => void) | null = null;
   private attackReleaseCb: (() => void) | null = null;
+  private bugModeToggleCb: ((active: boolean) => void) | null = null;
 
   private isDragging = false;
   private dragOffsetX = 0;
@@ -107,7 +111,21 @@ export class Hud {
     }
 
     root.appendChild(this.buildAttackBtn());
-    root.appendChild(this.buildUtilityBtn("hud-btn--cockroach", "Cockroach Mode", SVG_COCKROACH));
+    this.cockroachBtn = this.buildUtilityBtn("hud-btn--cockroach", "Cockroach Mode", SVG_COCKROACH);
+    this.cockroachBtn.addEventListener("click", () => {
+      this.activeMode = "cockroach";
+      this.setActiveMode("cockroach");
+      this.modeChangeCb?.("cockroach");
+    });
+    root.appendChild(this.cockroachBtn);
+    this.bugModeBtn = this.buildUtilityBtn("hud-btn--bug-mode", "Bug Mode", SVG_BUG);
+    this.bugModeBtn.addEventListener("click", () => {
+      this.bugModeActive = !this.bugModeActive;
+      this.bugModeBtn.classList.toggle("active", this.bugModeActive);
+      this.bugModeBtn.setAttribute("aria-pressed", String(this.bugModeActive));
+      this.bugModeToggleCb?.(this.bugModeActive);
+    });
+    root.appendChild(this.bugModeBtn);
     this.settingsBtn = this.buildUtilityBtn("hud-btn--settings", "Settings", SVG_SETTINGS);
     root.appendChild(this.settingsBtn);
     this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
@@ -126,6 +144,10 @@ export class Hud {
       btn.classList.toggle("active", m === mode);
       btn.setAttribute("aria-pressed", String(m === mode));
     }
+    if (this.cockroachBtn) {
+      this.cockroachBtn.classList.toggle("active", mode === "cockroach");
+      this.cockroachBtn.setAttribute("aria-pressed", String(mode === "cockroach"));
+    }
   }
 
   getActiveMode(): CreatureMode {
@@ -142,6 +164,14 @@ export class Hud {
 
   onAttackRelease(cb: () => void): void {
     this.attackReleaseCb = cb;
+  }
+
+  onBugModeToggle(cb: (active: boolean) => void): void {
+    this.bugModeToggleCb = cb;
+  }
+
+  isBugModeActive(): boolean {
+    return this.bugModeActive;
   }
 
   destroy(): void {
@@ -200,7 +230,7 @@ export class Hud {
     btn.setAttribute("aria-label", "Attack");
 
     const span = el("span");
-    span.textContent = "Attack";
+    span.textContent = "Protest";
     btn.appendChild(span);
 
     btn.addEventListener("pointerdown", (e: PointerEvent) => {

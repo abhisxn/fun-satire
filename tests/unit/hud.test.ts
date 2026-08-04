@@ -36,11 +36,9 @@ describe("Hud", () => {
 
     it("creates mode buttons with correct classes", () => {
       const eyeBtn = host.querySelector(".hud-btn--eye");
-      const bugBtn = host.querySelector(".hud-btn--bug");
       const handBtn = host.querySelector(".hud-btn--hand");
 
       expect(eyeBtn).toBeTruthy();
-      expect(bugBtn).toBeTruthy();
       expect(handBtn).toBeTruthy();
     });
 
@@ -48,7 +46,7 @@ describe("Hud", () => {
       const attackBtn = host.querySelector(".hud-attack");
       expect(attackBtn).toBeTruthy();
       expect(attackBtn?.getAttribute("aria-label")).toBe("Attack");
-      expect(attackBtn?.querySelector("span")?.textContent).toBe("Attack");
+      expect(attackBtn?.querySelector("span")?.textContent).toBe("Protest");
     });
 
     it("creates utility buttons", () => {
@@ -70,14 +68,14 @@ describe("Hud", () => {
     });
 
     it("toggles active state when clicked", () => {
-      const bugBtn = host.querySelector<HTMLButtonElement>(".hud-btn--bug");
-      bugBtn?.click();
+      const cockroachBtn = host.querySelector<HTMLButtonElement>(".hud-btn--cockroach");
+      cockroachBtn?.click();
 
       const eyeBtn = host.querySelector(".hud-btn--eye");
       const handBtn = host.querySelector(".hud-btn--hand");
 
-      expect(bugBtn?.classList.contains("active")).toBe(true);
-      expect(bugBtn?.getAttribute("aria-pressed")).toBe("true");
+      expect(cockroachBtn?.classList.contains("active")).toBe(true);
+      expect(cockroachBtn?.getAttribute("aria-pressed")).toBe("true");
       expect(eyeBtn?.classList.contains("active")).toBe(false);
       expect(eyeBtn?.getAttribute("aria-pressed")).toBe("false");
       expect(handBtn?.classList.contains("active")).toBe(false);
@@ -90,10 +88,10 @@ describe("Hud", () => {
         firedMode = mode;
       });
 
-      const bugBtn = host.querySelector<HTMLButtonElement>(".hud-btn--bug");
-      bugBtn?.click();
+      const cockroachBtn = host.querySelector<HTMLButtonElement>(".hud-btn--cockroach");
+      cockroachBtn?.click();
 
-      expect(firedMode).toBe("bugs");
+      expect(firedMode).toBe("cockroach");
     });
 
     it("setActiveMode updates UI correctly", () => {
@@ -166,16 +164,14 @@ describe("Hud", () => {
   describe("tooltips", () => {
     it("has tooltips on all buttons", () => {
       const eyeBtn = host.querySelector(".hud-btn--eye");
-      const bugBtn = host.querySelector(".hud-btn--bug");
       const handBtn = host.querySelector(".hud-btn--hand");
       const cockroachBtn = host.querySelector(".hud-btn--cockroach");
       const settingsBtn = host.querySelector(".hud-btn--settings");
       const galleryBtn = host.querySelector(".hud-btn--gallery");
 
       expect(eyeBtn?.getAttribute("data-tooltip")).toBe("Eye Mode");
-      expect(bugBtn?.getAttribute("data-tooltip")).toBe("Bug Mode");
       expect(handBtn?.getAttribute("data-tooltip")).toBe("Point Mode");
-      expect(cockroachBtn?.getAttribute("data-tooltip")).toBe("Cockroach Mode");
+      expect(cockroachBtn?.getAttribute("data-tooltip")).toBe("Bug Mode");
       expect(settingsBtn?.getAttribute("data-tooltip")).toBe("Settings");
       expect(galleryBtn?.getAttribute("data-tooltip")).toBe("Grid View");
     });
@@ -184,7 +180,6 @@ describe("Hud", () => {
   describe("ARIA labels", () => {
     it("has correct aria-labels on all buttons", () => {
       const eyeBtn = host.querySelector(".hud-btn--eye");
-      const bugBtn = host.querySelector(".hud-btn--bug");
       const handBtn = host.querySelector(".hud-btn--hand");
       const attackBtn = host.querySelector(".hud-attack");
       const cockroachBtn = host.querySelector(".hud-btn--cockroach");
@@ -192,10 +187,9 @@ describe("Hud", () => {
       const galleryBtn = host.querySelector(".hud-btn--gallery");
 
       expect(eyeBtn?.getAttribute("aria-label")).toBe("Eye Mode");
-      expect(bugBtn?.getAttribute("aria-label")).toBe("Bug Mode");
       expect(handBtn?.getAttribute("aria-label")).toBe("Point Mode");
       expect(attackBtn?.getAttribute("aria-label")).toBe("Attack");
-      expect(cockroachBtn?.getAttribute("aria-label")).toBe("Cockroach Mode");
+      expect(cockroachBtn?.getAttribute("aria-label")).toBe("Bug Mode");
       expect(settingsBtn?.getAttribute("aria-label")).toBe("Settings");
       expect(galleryBtn?.getAttribute("aria-label")).toBe("Grid View");
     });
@@ -213,7 +207,7 @@ describe("Hud", () => {
     it("has text content in attack button", () => {
       const attackBtn = host.querySelector(".hud-attack");
       const span = attackBtn?.querySelector("span");
-      expect(span?.textContent).toBe("Attack");
+      expect(span?.textContent).toBe("Protest");
     });
   });
 
@@ -221,8 +215,8 @@ describe("Hud", () => {
     it("returns current active mode", () => {
       expect(hud.getActiveMode()).toBe("eyes");
 
-      hud.setActiveMode("bugs");
-      expect(hud.getActiveMode()).toBe("bugs");
+      hud.setActiveMode("cockroach");
+      expect(hud.getActiveMode()).toBe("cockroach");
 
       hud.setActiveMode("pointedFinger");
       expect(hud.getActiveMode()).toBe("pointedFinger");

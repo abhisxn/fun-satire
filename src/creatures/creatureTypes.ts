@@ -11,7 +11,7 @@ export interface Creature {
   h: number;
 }
 
-export type CreatureMode = 'eyes' | 'bugs' | 'pointedFinger' | 'cockroach';
+export type CreatureMode = 'eyes' | 'pointedFinger' | 'cockroach';
 
 export interface CreatureGrid {
   creatures: Creature[];

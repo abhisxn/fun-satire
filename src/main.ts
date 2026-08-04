@@ -21,8 +21,6 @@ async function main(): Promise<void> {
 
   const grid = new CreatureGrid({
     container,
-    cols: 12,
-    rows: 8,
     mode: "eyes",
   });
   await grid.init();
@@ -46,26 +44,24 @@ async function main(): Promise<void> {
     grid.setRepelMultiplier(value);
   });
 
+  hud.onModeChange((mode) => {
+    grid.switchMode(mode);
+  });
+
   hud.getSettingsButton().addEventListener("click", () => {
     galleryPanel.close();
+    filterPanel.toggle();
   });
 
   hud.getGalleryButton().addEventListener("click", () => {
     filterPanel.close();
+    galleryPanel.toggle();
   });
 
   let resizeTimeout: number;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = window.setTimeout(() => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-
-      const cols = vw < 768 ? 8 : 12;
-      const rows = vh < 768 ? 6 : 8;
-
-      grid.setCols(cols);
-      grid.setRows(rows);
       grid.respawn();
     }, 200);
   });

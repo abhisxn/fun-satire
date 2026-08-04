@@ -1,16 +1,44 @@
 import type { Creature, CreatureMode } from "./creatureTypes";
 import type { EyeCreature } from "./EyeCreature";
+import type { CockroachCreature } from "./CockroachCreature";
 import type { PhysicsParams } from "./creaturePhysics";
 import { updateCreature } from "./creaturePhysics";
 import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg } from "./EyeCreature";
-import { createBugCreature, getBugRotation } from "./BugCreature";
 import { createFingerCreature, getFingerRotation } from "./FingerCreature";
-import { createCockroachCreature, getCockroachRotation } from "./CockroachCreature";
+import { createCockroachCreature, updateCockroach, getCockroachRotation } from "./CockroachCreature";
+
+interface ModeConfig {
+  readonly cols: number;
+  readonly rows: number;
+  readonly scaleFn: (hx: number, hy: number, vw: number, vh: number) => number;
+}
+
+const MODE_CONFIGS: Record<CreatureMode, ModeConfig> = {
+  eyes: {
+    cols: 12,
+    rows: 8,
+    scaleFn: (hx, hy, vw, vh) => {
+      const baseScale = 0.3 + Math.pow(Math.random(), 1.5) * 0.45;
+      const distToEdge = Math.min(hx, vw - hx, hy, vh - hy);
+      const maxDist = Math.min(vw / 2, vh / 2);
+      const edgeFactor = 1 - distToEdge / maxDist;
+      return baseScale + edgeFactor * 0.15;
+    },
+  },
+  pointedFinger: {
+    cols: 20,
+    rows: 12,
+    scaleFn: () => 0.08 + Math.pow(Math.random(), 1.5) * 0.35,
+  },
+  cockroach: {
+    cols: 20,
+    rows: 12,
+    scaleFn: () => 0.08 + Math.pow(Math.random(), 1.5) * 0.35,
+  },
+};
 
 export interface CreatureGridConfig {
   container: HTMLElement;
-  cols: number;
-  rows: number;
   mode: CreatureMode;
 }
 
@@ -31,9 +59,10 @@ export class CreatureGrid {
 
   constructor(config: CreatureGridConfig) {
     this.container = config.container;
-    this.cols = config.cols;
-    this.rows = config.rows;
     this.mode = config.mode;
+    const modeConfig = MODE_CONFIGS[this.mode];
+    this.cols = modeConfig.cols;
+    this.rows = modeConfig.rows;
   }
 
   async init(): Promise<void> {
@@ -46,6 +75,9 @@ export class CreatureGrid {
   spawn(mode: CreatureMode): void {
     this.clear();
     this.mode = mode;
+    const modeConfig = MODE_CONFIGS[mode];
+    this.cols = modeConfig.cols;
+    this.rows = modeConfig.rows;
 
     const vw = this.container.clientWidth || window.innerWidth;
     const vh = this.container.clientHeight || window.innerHeight;
@@ -56,7 +88,7 @@ export class CreatureGrid {
       for (let r = 0; r < this.rows; r++) {
         const hx = (c + 0.5) * cellW;
         const hy = (r + 0.5) * cellH;
-        const scale = 0.08 + Math.pow(Math.random(), 1.5) * 0.35;
+        const scale = modeConfig.scaleFn(hx, hy, vw, vh);
         const uid = `${c}_${r}`;
 
         let creature: Creature;
@@ -67,9 +99,6 @@ export class CreatureGrid {
             creature = eye;
             break;
           }
-          case 'bugs':
-            creature = createBugCreature(hx, hy, scale);
-            break;
           case 'pointedFinger':
             creature = createFingerCreature(hx, hy, scale);
             break;
@@ -95,11 +124,12 @@ export class CreatureGrid {
     if (targetCount > current) {
       const vw = this.container.clientWidth || window.innerWidth;
       const vh = this.container.clientHeight || window.innerHeight;
+      const modeConfig = MODE_CONFIGS[this.mode];
       const toAdd = targetCount - current;
       for (let i = 0; i < toAdd; i++) {
         const hx = Math.random() * vw;
         const hy = Math.random() * vh;
-        const scale = 0.08 + Math.pow(Math.random(), 1.5) * 0.35;
+        const scale = modeConfig.scaleFn(hx, hy, vw, vh);
         const uid = `extra_${current + i}`;
 
         let creature: Creature;
@@ -110,9 +140,6 @@ export class CreatureGrid {
             creature = eye;
             break;
           }
-          case 'bugs':
-            creature = createBugCreature(hx, hy, scale);
-            break;
           case 'pointedFinger':
             creature = createFingerCreature(hx, hy, scale);
             break;
@@ -136,9 +163,15 @@ export class CreatureGrid {
 
   update(avatarX: number, avatarY: number): void {
     const avatar = { x: avatarX, y: avatarY };
+    const vw = this.container.clientWidth || window.innerWidth;
+    const vh = this.container.clientHeight || window.innerHeight;
 
     for (const c of this.creatures) {
-      updateCreature(c, avatar, this.physicsParams);
+      if (this.mode === 'cockroach') {
+        updateCockroach(c as CockroachCreature, avatar, this.physicsParams, vw, vh);
+      } else {
+        updateCreature(c, avatar, this.physicsParams);
+      }
     }
 
     if (this.mode === 'eyes') {
@@ -156,14 +189,11 @@ export class CreatureGrid {
       for (const c of this.creatures) {
         let angle: number;
         switch (this.mode) {
-          case 'bugs':
-            angle = getBugRotation(c, avatarX, avatarY);
-            break;
           case 'pointedFinger':
             angle = getFingerRotation(c, avatarX, avatarY);
             break;
           case 'cockroach':
-            angle = getCockroachRotation(c, avatarX, avatarY);
+            angle = getCockroachRotation(c as CockroachCreature);
             break;
           default:
             angle = 0;

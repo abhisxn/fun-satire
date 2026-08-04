@@ -66,44 +66,31 @@ describe('CockroachCreature', () => {
   });
 
   describe('getCockroachRotation', () => {
-    it('calculates correct angle (atan2 + 180)', () => {
+    it('returns rotation based on crawl angle', () => {
       const cockroach = createCockroachCreature(0, 0, 1);
+      cockroach.crawlAngle = Math.PI; // 180 degrees
 
       const rotation = getCockroachRotation(cockroach, 100, 0);
 
-      expect(rotation).toBe(180);
+      expect(rotation).toBe(360); // crawlAngle * (180/PI) + 180
     });
 
-    it('faces away from avatar when avatar is to the right', () => {
+    it('faces in crawling direction', () => {
       const cockroach = createCockroachCreature(0, 0, 1);
+      cockroach.crawlAngle = 0; // facing right
 
       const rotation = getCockroachRotation(cockroach, 100, 0);
 
-      expect(rotation).toBe(180);
+      expect(rotation).toBe(180); // 0 * (180/PI) + 180
     });
 
-    it('faces away from avatar when avatar is above', () => {
-      const cockroach = createCockroachCreature(100, 100, 1);
+    it('handles different crawl angles', () => {
+      const cockroach = createCockroachCreature(0, 0, 1);
+      cockroach.crawlAngle = Math.PI / 2; // 90 degrees (facing down)
 
       const rotation = getCockroachRotation(cockroach, 100, 0);
 
-      expect(rotation).toBe(90);
-    });
-
-    it('faces away from avatar when avatar is below', () => {
-      const cockroach = createCockroachCreature(100, 100, 1);
-
-      const rotation = getCockroachRotation(cockroach, 100, 200);
-
-      expect(rotation).toBe(270);
-    });
-
-    it('faces away from avatar when avatar is to the left', () => {
-      const cockroach = createCockroachCreature(100, 100, 1);
-
-      const rotation = getCockroachRotation(cockroach, 0, 100);
-
-      expect(rotation).toBe(360);
+      expect(rotation).toBe(270); // 90 * (180/PI) + 180
     });
   });
 });
