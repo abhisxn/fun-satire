@@ -20,7 +20,6 @@ const SVG_HAND = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xm
 </svg>`;
 
 const SVG_COCKROACH = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="24" height="24" fill="white"/>
 <path d="M5 2C7.63612 2 10.0643 2.86783 12 4.32634M19 2C16.3639 2 13.9357 2.86783 12 4.32634M12 4.32634C9.29033 6.36796 7.54545 9.56698 7.54545 13.1632C7.54545 16.7594 9.29033 19.9584 12 22C14.7097 19.9584 16.4545 16.7594 16.4545 13.1632C16.4545 9.56698 14.7097 6.36796 12 4.32634Z" stroke="#2a1f1a" stroke-linecap="round"/>
 <path d="M12 13C12 13 15 11.2091 15 9C15 6.79086 12 5 12 5C12 5 9 6.79086 9 9C9 11.2091 12 13 12 13ZM12 13V21.5" stroke="#2a1f1a" stroke-linecap="round"/>
 </svg>`;

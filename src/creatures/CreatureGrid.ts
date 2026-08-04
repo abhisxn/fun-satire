@@ -1,11 +1,10 @@
 import type { Creature, CreatureMode } from "./creatureTypes";
 import type { EyeCreature } from "./EyeCreature";
-import type { CockroachCreature } from "./CockroachCreature";
 import type { PhysicsParams } from "./creaturePhysics";
 import { updateCreature } from "./creaturePhysics";
 import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg } from "./EyeCreature";
 import { createFingerCreature, getFingerRotation } from "./FingerCreature";
-import { createCockroachCreature, updateCockroach, getCockroachRotation } from "./CockroachCreature";
+import { createCockroachCreature, getCockroachRotation } from "./CockroachCreature";
 
 interface ModeConfig {
   readonly cols: number;
@@ -163,15 +162,9 @@ export class CreatureGrid {
 
   update(avatarX: number, avatarY: number): void {
     const avatar = { x: avatarX, y: avatarY };
-    const vw = this.container.clientWidth || window.innerWidth;
-    const vh = this.container.clientHeight || window.innerHeight;
 
     for (const c of this.creatures) {
-      if (this.mode === 'cockroach') {
-        updateCockroach(c as CockroachCreature, avatar, this.physicsParams, vw, vh);
-      } else {
-        updateCreature(c, avatar, this.physicsParams);
-      }
+      updateCreature(c, avatar, this.physicsParams);
     }
 
     if (this.mode === 'eyes') {
@@ -193,12 +186,12 @@ export class CreatureGrid {
             angle = getFingerRotation(c, avatarX, avatarY);
             break;
           case 'cockroach':
-            angle = getCockroachRotation(c as CockroachCreature);
+            angle = getCockroachRotation(c, avatarX, avatarY);
             break;
           default:
             angle = 0;
         }
-        c.el.style.transform = `translate(${c.x - c.w * c.scale * 0.5}px,${c.y - c.h * c.scale * 0.5}px) scale(${c.scale}) rotate(${angle}deg)`;
+        c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg)`;
       }
     }
   }
