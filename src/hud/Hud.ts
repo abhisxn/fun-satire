@@ -66,6 +66,7 @@ interface ModeBtnDef {
 
 const MODE_BTNS: readonly ModeBtnDef[] = [
   { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", svg: SVG_EYE },
+  { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", svg: SVG_COCKROACH },
   { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", svg: SVG_HAND },
 ];
 
@@ -80,7 +81,6 @@ export class Hud {
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
-  private cockroachBtn: HTMLButtonElement | null = null;
   private bugModeBtn: HTMLButtonElement | null = null;
   private activeMode: CreatureMode = "eyes";
   private bugModeActive = false;
@@ -111,18 +111,13 @@ export class Hud {
     }
 
     root.appendChild(this.buildAttackBtn());
-    this.cockroachBtn = this.buildUtilityBtn("hud-btn--cockroach", "Cockroach Mode", SVG_COCKROACH);
-    this.cockroachBtn.addEventListener("click", () => {
-      this.activeMode = "cockroach";
-      this.setActiveMode("cockroach");
-      this.modeChangeCb?.("cockroach");
-    });
-    root.appendChild(this.cockroachBtn);
     this.bugModeBtn = this.buildUtilityBtn("hud-btn--bug-mode", "Bug Mode", SVG_BUG);
-    this.bugModeBtn.addEventListener("click", () => {
+    const bugModeBtn = this.bugModeBtn;
+    bugModeBtn.setAttribute("aria-pressed", "false");
+    bugModeBtn.addEventListener("click", () => {
       this.bugModeActive = !this.bugModeActive;
-      this.bugModeBtn.classList.toggle("active", this.bugModeActive);
-      this.bugModeBtn.setAttribute("aria-pressed", String(this.bugModeActive));
+      bugModeBtn.classList.toggle("active", this.bugModeActive);
+      bugModeBtn.setAttribute("aria-pressed", String(this.bugModeActive));
       this.bugModeToggleCb?.(this.bugModeActive);
     });
     root.appendChild(this.bugModeBtn);
@@ -143,10 +138,6 @@ export class Hud {
     for (const [m, btn] of this.modeBtnEls) {
       btn.classList.toggle("active", m === mode);
       btn.setAttribute("aria-pressed", String(m === mode));
-    }
-    if (this.cockroachBtn) {
-      this.cockroachBtn.classList.toggle("active", mode === "cockroach");
-      this.cockroachBtn.setAttribute("aria-pressed", String(mode === "cockroach"));
     }
   }
 
