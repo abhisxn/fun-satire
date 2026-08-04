@@ -1,5 +1,6 @@
 import { Engine } from "./core/Engine";
 import { CreatureGrid } from "./creatures/CreatureGrid";
+import { BugSwarm } from "./creatures/BugSwarm";
 import { DraggableAvatar } from "./creatures/DraggableAvatar";
 import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
@@ -25,6 +26,8 @@ async function main(): Promise<void> {
   });
   await grid.init();
 
+  const bugSwarm = new BugSwarm(container);
+
   const hud = new Hud();
   const hudRoot = document.getElementById("hud-root");
   if (!hudRoot) throw new Error("Missing #hud-root container");
@@ -46,6 +49,10 @@ async function main(): Promise<void> {
 
   hud.onModeChange((mode) => {
     grid.switchMode(mode);
+  });
+
+  hud.onBugModeToggle((active) => {
+    bugSwarm.setActive(active);
   });
 
   hud.getSettingsButton().addEventListener("click", () => {
@@ -70,6 +77,7 @@ async function main(): Promise<void> {
   engine.onTick(() => {
     const center = avatar.getCenter();
     grid.update(center.x, center.y);
+    bugSwarm.update(center.x, center.y);
   });
   engine.start();
 }
