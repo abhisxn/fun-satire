@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=Space+Grotesk:wght@400;700&family=Anton&family=Caveat:wght@400;700&family=Playfair+Display:wght@400;700&family=Archivo+Black&family=DM+Serif+Display&family=Bungee&family=Bungee+Tint&family=Orbitron:wght@400;700&display=swap");
+
 :root {
   --gallery-glass-bg: rgba(255, 255, 255, 0.7);
   --gallery-glass-border: rgba(255, 255, 255, 0.9);
@@ -299,4 +301,18 @@
   .text-card {
     transition: none;
   }
+}
+
+.text-overlay-editor:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.text-overlay {
+  pointer-events: auto;
+}
+
+.text-overlay.dragging {
+  cursor: grabbing;
 }

@@ -3,6 +3,7 @@ import { CreatureGrid } from "./creatures/CreatureGrid";
 import { BugSwarm } from "./creatures/BugSwarm";
 import { DraggableAvatar } from "./creatures/DraggableAvatar";
 import { StickerOverlay } from "./creatures/StickerOverlay";
+import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel } from "./hud/GalleryPanel";
@@ -81,14 +82,33 @@ async function main(): Promise<void> {
   });
   engine.start();
 
-  let activeOverlay: StickerOverlay | null = null;
+  let activeOverlay: StickerOverlay | TextOverlay | null = null;
+
+  const clearOverlay = (): void => {
+    if (!activeOverlay) return;
+    activeOverlay.destroy();
+    activeOverlay = null;
+  };
 
   galleryPanel.onStickerSelect((src) => {
-    if (activeOverlay) {
+    if (activeOverlay instanceof TextOverlay) clearOverlay();
+    if (activeOverlay instanceof StickerOverlay) {
       activeOverlay.setImage(src);
     } else {
-      activeOverlay = new StickerOverlay(src);
-      document.body.appendChild(activeOverlay.el);
+      const sticker = new StickerOverlay(src);
+      document.body.appendChild(sticker.el);
+      activeOverlay = sticker;
+    }
+  });
+
+  galleryPanel.onTextSelect((font) => {
+    if (activeOverlay instanceof StickerOverlay) clearOverlay();
+    if (activeOverlay instanceof TextOverlay) {
+      activeOverlay.setFont(font);
+    } else {
+      const text = new TextOverlay(font);
+      document.body.appendChild(text.el);
+      activeOverlay = text;
     }
   });
 }

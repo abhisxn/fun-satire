@@ -33,7 +33,21 @@ const STICKER_DEFS: readonly StickerDef[] = [
   { src: "/avatars/sticker_48.png", label: "Sticker 48" },
 ];
 
-const TEXT_COUNT = 8;
+interface TextDef {
+  readonly font: string;
+  readonly label: string;
+}
+
+const TEXT_FONTS: readonly TextDef[] = [
+  { font: '"Fraunces", serif', label: "Fraunces" },
+  { font: '"Space Grotesk", sans-serif', label: "Space Grotesk" },
+  { font: '"Anton", sans-serif', label: "Anton" },
+  { font: '"Caveat", cursive', label: "Caveat" },
+  { font: '"Playfair Display", serif', label: "Playfair Display" },
+  { font: '"Archivo Black", sans-serif', label: "Archivo Black" },
+  { font: '"DM Serif Display", serif', label: "DM Serif Display" },
+  { font: '"Bungee", sans-serif', label: "Bungee" },
+];
 
 export class GalleryPanel {
   private readonly overlay: HTMLElement;
@@ -43,8 +57,10 @@ export class GalleryPanel {
   private readonly stickerCards: HTMLElement[];
   private readonly textCards: HTMLElement[];
   private readonly stickerSrcByCard = new WeakMap<HTMLElement, string>();
+  private readonly textFontByCard = new WeakMap<HTMLElement, string>();
   private readonly boundMouseMoveHandlers = new Map<HTMLElement, (e: MouseEvent) => void>();
   private stickerSelectListeners: Array<(src: string) => void> = [];
+  private textSelectListeners: Array<(font: string) => void> = [];
 
   private galleryButton: HTMLElement | null = null;
   private isOpen = false;
@@ -80,8 +96,8 @@ export class GalleryPanel {
     const textGrid = document.createElement("div");
     textGrid.className = "text-grid";
     this.textCards = [];
-    for (let i = 0; i < TEXT_COUNT; i++) {
-      const card = this.buildTextCard();
+    for (const def of TEXT_FONTS) {
+      const card = this.buildTextCard(def);
       this.textCards.push(card);
       textGrid.appendChild(card);
     }
@@ -152,6 +168,13 @@ export class GalleryPanel {
     };
   }
 
+  onTextSelect(cb: (font: string) => void): () => void {
+    this.textSelectListeners.push(cb);
+    return () => {
+      this.textSelectListeners = this.textSelectListeners.filter((l) => l !== cb);
+    };
+  }
+
   destroy(): void {
     this.close();
     this.removeMouseMoveHandlers();
@@ -214,13 +237,21 @@ export class GalleryPanel {
     return card;
   }
 
-  private buildTextCard(): HTMLElement {
+  private buildTextCard(def: TextDef): HTMLElement {
     const card = document.createElement("div");
     card.className = "text-card";
+    card.dataset.textFont = def.font;
 
     const p = document.createElement("p");
-    p.textContent = "Fraunces";
+    p.textContent = def.label;
+    p.style.fontFamily = def.font;
     card.appendChild(p);
+
+    this.textFontByCard.set(card, def.font);
+
+    card.addEventListener("click", () => {
+      for (const listener of this.textSelectListeners) listener(def.font);
+    });
 
     return card;
   }
