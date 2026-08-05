@@ -77,7 +77,6 @@ async function main(): Promise<void> {
   engine.onTick(() => {
     const center = avatar.getCenter();
     grid.update(center.x, center.y);
-    bugSwarm.update(center.x, center.y);
   });
   engine.start();
 }
