@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Bug Crawl — Early-Commit Icon</title>
+  <style>
+    :root {
+      --cream: #EDE7DD; --slate: #5B7A8C; --sage: #6D7A5E; --ink: #2A2420; --rule: #C9C2B5;
+    }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--cream); color: var(--ink); font-family: Georgia, serif; overflow: hidden; }
+    .hud { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: baseline; justify-content: space-between; padding: 18px 24px; pointer-events: none; }
+    .hud h1 { font-weight: 500; font-size: 20px; margin: 0; }
+    .hud p { font-family: "Courier New", monospace; font-size: 12px; color: var(--slate); margin: 4px 0 0; }
+    .hud button { pointer-events: auto; font-family: "Courier New", monospace; font-size: 12px; background: #fff; border: 1px solid var(--rule); color: var(--ink); padding: 8px 14px; cursor: pointer; }
+    .hud button:hover { border-color: var(--slate); color: var(--slate); }
+    #stage { position: fixed; inset: 0; cursor: crosshair; }
+    .bug { position: absolute; top: 0; left: 0; pointer-events: none; transform-origin: 50% 50%; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15)); }
+    .bug svg { display: block; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div>
+      <h1>Bug Crawl — early-commit icon</h1>
+      <p>uses docs/superpowers/assets/icons/bug.svg (predates the current creature asset) · click to drop a bug · <span id="count">0</span> crawling</p>
+    </div>
+    <button id="rescatter" type="button">↻ re-scatter</button>
+  </div>
+
+  <div id="stage"></div>
+
+  <!-- Shape lifted verbatim from docs/superpowers/assets/icons/bug.svg, reused via <use> per instance. -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="bug-shape" viewBox="0 0 35 67">
+      <path d="M22.2671 48.6146L29.7734 46.9925L25.2696 61L27 65M22.2671 38.6045L29.5 37.5L33.5 44M24.1437 31.0957L28.5 28.5L33.5 29.5" stroke="var(--stroke-0, #2A2420)" stroke-width="1.75" stroke-linecap="round" fill="none"/>
+      <path d="M13.2329 48.6146L5.7266 46.9925L10.2304 61L8.5 65M13.2329 38.6045L6 37.5L2 44M11.3563 31.0957L7 28.5L2 29.5" stroke="var(--stroke-0, #2A2420)" stroke-width="1.75" stroke-linecap="round" fill="none"/>
+      <path d="M26.0014 30.345C26.0014 35.9415 26.8143 61.4961 17.7633 61.4961C8.71226 61.4961 9.5252 35.9415 9.5252 30.345C9.5252 24.7484 13.2135 20.2115 17.7633 20.2114C22.3131 20.2114 26.0014 24.7484 26.0014 30.345Z" fill="var(--fill-0, #5D4949)"/>
+      <path d="M20.7657 21.7128C21.7666 14.3316 25.1945 -0.130604 30.8993 1.07041" stroke="var(--stroke-0, #2A2420)" stroke-width="1.75" stroke-linecap="round" fill="none"/>
+      <path d="M14.3854 21.7128C13.3845 14.3316 9.95665 -0.130604 4.25186 1.07041" stroke="var(--stroke-0, #2A2420)" stroke-width="1.75" stroke-linecap="round" fill="none"/>
+    </symbol>
+  </svg>
+
+  <script>
+    // No external scripts required — everything below is vanilla DOM + rAF.
+    (function () {
+      "use strict";
+
+      var stage = document.getElementById("stage");
+      var countLabel = document.getElementById("count");
+      var rescatterBtn = document.getElementById("rescatter");
+
+      var TINTS = [
+        ["#5D4949", "#2A2420"],
+        ["#49525D", "#2A2420"],
+        ["#4A5D49", "#2A2420"],
+        ["#5D4F3A", "#2A2420"],
+      ];
+      var TAU = Math.PI * 2;
+
+      function rand(min, max) { return min + Math.random() * (max - min); }
+
+      var bugs = [];
+
+      function makeBug(x, y) {
+        var wrap = document.createElement("div");
+        wrap.className = "bug";
+        var size = rand(18, 34);
+        var svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgEl.setAttribute("width", String(size));
+        svgEl.setAttribute("height", String(size * (67 / 35)));
+        svgEl.setAttribute("viewBox", "0 0 35 67");
+        var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        use.setAttribute("href", "#bug-shape");
+        svgEl.appendChild(use);
+        wrap.appendChild(svgEl);
+        var tint = TINTS[Math.floor(rand(0, TINTS.length))];
+        wrap.style.setProperty("--fill-0", tint[0]);
+        wrap.style.setProperty("--stroke-0", tint[1]);
+        stage.appendChild(wrap);
+
+        return {
+          el: wrap,
+          w: size,
+          h: size * (67 / 35),
+          x: x, y: y,
+          angle: rand(0, TAU),
+          angularVel: 0,
+          speed: rand(24, 60),
+          wiggleSeed: rand(0, TAU),
+          wiggleFreq: rand(6, 10),
+          bobSeed: rand(0, TAU),
+        };
+      }
+
+      function spawnRandom(n) {
+        var w = window.innerWidth, h = window.innerHeight;
+        for (var i = 0; i < n; i++) bugs.push(makeBug(rand(0, w), rand(0, h)));
+        countLabel.textContent = String(bugs.length);
+      }
+
+      function clearBugs() {
+        for (var i = 0; i < bugs.length; i++) bugs[i].el.remove();
+        bugs = [];
+        countLabel.textContent = "0";
+      }
+
+      function scatter() {
+        clearBugs();
+        spawnRandom(Math.floor(rand(10, 18)));
+      }
+
+      // Semi-implicit Euler steering: angular velocity does a bounded random walk,
+      // heading integrates from it, position integrates from heading + speed.
+      var MARGIN = 40;
+      var TURN_ACCEL = 6;
+      var TURN_DAMPING = 0.9;
+
+      function step(bug, dt, t, w, h) {
+        bug.angularVel += (Math.random() - 0.5) * TURN_ACCEL * dt;
+        bug.angularVel *= TURN_DAMPING;
+
+        if (bug.x < MARGIN) bug.angularVel += Math.random() * 5 * dt;
+        if (bug.x > w - MARGIN) bug.angularVel -= Math.random() * 5 * dt;
+        if (bug.y < MARGIN) bug.angularVel += Math.random() * 5 * dt;
+        if (bug.y > h - MARGIN) bug.angularVel -= Math.random() * 5 * dt;
+
+        bug.angle += bug.angularVel * dt;
+
+        bug.x += Math.cos(bug.angle) * bug.speed * dt;
+        bug.y += Math.sin(bug.angle) * bug.speed * dt;
+        bug.x = Math.max(-bug.w, Math.min(w + bug.w, bug.x));
+        bug.y = Math.max(-bug.h, Math.min(h + bug.h, bug.y));
+
+        var wiggleDeg = Math.sin(t * bug.wiggleFreq + bug.wiggleSeed) * 6;
+        var bob = 1 + Math.sin(t * 5 + bug.bobSeed) * 0.04;
+        var headingDeg = (bug.angle * 180) / Math.PI + 90; // shape's forward is up (0deg)
+
+        var tx = bug.x - bug.w / 2;
+        var ty = bug.y - bug.h / 2;
+        bug.el.style.transform =
+          "translate3d(" + tx.toFixed(1) + "px," + ty.toFixed(1) + "px,0) " +
+          "rotate(" + (headingDeg + wiggleDeg).toFixed(1) + "deg) " +
+          "scale(" + bob.toFixed(3) + ")";
+      }
+
+      var lastT = null;
+      function tick(now) {
+        var t = now / 1000;
+        if (lastT === null) lastT = t;
+        var dt = Math.min(0.05, t - lastT);
+        lastT = t;
+        var w = window.innerWidth, h = window.innerHeight;
+        for (var i = 0; i < bugs.length; i++) step(bugs[i], dt, t, w, h);
+        requestAnimationFrame(tick);
+      }
+
+      stage.addEventListener("click", function (e) {
+        bugs.push(makeBug(e.clientX, e.clientY));
+        countLabel.textContent = String(bugs.length);
+      });
+      rescatterBtn.addEventListener("click", scatter);
+
+      scatter();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
