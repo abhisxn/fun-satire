@@ -2,6 +2,7 @@ import { Engine } from "./core/Engine";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { BugSwarm } from "./creatures/BugSwarm";
 import { DraggableAvatar } from "./creatures/DraggableAvatar";
+import { StickerOverlay } from "./creatures/StickerOverlay";
 import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel } from "./hud/GalleryPanel";
@@ -79,6 +80,17 @@ async function main(): Promise<void> {
     grid.update(center.x, center.y);
   });
   engine.start();
+
+  let activeOverlay: StickerOverlay | null = null;
+
+  galleryPanel.onStickerSelect((src) => {
+    if (activeOverlay) {
+      activeOverlay.setImage(src);
+    } else {
+      activeOverlay = new StickerOverlay(src);
+      document.body.appendChild(activeOverlay.el);
+    }
+  });
 }
 
 main().catch(console.error);

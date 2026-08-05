@@ -3,21 +3,34 @@ import "./galleryPanel.css";
 type GalleryMode = "sticker" | "text";
 
 interface StickerDef {
-  readonly emoji: string;
-  readonly gradient: string;
+  readonly src: string;
+  readonly label: string;
 }
 
 const STICKER_DEFS: readonly StickerDef[] = [
-  { emoji: "\u{1F441}", gradient: "linear-gradient(135deg,#ff9a9e,#fad0c4)" },
-  { emoji: "\u{1F41B}", gradient: "linear-gradient(135deg,#a18cd1,#fbc2eb)" },
-  { emoji: "\u261D\uFE0F", gradient: "linear-gradient(135deg,#fbc2eb,#a6c1ee)" },
-  { emoji: "\u{1FAB3}", gradient: "linear-gradient(135deg,#fdcbf1,#e6dee9)" },
-  { emoji: "\u{1F441}", gradient: "linear-gradient(135deg,#a1c4fd,#c2e9fb)" },
-  { emoji: "\u{1F41B}", gradient: "linear-gradient(135deg,#d4fc79,#96e6a1)" },
-  { emoji: "\u261D\uFE0F", gradient: "linear-gradient(135deg,#f6d365,#fda085)" },
-  { emoji: "\u{1FAB3}", gradient: "linear-gradient(135deg,#ffecd2,#fcb69f)" },
-  { emoji: "\u{1F441}", gradient: "linear-gradient(135deg,#89f7fe,#66a6ff)" },
-  { emoji: "\u{1F41B}", gradient: "linear-gradient(135deg,#fddb92,#d1fdff)" },
+  { src: "/avatars/adalat_sharma.png", label: "Adalat Sharma" },
+  { src: "/avatars/chronology.png", label: "Chronology" },
+  { src: "/avatars/ethanol.png", label: "Ethanol" },
+  { src: "/avatars/gutter.png", label: "Gutter" },
+  { src: "/avatars/kaleshi.png", label: "Kaleshi" },
+  { src: "/avatars/leak-pradhan.png", label: "Leak Pradhan" },
+  { src: "/avatars/mananiya-sadasya.png", label: "Mananiya Sadasya" },
+  { src: "/avatars/naya_leak.png", label: "Naya Leak" },
+  { src: "/avatars/petroleum.png", label: "Petroleum" },
+  { src: "/avatars/reel-minister.png", label: "Reel Minister" },
+  { src: "/avatars/republic.png", label: "Republic" },
+  { src: "/avatars/vishwaguru.png", label: "Vishwaguru" },
+  { src: "/avatars/sticker_38.png", label: "Sticker 38" },
+  { src: "/avatars/sticker_39.png", label: "Sticker 39" },
+  { src: "/avatars/sticker_40.png", label: "Sticker 40" },
+  { src: "/avatars/sticker_41.png", label: "Sticker 41" },
+  { src: "/avatars/sticker_42.png", label: "Sticker 42" },
+  { src: "/avatars/sticker_43.png", label: "Sticker 43" },
+  { src: "/avatars/sticker_44.png", label: "Sticker 44" },
+  { src: "/avatars/sticker_45.png", label: "Sticker 45" },
+  { src: "/avatars/sticker_46.png", label: "Sticker 46" },
+  { src: "/avatars/sticker_47.png", label: "Sticker 47" },
+  { src: "/avatars/sticker_48.png", label: "Sticker 48" },
 ];
 
 const TEXT_COUNT = 8;
@@ -29,7 +42,9 @@ export class GalleryPanel {
   private readonly toggleBtns: HTMLButtonElement[];
   private readonly stickerCards: HTMLElement[];
   private readonly textCards: HTMLElement[];
+  private readonly stickerSrcByCard = new WeakMap<HTMLElement, string>();
   private readonly boundMouseMoveHandlers = new Map<HTMLElement, (e: MouseEvent) => void>();
+  private stickerSelectListeners: Array<(src: string) => void> = [];
 
   private galleryButton: HTMLElement | null = null;
   private isOpen = false;
@@ -130,6 +145,13 @@ export class GalleryPanel {
     this.replayCardAnimations();
   }
 
+  onStickerSelect(cb: (src: string) => void): () => void {
+    this.stickerSelectListeners.push(cb);
+    return () => {
+      this.stickerSelectListeners = this.stickerSelectListeners.filter((l) => l !== cb);
+    };
+  }
+
   destroy(): void {
     this.close();
     this.removeMouseMoveHandlers();
@@ -166,13 +188,16 @@ export class GalleryPanel {
   private buildStickerCard(def: StickerDef): HTMLElement {
     const card = document.createElement("div");
     card.className = "sticker-card";
+    card.dataset.stickerSrc = def.src;
 
-    const placeholder = document.createElement("div");
-    placeholder.className = "sticker-placeholder";
-    placeholder.style.background = def.gradient;
-    placeholder.textContent = def.emoji;
+    const img = document.createElement("img");
+    img.className = "sticker-thumb";
+    img.src = def.src;
+    img.alt = def.label;
+    img.draggable = false;
+    card.appendChild(img);
 
-    card.appendChild(placeholder);
+    this.stickerSrcByCard.set(card, def.src);
 
     const onMouseMove = (e: MouseEvent): void => {
       const rect = card.getBoundingClientRect();
@@ -181,6 +206,10 @@ export class GalleryPanel {
     };
     card.addEventListener("mousemove", onMouseMove);
     this.boundMouseMoveHandlers.set(card, onMouseMove);
+
+    card.addEventListener("click", () => {
+      for (const listener of this.stickerSelectListeners) listener(def.src);
+    });
 
     return card;
   }
