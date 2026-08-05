@@ -52,7 +52,7 @@ describe("hud/GalleryPanel", () => {
       expect(stickerGrid).not.toBeNull();
 
       const stickerCards = root.querySelectorAll(".sticker-card");
-      expect(stickerCards.length).toBe(10);
+      expect(stickerCards.length).toBe(23);
 
       const textGrid = root.querySelector(".text-grid");
       expect(textGrid).not.toBeNull();
@@ -61,16 +61,17 @@ describe("hud/GalleryPanel", () => {
       expect(textCards.length).toBe(8);
     });
 
-    it("creates sticker cards with emoji placeholders and gradients", () => {
+    it("creates sticker cards with PNG thumbnails", () => {
       panel.attachTo(galleryButton);
       const root = panel.getRoot();
 
       const stickerCards = root.querySelectorAll(".sticker-card");
       stickerCards.forEach((card) => {
-        const placeholder = card.querySelector(".sticker-placeholder");
-        expect(placeholder).not.toBeNull();
-        expect(placeholder?.textContent).toBeTruthy();
-        expect(placeholder?.getAttribute("style")).toContain("background");
+        const img = card.querySelector("img.sticker-thumb");
+        expect(img).not.toBeNull();
+        const src = (img as HTMLImageElement).getAttribute("src");
+        expect(src).toBeTruthy();
+        expect(src).toMatch(/^\/avatars\//);
       });
     });
 
@@ -322,6 +323,31 @@ describe("hud/GalleryPanel", () => {
       panel.destroy();
 
       expect(removeEventListenerSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("onStickerSelect", () => {
+    it("invokes callback with the clicked sticker's src", () => {
+      panel.attachTo(galleryButton);
+      const cb = vi.fn();
+      panel.onStickerSelect(cb);
+
+      const root = panel.getRoot();
+      const firstCard = root.querySelector<HTMLElement>(".sticker-card");
+      firstCard?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(cb).toHaveBeenCalledTimes(1);
+      expect(cb).toHaveBeenCalledWith(firstCard?.dataset.stickerSrc);
+    });
+
+    it("returns an unsubscribe function", () => {
+      panel.attachTo(galleryButton);
+      const cb = vi.fn();
+      const off = panel.onStickerSelect(cb);
+      off();
+      const root = panel.getRoot();
+      root.querySelector<HTMLElement>(".sticker-card")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(cb).not.toHaveBeenCalled();
     });
   });
 });
