@@ -2,6 +2,7 @@ import { Engine } from "./core/Engine";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { BugSwarm } from "./creatures/BugSwarm";
 import { DraggableAvatar } from "./creatures/DraggableAvatar";
+import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel } from "./hud/GalleryPanel";
@@ -79,6 +80,17 @@ async function main(): Promise<void> {
     grid.update(center.x, center.y);
   });
   engine.start();
+
+  let activeOverlay: TextOverlay | null = null;
+
+  galleryPanel.onTextSelect((font) => {
+    if (activeOverlay) {
+      activeOverlay.setFont(font);
+    } else {
+      activeOverlay = new TextOverlay(font);
+      document.body.appendChild(activeOverlay.el);
+    }
+  });
 }
 
 main().catch(console.error);

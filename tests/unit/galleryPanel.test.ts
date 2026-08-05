@@ -74,16 +74,22 @@ describe("hud/GalleryPanel", () => {
       });
     });
 
-    it("creates text cards with Fraunces text", () => {
+    it("creates text cards with distinct font previews", () => {
       panel.attachTo(galleryButton);
       const root = panel.getRoot();
 
       const textCards = root.querySelectorAll(".text-card");
+      expect(textCards.length).toBe(8);
+      const labels = new Set<string>();
       textCards.forEach((card) => {
         const p = card.querySelector("p");
         expect(p).not.toBeNull();
-        expect(p?.textContent).toBe("Fraunces");
+        const font = (p as HTMLElement).style.fontFamily;
+        expect(font).toBeTruthy();
+        expect(font).not.toBe('"Fraunces", serif');
+        labels.add((p as HTMLElement).textContent ?? "");
       });
+      expect(labels.size).toBe(8);
     });
   });
 
@@ -322,6 +328,31 @@ describe("hud/GalleryPanel", () => {
       panel.destroy();
 
       expect(removeEventListenerSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("onTextSelect", () => {
+    it("invokes callback with the clicked font", () => {
+      panel.attachTo(galleryButton);
+      const cb = vi.fn();
+      panel.onTextSelect(cb);
+
+      const root = panel.getRoot();
+      const firstText = root.querySelector<HTMLElement>(".text-card");
+      firstText?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(cb).toHaveBeenCalledTimes(1);
+      expect(cb).toHaveBeenCalledWith(firstText?.dataset.textFont);
+    });
+
+    it("returns an unsubscribe function", () => {
+      panel.attachTo(galleryButton);
+      const cb = vi.fn();
+      const off = panel.onTextSelect(cb);
+      off();
+      const root = panel.getRoot();
+      root.querySelector<HTMLElement>(".text-card")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(cb).not.toHaveBeenCalled();
     });
   });
 });
