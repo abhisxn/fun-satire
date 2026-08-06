@@ -7,6 +7,44 @@ import { createFingerCreature, getFingerRotation } from "./FingerCreature";
 import { createCockroachCreature, getCockroachRotation } from "./CockroachCreature";
 import { createPlacardCreature, getPlacardRotation } from "./PlacardCreature";
 
+/** Whole batch of creatures finishes appearing within this window (ms). */
+export const SPAWN_WAVE_MS = 1800;
+/** Duration of one creature's own scale+fade pop animation (ms). */
+export const SPAWN_POP_MS = 380;
+
+function easeOutBack(t: number): number {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+export interface SpawnProgress {
+  scale: number;
+  opacity: number;
+  done: boolean;
+}
+
+/**
+ * Pure function: given when a creature is scheduled to start popping in
+ * (spawnPopAtMs) and the current time, returns its visual scale/opacity and
+ * whether its pop animation has finished.
+ */
+export function computeSpawnProgress(spawnPopAtMs: number, nowMs: number): SpawnProgress {
+  const t = nowMs - spawnPopAtMs;
+  if (t <= 0) {
+    return { scale: 0, opacity: 0, done: false };
+  }
+  if (t >= SPAWN_POP_MS) {
+    return { scale: 1, opacity: 1, done: true };
+  }
+  const progress = t / SPAWN_POP_MS;
+  return {
+    scale: easeOutBack(progress),
+    opacity: Math.min(1, progress / 0.6),
+    done: false,
+  };
+}
+
 interface ModeConfig {
   readonly cols: number;
   readonly rows: number;
