@@ -16,7 +16,8 @@ export class DraggableAvatar {
     this.el.style.webkitUserSelect = 'none';
     this.el.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.18))';
     this.el.style.transition = 'filter 0.15s';
-    this.el.style.zIndex = '500';
+    // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
+    this.el.style.zIndex = '100';
 
     this.drag = attachDrag(this.el, { x: initialX, y: initialY }, onMove);
   }

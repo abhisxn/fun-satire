@@ -1,7 +1,8 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
 
-export const STICKER_Z_INDEX = 500;
+// Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
+export const STICKER_Z_INDEX = 100;
 const DEFAULT_WIDTH = 160;
 const MIN_WIDTH = 48;
 const MAX_WIDTH = 480;

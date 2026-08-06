@@ -1,7 +1,8 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
 
-export const TEXT_Z_INDEX = 500;
+// Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
+export const TEXT_Z_INDEX = 100;
 const DEFAULT_FONT_SIZE = 56;
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 240;
