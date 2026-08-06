@@ -24,6 +24,12 @@ const SVG_COCKROACH = `<svg width="24" height="24" viewBox="0 0 24 24" fill="non
 <path d="M12 13C12 13 15 11.2091 15 9C15 6.79086 12 5 12 5C12 5 9 6.79086 9 9C9 11.2091 12 13 12 13ZM12 13V21.5" stroke="#2a1f1a" stroke-linecap="round"/>
 </svg>`;
 
+const SVG_PLACARD = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="16" height="10" rx="1" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 14V21" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M8 21H16" stroke="#2a1f1a" stroke-linecap="round"/>
+</svg>`;
+
 const SVG_BUG = `<svg width="35" height="67" viewBox="0 0 35 67" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g clip-path="url(#clip0_18_109)">
     <path d="M22.2671 48.6146L29.7734 46.9925L25.2696 61L27 65M22.2671 38.6045L29.5 37.5L33.5 44M24.1437 31.0957L28.5 28.5L33.5 29.5" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
@@ -67,6 +73,7 @@ const MODE_BTNS: readonly ModeBtnDef[] = [
   { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", svg: SVG_EYE },
   { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", svg: SVG_HAND },
   { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", svg: SVG_COCKROACH },
+  { mode: "placard", cssClass: "hud-btn--placard", tooltip: "Placard Mode", ariaLabel: "Placard Mode", svg: SVG_PLACARD },
 ];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLElementTagNameMap[K] {

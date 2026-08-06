@@ -42,14 +42,16 @@ describe("Hud", () => {
       expect(eyeBtn).toBeTruthy();
       expect(cockroachBtn).toBeTruthy();
       expect(handBtn).toBeTruthy();
+      expect(host.querySelector(".hud-btn--placard")).toBeTruthy();
     });
 
-    it("renders mode buttons in eye, hand, cockroach order", () => {
-      const modeButtons = host.querySelectorAll(".hud-btn--eye, .hud-btn--hand, .hud-btn--bug");
+    it("renders mode buttons in eye, hand, cockroach, placard order", () => {
+      const modeButtons = host.querySelectorAll(".hud-btn--eye, .hud-btn--hand, .hud-btn--bug, .hud-btn--placard");
       const classNames = Array.from(modeButtons).map((btn) => btn.className);
       expect(classNames[0]).toContain("hud-btn--eye");
       expect(classNames[1]).toContain("hud-btn--hand");
       expect(classNames[2]).toContain("hud-btn--bug");
+      expect(classNames[3]).toContain("hud-btn--placard");
     });
 
     it("creates attack button", () => {
@@ -102,6 +104,18 @@ describe("Hud", () => {
       cockroachBtn?.click();
 
       expect(firedMode).toBe("cockroach");
+    });
+
+    it("fires mode change event for placard mode", () => {
+      let firedMode: CreatureMode | null = null;
+      hud.onModeChange((mode) => {
+        firedMode = mode;
+      });
+
+      const placardBtn = host.querySelector<HTMLButtonElement>(".hud-btn--placard");
+      placardBtn?.click();
+
+      expect(firedMode).toBe("placard");
     });
 
     it("setActiveMode updates UI correctly", () => {

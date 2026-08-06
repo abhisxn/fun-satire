@@ -154,7 +154,8 @@
    ============================================ */
 .hud-btn--eye,
 .hud-btn--bug,
-.hud-btn--hand {
+.hud-btn--hand,
+.hud-btn--placard {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 30px;
@@ -180,9 +181,16 @@
   box-shadow: 0px 4px 0px #226591;
 }
 
+.hud-btn--placard.active {
+  background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
+  border: 1px solid #871e93;
+  box-shadow: 0px 4px 0px #871e93;
+}
+
 .hud-btn--eye:hover,
 .hud-btn--bug:hover,
-.hud-btn--hand:hover {
+.hud-btn--hand:hover,
+.hud-btn--placard:hover {
   transform: scale(1.08) translateY(-2px);
 }
 
@@ -198,9 +206,14 @@
   box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
 }
 
+.hud-btn--placard.active:hover {
+  box-shadow: 0px 6px 0px #871e93, 0px 8px 16px rgba(135, 30, 147, 0.3);
+}
+
 .hud-btn--eye.active:active,
 .hud-btn--bug.active:active,
-.hud-btn--hand.active:active {
+.hud-btn--hand.active:active,
+.hud-btn--placard.active:active {
   transform: scale(0.95) translateY(2px);
   transition-duration: 0.1s;
 }
@@ -215,6 +228,10 @@
 
 .hud-btn--hand.active:active {
   box-shadow: 0px 2px 0px #226591;
+}
+
+.hud-btn--placard.active:active {
+  box-shadow: 0px 2px 0px #871e93;
 }
 
 /* ============================================

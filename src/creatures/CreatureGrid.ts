@@ -34,6 +34,11 @@ const MODE_CONFIGS: Record<CreatureMode, ModeConfig> = {
     rows: 12,
     scaleFn: () => 0.08 + Math.pow(Math.random(), 1.5) * 0.35,
   },
+  placard: {
+    cols: 20,
+    rows: 12,
+    scaleFn: () => 0.08 + Math.pow(Math.random(), 1.5) * 0.35,
+  },
 };
 
 export interface CreatureGridConfig {
@@ -104,6 +109,9 @@ export class CreatureGrid {
           case 'cockroach':
             creature = createCockroachCreature(hx, hy, scale);
             break;
+          case 'placard':
+            creature = createCockroachCreature(hx, hy, scale);
+            break;
         }
         this.creatures.push(creature);
         this.container.appendChild(creature.el);
@@ -143,6 +151,9 @@ export class CreatureGrid {
             creature = createFingerCreature(hx, hy, scale);
             break;
           case 'cockroach':
+            creature = createCockroachCreature(hx, hy, scale);
+            break;
+          case 'placard':
             creature = createCockroachCreature(hx, hy, scale);
             break;
         }
@@ -187,6 +198,9 @@ export class CreatureGrid {
             break;
           case 'cockroach':
             angle = getCockroachRotation(c, avatarX, avatarY);
+            break;
+          case 'placard':
+            angle = 0;
             break;
           default:
             angle = 0;
