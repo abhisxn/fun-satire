@@ -245,6 +245,7 @@ export class CreatureGrid {
 
   update(avatarX: number, avatarY: number): void {
     const avatar = { x: avatarX, y: avatarY };
+    const now = Date.now();
 
     for (const c of this.creatures) {
       updateCreature(c, avatar, this.physicsParams);
@@ -265,7 +266,18 @@ export class CreatureGrid {
         const angleRad = Math.atan2(dy, -Math.abs(dx));
         const fullAngle = angleRad * (180 / Math.PI);
         const rotation = fullAngle * eye.rotFactor * halfSign;
-        eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scaleY(${scaleY})`;
+
+        let popScale = 1;
+        let opacity = 1;
+        if (!eye.spawnDone) {
+          const spawnState = computeSpawnProgress(eye.spawnPopAtMs, now);
+          popScale = spawnState.scale;
+          opacity = spawnState.opacity;
+          eye.spawnDone = spawnState.done;
+        }
+
+        eye.el.style.opacity = String(opacity);
+        eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scale(${popScale}) scaleY(${scaleY})`;
       }
     } else {
       for (const c of this.creatures) {
@@ -283,7 +295,18 @@ export class CreatureGrid {
           default:
             angle = 0;
         }
-        c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg)`;
+
+        let popScale = 1;
+        let opacity = 1;
+        if (!c.spawnDone) {
+          const spawnState = computeSpawnProgress(c.spawnPopAtMs, now);
+          popScale = spawnState.scale;
+          opacity = spawnState.opacity;
+          c.spawnDone = spawnState.done;
+        }
+
+        c.el.style.opacity = String(opacity);
+        c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg) scale(${popScale})`;
       }
     }
   }
