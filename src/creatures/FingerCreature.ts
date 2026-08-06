@@ -38,6 +38,8 @@ export function createFingerCreature(
     scale,
     w,
     h,
+    spawnPopAtMs: 0,
+    spawnDone: false,
   };
 }
 

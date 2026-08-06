@@ -102,6 +102,8 @@ export function createPlacardCreature(
     scale,
     w,
     h,
+    spawnPopAtMs: 0,
+    spawnDone: false,
   };
 }
 
