@@ -1,8 +1,5 @@
 import "./snapGuides.css";
-import { getSnapTargets } from "./snapGrid";
-
-const SNAP_MARGIN = 100;
-const SNAP_THRESHOLD = 28;
+import { getSnapLines, findNearestSnap } from "./snapGrid";
 
 let guideX: HTMLDivElement | null = null;
 let guideY: HTMLDivElement | null = null;
@@ -23,47 +20,19 @@ function ensureGuides(): { x: HTMLDivElement; y: HTMLDivElement } {
 
 export function updateSnapGuides(el: HTMLElement): void {
   const { x: xGuide, y: yGuide } = ensureGuides();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const rect = el.getBoundingClientRect();
-  const w = rect.width;
-  const h = rect.height;
-  const curLeft = rect.left;
-  const curTop = rect.top;
+  const { x, y } = getSnapLines(el);
+  const snapX = findNearestSnap(x);
+  const snapY = findNearestSnap(y);
 
-  const targets = getSnapTargets(w, h);
-  const xLines: readonly number[] = [SNAP_MARGIN, (vw - w) / 2, targets.left];
-  const yLines: readonly number[] = [SNAP_MARGIN, (vh - h) / 2, targets.top];
-
-  let bestDx = SNAP_THRESHOLD;
-  let bestXLine: number | null = null;
-  for (const line of xLines) {
-    const dx = Math.abs(curLeft - line);
-    if (dx < bestDx) {
-      bestDx = dx;
-      bestXLine = line;
-    }
-  }
-
-  let bestDy = SNAP_THRESHOLD;
-  let bestYLine: number | null = null;
-  for (const line of yLines) {
-    const dy = Math.abs(curTop - line);
-    if (dy < bestDy) {
-      bestDy = dy;
-      bestYLine = line;
-    }
-  }
-
-  if (bestXLine !== null) {
-    xGuide.style.left = `${bestXLine}px`;
+  if (snapX !== null) {
+    xGuide.style.left = `${snapX.guideLine}px`;
     xGuide.style.display = "block";
   } else {
     xGuide.style.display = "none";
   }
 
-  if (bestYLine !== null) {
-    yGuide.style.top = `${bestYLine}px`;
+  if (snapY !== null) {
+    yGuide.style.top = `${snapY.guideLine}px`;
     yGuide.style.display = "block";
   } else {
     yGuide.style.display = "none";
