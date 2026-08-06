@@ -1,4 +1,5 @@
 import { snapToGrid } from "./snapGrid";
+import { updateSnapGuides, hideSnapGuides } from "./snapGuides";
 
 export interface DragHandle {
   attach(): void;
@@ -29,6 +30,7 @@ export function attachDrag(
     dragging = false;
     target.classList.remove('dragging');
     snapToGrid(target);
+    hideSnapGuides();
     const rect = target.getBoundingClientRect();
     x = rect.left;
     y = rect.top;
@@ -49,6 +51,7 @@ export function attachDrag(
     y = e.clientY - offsetY;
     target.style.left = `${x}px`;
     target.style.top = `${y}px`;
+    updateSnapGuides(target);
     moveCb(x, y);
   };
 
@@ -76,6 +79,7 @@ export function attachDrag(
     y = t.clientY - offsetY;
     target.style.left = `${x}px`;
     target.style.top = `${y}px`;
+    updateSnapGuides(target);
     moveCb(x, y);
   };
 
