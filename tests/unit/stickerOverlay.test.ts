@@ -12,10 +12,10 @@ describe('StickerOverlay', () => {
     vi.restoreAllMocks();
   });
 
-  it('creates an img element at z-index 400', () => {
+  it('creates an img element at z-index 100', () => {
     const s = new StickerOverlay('/avatars/ethanol.png', 50, 60);
     expect(s.el.tagName).toBe('IMG');
-    expect(s.el.style.zIndex).toBe('400');
+    expect(s.el.style.zIndex).toBe('100');
     expect(s.el.style.left).toBe('50px');
     expect(s.el.style.top).toBe('60px');
     expect(s.el.className).toBe('sticker-overlay');

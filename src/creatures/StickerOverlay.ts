@@ -1,7 +1,7 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
 
-export const STICKER_Z_INDEX = 400;
+export const STICKER_Z_INDEX = 100;
 
 export class StickerOverlay {
   readonly el: HTMLImageElement;

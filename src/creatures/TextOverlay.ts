@@ -1,16 +1,18 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
 
-export const TEXT_Z_INDEX = 400;
+export const TEXT_Z_INDEX = 100;
 const DEFAULT_FONT_SIZE = 56;
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 240;
 const HANDLE_SIZE = 14;
+const DRAG_HANDLE_SIZE = 18;
 
 export class TextOverlay {
   readonly el: HTMLDivElement;
   private readonly editor: HTMLDivElement;
   private readonly handle: HTMLDivElement;
+  private readonly dragHandle: HTMLDivElement;
   private readonly drag: DragHandle;
   private fontSize: number;
   private currentFont: string;
@@ -40,6 +42,25 @@ export class TextOverlay {
       "touch-action:none",
     ].join(";");
 
+    this.dragHandle = document.createElement("div");
+    this.dragHandle.className = "text-overlay-drag";
+    this.dragHandle.style.cssText = [
+      "position:absolute",
+      `width:${DRAG_HANDLE_SIZE}px`,
+      `height:${DRAG_HANDLE_SIZE}px`,
+      "left:-9px",
+      "top:-9px",
+      "border-radius:50%",
+      "background:#fff",
+      "border:1px solid rgba(0,0,0,0.25)",
+      "cursor:grab",
+      "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
+      "opacity:0",
+      "transition:opacity 0.15s",
+      "z-index:2",
+    ].join(";");
+    this.el.appendChild(this.dragHandle);
+
     this.editor = document.createElement("div");
     this.editor.className = "text-overlay-editor";
     this.editor.contentEditable = "true";
@@ -51,7 +72,7 @@ export class TextOverlay {
       "min-width:120px",
       "padding:6px 10px",
       "border-radius:6px",
-      "background:rgba(255,255,255,0.85)",
+      "background:transparent",
       "color:#111",
       "line-height:1.1",
       "text-transform:none",
@@ -88,12 +109,14 @@ export class TextOverlay {
 
     this.el.addEventListener("mouseenter", () => {
       this.handle.style.opacity = "1";
+      this.dragHandle.style.opacity = "1";
     });
     this.el.addEventListener("mouseleave", () => {
       this.handle.style.opacity = "0";
+      this.dragHandle.style.opacity = "0";
     });
 
-    this.drag = attachDrag(this.el, { x, y });
+    this.drag = attachDrag(this.dragHandle, { x, y }, undefined, this.el);
     this.drag.attach();
     this.attachResize();
   }

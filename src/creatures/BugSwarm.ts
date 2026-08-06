@@ -35,7 +35,7 @@ function buildBugNode(): HTMLDivElement {
   const node = document.createElement("div");
   node.className = "bug";
   node.style.cssText =
-    "position:absolute;top:0;left:0;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.18));";
+    "position:absolute;top:0;left:0;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.18));z-index:200;";
 
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg") as SVGSVGElement;
@@ -240,6 +240,18 @@ export class BugSwarm {
 
   private attachClick(): void {
     this.boundClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target) return;
+      if (
+        target.closest(".premium-hud") ||
+        target.closest(".filter-panel-popover") ||
+        target.closest(".glass-panel-overlay") ||
+        target.closest(".sticker-overlay") ||
+        target.closest(".text-overlay") ||
+        target.closest("#draggable")
+      ) {
+        return;
+      }
       const b = makeBug(this.container, e.clientX, e.clientY);
       const vw = this.container.clientWidth || window.innerWidth;
       const vh = this.container.clientHeight || window.innerHeight;
@@ -247,12 +259,12 @@ export class BugSwarm {
       startGait(b);
       this.bugs.push(b);
     };
-    this.container.addEventListener("click", this.boundClick);
+    document.body.addEventListener("click", this.boundClick);
   }
 
   private detachClick(): void {
     if (this.boundClick) {
-      this.container.removeEventListener("click", this.boundClick);
+      document.body.removeEventListener("click", this.boundClick);
       this.boundClick = null;
     }
   }

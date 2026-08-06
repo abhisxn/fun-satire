@@ -269,7 +269,7 @@ export class GalleryPanel {
   private addEventListeners(): void {
     this.boundOnDocumentClick = (e: MouseEvent) => {
       if (
-        !this.overlay.contains(e.target as Node) &&
+        !this.panel.contains(e.target as Node) &&
         !this.galleryButton?.contains(e.target as Node)
       ) {
         this.close();

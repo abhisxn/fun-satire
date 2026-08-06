@@ -46,37 +46,39 @@
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   z-index: 1000;
   animation: hud-slide-up 0.8s var(--hud-ease-spring) forwards;
-}
-
-.premium-hud:hover {
-  transform: translateX(-50%) translateY(-2px);
-  transition: transform 0.6s var(--hud-ease-spring);
+  will-change: left, top;
 }
 
 /* ============================================
    Drag Handle — Grip Icon
    ============================================ */
 .hud-drag-handle {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: grab;
-  transition: opacity 0.3s var(--hud-ease-smooth);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 6px;
+  transition: opacity 0.3s var(--hud-ease-smooth), background 0.2s var(--hud-ease-smooth);
   animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
-  opacity: 0;
   animation-delay: 0.05s;
+  opacity: 0;
 }
 
 .hud-drag-handle:hover {
-  opacity: 0.7;
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .hud-drag-handle:active {
   cursor: grabbing;
   opacity: 1;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .hud-drag-handle svg {
@@ -111,14 +113,13 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+  background: rgba(255, 255, 255, 0.9);
   opacity: 0;
-  transition: opacity 0.4s var(--hud-ease-smooth);
+  transition: opacity 0.3s var(--hud-ease-smooth);
 }
 
-.hud-btn:hover::before {
-  opacity: 1;
-}
+.hud-btn:hover::before { opacity: 1; }
+.hud-btn.active:hover::before { opacity: 0; }
 
 .hud-btn:hover {
   transform: scale(1.08);
@@ -154,7 +155,8 @@
    ============================================ */
 .hud-btn--eye,
 .hud-btn--bug,
-.hud-btn--hand {
+.hud-btn--hand,
+.hud-btn--placard {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 30px;
@@ -169,20 +171,27 @@
 }
 
 .hud-btn--bug.active {
-  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
-  border: 1px solid #226591;
-  box-shadow: 0px 4px 0px #226591;
-}
-
-.hud-btn--hand.active {
   background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
   border: 1px solid #228b20;
   box-shadow: 0px 4px 0px #228b20;
 }
 
+.hud-btn--hand.active {
+  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
+  border: 1px solid #226591;
+  box-shadow: 0px 4px 0px #226591;
+}
+
+.hud-btn--placard.active {
+  background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
+  border: 1px solid #871e93;
+  box-shadow: 0px 4px 0px #871e93;
+}
+
 .hud-btn--eye:hover,
 .hud-btn--bug:hover,
-.hud-btn--hand:hover {
+.hud-btn--hand:hover,
+.hud-btn--placard:hover {
   transform: scale(1.08) translateY(-2px);
 }
 
@@ -191,16 +200,21 @@
 }
 
 .hud-btn--bug.active:hover {
-  box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
+  box-shadow: 0px 6px 0px #228b20, 0px 8px 16px rgba(34, 139, 32, 0.3);
 }
 
 .hud-btn--hand.active:hover {
-  box-shadow: 0px 6px 0px #228b20, 0px 8px 16px rgba(34, 139, 32, 0.3);
+  box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
+}
+
+.hud-btn--placard.active:hover {
+  box-shadow: 0px 6px 0px #871e93, 0px 8px 16px rgba(135, 30, 147, 0.3);
 }
 
 .hud-btn--eye.active:active,
 .hud-btn--bug.active:active,
-.hud-btn--hand.active:active {
+.hud-btn--hand.active:active,
+.hud-btn--placard.active:active {
   transform: scale(0.95) translateY(2px);
   transition-duration: 0.1s;
 }
@@ -210,27 +224,40 @@
 }
 
 .hud-btn--bug.active:active {
-  box-shadow: 0px 2px 0px #226591;
-}
-
-.hud-btn--hand.active:active {
   box-shadow: 0px 2px 0px #228b20;
 }
 
-/* ============================================
-   Utility Buttons — Ellipse Backgrounds
-   ============================================ */
-.hud-btn--gallery,
-.hud-btn--settings,
-.hud-btn--bug-mode {
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 70%);
-  border-radius: 50%;
+.hud-btn--hand.active:active {
+  box-shadow: 0px 2px 0px #226591;
 }
 
-/* Bug Mode toggle — subtle highlight, distinct from the bold mode-button gradients */
-.hud-btn--bug-mode.active {
-  background: radial-gradient(ellipse at center, rgba(116, 212, 231, 0.45) 0%, rgba(116, 212, 231, 0.12) 70%);
-  box-shadow: 0 0 0 2px rgba(58, 133, 186, 0.35);
+.hud-btn--placard.active:active {
+  box-shadow: 0px 2px 0px #871e93;
+}
+
+/* ============================================
+   Divider
+   ============================================ */
+.hud-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(42, 31, 26, 0.15);
+  border: none;
+  margin: 0 4px;
+  flex-shrink: 0;
+  align-self: center;
+  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  opacity: 0;
+  animation-delay: 0.25s;
+}
+
+/* ============================================
+   Utility Buttons — Filter, Gallery
+   ============================================ */
+.hud-btn--gallery,
+.hud-btn--settings {
+  background: transparent;
+  border-radius: 50%;
 }
 
 /* ============================================
@@ -380,10 +407,38 @@
 .hud-btn:nth-child(2) { animation-delay: 0.1s; }
 .hud-btn:nth-child(3) { animation-delay: 0.15s; }
 .hud-btn:nth-child(4) { animation-delay: 0.2s; }
-.hud-attack { animation-delay: 0.3s; }
-.hud-btn:nth-child(6) { animation-delay: 0.35s; }
-.hud-btn:nth-child(7) { animation-delay: 0.4s; }
-.hud-btn:nth-child(8) { animation-delay: 0.45s; }
+.hud-btn:nth-child(5) { animation-delay: 0.25s; }
+.hud-divider { animation-delay: 0.28s; }
+.hud-btn:nth-child(7) { animation-delay: 0.35s; }
+.hud-btn:nth-child(8) { animation-delay: 0.4s; }
+.hud-attack { animation-delay: 0.5s; }
+
+.premium-hud.hud--dragging,
+.premium-hud.hud--dragging:hover {
+  transform: none;
+  transition: none;
+  animation: none;
+}
+
+.premium-hud.hud--dragging .hud-btn,
+.premium-hud.hud--dragging .hud-attack,
+.premium-hud.hud--dragging .hud-divider {
+  animation: none;
+  opacity: 1;
+}
+
+.premium-hud.hud--dragging .hud-btn:hover,
+.premium-hud.hud--dragging .hud-btn:active,
+.premium-hud.hud--dragging .hud-attack:hover,
+.premium-hud.hud--dragging .hud-attack:active {
+  transform: none;
+  transition: none;
+}
+
+.premium-hud.hud--dragging .hud-btn::before,
+.premium-hud.hud--dragging .hud-btn:hover::before {
+  opacity: 0;
+}
 
 /* ============================================
    Responsive — Tablet (768px)
