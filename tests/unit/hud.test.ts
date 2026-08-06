@@ -44,6 +44,14 @@ describe("Hud", () => {
       expect(handBtn).toBeTruthy();
     });
 
+    it("renders mode buttons in eye, hand, cockroach order", () => {
+      const modeButtons = host.querySelectorAll(".hud-btn--eye, .hud-btn--hand, .hud-btn--bug");
+      const classNames = Array.from(modeButtons).map((btn) => btn.className);
+      expect(classNames[0]).toContain("hud-btn--eye");
+      expect(classNames[1]).toContain("hud-btn--hand");
+      expect(classNames[2]).toContain("hud-btn--bug");
+    });
+
     it("creates attack button", () => {
       const attackBtn = host.querySelector(".hud-attack");
       expect(attackBtn).toBeTruthy();

@@ -65,8 +65,8 @@ interface ModeBtnDef {
 
 const MODE_BTNS: readonly ModeBtnDef[] = [
   { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", svg: SVG_EYE },
-  { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", svg: SVG_COCKROACH },
   { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", svg: SVG_HAND },
+  { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", svg: SVG_COCKROACH },
 ];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLElementTagNameMap[K] {

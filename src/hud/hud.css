@@ -169,15 +169,15 @@
 }
 
 .hud-btn--bug.active {
-  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
-  border: 1px solid #226591;
-  box-shadow: 0px 4px 0px #226591;
-}
-
-.hud-btn--hand.active {
   background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
   border: 1px solid #228b20;
   box-shadow: 0px 4px 0px #228b20;
+}
+
+.hud-btn--hand.active {
+  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
+  border: 1px solid #226591;
+  box-shadow: 0px 4px 0px #226591;
 }
 
 .hud-btn--eye:hover,
@@ -191,11 +191,11 @@
 }
 
 .hud-btn--bug.active:hover {
-  box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
+  box-shadow: 0px 6px 0px #228b20, 0px 8px 16px rgba(34, 139, 32, 0.3);
 }
 
 .hud-btn--hand.active:hover {
-  box-shadow: 0px 6px 0px #228b20, 0px 8px 16px rgba(34, 139, 32, 0.3);
+  box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
 }
 
 .hud-btn--eye.active:active,
@@ -210,11 +210,11 @@
 }
 
 .hud-btn--bug.active:active {
-  box-shadow: 0px 2px 0px #226591;
+  box-shadow: 0px 2px 0px #228b20;
 }
 
 .hud-btn--hand.active:active {
-  box-shadow: 0px 2px 0px #228b20;
+  box-shadow: 0px 2px 0px #226591;
 }
 
 /* ============================================
