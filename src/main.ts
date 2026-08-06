@@ -2,6 +2,7 @@ import { Engine } from "./core/Engine";
 import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { DraggableAvatar } from "./creatures/DraggableAvatar";
+import { spawnPoof } from "./creatures/poofEffect";
 import { StickerOverlay } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
@@ -92,13 +93,18 @@ async function main(): Promise<void> {
 
   galleryPanel.onStickerSelect((src) => {
     if (activeOverlay instanceof TextOverlay) clearOverlay();
+    let initialX: number | undefined;
+    let initialY: number | undefined;
     if (activeOverlay instanceof StickerOverlay) {
-      activeOverlay.setImage(src);
-    } else {
-      const sticker = new StickerOverlay(src);
-      document.body.appendChild(sticker.el);
-      activeOverlay = sticker;
+      const rect = activeOverlay.el.getBoundingClientRect();
+      spawnPoof(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      initialX = rect.left;
+      initialY = rect.top;
+      clearOverlay();
     }
+    const sticker = new StickerOverlay(src, initialX, initialY);
+    document.body.appendChild(sticker.el);
+    activeOverlay = sticker;
   });
 
   galleryPanel.onTextSelect((font) => {
