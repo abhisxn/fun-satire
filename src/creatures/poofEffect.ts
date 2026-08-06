@@ -19,8 +19,15 @@ function makePuff(cx: number, cy: number, size: number): HTMLDivElement {
   return puff;
 }
 
-export function spawnPoof(cx: number, cy: number): void {
+/**
+ * Spawns the two-layer poof burst. Returns a promise that resolves once the
+ * sharp "pop" layer (the primary visual burst) finishes, so callers can
+ * sequence content changes to land after the old content has visibly
+ * vanished — the slower "smoke" layer keeps drifting in the background.
+ */
+export function spawnPoof(cx: number, cy: number): Promise<void> {
   const animateSupported = typeof document.createElement("div").animate === "function";
+  const popFinished: Promise<void>[] = [];
 
   // Layer 1: sharp, small, fast "pop" — the initial burst.
   for (let i = 0; i < POP_COUNT; i++) {
@@ -45,6 +52,7 @@ export function spawnPoof(cx: number, cy: number): void {
       { duration: 380 + Math.random() * 120, easing: "ease-out" },
     );
     anim.onfinish = () => puff.remove();
+    popFinished.push(anim.finished.then(() => undefined).catch(() => undefined));
   }
 
   // Layer 2: bigger, softer, slower "smoke" — drifts outward and up.
@@ -80,4 +88,7 @@ export function spawnPoof(cx: number, cy: number): void {
     );
     anim.onfinish = () => puff.remove();
   }
+
+  if (popFinished.length === 0) return Promise.resolve();
+  return Promise.all(popFinished).then(() => undefined);
 }

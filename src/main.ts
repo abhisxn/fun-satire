@@ -77,9 +77,14 @@ async function main(): Promise<void> {
   });
 
   type Attractor = { getCenter(): { x: number; y: number } };
+  const staticAttractor = (x: number, y: number): Attractor => ({
+    getCenter: () => ({ x, y }),
+  });
+
   let currentAttractor: Attractor = avatar;
   let avatarActive = true;
   let activeOverlay: StickerOverlay | TextOverlay | null = null;
+  let replaceToken = 0;
 
   const engine = new Engine();
   engine.onTick(() => {
@@ -88,23 +93,39 @@ async function main(): Promise<void> {
   });
   engine.start();
 
-  const poofElement = (el: HTMLElement): void => {
+  const poofElement = (el: HTMLElement): Promise<void> => {
     const rect = el.getBoundingClientRect();
-    spawnPoof(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return spawnPoof(rect.left + rect.width / 2, rect.top + rect.height / 2);
   };
 
-  const replaceOverlay = (
+  const replaceOverlay = async (
     next: StickerOverlay | TextOverlay,
-  ): void => {
+  ): Promise<void> => {
+    const token = ++replaceToken;
+
+    // Freeze the attractor at the last known center while the old content
+    // poofs away, since the element it's read from is about to be removed.
+    const center = currentAttractor.getCenter();
+    currentAttractor = staticAttractor(center.x, center.y);
+
+    let poofDone: Promise<void>;
     if (avatarActive) {
-      poofElement(avatar.el);
+      poofDone = poofElement(avatar.el);
       avatar.detach();
       avatar.el.remove();
       avatarActive = false;
     } else if (activeOverlay) {
-      poofElement(activeOverlay.el);
-      activeOverlay.destroy();
+      const overlay = activeOverlay;
+      activeOverlay = null;
+      poofDone = poofElement(overlay.el);
+      overlay.destroy();
+    } else {
+      poofDone = Promise.resolve();
     }
+
+    await poofDone;
+    if (token !== replaceToken) return; // superseded by a newer replace
+
     document.body.appendChild(next.el);
     activeOverlay = next;
     currentAttractor = next;
@@ -112,16 +133,22 @@ async function main(): Promise<void> {
 
   galleryPanel.onStickerSelect((src) => {
     const sticker = new StickerOverlay(src);
-    replaceOverlay(sticker);
+    void replaceOverlay(sticker);
   });
 
   galleryPanel.onTextSelect((font) => {
     if (activeOverlay instanceof TextOverlay) {
-      activeOverlay.setFont(font);
+      const overlay = activeOverlay;
+      const poofDone = poofElement(overlay.el);
+      overlay.el.style.visibility = "hidden";
+      void poofDone.then(() => {
+        overlay.setFont(font);
+        overlay.el.style.visibility = "visible";
+      });
       return;
     }
     const text = new TextOverlay(font);
-    replaceOverlay(text);
+    void replaceOverlay(text);
   });
 }
 
