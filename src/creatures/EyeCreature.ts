@@ -62,6 +62,7 @@ export function createEyeCreature(
     h,
     spawnPopAtMs: 0,
     spawnDone: false,
+    fadeStartMs: 0,
     nextBlink: Date.now() + 2000 + Math.random() * 4000,
     blinking: false,
     blinkStart: 0,

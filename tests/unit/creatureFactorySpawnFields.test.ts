@@ -12,23 +12,27 @@ describe('creature factories initialize spawn animation fields', () => {
     const eye = createEyeCreature(10, 20, 1, TEST_SVG, 'uid');
     expect(eye.spawnPopAtMs).toBe(0);
     expect(eye.spawnDone).toBe(false);
+    expect(eye.fadeStartMs).toBe(0);
   });
 
   it('createFingerCreature defaults spawnPopAtMs to 0 and spawnDone to false', () => {
     const finger = createFingerCreature(10, 20, 1);
     expect(finger.spawnPopAtMs).toBe(0);
     expect(finger.spawnDone).toBe(false);
+    expect(finger.fadeStartMs).toBe(0);
   });
 
   it('createCockroachCreature defaults spawnPopAtMs to 0 and spawnDone to false', () => {
     const cockroach = createCockroachCreature(10, 20, 1);
     expect(cockroach.spawnPopAtMs).toBe(0);
     expect(cockroach.spawnDone).toBe(false);
+    expect(cockroach.fadeStartMs).toBe(0);
   });
 
   it('createPlacardCreature defaults spawnPopAtMs to 0 and spawnDone to false', () => {
     const placard = createPlacardCreature(10, 20, 1);
     expect(placard.spawnPopAtMs).toBe(0);
     expect(placard.spawnDone).toBe(false);
+    expect(placard.fadeStartMs).toBe(0);
   });
 });

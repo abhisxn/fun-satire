@@ -37,6 +37,7 @@ export function createCockroachCreature(
     h,
     spawnPopAtMs: 0,
     spawnDone: false,
+    fadeStartMs: 0,
   };
 }
 

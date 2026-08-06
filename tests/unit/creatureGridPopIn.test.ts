@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreatureGrid } from '../../src/creatures/CreatureGrid';
+import { CreatureGrid, RESPAWN_COUNT, FADE_OUT_MS } from '../../src/creatures/CreatureGrid';
 import type { CreatureGridConfig } from '../../src/creatures/CreatureGrid';
 
 const TEST_SVG = `<svg viewBox="0 0 115 57"><circle cx="40.25" cy="28.75" r="10"/></svg>`;
@@ -33,6 +33,7 @@ vi.mock('../../src/creatures/EyeCreature', async (importOriginal) => {
         h: 57 * scale,
         spawnPopAtMs: 0,
         spawnDone: false,
+        fadeStartMs: 0,
         nextBlink: Date.now() + 10000,
         blinking: false,
         blinkStart: 0,
@@ -86,12 +87,16 @@ describe('CreatureGrid update — pop-in visuals', () => {
   it('does not recompute the animation once a creature is marked done', () => {
     const grid = new CreatureGrid(config);
     grid.spawn('cockroach');
-    const creatures = (grid as unknown as { creatures: Array<{ el: HTMLElement; hx: number; hy: number; spawnPopAtMs: number; spawnDone: boolean }> }).creatures;
+    const creatures = (grid as unknown as { creatures: Array<{ el: HTMLElement; hx: number; hy: number; spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number }> }).creatures;
     const creature = creatures[0];
     creature.spawnPopAtMs = Date.now() - 10000;
     grid.update(creature.hx, creature.hy);
     expect(creature.spawnDone).toBe(true);
 
+    // Isolate from the random re-pop machinery so it doesn't fade this
+    // creature out and alter its opacity.
+    (grid as unknown as { lastRespawnMs: number }).lastRespawnMs = Date.now();
+    creature.fadeStartMs = 0;
     creature.spawnPopAtMs = Date.now() + 10000;
     grid.update(creature.hx, creature.hy);
 
@@ -109,5 +114,89 @@ describe('CreatureGrid update — pop-in visuals', () => {
     grid.update(creature.hx, creature.hy);
 
     expect(creature.el.style.transform).toMatch(/scale\(1\).*scaleY\(/);
+  });
+
+  it('does not randomly re-pop while the initial wave is still appearing', () => {
+    const grid = new CreatureGrid(config);
+    grid.spawn('cockroach');
+    const creatures = (grid as unknown as { creatures: Array<{ spawnPopAtMs: number; spawnDone: boolean }> }).creatures;
+    for (const c of creatures) {
+      c.spawnDone = false;
+      c.spawnPopAtMs = Date.now() + 60000;
+    }
+
+    grid.update(400, 300);
+
+    expect(creatures.every((c) => !c.spawnDone)).toBe(true);
+  });
+
+  it('randomly marks settled creatures for fade-out', () => {
+    const grid = new CreatureGrid(config);
+    grid.spawn('cockroach');
+    const creatures = (grid as unknown as { creatures: Array<{ spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number }> }).creatures;
+    for (const c of creatures) {
+      c.spawnDone = true;
+      c.spawnPopAtMs = 1;
+    }
+    const before = Date.now();
+
+    grid.update(400, 300);
+
+    const fading = creatures.filter((c) => c.fadeStartMs > 0);
+    expect(fading.length).toBe(RESPAWN_COUNT);
+    expect(creatures.every((c) => c.spawnDone)).toBe(true);
+    for (const c of fading) {
+      expect(c.fadeStartMs).toBeGreaterThanOrEqual(before);
+    }
+  });
+
+  it('starts random re-pops while the initial wave is still appearing', () => {
+    const grid = new CreatureGrid(config);
+    grid.spawn('cockroach');
+    const creatures = (grid as unknown as { creatures: Array<{ spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number }> }).creatures;
+    for (const c of creatures) {
+      c.spawnDone = true;
+      c.spawnPopAtMs = 1;
+    }
+    // Half the crowd is still mid-pop-in; the other half has settled.
+    for (let i = 0; i < creatures.length / 2; i++) {
+      creatures[i].spawnDone = false;
+      creatures[i].spawnPopAtMs = Date.now() + 60000;
+    }
+
+    grid.update(400, 300);
+
+    const fading = creatures.filter((c) => c.fadeStartMs > 0);
+    expect(fading.length).toBe(RESPAWN_COUNT);
+    for (const c of fading) {
+      expect(c.spawnDone).toBe(true);
+    }
+  });
+
+  it('fades a creature out before re-popping it', () => {
+    const grid = new CreatureGrid(config);
+    grid.spawn('cockroach');
+    const creatures = (grid as unknown as { creatures: Array<{ el: HTMLElement; hx: number; hy: number; spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number }> }).creatures;
+    for (const c of creatures) {
+      c.spawnDone = true;
+      c.spawnPopAtMs = 1;
+    }
+    const target = creatures[0];
+
+    target.fadeStartMs = Date.now() - FADE_OUT_MS / 2;
+    grid.update(400, 300);
+
+    const midOpacity = Number(target.el.style.opacity);
+    expect(target.spawnDone).toBe(true);
+    expect(target.fadeStartMs).toBeGreaterThan(0);
+    expect(midOpacity).toBeGreaterThan(0);
+    expect(midOpacity).toBeLessThan(1);
+
+    target.fadeStartMs = Date.now() - FADE_OUT_MS - 50;
+    grid.update(400, 300);
+
+    expect(target.fadeStartMs).toBe(0);
+    expect(target.spawnDone).toBe(false);
+    expect(target.spawnPopAtMs).toBeGreaterThanOrEqual(Date.now() - 100);
   });
 });

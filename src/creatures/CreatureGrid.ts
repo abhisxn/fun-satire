@@ -8,9 +8,15 @@ import { createCockroachCreature, getCockroachRotation } from "./CockroachCreatu
 import { createPlacardCreature, getPlacardRotation } from "./PlacardCreature";
 
 /** Whole batch of creatures finishes appearing within this window (ms). */
-export const SPAWN_WAVE_MS = 1800;
+export const SPAWN_WAVE_MS = 20000;
 /** Duration of one creature's own scale+fade pop animation (ms). */
-export const SPAWN_POP_MS = 380;
+export const SPAWN_POP_MS = 1200;
+/** Random re-pop cadence for settled creatures (ms between batches). */
+export const RESPAWN_INTERVAL_MS = 1500;
+/** How many settled creatures randomly re-pop per interval. */
+export const RESPAWN_COUNT = 4;
+/** Duration of the fade-out before a creature re-pops (ms). */
+export const FADE_OUT_MS = 400;
 
 function easeOutBack(t: number): number {
   const c1 = 1.70158;
@@ -43,6 +49,30 @@ export function computeSpawnProgress(spawnPopAtMs: number, nowMs: number): Spawn
     opacity: Math.min(1, progress / 0.6),
     done: false,
   };
+}
+
+/**
+ * Resolves a creature's visual state for the current frame. Handles the
+ * fade-out phase (fadeStartMs > 0) that precedes a random re-pop, then the
+ * pop-in animation, then the settled state.
+ */
+function resolveSpawnState(creature: Creature, nowMs: number): { popScale: number; opacity: number } {
+  if (creature.fadeStartMs > 0) {
+    const fadeProgress = (nowMs - creature.fadeStartMs) / FADE_OUT_MS;
+    if (fadeProgress >= 1) {
+      creature.fadeStartMs = 0;
+      creature.spawnDone = false;
+      creature.spawnPopAtMs = nowMs;
+    } else {
+      return { popScale: 1, opacity: 1 - fadeProgress };
+    }
+  }
+  if (!creature.spawnDone) {
+    const spawnState = computeSpawnProgress(creature.spawnPopAtMs, nowMs);
+    creature.spawnDone = spawnState.done;
+    return { popScale: spawnState.scale, opacity: spawnState.opacity };
+  }
+  return { popScale: 1, opacity: 1 };
 }
 
 interface ModeConfig {
@@ -105,6 +135,7 @@ export class CreatureGrid {
     springStrength: 0.02,
     damping: 0.88,
   };
+  private lastRespawnMs: number = 0;
 
   constructor(config: CreatureGridConfig) {
     this.container = config.container;
@@ -267,17 +298,9 @@ export class CreatureGrid {
         const fullAngle = angleRad * (180 / Math.PI);
         const rotation = fullAngle * eye.rotFactor * halfSign;
 
-        let popScale = 1;
-        let opacity = 1;
-        if (!eye.spawnDone) {
-          const spawnState = computeSpawnProgress(eye.spawnPopAtMs, now);
-          popScale = spawnState.scale;
-          opacity = spawnState.opacity;
-          eye.spawnDone = spawnState.done;
-        }
-
-        eye.el.style.opacity = String(opacity);
-        eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scale(${popScale}) scaleY(${scaleY})`;
+        const spawn = resolveSpawnState(eye, now);
+        eye.el.style.opacity = String(spawn.opacity);
+        eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scale(${spawn.popScale}) scaleY(${scaleY})`;
       }
     } else {
       for (const c of this.creatures) {
@@ -296,17 +319,24 @@ export class CreatureGrid {
             angle = 0;
         }
 
-        let popScale = 1;
-        let opacity = 1;
-        if (!c.spawnDone) {
-          const spawnState = computeSpawnProgress(c.spawnPopAtMs, now);
-          popScale = spawnState.scale;
-          opacity = spawnState.opacity;
-          c.spawnDone = spawnState.done;
-        }
+        const spawn = resolveSpawnState(c, now);
+        c.el.style.opacity = String(spawn.opacity);
+        c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg) scale(${spawn.popScale})`;
+      }
+    }
 
-        c.el.style.opacity = String(opacity);
-        c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg) scale(${popScale})`;
+    // Keep settled creatures randomly fading out and re-popping so the crowd
+    // feels alive. Starts as soon as the first creatures finish their pop-in,
+    // without waiting for the whole crowd to appear.
+    if (now - this.lastRespawnMs >= RESPAWN_INTERVAL_MS) {
+      const candidates = this.creatures.filter((c) => c.spawnDone && c.fadeStartMs === 0);
+      if (candidates.length > 0) {
+        this.lastRespawnMs = now;
+        const count = Math.min(RESPAWN_COUNT, candidates.length);
+        for (let i = 0; i < count; i++) {
+          const picked = candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0];
+          picked.fadeStartMs = now;
+        }
       }
     }
   }
