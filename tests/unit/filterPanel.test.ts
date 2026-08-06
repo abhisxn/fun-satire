@@ -109,8 +109,8 @@ describe("hud/FilterPanel", () => {
       expect(panel.getQuantity()).toBe(10);
     });
 
-    it("respects maximum bound (220)", () => {
-      panel = new FilterPanel(220, 1);
+    it("respects maximum bound (500)", () => {
+      panel = new FilterPanel(500, 1);
       panel.attachTo(settingsButton);
       const cb = vi.fn();
       panel.onQuantityChange(cb);
@@ -119,7 +119,7 @@ describe("hud/FilterPanel", () => {
       incBtn?.click();
 
       expect(cb).not.toHaveBeenCalled();
-      expect(panel.getQuantity()).toBe(220);
+      expect(panel.getQuantity()).toBe(500);
     });
 
     it("updates display value", () => {
@@ -396,9 +396,9 @@ describe("hud/FilterPanel", () => {
 
     it("clamps to maximum", () => {
       panel.attachTo(settingsButton);
-      panel.setQuantity(250);
+      panel.setQuantity(600);
 
-      expect(panel.getQuantity()).toBe(220);
+      expect(panel.getQuantity()).toBe(500);
     });
   });
 

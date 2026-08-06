@@ -23,9 +23,12 @@ async function main(): Promise<void> {
   document.body.appendChild(avatar.el);
   avatar.attach();
 
+  const filterPanel = new FilterPanel();
+
   const grid = new CreatureGrid({
     container,
     mode: "eyes",
+    initialQuantity: filterPanel.getQuantity(),
   });
   await grid.init();
 
@@ -36,7 +39,6 @@ async function main(): Promise<void> {
   if (!hudRoot) throw new Error("Missing #hud-root container");
   hud.attachTo(hudRoot);
 
-  const filterPanel = new FilterPanel();
   const galleryPanel = new GalleryPanel();
 
   filterPanel.attachTo(hud.getSettingsButton());

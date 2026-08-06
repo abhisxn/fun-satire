@@ -79,7 +79,7 @@ describe('CreatureGrid', () => {
     });
 
     it('creates eyes mode creatures', () => {
-      const grid = new CreatureGrid(config);
+      const grid = new CreatureGrid({ ...config, mode: 'eyes' });
       grid.spawn('eyes');
       expect(grid.getCreatureCount()).toBe(96);
       expect(grid.getMode()).toBe('eyes');
@@ -114,8 +114,20 @@ describe('CreatureGrid', () => {
       expect(grid.getCreatureCount()).toBe(240);
 
       grid.switchMode('eyes');
-      expect(grid.getCreatureCount()).toBe(96);
       expect(grid.getMode()).toBe('eyes');
+    });
+
+    it('preserves the current creature count across a mode switch', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach');
+      grid.setQuantity(300);
+      expect(grid.getCreatureCount()).toBe(300);
+
+      grid.switchMode('eyes');
+      expect(grid.getCreatureCount()).toBe(300);
+
+      grid.switchMode('cockroach');
+      expect(grid.getCreatureCount()).toBe(300);
     });
 
     it('does nothing when switching to same mode', () => {
