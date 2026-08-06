@@ -145,7 +145,11 @@
   width: 100%;
   height: 3px;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--filter-accent) 50%, var(--filter-text-muted) 50%);
+  background: linear-gradient(
+    90deg,
+    var(--filter-accent) var(--filter-repel-fill, 50%),
+    var(--filter-text-muted) var(--filter-repel-fill, 50%)
+  );
   outline: none;
   cursor: pointer;
   margin: 4px 0;

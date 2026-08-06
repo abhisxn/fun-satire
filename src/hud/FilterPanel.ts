@@ -93,10 +93,12 @@ export class FilterPanel {
     range.addEventListener("input", () => {
       const v = Math.max(REPEL_MIN, Math.min(REPEL_MAX, Number.parseFloat(range.value)));
       this.repel = v;
+      this.updateRepelFill(v);
       this.repelChangeCb?.(v);
     });
     repel.append(repelLabel, range);
     this.repelInput = range;
+    this.updateRepelFill(this.repel);
     root.appendChild(repel);
 
     const bugModeDivider = document.createElement("hr");
@@ -174,10 +176,16 @@ export class FilterPanel {
     const clamped = Math.max(REPEL_MIN, Math.min(REPEL_MAX, multiplier));
     this.repel = clamped;
     this.repelInput.value = String(clamped);
+    this.updateRepelFill(clamped);
   }
 
   getRepel(): number {
     return this.repel;
+  }
+
+  private updateRepelFill(value: number): void {
+    const pct = ((value - REPEL_MIN) / (REPEL_MAX - REPEL_MIN)) * 100;
+    this.repelInput.style.setProperty("--filter-repel-fill", `${pct}%`);
   }
 
   private stepQuantity(delta: number): void {
