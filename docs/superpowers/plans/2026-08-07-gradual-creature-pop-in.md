@@ -960,6 +960,105 @@ and what was observed before moving on.
 
 ---
 
+## Task 7: CSS hygiene — move static wrapper styles to global CSS
+
+Moves the static presentational styles the four creature factories currently set inline
+(`position: absolute`, `pointer-events: none`, `will-change: transform`) into the existing
+global `#stage > .wrap` rule in `index.html`. Per-frame dynamic values stay inline — they are
+computed per creature per frame and cannot live in static CSS:
+- `width` / `height`: derived from each creature's randomized scale.
+- `opacity` / `transform`: written every frame by the pop-in animation in `update()`.
+
+**Files:**
+- Modify: `index.html` (`#stage > .wrap` rule)
+- Modify: `src/creatures/EyeCreature.ts`, `src/creatures/FingerCreature.ts`,
+  `src/creatures/CockroachCreature.ts`, `src/creatures/PlacardCreature.ts`
+- Test: `tests/unit/creatureCssHygiene.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/unit/creatureCssHygiene.test.ts`:
+
+```ts
+// @vitest-environment happy-dom
+import { describe, it, expect } from 'vitest';
+import { createEyeCreature } from '../../src/creatures/EyeCreature';
+import { createFingerCreature } from '../../src/creatures/FingerCreature';
+import { createCockroachCreature } from '../../src/creatures/CockroachCreature';
+import { createPlacardCreature } from '../../src/creatures/PlacardCreature';
+
+const TEST_SVG = `<svg viewBox="0 0 115 57"><circle cx="40.25" cy="28.75" r="10"/></svg>`;
+
+describe('creature factories keep static styles in global CSS', () => {
+  it('uses the shared wrap class instead of inlining static presentational styles', () => {
+    const creatures = [
+      createEyeCreature(10, 20, 1, TEST_SVG, 'uid'),
+      createFingerCreature(10, 20, 1),
+      createCockroachCreature(10, 20, 1),
+      createPlacardCreature(10, 20, 1),
+    ];
+    for (const c of creatures) {
+      expect(c.el.className).toBe('wrap');
+      expect(c.el.style.position).toBe('');
+      expect(c.el.style.pointerEvents).toBe('');
+      expect(c.el.style.willChange).toBe('');
+      expect(c.el.style.width).not.toBe('');
+      expect(c.el.style.height).not.toBe('');
+    }
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run tests/unit/creatureCssHygiene.test.ts`
+Expected: FAIL — factories still inline `position` / `pointerEvents` / `willChange`.
+
+- [ ] **Step 3: Implement**
+
+In `index.html`, replace:
+
+```css
+      #stage > .wrap {
+        z-index: 300;
+      }
+```
+
+with:
+
+```css
+      #stage > .wrap {
+        position: absolute;
+        pointer-events: none;
+        will-change: transform;
+        z-index: 300;
+      }
+```
+
+In each of the four factories, delete the three static style lines
+(`el.style.position = 'absolute';`, `el.style.pointerEvents = 'none';`,
+`el.style.willChange = 'transform';`). Keep `width`/`height` (per-creature) and the inner
+`img`/`svg` sizing inline.
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npx vitest run tests/unit/creatureCssHygiene.test.ts`
+Expected: PASS.
+
+- [ ] **Step 5: Typecheck and full suite**
+
+Run: `npx tsc --noEmit`, then `npm test`
+Expected: no new failures (the known 7 pre-existing failures in draggableAvatar/filterPanel may remain).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add index.html src/creatures/EyeCreature.ts src/creatures/FingerCreature.ts src/creatures/CockroachCreature.ts src/creatures/PlacardCreature.ts tests/unit/creatureCssHygiene.test.ts
+git commit -m "refactor: move static creature wrapper styles to global CSS"
+```
+
+---
+
 ## Post-implementation
 
 All tasks above produce working, independently-testable increments. Once Task 6's manual
