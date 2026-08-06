@@ -32,7 +32,7 @@ describe("hud/FilterPanel", () => {
   });
 
   describe("DOM structure", () => {
-    it("creates correct structure with sections, stepper, divider, and repel slider", () => {
+    it("creates correct structure with sections, qty slider, divider, and repel slider", () => {
       panel.attachTo(settingsButton);
       const root = panel.getRoot();
 
@@ -42,14 +42,13 @@ describe("hud/FilterPanel", () => {
       const label = numbersSection?.querySelector(".filter-panel__label");
       expect(label?.textContent).toBe("Numbers");
 
-      const stepper = root.querySelector(".filter-panel__stepper");
-      expect(stepper).not.toBeNull();
-
-      const decBtn = root.querySelector('[data-filter-qty="dec"]');
-      const incBtn = root.querySelector('[data-filter-qty="inc"]');
+      const qtyInput = root.querySelector<HTMLInputElement>("[data-filter-qty]");
       const qtyValue = root.querySelector("[data-filter-qty-value]");
-      expect(decBtn).not.toBeNull();
-      expect(incBtn).not.toBeNull();
+      expect(qtyInput).not.toBeNull();
+      expect(qtyInput?.type).toBe("range");
+      expect(qtyInput?.min).toBe("10");
+      expect(qtyInput?.max).toBe("500");
+      expect(qtyInput?.step).toBe("10");
       expect(qtyValue).not.toBeNull();
       expect(qtyValue?.textContent?.trim()).toBe("60");
 
@@ -71,29 +70,18 @@ describe("hud/FilterPanel", () => {
     });
   });
 
-  describe("Quantity stepper", () => {
-    it("increments quantity by step (10)", () => {
+  describe("Quantity slider", () => {
+    it("emits change events with correct value", () => {
       panel.attachTo(settingsButton);
       const cb = vi.fn();
       panel.onQuantityChange(cb);
 
-      const incBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="inc"]');
-      incBtn?.click();
+      const qtyInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-qty]");
+      qtyInput!.value = "70";
+      qtyInput?.dispatchEvent(new Event("input", { bubbles: true }));
 
       expect(cb).toHaveBeenCalledWith(70);
       expect(panel.getQuantity()).toBe(70);
-    });
-
-    it("decrements quantity by step (10)", () => {
-      panel.attachTo(settingsButton);
-      const cb = vi.fn();
-      panel.onQuantityChange(cb);
-
-      const decBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="dec"]');
-      decBtn?.click();
-
-      expect(cb).toHaveBeenCalledWith(50);
-      expect(panel.getQuantity()).toBe(50);
     });
 
     it("respects minimum bound (10)", () => {
@@ -102,10 +90,10 @@ describe("hud/FilterPanel", () => {
       const cb = vi.fn();
       panel.onQuantityChange(cb);
 
-      const decBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="dec"]');
-      decBtn?.click();
+      const qtyInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-qty]");
+      qtyInput!.value = "10";
+      qtyInput?.dispatchEvent(new Event("input", { bubbles: true }));
 
-      expect(cb).not.toHaveBeenCalled();
       expect(panel.getQuantity()).toBe(10);
     });
 
@@ -115,17 +103,18 @@ describe("hud/FilterPanel", () => {
       const cb = vi.fn();
       panel.onQuantityChange(cb);
 
-      const incBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="inc"]');
-      incBtn?.click();
+      const qtyInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-qty]");
+      qtyInput!.value = "500";
+      qtyInput?.dispatchEvent(new Event("input", { bubbles: true }));
 
-      expect(cb).not.toHaveBeenCalled();
       expect(panel.getQuantity()).toBe(500);
     });
 
     it("updates display value", () => {
       panel.attachTo(settingsButton);
-      const incBtn = panel.getRoot().querySelector<HTMLButtonElement>('[data-filter-qty="inc"]');
-      incBtn?.click();
+      const qtyInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-qty]");
+      qtyInput!.value = "70";
+      qtyInput?.dispatchEvent(new Event("input", { bubbles: true }));
 
       const qtyValue = panel.getRoot().querySelector("[data-filter-qty-value]");
       expect(qtyValue?.textContent?.trim()).toBe("70");

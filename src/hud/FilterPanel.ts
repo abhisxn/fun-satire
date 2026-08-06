@@ -7,12 +7,10 @@ const REPEL_MIN = 0;
 const REPEL_MAX = 2;
 const REPEL_STEP = 0.05;
 
-const SVG_MINUS = `<svg viewBox="0 0 14 14" aria-hidden="true"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
-const SVG_PLUS = `<svg viewBox="0 0 14 14" aria-hidden="true"><line x1="7" y1="2" x2="7" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
-
 export class FilterPanel {
   private readonly root: HTMLElement;
   private readonly qtyValue: HTMLElement;
+  private readonly qtyInput: HTMLInputElement;
   private readonly repelInput: HTMLInputElement;
   private readonly bugModeInput: HTMLInputElement;
   private quantity: number;
@@ -42,32 +40,35 @@ export class FilterPanel {
     const numbers = document.createElement("div");
     numbers.className = "filter-panel__section";
     numbers.dataset.filterSection = "numbers";
-    const numbersLabel = document.createElement("span");
+    const numbersHeader = document.createElement("div");
+    numbersHeader.className = "filter-panel__header-row";
+    const numbersLabel = document.createElement("label");
     numbersLabel.className = "filter-panel__label";
     numbersLabel.textContent = "Numbers";
-    const numbersRow = document.createElement("div");
-    numbersRow.className = "filter-panel__stepper";
-    const dec = document.createElement("button");
-    dec.type = "button";
-    dec.className = "filter-panel__qty-btn";
-    dec.dataset.filterQty = "dec";
-    dec.setAttribute("aria-label", "Decrease quantity");
-    dec.innerHTML = SVG_MINUS;
     const value = document.createElement("output");
     value.className = "filter-panel__qty-value";
     value.dataset.filterQtyValue = "";
     value.textContent = String(this.quantity);
-    const inc = document.createElement("button");
-    inc.type = "button";
-    inc.className = "filter-panel__qty-btn";
-    inc.dataset.filterQty = "inc";
-    inc.setAttribute("aria-label", "Increase quantity");
-    inc.innerHTML = SVG_PLUS;
-    dec.addEventListener("click", () => this.stepQuantity(-1));
-    inc.addEventListener("click", () => this.stepQuantity(1));
-    numbersRow.append(dec, value, inc);
-    numbers.append(numbersLabel, numbersRow);
+    numbersHeader.append(numbersLabel, value);
+    const qtyRange = document.createElement("input");
+    qtyRange.type = "range";
+    qtyRange.className = "filter-panel__slider";
+    qtyRange.dataset.filterQty = "";
+    qtyRange.min = String(QTY_MIN);
+    qtyRange.max = String(QTY_MAX);
+    qtyRange.step = String(QTY_STEP);
+    qtyRange.value = String(this.quantity);
+    qtyRange.id = "filter-qty";
+    numbersLabel.htmlFor = qtyRange.id;
+    qtyRange.addEventListener("input", () => {
+      const v = Math.max(QTY_MIN, Math.min(QTY_MAX, Number.parseInt(qtyRange.value, 10)));
+      this.setQuantity(v);
+      this.quantityChangeCb?.(this.quantity);
+    });
+    numbers.append(numbersHeader, qtyRange);
     this.qtyValue = value;
+    this.qtyInput = qtyRange;
+    this.updateQtyFill(this.quantity);
     root.appendChild(numbers);
 
     const divider = document.createElement("hr");
@@ -82,7 +83,7 @@ export class FilterPanel {
     repelLabel.textContent = "Repel";
     const range = document.createElement("input");
     range.type = "range";
-    range.className = "filter-panel__repel";
+    range.className = "filter-panel__slider";
     range.dataset.filterRepel = "";
     range.min = String(REPEL_MIN);
     range.max = String(REPEL_MAX);
@@ -166,6 +167,8 @@ export class FilterPanel {
     const clamped = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(quantity / QTY_STEP) * QTY_STEP));
     this.quantity = clamped;
     this.qtyValue.textContent = String(clamped);
+    this.qtyInput.value = String(clamped);
+    this.updateQtyFill(clamped);
   }
 
   getQuantity(): number {
@@ -185,14 +188,12 @@ export class FilterPanel {
 
   private updateRepelFill(value: number): void {
     const pct = ((value - REPEL_MIN) / (REPEL_MAX - REPEL_MIN)) * 100;
-    this.repelInput.style.setProperty("--filter-repel-fill", `${pct}%`);
+    this.repelInput.style.setProperty("--filter-slider-fill", `${pct}%`);
   }
 
-  private stepQuantity(delta: number): void {
-    const next = this.quantity + delta * QTY_STEP;
-    if (next < QTY_MIN || next > QTY_MAX) return;
-    this.setQuantity(next);
-    this.quantityChangeCb?.(this.quantity);
+  private updateQtyFill(value: number): void {
+    const pct = ((value - QTY_MIN) / (QTY_MAX - QTY_MIN)) * 100;
+    this.qtyInput.style.setProperty("--filter-slider-fill", `${pct}%`);
   }
 
   onQuantityChange(cb: (quantity: number) => void): void {
