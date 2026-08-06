@@ -111,14 +111,13 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+  background: rgba(255, 255, 255, 0.9);
   opacity: 0;
-  transition: opacity 0.4s var(--hud-ease-smooth);
+  transition: opacity 0.3s var(--hud-ease-smooth);
 }
 
-.hud-btn:hover::before {
-  opacity: 1;
-}
+.hud-btn:hover::before { opacity: 1; }
+.hud-btn.active:hover::before { opacity: 0; }
 
 .hud-btn:hover {
   transform: scale(1.08);
@@ -238,16 +237,9 @@
    Utility Buttons — Ellipse Backgrounds
    ============================================ */
 .hud-btn--gallery,
-.hud-btn--settings,
-.hud-btn--bug-mode {
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 70%);
+.hud-btn--settings {
+  background: transparent;
   border-radius: 50%;
-}
-
-/* Bug Mode toggle — subtle highlight, distinct from the bold mode-button gradients */
-.hud-btn--bug-mode.active {
-  background: radial-gradient(ellipse at center, rgba(116, 212, 231, 0.45) 0%, rgba(116, 212, 231, 0.12) 70%);
-  box-shadow: 0 0 0 2px rgba(58, 133, 186, 0.35);
 }
 
 /* ============================================
