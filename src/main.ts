@@ -1,4 +1,5 @@
 import { Engine } from "./core/Engine";
+import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { DraggableAvatar } from "./creatures/DraggableAvatar";
 import { StickerOverlay } from "./creatures/StickerOverlay";
@@ -27,6 +28,8 @@ async function main(): Promise<void> {
   });
   await grid.init();
 
+  const bugSwarm = new BugSwarm(container);
+
   const hud = new Hud();
   const hudRoot = document.getElementById("hud-root");
   if (!hudRoot) throw new Error("Missing #hud-root container");
@@ -44,6 +47,10 @@ async function main(): Promise<void> {
 
   filterPanel.onRepelChange((value) => {
     grid.setRepelMultiplier(value);
+  });
+
+  filterPanel.onBugModeToggle((active) => {
+    bugSwarm.setActive(active);
   });
 
   hud.onModeChange((mode) => {
