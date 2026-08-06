@@ -33,12 +33,17 @@ export const PLACARD_POOL: PlacardAsset[] = [
   { src: '/creatures/placards/placard_18.png', w: 1416, h: 732 },
 ];
 
-/** Placard display width, as a multiple of the stick's rendered width. Tune by eye. */
-export const PLACARD_WIDTH_RATIO = 5.5;
+/** Placard display width reference, in px, at signScale = 1. Tune by eye. */
+export const PLACARD_BASE_W = 150;
 
 export function pickRandomPlacard(): PlacardAsset {
   const index = Math.floor(Math.random() * PLACARD_POOL.length);
   return PLACARD_POOL[index];
+}
+
+/** Sign size randomized independently from the stick's scale, kept legible. */
+function pickSignScale(): number {
+  return 0.3 + Math.pow(Math.random(), 1.5) * 0.5;
 }
 
 export function createPlacardCreature(
@@ -67,7 +72,8 @@ export function createPlacardCreature(
   el.appendChild(stickImg);
 
   const asset = pickRandomPlacard();
-  const placardW = PLACARD_WIDTH_RATIO * w;
+  const signScale = pickSignScale();
+  const placardW = PLACARD_BASE_W * signScale;
   const placardH = placardW * (asset.h / asset.w);
   const anchorPx = {
     x: STICK_ANCHOR_PCT.x * w,

@@ -38,9 +38,10 @@ const MODE_CONFIGS: Record<CreatureMode, ModeConfig> = {
   placard: {
     cols: 20,
     rows: 12,
-    // Higher floor than other modes (0.18 vs 0.08) so the placard sign text stays legible
-    // even on the smallest creatures in the grid.
-    scaleFn: () => 0.18 + Math.pow(Math.random(), 1.5) * 0.25,
+    // Higher floor than other modes (0.18 vs 0.08) so the placard stick stays legible
+    // even on the smallest creatures in the grid. Sign size is randomized independently
+    // in createPlacardCreature.
+    scaleFn: () => 0.18 + Math.pow(Math.random(), 1.5) * 0.22,
   },
 };
 

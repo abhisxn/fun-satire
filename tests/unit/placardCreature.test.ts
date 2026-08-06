@@ -5,7 +5,7 @@ import {
   getPlacardRotation,
   pickRandomPlacard,
   PLACARD_POOL,
-  PLACARD_WIDTH_RATIO,
+  PLACARD_BASE_W,
   STICK_NAT_W,
   STICK_NAT_H,
   STICK_ANCHOR_PCT,
@@ -80,14 +80,19 @@ describe('PlacardCreature', () => {
         x: STICK_ANCHOR_PCT.x * stickW,
         y: STICK_ANCHOR_PCT.y * stickH,
       };
-      const expectedW = PLACARD_WIDTH_RATIO * stickW;
-      const expectedH = expectedW * (asset.h / asset.w);
-      const expectedLeft = anchorPx.x - expectedW / 2;
+
+      // Sign size is randomized independently of stick scale, so bounds-check it
+      // (signScale in [0.3, 0.8]) rather than asserting an exact value.
+      const actualW = parseFloat(placardImg.style.width);
+      expect(actualW).toBeGreaterThanOrEqual(PLACARD_BASE_W * 0.3 - 1e-6);
+      expect(actualW).toBeLessThanOrEqual(PLACARD_BASE_W * 0.8 + 1e-6);
+
+      const expectedH = actualW * (asset.h / asset.w);
+      const expectedLeft = anchorPx.x - actualW / 2;
       const expectedTop = anchorPx.y - expectedH / 2;
 
       // happy-dom's CSSOM serializes style values with limited decimal
       // precision, so compare parsed floats rather than exact strings.
-      expect(parseFloat(placardImg.style.width)).toBeCloseTo(expectedW, 5);
       expect(parseFloat(placardImg.style.height)).toBeCloseTo(expectedH, 5);
       expect(parseFloat(placardImg.style.left)).toBeCloseTo(expectedLeft, 5);
       expect(parseFloat(placardImg.style.top)).toBeCloseTo(expectedTop, 5);
