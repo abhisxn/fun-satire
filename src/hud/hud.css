@@ -415,6 +415,14 @@
 .premium-hud.hud--dragging:hover {
   transform: none;
   transition: none;
+  animation: none;
+}
+
+.premium-hud.hud--dragging .hud-btn,
+.premium-hud.hud--dragging .hud-attack,
+.premium-hud.hud--dragging .hud-divider {
+  animation: none;
+  opacity: 1;
 }
 
 .premium-hud.hud--dragging .hud-btn:hover,
