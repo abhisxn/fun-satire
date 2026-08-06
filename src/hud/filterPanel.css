@@ -16,9 +16,9 @@
 
 .filter-panel-popover {
   position: fixed;
-  width: 168px;
-  padding: 20px;
-  border-radius: 16px;
+  width: 192px;
+  padding: 28px;
+  border-radius: 18px;
   background: var(--filter-glass-bg);
   border: 1px solid var(--filter-glass-border);
   backdrop-filter: blur(30px);
@@ -28,7 +28,7 @@
   font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   display: none;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
   box-sizing: border-box;
   z-index: 1001;
 }
@@ -52,7 +52,7 @@
 .filter-panel__section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .filter-panel__label {
@@ -244,7 +244,7 @@
 @media (max-width: 340px) {
   .filter-panel-popover {
     width: calc(100vw - 32px);
-    max-width: 168px;
+    max-width: 192px;
   }
 }
 

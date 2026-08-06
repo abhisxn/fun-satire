@@ -49,5 +49,5 @@ export function getPlacardRotation(
 ): number {
   const dx = avatarX - creature.x;
   const dy = avatarY - creature.y;
-  return Math.atan2(dy, dx) * (180 / Math.PI) + 180;
+  return Math.atan2(dy, dx) * (180 / Math.PI) + 90;
 }

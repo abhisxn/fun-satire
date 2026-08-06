@@ -1,3 +1,5 @@
+import { snapToGrid } from "./snapGrid";
+
 export interface DragHandle {
   attach(): void;
   detach(): void;
@@ -23,6 +25,15 @@ export function attachDrag(
   target.style.left = `${x}px`;
   target.style.top = `${y}px`;
 
+  const finalize = (): void => {
+    dragging = false;
+    target.classList.remove('dragging');
+    snapToGrid(target);
+    const rect = target.getBoundingClientRect();
+    x = rect.left;
+    y = rect.top;
+  };
+
   const handleMouseDown = (e: MouseEvent): void => {
     dragging = true;
     target.classList.add('dragging');
@@ -42,8 +53,8 @@ export function attachDrag(
   };
 
   const handleMouseUp = (): void => {
-    dragging = false;
-    target.classList.remove('dragging');
+    if (!dragging) return;
+    finalize();
   };
 
   const handleTouchStart = (e: TouchEvent): void => {
@@ -51,6 +62,7 @@ export function attachDrag(
     target.classList.add('dragging');
     const rect = target.getBoundingClientRect();
     const t = e.touches[0];
+    if (!t) return;
     offsetX = t.clientX - rect.left;
     offsetY = t.clientY - rect.top;
     e.preventDefault();
@@ -59,6 +71,7 @@ export function attachDrag(
   const handleTouchMove = (e: TouchEvent): void => {
     if (!dragging) return;
     const t = e.touches[0];
+    if (!t) return;
     x = t.clientX - offsetX;
     y = t.clientY - offsetY;
     target.style.left = `${x}px`;
@@ -67,8 +80,8 @@ export function attachDrag(
   };
 
   const handleTouchEnd = (): void => {
-    dragging = false;
-    target.classList.remove('dragging');
+    if (!dragging) return;
+    finalize();
   };
 
   return {

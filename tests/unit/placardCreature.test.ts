@@ -66,36 +66,36 @@ describe('PlacardCreature', () => {
   });
 
   describe('getPlacardRotation', () => {
-    it('calculates correct angle (atan2 + 180)', () => {
+    it('points placard top at avatar (atan2 + 90)', () => {
       const placard = createPlacardCreature(0, 0, 1);
-
-      const rotation = getPlacardRotation(placard, 100, 0);
-
-      expect(rotation).toBe(180);
-    });
-
-    it('faces away from avatar when avatar is above', () => {
-      const placard = createPlacardCreature(100, 100, 1);
 
       const rotation = getPlacardRotation(placard, 100, 0);
 
       expect(rotation).toBe(90);
     });
 
-    it('faces away from avatar when avatar is below', () => {
+    it('points placard at avatar when avatar is above', () => {
+      const placard = createPlacardCreature(100, 100, 1);
+
+      const rotation = getPlacardRotation(placard, 100, 0);
+
+      expect(rotation).toBe(0);
+    });
+
+    it('points placard at avatar when avatar is below', () => {
       const placard = createPlacardCreature(100, 100, 1);
 
       const rotation = getPlacardRotation(placard, 100, 200);
 
-      expect(rotation).toBe(270);
+      expect(rotation).toBe(180);
     });
 
-    it('faces away from avatar when avatar is to the left', () => {
+    it('points placard at avatar when avatar is to the left', () => {
       const placard = createPlacardCreature(100, 100, 1);
 
       const rotation = getPlacardRotation(placard, 0, 100);
 
-      expect(rotation).toBe(360);
+      expect(rotation).toBe(270);
     });
   });
 });

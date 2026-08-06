@@ -85,37 +85,34 @@ async function main(): Promise<void> {
 
   let activeOverlay: StickerOverlay | TextOverlay | null = null;
 
-  const clearOverlay = (): void => {
-    if (!activeOverlay) return;
-    activeOverlay.destroy();
-    activeOverlay = null;
+  const poofOverlay = (overlay: StickerOverlay | TextOverlay): void => {
+    const rect = overlay.el.getBoundingClientRect();
+    spawnPoof(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  };
+
+  const replaceOverlay = (
+    next: StickerOverlay | TextOverlay,
+  ): void => {
+    if (activeOverlay) {
+      poofOverlay(activeOverlay);
+      activeOverlay.destroy();
+    }
+    document.body.appendChild(next.el);
+    activeOverlay = next;
   };
 
   galleryPanel.onStickerSelect((src) => {
-    if (activeOverlay instanceof TextOverlay) clearOverlay();
-    let initialX: number | undefined;
-    let initialY: number | undefined;
-    if (activeOverlay instanceof StickerOverlay) {
-      const rect = activeOverlay.el.getBoundingClientRect();
-      spawnPoof(rect.left + rect.width / 2, rect.top + rect.height / 2);
-      initialX = rect.left;
-      initialY = rect.top;
-      clearOverlay();
-    }
-    const sticker = new StickerOverlay(src, initialX, initialY);
-    document.body.appendChild(sticker.el);
-    activeOverlay = sticker;
+    const sticker = new StickerOverlay(src);
+    replaceOverlay(sticker);
   });
 
   galleryPanel.onTextSelect((font) => {
-    if (activeOverlay instanceof StickerOverlay) clearOverlay();
     if (activeOverlay instanceof TextOverlay) {
       activeOverlay.setFont(font);
-    } else {
-      const text = new TextOverlay(font);
-      document.body.appendChild(text.el);
-      activeOverlay = text;
+      return;
     }
+    const text = new TextOverlay(font);
+    replaceOverlay(text);
   });
 }
 

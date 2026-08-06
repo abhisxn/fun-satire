@@ -1,5 +1,6 @@
 import "./hud.css";
 import type { CreatureMode } from "../creatures/creatureTypes";
+import { snapToGrid } from "../creatures/snapGrid";
 
 const SVG_DRAG_HANDLE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path fill-rule="evenodd" clip-rule="evenodd" d="M9.5 5C9.5 6.10455 8.60455 7 7.5 7C6.39545 7 5.5 6.10455 5.5 5C5.5 3.89543 6.39545 3 7.5 3C8.60455 3 9.5 3.89543 9.5 5ZM7.5 14C8.60455 14 9.5 13.1046 9.5 12C9.5 10.8954 8.60455 10 7.5 10C6.39545 10 5.5 10.8954 5.5 12C5.5 13.1046 6.39545 14 7.5 14ZM7.5 21C8.60455 21 9.5 20.1046 9.5 19C9.5 17.8954 8.60455 17 7.5 17C6.39545 17 5.5 17.8954 5.5 19C5.5 20.1046 6.39545 21 7.5 21Z" fill="#2a1f1a"/>
@@ -230,6 +231,7 @@ export class Hud {
   }
 
   private startDrag(e: PointerEvent): void {
+    e.stopPropagation();
     const rect = this.root.getBoundingClientRect();
     this.isDragging = true;
     this.dragOffsetX = e.clientX - rect.left;
@@ -239,24 +241,30 @@ export class Hud {
     this.root.style.left = `${rect.left}px`;
     this.root.style.top = `${rect.top}px`;
     this.root.style.transform = "none";
+    this.root.style.transition = "none";
     this.root.classList.add("hud--dragging");
 
     this.boundOnPointerMove = (ev: PointerEvent) => this.onPointerMove(ev);
-    this.boundOnPointerUp = () => this.stopDrag();
+    this.boundOnPointerUp = (ev: PointerEvent) => this.stopDrag(ev);
     document.addEventListener("pointermove", this.boundOnPointerMove);
     document.addEventListener("pointerup", this.boundOnPointerUp);
+    document.addEventListener("pointercancel", this.boundOnPointerUp);
   }
 
   private onPointerMove(e: PointerEvent): void {
     if (!this.isDragging) return;
+    e.preventDefault();
     const x = e.clientX - this.dragOffsetX;
     const y = e.clientY - this.dragOffsetY;
     this.root.style.left = `${x}px`;
     this.root.style.top = `${y}px`;
   }
 
-  private stopDrag(): void {
+  private stopDrag(_e?: PointerEvent): void {
+    if (!this.isDragging) return;
     this.isDragging = false;
+    snapToGrid(this.root);
+    this.root.style.transition = "";
     this.root.classList.remove("hud--dragging");
     this.detachDragListeners();
   }
@@ -268,6 +276,7 @@ export class Hud {
     }
     if (this.boundOnPointerUp) {
       document.removeEventListener("pointerup", this.boundOnPointerUp);
+      document.removeEventListener("pointercancel", this.boundOnPointerUp);
       this.boundOnPointerUp = null;
     }
   }
