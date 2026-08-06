@@ -3,8 +3,12 @@ import { describe, it, expect } from 'vitest';
 import {
   createPlacardCreature,
   getPlacardRotation,
-  PLACARD_NAT_W,
-  PLACARD_NAT_H,
+  pickRandomPlacard,
+  PLACARD_POOL,
+  PLACARD_WIDTH_RATIO,
+  STICK_NAT_W,
+  STICK_NAT_H,
+  STICK_ANCHOR_PCT,
 } from '../../src/creatures/PlacardCreature';
 
 describe('PlacardCreature', () => {
@@ -26,30 +30,68 @@ describe('PlacardCreature', () => {
       const scale = 1.5;
       const placard = createPlacardCreature(0, 0, scale);
 
-      expect(placard.w).toBe(PLACARD_NAT_W * scale);
-      expect(placard.h).toBe(PLACARD_NAT_H * scale);
+      expect(placard.w).toBe(STICK_NAT_W * scale);
+      expect(placard.h).toBe(STICK_NAT_H * scale);
     });
 
     it('has correct dimensions at scale 1', () => {
       const placard = createPlacardCreature(0, 0, 1);
 
-      expect(placard.w).toBe(PLACARD_NAT_W);
-      expect(placard.h).toBe(PLACARD_NAT_H);
+      expect(placard.w).toBe(STICK_NAT_W);
+      expect(placard.h).toBe(STICK_NAT_H);
     });
 
-    it('element contains an img tag with correct src', () => {
+    it('stick img has correct src', () => {
       const placard = createPlacardCreature(0, 0, 1);
 
-      const img = placard.el.querySelector('img');
-      expect(img).not.toBeNull();
-      expect(img!.src).toContain('/creatures/placard_stick.png');
+      const imgs = placard.el.querySelectorAll('img');
+      expect(imgs[0].src).toContain('/creatures/placard_stick.png');
     });
 
-    it('img is not draggable', () => {
+    it('placard img src is one of the pool entries', () => {
       const placard = createPlacardCreature(0, 0, 1);
 
-      const img = placard.el.querySelector('img');
-      expect(img!.draggable).toBe(false);
+      const imgs = placard.el.querySelectorAll('img');
+      const placardSrc = imgs[1].src;
+      const matches = PLACARD_POOL.some((entry) => placardSrc.endsWith(entry.src));
+      expect(matches).toBe(true);
+    });
+
+    it('neither img is draggable', () => {
+      const placard = createPlacardCreature(0, 0, 1);
+
+      const imgs = placard.el.querySelectorAll('img');
+      expect(imgs[0].draggable).toBe(false);
+      expect(imgs[1].draggable).toBe(false);
+    });
+
+    it('placard layer is centered on the stick anchor point', () => {
+      const scale = 2;
+      const placard = createPlacardCreature(0, 0, scale);
+
+      const imgs = placard.el.querySelectorAll('img');
+      const placardImg = imgs[1] as HTMLImageElement;
+      const placardSrc = placardImg.src;
+      const asset = PLACARD_POOL.find((entry) => placardSrc.endsWith(entry.src))!;
+
+      const stickW = STICK_NAT_W * scale;
+      const stickH = STICK_NAT_H * scale;
+      const anchorPx = {
+        x: STICK_ANCHOR_PCT.x * stickW,
+        y: STICK_ANCHOR_PCT.y * stickH,
+      };
+      const expectedW = PLACARD_WIDTH_RATIO * stickW;
+      const expectedH = expectedW * (asset.h / asset.w);
+      const expectedLeft = anchorPx.x - expectedW / 2;
+      const expectedTop = anchorPx.y - expectedH / 2;
+
+      // happy-dom's CSSOM serializes style values with limited decimal
+      // precision, so compare parsed floats rather than exact strings.
+      expect(parseFloat(placardImg.style.width)).toBeCloseTo(expectedW, 5);
+      expect(parseFloat(placardImg.style.height)).toBeCloseTo(expectedH, 5);
+      expect(parseFloat(placardImg.style.left)).toBeCloseTo(expectedLeft, 5);
+      expect(parseFloat(placardImg.style.top)).toBeCloseTo(expectedTop, 5);
+      expect(placardImg.style.position).toBe('absolute');
     });
 
     it('creates element with correct styles', () => {
@@ -60,8 +102,8 @@ describe('PlacardCreature', () => {
       expect(placard.el.style.position).toBe('absolute');
       expect(placard.el.style.pointerEvents).toBe('none');
       expect(placard.el.style.willChange).toBe('transform');
-      expect(placard.el.style.width).toBe(`${PLACARD_NAT_W * scale}px`);
-      expect(placard.el.style.height).toBe(`${PLACARD_NAT_H * scale}px`);
+      expect(placard.el.style.width).toBe(`${STICK_NAT_W * scale}px`);
+      expect(placard.el.style.height).toBe(`${STICK_NAT_H * scale}px`);
     });
   });
 
@@ -96,6 +138,15 @@ describe('PlacardCreature', () => {
       const rotation = getPlacardRotation(placard, 0, 100);
 
       expect(rotation).toBe(270);
+    });
+  });
+
+  describe('pickRandomPlacard', () => {
+    it('always returns an entry from PLACARD_POOL', () => {
+      for (let i = 0; i < 20; i++) {
+        const picked = pickRandomPlacard();
+        expect(PLACARD_POOL).toContain(picked);
+      }
     });
   });
 });
