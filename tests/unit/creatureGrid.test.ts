@@ -98,6 +98,13 @@ describe('CreatureGrid', () => {
       expect(grid.getCreatureCount()).toBe(240);
       expect(grid.getMode()).toBe('cockroach');
     });
+
+    it('creates placard mode creatures', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('placard');
+      expect(grid.getCreatureCount()).toBe(240);
+      expect(grid.getMode()).toBe('placard');
+    });
   });
 
   describe('switchMode', () => {
@@ -209,7 +216,7 @@ describe('CreatureGrid', () => {
     });
 
     it('returns all valid modes', () => {
-      const modes: CreatureMode[] = ['eyes', 'pointedFinger', 'cockroach'];
+      const modes: CreatureMode[] = ['eyes', 'pointedFinger', 'cockroach', 'placard'];
       const grid = new CreatureGrid(config);
 
       for (const mode of modes) {
@@ -235,6 +242,12 @@ describe('CreatureGrid', () => {
     it('does not throw for cockroach mode', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('cockroach');
+      expect(() => grid.update(400, 300)).not.toThrow();
+    });
+
+    it('does not throw for placard mode', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('placard');
       expect(() => grid.update(400, 300)).not.toThrow();
     });
 

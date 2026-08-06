@@ -5,6 +5,7 @@ import { updateCreature } from "./creaturePhysics";
 import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg } from "./EyeCreature";
 import { createFingerCreature, getFingerRotation } from "./FingerCreature";
 import { createCockroachCreature, getCockroachRotation } from "./CockroachCreature";
+import { createPlacardCreature, getPlacardRotation } from "./PlacardCreature";
 
 interface ModeConfig {
   readonly cols: number;
@@ -30,6 +31,11 @@ const MODE_CONFIGS: Record<CreatureMode, ModeConfig> = {
     scaleFn: () => 0.08 + Math.pow(Math.random(), 1.5) * 0.35,
   },
   cockroach: {
+    cols: 20,
+    rows: 12,
+    scaleFn: () => 0.08 + Math.pow(Math.random(), 1.5) * 0.35,
+  },
+  placard: {
     cols: 20,
     rows: 12,
     scaleFn: () => 0.08 + Math.pow(Math.random(), 1.5) * 0.35,
@@ -104,6 +110,9 @@ export class CreatureGrid {
           case 'cockroach':
             creature = createCockroachCreature(hx, hy, scale);
             break;
+          case 'placard':
+            creature = createPlacardCreature(hx, hy, scale);
+            break;
         }
         this.creatures.push(creature);
         this.container.appendChild(creature.el);
@@ -144,6 +153,9 @@ export class CreatureGrid {
             break;
           case 'cockroach':
             creature = createCockroachCreature(hx, hy, scale);
+            break;
+          case 'placard':
+            creature = createPlacardCreature(hx, hy, scale);
             break;
         }
         this.creatures.push(creature);
@@ -187,6 +199,9 @@ export class CreatureGrid {
             break;
           case 'cockroach':
             angle = getCockroachRotation(c, avatarX, avatarY);
+            break;
+          case 'placard':
+            angle = getPlacardRotation(c, avatarX, avatarY);
             break;
           default:
             angle = 0;
