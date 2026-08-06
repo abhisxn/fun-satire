@@ -138,6 +138,7 @@ export class CreatureGrid {
     const vh = this.container.clientHeight || window.innerHeight;
     const cellW = vw / cols;
     const cellH = vh / rows;
+    const batchStartMs = Date.now();
 
     for (let i = 0; i < this.targetCount; i++) {
       const c = Math.floor(i / rows);
@@ -165,6 +166,8 @@ export class CreatureGrid {
           creature = createPlacardCreature(hx, hy, scale);
           break;
       }
+      creature.spawnPopAtMs = batchStartMs + Math.random() * Math.max(0, SPAWN_WAVE_MS - SPAWN_POP_MS);
+      creature.spawnDone = false;
       this.creatures.push(creature);
       this.container.appendChild(creature.el);
     }
@@ -187,6 +190,7 @@ export class CreatureGrid {
     const vh = this.container.clientHeight || window.innerHeight;
     const cellW = vw / cols;
     const cellH = vh / rows;
+    const batchStartMs = Date.now();
 
     if (targetCount < current) {
       const removed = this.creatures.splice(targetCount);
@@ -232,6 +236,8 @@ export class CreatureGrid {
           creature = createPlacardCreature(hx, hy, scale);
           break;
       }
+      creature.spawnPopAtMs = batchStartMs + Math.random() * Math.max(0, SPAWN_WAVE_MS - SPAWN_POP_MS);
+      creature.spawnDone = false;
       this.creatures.push(creature);
       this.container.appendChild(creature.el);
     }

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreatureGrid } from '../../src/creatures/CreatureGrid';
+import { CreatureGrid, SPAWN_WAVE_MS } from '../../src/creatures/CreatureGrid';
 import type { CreatureGridConfig } from '../../src/creatures/CreatureGrid';
 import type { CreatureMode } from '../../src/creatures/creatureTypes';
 
@@ -107,6 +107,32 @@ describe('CreatureGrid', () => {
     });
   });
 
+  describe('spawn — pop-in animation scheduling', () => {
+    it('assigns every creature a spawnPopAtMs within the spawn wave window', () => {
+      const grid = new CreatureGrid(config);
+      const before = Date.now();
+      grid.spawn('cockroach');
+      const after = Date.now();
+
+      const creatures = (grid as unknown as { creatures: Array<{ spawnPopAtMs: number; spawnDone: boolean }> }).creatures;
+      expect(creatures.length).toBeGreaterThan(0);
+      for (const c of creatures) {
+        expect(c.spawnPopAtMs).toBeGreaterThanOrEqual(before);
+        expect(c.spawnPopAtMs).toBeLessThanOrEqual(after + SPAWN_WAVE_MS);
+        expect(c.spawnDone).toBe(false);
+      }
+    });
+
+    it('assigns randomized (non-identical) spawnPopAtMs across creatures', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach');
+
+      const creatures = (grid as unknown as { creatures: Array<{ spawnPopAtMs: number }> }).creatures;
+      const uniqueTimes = new Set(creatures.map((c) => c.spawnPopAtMs));
+      expect(uniqueTimes.size).toBeGreaterThan(1);
+    });
+  });
+
   describe('switchMode', () => {
     it('clears old creatures and creates new ones', () => {
       const grid = new CreatureGrid(config);
@@ -192,6 +218,33 @@ describe('CreatureGrid', () => {
       grid.spawn('cockroach');
       grid.setQuantity(200);
       expect(container.children.length).toBe(200);
+    });
+
+    it('gives newly added creatures a fresh spawn animation without resetting existing ones', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach');
+
+      const creatures = (grid as unknown as { creatures: Array<{ spawnPopAtMs: number; spawnDone: boolean }> }).creatures;
+      for (const c of creatures) {
+        c.spawnDone = true;
+        c.spawnPopAtMs = 1;
+      }
+      const existingCount = creatures.length;
+
+      const before = Date.now();
+      grid.setQuantity(existingCount + 10);
+      const after = Date.now();
+
+      const updated = (grid as unknown as { creatures: Array<{ spawnPopAtMs: number; spawnDone: boolean }> }).creatures;
+      for (let i = 0; i < existingCount; i++) {
+        expect(updated[i].spawnDone).toBe(true);
+        expect(updated[i].spawnPopAtMs).toBe(1);
+      }
+      for (let i = existingCount; i < updated.length; i++) {
+        expect(updated[i].spawnDone).toBe(false);
+        expect(updated[i].spawnPopAtMs).toBeGreaterThanOrEqual(before);
+        expect(updated[i].spawnPopAtMs).toBeLessThanOrEqual(after + SPAWN_WAVE_MS);
+      }
     });
   });
 
