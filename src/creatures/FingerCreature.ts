@@ -38,6 +38,7 @@ export function createFingerCreature(
     spawnPopAtMs: 0,
     spawnDone: false,
     fadeStartMs: 0,
+    waitingRespawn: false,
   };
 }
 

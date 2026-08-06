@@ -13,6 +13,7 @@ describe('creature factories initialize spawn animation fields', () => {
     expect(eye.spawnPopAtMs).toBe(0);
     expect(eye.spawnDone).toBe(false);
     expect(eye.fadeStartMs).toBe(0);
+    expect(eye.waitingRespawn).toBe(false);
   });
 
   it('createFingerCreature defaults spawnPopAtMs to 0 and spawnDone to false', () => {
@@ -20,6 +21,7 @@ describe('creature factories initialize spawn animation fields', () => {
     expect(finger.spawnPopAtMs).toBe(0);
     expect(finger.spawnDone).toBe(false);
     expect(finger.fadeStartMs).toBe(0);
+    expect(finger.waitingRespawn).toBe(false);
   });
 
   it('createCockroachCreature defaults spawnPopAtMs to 0 and spawnDone to false', () => {
@@ -27,6 +29,7 @@ describe('creature factories initialize spawn animation fields', () => {
     expect(cockroach.spawnPopAtMs).toBe(0);
     expect(cockroach.spawnDone).toBe(false);
     expect(cockroach.fadeStartMs).toBe(0);
+    expect(cockroach.waitingRespawn).toBe(false);
   });
 
   it('createPlacardCreature defaults spawnPopAtMs to 0 and spawnDone to false', () => {
@@ -34,5 +37,6 @@ describe('creature factories initialize spawn animation fields', () => {
     expect(placard.spawnPopAtMs).toBe(0);
     expect(placard.spawnDone).toBe(false);
     expect(placard.fadeStartMs).toBe(0);
+    expect(placard.waitingRespawn).toBe(false);
   });
 });

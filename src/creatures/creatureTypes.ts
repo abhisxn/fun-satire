@@ -12,6 +12,7 @@ export interface Creature {
   spawnPopAtMs: number;
   spawnDone: boolean;
   fadeStartMs: number;
+  waitingRespawn: boolean;
 }
 
 export type CreatureMode = 'eyes' | 'pointedFinger' | 'cockroach' | 'placard';

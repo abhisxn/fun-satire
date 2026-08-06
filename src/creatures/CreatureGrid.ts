@@ -11,12 +11,16 @@ import { createPlacardCreature, getPlacardRotation } from "./PlacardCreature";
 export const SPAWN_WAVE_MS = 20000;
 /** Duration of one creature's own scale+fade pop animation (ms). */
 export const SPAWN_POP_MS = 1200;
-/** Random re-pop cadence for settled creatures (ms between batches). */
-export const RESPAWN_INTERVAL_MS = 1500;
-/** How many settled creatures randomly re-pop per interval. */
-export const RESPAWN_COUNT = 4;
-/** Duration of the fade-out before a creature re-pops (ms). */
+/** Random disappear cadence for settled creatures (ms between fade batches). */
+export const FADE_PICK_INTERVAL_MS = 1500;
+/** How many settled creatures randomly fade out per interval. */
+export const FADE_PICK_COUNT = 4;
+/** Duration of the fade-out before a creature becomes invisible (ms). */
 export const FADE_OUT_MS = 400;
+/** Random re-pop cadence for invisible creatures (ms between batches). */
+export const REPOP_INTERVAL_MS = 2000;
+/** How many invisible creatures randomly pop back in per interval. */
+export const REPOP_COUNT = 3;
 
 function easeOutBack(t: number): number {
   const c1 = 1.70158;
@@ -53,8 +57,8 @@ export function computeSpawnProgress(spawnPopAtMs: number, nowMs: number): Spawn
 
 /**
  * Resolves a creature's visual state for the current frame. Handles the
- * fade-out phase (fadeStartMs > 0) that precedes a random re-pop, then the
- * pop-in animation, then the settled state.
+ * fade-out phase (fadeStartMs > 0), the invisible waiting-for-re-pop phase
+ * (waitingRespawn === true), the pop-in animation, and the settled state.
  */
 function resolveSpawnState(creature: Creature, nowMs: number): { popScale: number; opacity: number } {
   if (creature.fadeStartMs > 0) {
@@ -62,10 +66,13 @@ function resolveSpawnState(creature: Creature, nowMs: number): { popScale: numbe
     if (fadeProgress >= 1) {
       creature.fadeStartMs = 0;
       creature.spawnDone = false;
-      creature.spawnPopAtMs = nowMs;
+      creature.waitingRespawn = true;
     } else {
       return { popScale: 1, opacity: 1 - fadeProgress };
     }
+  }
+  if (creature.waitingRespawn) {
+    return { popScale: 0, opacity: 0 };
   }
   if (!creature.spawnDone) {
     const spawnState = computeSpawnProgress(creature.spawnPopAtMs, nowMs);
@@ -135,7 +142,8 @@ export class CreatureGrid {
     springStrength: 0.02,
     damping: 0.88,
   };
-  private lastRespawnMs: number = 0;
+  private lastFadePickMs: number = 0;
+  private lastRepopPickMs: number = 0;
 
   constructor(config: CreatureGridConfig) {
     this.container = config.container;
@@ -325,17 +333,29 @@ export class CreatureGrid {
       }
     }
 
-    // Keep settled creatures randomly fading out and re-popping so the crowd
-    // feels alive. Starts as soon as the first creatures finish their pop-in,
-    // without waiting for the whole crowd to appear.
-    if (now - this.lastRespawnMs >= RESPAWN_INTERVAL_MS) {
+    // Random disappear: settled creatures fade out independently.
+    if (now - this.lastFadePickMs >= FADE_PICK_INTERVAL_MS) {
       const candidates = this.creatures.filter((c) => c.spawnDone && c.fadeStartMs === 0);
       if (candidates.length > 0) {
-        this.lastRespawnMs = now;
-        const count = Math.min(RESPAWN_COUNT, candidates.length);
+        this.lastFadePickMs = now;
+        const count = Math.min(FADE_PICK_COUNT, candidates.length);
         for (let i = 0; i < count; i++) {
           const picked = candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0];
           picked.fadeStartMs = now;
+        }
+      }
+    }
+
+    // Random respawn: invisible creatures pop back in independently.
+    if (now - this.lastRepopPickMs >= REPOP_INTERVAL_MS) {
+      const waiting = this.creatures.filter((c) => c.waitingRespawn);
+      if (waiting.length > 0) {
+        this.lastRepopPickMs = now;
+        const count = Math.min(REPOP_COUNT, waiting.length);
+        for (let i = 0; i < count; i++) {
+          const picked = waiting.splice(Math.floor(Math.random() * waiting.length), 1)[0];
+          picked.waitingRespawn = false;
+          picked.spawnPopAtMs = now;
         }
       }
     }
