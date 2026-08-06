@@ -23,6 +23,7 @@ export function createPlacardCreature(
   img.src = '/creatures/placard_stick.png';
   img.style.width = '100%';
   img.style.height = '100%';
+  img.style.objectFit = 'contain';
   img.style.display = 'block';
   img.draggable = false;
   el.appendChild(img);
