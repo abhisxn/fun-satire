@@ -80,9 +80,9 @@ describe('EyeCreature', () => {
       const eye = createEyeCreature(0, 0, scale, TEST_SVG, 'test6');
 
       expect(eye.el.className).toBe('wrap');
-      expect(eye.el.style.position).toBe('absolute');
-      expect(eye.el.style.pointerEvents).toBe('none');
-      expect(eye.el.style.willChange).toBe('transform');
+      expect(eye.el.style.position).toBe('');
+      expect(eye.el.style.pointerEvents).toBe('');
+      expect(eye.el.style.willChange).toBe('');
       expect(eye.el.style.width).toBe(`${EYE_NAT_W * scale}px`);
       expect(eye.el.style.height).toBe(`${EYE_NAT_H * scale}px`);
     });

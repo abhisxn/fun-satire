@@ -15,9 +15,6 @@ export function createCockroachCreature(
   el.className = 'wrap';
   el.style.width = `${w}px`;
   el.style.height = `${h}px`;
-  el.style.position = 'absolute';
-  el.style.pointerEvents = 'none';
-  el.style.willChange = 'transform';
 
   const img = document.createElement('img');
   img.src = '/creatures/cockroach.png';
@@ -38,6 +35,9 @@ export function createCockroachCreature(
     scale,
     w,
     h,
+    spawnPopAtMs: 0,
+    spawnDone: false,
+    fadeStartMs: 0,
   };
 }
 

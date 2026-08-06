@@ -104,9 +104,9 @@ describe('PlacardCreature', () => {
       const placard = createPlacardCreature(0, 0, scale);
 
       expect(placard.el.className).toBe('wrap');
-      expect(placard.el.style.position).toBe('absolute');
-      expect(placard.el.style.pointerEvents).toBe('none');
-      expect(placard.el.style.willChange).toBe('transform');
+      expect(placard.el.style.position).toBe('');
+      expect(placard.el.style.pointerEvents).toBe('');
+      expect(placard.el.style.willChange).toBe('');
       expect(placard.el.style.width).toBe(`${STICK_NAT_W * scale}px`);
       expect(placard.el.style.height).toBe(`${STICK_NAT_H * scale}px`);
     });

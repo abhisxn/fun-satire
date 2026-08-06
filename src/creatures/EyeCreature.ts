@@ -34,9 +34,6 @@ export function createEyeCreature(
   el.className = 'wrap';
   el.style.width = `${w}px`;
   el.style.height = `${h}px`;
-  el.style.position = 'absolute';
-  el.style.pointerEvents = 'none';
-  el.style.willChange = 'transform';
 
   // Make SVG IDs unique to avoid conflicts
   let markup = svgMarkup
@@ -63,6 +60,9 @@ export function createEyeCreature(
     scale,
     w,
     h,
+    spawnPopAtMs: 0,
+    spawnDone: false,
+    fadeStartMs: 0,
     nextBlink: Date.now() + 2000 + Math.random() * 4000,
     blinking: false,
     blinkStart: 0,

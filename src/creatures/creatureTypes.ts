@@ -9,6 +9,9 @@ export interface Creature {
   scale: number;
   w: number;
   h: number;
+  spawnPopAtMs: number;
+  spawnDone: boolean;
+  fadeStartMs: number;
 }
 
 export type CreatureMode = 'eyes' | 'pointedFinger' | 'cockroach' | 'placard';
