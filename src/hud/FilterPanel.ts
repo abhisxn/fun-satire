@@ -136,7 +136,7 @@ export class FilterPanel {
   open(): void {
     if (this.isOpen || !this.anchorButton) return;
     this.isOpen = true;
-    this.root.style.display = "block";
+    this.root.style.display = "flex";
     this.updatePosition();
     this.addEventListeners();
   }
@@ -211,7 +211,7 @@ export class FilterPanel {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    let top = buttonRect.top - panelRect.height - 8;
+    let top = buttonRect.top - panelRect.height - 16;
     let left = buttonRect.left + buttonRect.width / 2 - panelRect.width / 2;
 
     if (top < 8) {
