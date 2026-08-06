@@ -162,6 +162,62 @@ describe("hud/FilterPanel", () => {
     });
   });
 
+  describe("Bug Mode toggle", () => {
+    it("creates a bug-mode section with a toggle input, unchecked by default", () => {
+      panel.attachTo(settingsButton);
+      const root = panel.getRoot();
+
+      const section = root.querySelector('[data-filter-section="bug-mode"]');
+      expect(section).not.toBeNull();
+
+      const label = section?.querySelector(".filter-panel__label");
+      expect(label?.textContent).toBe("Bug Mode");
+
+      const toggleInput = root.querySelector<HTMLInputElement>("[data-filter-bug-mode]");
+      expect(toggleInput).not.toBeNull();
+      expect(toggleInput?.type).toBe("checkbox");
+      expect(toggleInput?.checked).toBe(false);
+    });
+
+    it("fires the bug mode toggle callback when checked", () => {
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onBugModeToggle(cb);
+
+      const toggleInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-bug-mode]");
+      toggleInput!.checked = true;
+      toggleInput?.dispatchEvent(new Event("change", { bubbles: true }));
+
+      expect(cb).toHaveBeenCalledWith(true);
+    });
+
+    it("fires the bug mode toggle callback when unchecked", () => {
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onBugModeToggle(cb);
+
+      const toggleInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-bug-mode]");
+      toggleInput!.checked = true;
+      toggleInput?.dispatchEvent(new Event("change", { bubbles: true }));
+      toggleInput!.checked = false;
+      toggleInput?.dispatchEvent(new Event("change", { bubbles: true }));
+
+      expect(cb).toHaveBeenNthCalledWith(1, true);
+      expect(cb).toHaveBeenNthCalledWith(2, false);
+    });
+
+    it("isBugModeActive reflects current state", () => {
+      panel.attachTo(settingsButton);
+      expect(panel.isBugModeActive()).toBe(false);
+
+      const toggleInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-bug-mode]");
+      toggleInput!.checked = true;
+      toggleInput?.dispatchEvent(new Event("change", { bubbles: true }));
+
+      expect(panel.isBugModeActive()).toBe(true);
+    });
+  });
+
   describe("Open/Close/Toggle", () => {
     it("open() shows the panel", () => {
       panel.attachTo(settingsButton);

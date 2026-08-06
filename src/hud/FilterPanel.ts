@@ -14,6 +14,7 @@ export class FilterPanel {
   private readonly root: HTMLElement;
   private readonly qtyValue: HTMLElement;
   private readonly repelInput: HTMLInputElement;
+  private readonly bugModeInput: HTMLInputElement;
   private quantity: number;
   private repel: number;
   private anchorButton: HTMLElement | null = null;
@@ -21,6 +22,7 @@ export class FilterPanel {
 
   private quantityChangeCb: ((quantity: number) => void) | null = null;
   private repelChangeCb: ((multiplier: number) => void) | null = null;
+  private bugModeChangeCb: ((active: boolean) => void) | null = null;
 
   private boundOnDocumentClick: ((e: MouseEvent) => void) | null = null;
   private boundOnKeyDown: ((e: KeyboardEvent) => void) | null = null;
@@ -96,6 +98,34 @@ export class FilterPanel {
     repel.append(repelLabel, range);
     this.repelInput = range;
     root.appendChild(repel);
+
+    const bugModeDivider = document.createElement("hr");
+    bugModeDivider.className = "filter-panel__divider";
+    root.appendChild(bugModeDivider);
+
+    const bugMode = document.createElement("div");
+    bugMode.className = "filter-panel__section";
+    bugMode.dataset.filterSection = "bug-mode";
+    const bugModeLabel = document.createElement("span");
+    bugModeLabel.className = "filter-panel__label";
+    bugModeLabel.textContent = "Bug Mode";
+    const toggleLabel = document.createElement("label");
+    toggleLabel.className = "filter-panel__toggle";
+    const toggleInput = document.createElement("input");
+    toggleInput.type = "checkbox";
+    toggleInput.className = "filter-panel__toggle-input";
+    toggleInput.dataset.filterBugMode = "";
+    toggleInput.setAttribute("aria-label", "Bug Mode");
+    const toggleTrack = document.createElement("span");
+    toggleTrack.className = "filter-panel__toggle-track";
+    toggleTrack.setAttribute("aria-hidden", "true");
+    toggleInput.addEventListener("change", () => {
+      this.bugModeChangeCb?.(toggleInput.checked);
+    });
+    toggleLabel.append(toggleInput, toggleTrack);
+    bugMode.append(bugModeLabel, toggleLabel);
+    this.bugModeInput = toggleInput;
+    root.appendChild(bugMode);
   }
 
   attachTo(settingsButton: HTMLElement): void {
@@ -163,6 +193,14 @@ export class FilterPanel {
 
   onRepelChange(cb: (multiplier: number) => void): void {
     this.repelChangeCb = cb;
+  }
+
+  onBugModeToggle(cb: (active: boolean) => void): void {
+    this.bugModeChangeCb = cb;
+  }
+
+  isBugModeActive(): boolean {
+    return this.bugModeInput.checked;
   }
 
   private updatePosition(): void {
