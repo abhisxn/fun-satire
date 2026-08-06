@@ -24,19 +24,10 @@ const SVG_COCKROACH = `<svg width="24" height="24" viewBox="0 0 24 24" fill="non
 <path d="M12 13C12 13 15 11.2091 15 9C15 6.79086 12 5 12 5C12 5 9 6.79086 9 9C9 11.2091 12 13 12 13ZM12 13V21.5" stroke="#2a1f1a" stroke-linecap="round"/>
 </svg>`;
 
-const SVG_BUG = `<svg width="35" height="67" viewBox="0 0 35 67" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <g clip-path="url(#clip0_18_109)">
-    <path d="M22.2671 48.6146L29.7734 46.9925L25.2696 61L27 65M22.2671 38.6045L29.5 37.5L33.5 44M24.1437 31.0957L28.5 28.5L33.5 29.5" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
-    <path d="M13.2329 48.6146L5.7266 46.9925L10.2304 61L8.5 65M13.2329 38.6045L6 37.5L2 44M11.3563 31.0957L7 28.5L2 29.5" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
-    <path d="M26.0014 30.345C26.0014 35.9415 26.8143 61.4961 17.7633 61.4961C8.71226 61.4961 9.5252 35.9415 9.5252 30.345C9.5252 24.7484 13.2135 20.2115 17.7633 20.2114C22.3131 20.2114 26.0014 24.7484 26.0014 30.345Z" fill="#5D4949"/>
-    <path d="M20.7657 21.7128C21.7666 14.3316 25.1945 -0.130604 30.8993 1.07041" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
-    <path d="M14.3854 21.7128C13.3845 14.3316 9.95665 -0.130604 4.25186 1.07041" stroke="#2a1f1a" stroke-width="1.75" stroke-linecap="round"/>
-  </g>
-  <defs>
-    <clipPath id="clip0_18_109">
-      <rect width="35" height="67" fill="white"/>
-    </clipPath>
-  </defs>
+const SVG_PLACARD = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="16" height="10" rx="1" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 14V21" stroke="#2a1f1a" stroke-linecap="round"/>
+  <path d="M8 21H16" stroke="#2a1f1a" stroke-linecap="round"/>
 </svg>`;
 
 const SVG_GALLERY = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -65,8 +56,9 @@ interface ModeBtnDef {
 
 const MODE_BTNS: readonly ModeBtnDef[] = [
   { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", svg: SVG_EYE },
-  { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", svg: SVG_COCKROACH },
   { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", svg: SVG_HAND },
+  { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", svg: SVG_COCKROACH },
+  { mode: "placard", cssClass: "hud-btn--placard", tooltip: "Placard Mode", ariaLabel: "Placard Mode", svg: SVG_PLACARD },
 ];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLElementTagNameMap[K] {
@@ -80,14 +72,11 @@ export class Hud {
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
-  private bugModeBtn: HTMLButtonElement | null = null;
   private activeMode: CreatureMode = "eyes";
-  private bugModeActive = false;
 
   private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
   private attackPressCb: (() => void) | null = null;
   private attackReleaseCb: (() => void) | null = null;
-  private bugModeToggleCb: ((active: boolean) => void) | null = null;
 
   private isDragging = false;
   private dragOffsetX = 0;
@@ -110,16 +99,6 @@ export class Hud {
     }
 
     root.appendChild(this.buildAttackBtn());
-    this.bugModeBtn = this.buildUtilityBtn("hud-btn--bug-mode", "Bug Mode", SVG_BUG);
-    const bugModeBtn = this.bugModeBtn;
-    bugModeBtn.setAttribute("aria-pressed", "false");
-    bugModeBtn.addEventListener("click", () => {
-      this.bugModeActive = !this.bugModeActive;
-      bugModeBtn.classList.toggle("active", this.bugModeActive);
-      bugModeBtn.setAttribute("aria-pressed", String(this.bugModeActive));
-      this.bugModeToggleCb?.(this.bugModeActive);
-    });
-    root.appendChild(this.bugModeBtn);
     this.settingsBtn = this.buildUtilityBtn("hud-btn--settings", "Settings", SVG_SETTINGS);
     root.appendChild(this.settingsBtn);
     this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
@@ -154,14 +133,6 @@ export class Hud {
 
   onAttackRelease(cb: () => void): void {
     this.attackReleaseCb = cb;
-  }
-
-  onBugModeToggle(cb: (active: boolean) => void): void {
-    this.bugModeToggleCb = cb;
-  }
-
-  isBugModeActive(): boolean {
-    return this.bugModeActive;
   }
 
   destroy(): void {
