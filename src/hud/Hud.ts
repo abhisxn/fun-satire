@@ -98,11 +98,14 @@ export class Hud {
       root.appendChild(btn);
     }
 
-    root.appendChild(this.buildAttackBtn());
+    root.appendChild(this.buildDivider());
+
     this.settingsBtn = this.buildUtilityBtn("hud-btn--settings", "Settings", SVG_SETTINGS);
     root.appendChild(this.settingsBtn);
     this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
     root.appendChild(this.galleryBtn);
+
+    root.appendChild(this.buildAttackBtn());
 
     this.setActiveMode("eyes");
   }
@@ -208,6 +211,13 @@ export class Hud {
     });
 
     return btn;
+  }
+
+  private buildDivider(): HTMLElement {
+    const divider = el("div", "hud-divider");
+    divider.setAttribute("role", "separator");
+    divider.setAttribute("aria-orientation", "vertical");
+    return divider;
   }
 
   private buildUtilityBtn(cssClass: string, tooltip: string, svg: string): HTMLButtonElement {

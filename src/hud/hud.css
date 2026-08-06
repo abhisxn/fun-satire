@@ -234,7 +234,23 @@
 }
 
 /* ============================================
-   Utility Buttons — Ellipse Backgrounds
+   Divider
+   ============================================ */
+.hud-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(42, 31, 26, 0.15);
+  border: none;
+  margin: 0 4px;
+  flex-shrink: 0;
+  align-self: center;
+  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  opacity: 0;
+  animation-delay: 0.25s;
+}
+
+/* ============================================
+   Utility Buttons — Filter, Gallery
    ============================================ */
 .hud-btn--gallery,
 .hud-btn--settings {
@@ -389,10 +405,30 @@
 .hud-btn:nth-child(2) { animation-delay: 0.1s; }
 .hud-btn:nth-child(3) { animation-delay: 0.15s; }
 .hud-btn:nth-child(4) { animation-delay: 0.2s; }
-.hud-attack { animation-delay: 0.3s; }
-.hud-btn:nth-child(6) { animation-delay: 0.35s; }
-.hud-btn:nth-child(7) { animation-delay: 0.4s; }
-.hud-btn:nth-child(8) { animation-delay: 0.45s; }
+.hud-btn:nth-child(5) { animation-delay: 0.25s; }
+.hud-divider { animation-delay: 0.28s; }
+.hud-btn:nth-child(7) { animation-delay: 0.35s; }
+.hud-btn:nth-child(8) { animation-delay: 0.4s; }
+.hud-attack { animation-delay: 0.5s; }
+
+.premium-hud.hud--dragging,
+.premium-hud.hud--dragging:hover {
+  transform: none;
+  transition: none;
+}
+
+.premium-hud.hud--dragging .hud-btn:hover,
+.premium-hud.hud--dragging .hud-btn:active,
+.premium-hud.hud--dragging .hud-attack:hover,
+.premium-hud.hud--dragging .hud-attack:active {
+  transform: none;
+  transition: none;
+}
+
+.premium-hud.hud--dragging .hud-btn::before,
+.premium-hud.hud--dragging .hud-btn:hover::before {
+  opacity: 0;
+}
 
 /* ============================================
    Responsive — Tablet (768px)
