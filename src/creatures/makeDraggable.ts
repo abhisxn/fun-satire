@@ -9,7 +9,9 @@ export function attachDrag(
   el: HTMLElement,
   initial: { x: number; y: number },
   onMove?: (x: number, y: number) => void,
+  targetEl?: HTMLElement,
 ): DragHandle {
+  const target = targetEl ?? el;
   let x = initial.x;
   let y = initial.y;
   let dragging = false;
@@ -17,14 +19,14 @@ export function attachDrag(
   let offsetY = 0;
   const moveCb = onMove ?? (() => {});
 
-  el.style.position = 'absolute';
-  el.style.left = `${x}px`;
-  el.style.top = `${y}px`;
+  target.style.position = 'absolute';
+  target.style.left = `${x}px`;
+  target.style.top = `${y}px`;
 
   const handleMouseDown = (e: MouseEvent): void => {
     dragging = true;
-    el.classList.add('dragging');
-    const rect = el.getBoundingClientRect();
+    target.classList.add('dragging');
+    const rect = target.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
     e.preventDefault();
@@ -34,20 +36,20 @@ export function attachDrag(
     if (!dragging) return;
     x = e.clientX - offsetX;
     y = e.clientY - offsetY;
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
+    target.style.left = `${x}px`;
+    target.style.top = `${y}px`;
     moveCb(x, y);
   };
 
   const handleMouseUp = (): void => {
     dragging = false;
-    el.classList.remove('dragging');
+    target.classList.remove('dragging');
   };
 
   const handleTouchStart = (e: TouchEvent): void => {
     dragging = true;
-    el.classList.add('dragging');
-    const rect = el.getBoundingClientRect();
+    target.classList.add('dragging');
+    const rect = target.getBoundingClientRect();
     const t = e.touches[0];
     offsetX = t.clientX - rect.left;
     offsetY = t.clientY - rect.top;
@@ -59,14 +61,14 @@ export function attachDrag(
     const t = e.touches[0];
     x = t.clientX - offsetX;
     y = t.clientY - offsetY;
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
+    target.style.left = `${x}px`;
+    target.style.top = `${y}px`;
     moveCb(x, y);
   };
 
   const handleTouchEnd = (): void => {
     dragging = false;
-    el.classList.remove('dragging');
+    target.classList.remove('dragging');
   };
 
   return {
