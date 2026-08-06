@@ -58,9 +58,6 @@ export function createPlacardCreature(
   el.className = 'wrap';
   el.style.width = `${w}px`;
   el.style.height = `${h}px`;
-  el.style.position = 'absolute';
-  el.style.pointerEvents = 'none';
-  el.style.willChange = 'transform';
 
   const stickImg = document.createElement('img');
   stickImg.src = '/creatures/placard_stick.png';

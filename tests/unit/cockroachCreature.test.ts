@@ -57,9 +57,9 @@ describe('CockroachCreature', () => {
       const cockroach = createCockroachCreature(0, 0, scale);
 
       expect(cockroach.el.className).toBe('wrap');
-      expect(cockroach.el.style.position).toBe('absolute');
-      expect(cockroach.el.style.pointerEvents).toBe('none');
-      expect(cockroach.el.style.willChange).toBe('transform');
+      expect(cockroach.el.style.position).toBe('');
+      expect(cockroach.el.style.pointerEvents).toBe('');
+      expect(cockroach.el.style.willChange).toBe('');
       expect(cockroach.el.style.width).toBe(`${COCKROACH_NAT_W * scale}px`);
       expect(cockroach.el.style.height).toBe(`${COCKROACH_NAT_H * scale}px`);
     });

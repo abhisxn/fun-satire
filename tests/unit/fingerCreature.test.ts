@@ -57,9 +57,9 @@ describe('FingerCreature', () => {
       const finger = createFingerCreature(0, 0, scale);
 
       expect(finger.el.className).toBe('wrap');
-      expect(finger.el.style.position).toBe('absolute');
-      expect(finger.el.style.pointerEvents).toBe('none');
-      expect(finger.el.style.willChange).toBe('transform');
+      expect(finger.el.style.position).toBe('');
+      expect(finger.el.style.pointerEvents).toBe('');
+      expect(finger.el.style.willChange).toBe('');
       expect(finger.el.style.width).toBe(`${FINGER_NAT_W * scale}px`);
       expect(finger.el.style.height).toBe(`${FINGER_NAT_H * scale}px`);
     });
