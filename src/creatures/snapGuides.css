@@ -1,0 +1,35 @@
+.snap-guide {
+  position: fixed;
+  display: none;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--filter-accent, #e26790) 0,
+    var(--filter-accent, #e26790) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  opacity: 0.85;
+}
+
+.snap-guide--x {
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100vh;
+}
+
+.snap-guide--y {
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--filter-accent, #e26790) 0,
+    var(--filter-accent, #e26790) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}

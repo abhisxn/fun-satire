@@ -76,29 +76,38 @@ async function main(): Promise<void> {
     }, 200);
   });
 
+  type Attractor = { getCenter(): { x: number; y: number } };
+  let currentAttractor: Attractor = avatar;
+  let avatarActive = true;
+  let activeOverlay: StickerOverlay | TextOverlay | null = null;
+
   const engine = new Engine();
   engine.onTick(() => {
-    const center = avatar.getCenter();
+    const center = currentAttractor.getCenter();
     grid.update(center.x, center.y);
   });
   engine.start();
 
-  let activeOverlay: StickerOverlay | TextOverlay | null = null;
-
-  const poofOverlay = (overlay: StickerOverlay | TextOverlay): void => {
-    const rect = overlay.el.getBoundingClientRect();
+  const poofElement = (el: HTMLElement): void => {
+    const rect = el.getBoundingClientRect();
     spawnPoof(rect.left + rect.width / 2, rect.top + rect.height / 2);
   };
 
   const replaceOverlay = (
     next: StickerOverlay | TextOverlay,
   ): void => {
-    if (activeOverlay) {
-      poofOverlay(activeOverlay);
+    if (avatarActive) {
+      poofElement(avatar.el);
+      avatar.detach();
+      avatar.el.remove();
+      avatarActive = false;
+    } else if (activeOverlay) {
+      poofElement(activeOverlay.el);
       activeOverlay.destroy();
     }
     document.body.appendChild(next.el);
     activeOverlay = next;
+    currentAttractor = next;
   };
 
   galleryPanel.onStickerSelect((src) => {

@@ -1,6 +1,7 @@
 import "./hud.css";
 import type { CreatureMode } from "../creatures/creatureTypes";
 import { snapToGrid } from "../creatures/snapGrid";
+import { updateSnapGuides, hideSnapGuides } from "../creatures/snapGuides";
 
 const SVG_DRAG_HANDLE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path fill-rule="evenodd" clip-rule="evenodd" d="M9.5 5C9.5 6.10455 8.60455 7 7.5 7C6.39545 7 5.5 6.10455 5.5 5C5.5 3.89543 6.39545 3 7.5 3C8.60455 3 9.5 3.89543 9.5 5ZM7.5 14C8.60455 14 9.5 13.1046 9.5 12C9.5 10.8954 8.60455 10 7.5 10C6.39545 10 5.5 10.8954 5.5 12C5.5 13.1046 6.39545 14 7.5 14ZM7.5 21C8.60455 21 9.5 20.1046 9.5 19C9.5 17.8954 8.60455 17 7.5 17C6.39545 17 5.5 17.8954 5.5 19C5.5 20.1046 6.39545 21 7.5 21Z" fill="#2a1f1a"/>
@@ -237,7 +238,10 @@ export class Hud {
     this.dragOffsetX = e.clientX - rect.left;
     this.dragOffsetY = e.clientY - rect.top;
 
-    this.root.style.bottom = "";
+    this.root.style.animation = "none";
+    this.root.style.bottom = "auto";
+    this.root.style.width = `${rect.width}px`;
+    this.root.style.height = `${rect.height}px`;
     this.root.style.left = `${rect.left}px`;
     this.root.style.top = `${rect.top}px`;
     this.root.style.transform = "none";
@@ -258,12 +262,14 @@ export class Hud {
     const y = e.clientY - this.dragOffsetY;
     this.root.style.left = `${x}px`;
     this.root.style.top = `${y}px`;
+    updateSnapGuides(this.root);
   }
 
   private stopDrag(_e?: PointerEvent): void {
     if (!this.isDragging) return;
     this.isDragging = false;
     snapToGrid(this.root);
+    hideSnapGuides();
     this.root.style.transition = "";
     this.root.classList.remove("hud--dragging");
     this.detachDragListeners();

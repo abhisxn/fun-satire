@@ -17,7 +17,7 @@
 .filter-panel-popover {
   position: fixed;
   width: 192px;
-  padding: 28px;
+  padding: 36px 32px;
   border-radius: 18px;
   background: var(--filter-glass-bg);
   border: 1px solid var(--filter-glass-border);
@@ -28,7 +28,7 @@
   font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   display: none;
   flex-direction: column;
-  gap: 24px;
+  gap: 44px;
   box-sizing: border-box;
   z-index: 1001;
 }
@@ -52,7 +52,7 @@
 .filter-panel__section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 15px;
 }
 
 .filter-panel__label {

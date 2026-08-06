@@ -1,7 +1,7 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
 
-export const TEXT_Z_INDEX = 100;
+export const TEXT_Z_INDEX = 500;
 const DEFAULT_FONT_SIZE = 56;
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 240;
@@ -132,6 +132,11 @@ export class TextOverlay {
 
   getEditor(): HTMLDivElement {
     return this.editor;
+  }
+
+  getCenter(): { x: number; y: number } {
+    const rect = this.el.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   }
 
   destroy(): void {
