@@ -2,7 +2,7 @@ import "./galleryPanel.css";
 
 type GalleryMode = "sticker" | "text";
 
-interface StickerDef {
+export interface StickerDef {
   readonly src: string;
   readonly label: string;
 }
@@ -36,6 +36,10 @@ const STICKER_DEFS: readonly StickerDef[] = [
 interface TextDef {
   readonly font: string;
   readonly label: string;
+}
+
+export function getStickerDefs(): readonly StickerDef[] {
+  return STICKER_DEFS;
 }
 
 const TEXT_FONTS: readonly TextDef[] = [

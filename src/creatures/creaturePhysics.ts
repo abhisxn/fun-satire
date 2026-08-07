@@ -14,16 +14,14 @@ export interface PhysicsParams {
 
 const EPS = 1e-6;
 
-export function updateCreature(
+export function applyRepulsion(
   creature: Creature,
-  avatar: AvatarPos,
+  source: AvatarPos,
   params: PhysicsParams,
 ): void {
-  const { repelRadius, repelStrength, springStrength, damping } = params;
-
-  // Repulsion from avatar
-  const dx = creature.x - avatar.x;
-  const dy = creature.y - avatar.y;
+  const { repelRadius, repelStrength } = params;
+  const dx = creature.x - source.x;
+  const dy = creature.y - source.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
   if (dist < repelRadius && dist > EPS) {
@@ -31,6 +29,18 @@ export function updateCreature(
     creature.vx += (dx / dist) * force;
     creature.vy += (dy / dist) * force;
   }
+}
+
+export function updateCreature(
+  creature: Creature,
+  avatar: AvatarPos,
+  params: PhysicsParams,
+  repulsor?: AvatarPos | null,
+): void {
+  const { springStrength, damping } = params;
+
+  applyRepulsion(creature, avatar, params);
+  if (repulsor) applyRepulsion(creature, repulsor, params);
 
   // Spring to home
   creature.vx += (creature.hx - creature.x) * springStrength;
