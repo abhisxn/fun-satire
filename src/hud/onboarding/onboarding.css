@@ -1,0 +1,290 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=Bungee&display=swap");
+
+.onb-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 520px;
+  height: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  transform: translate(-50%, -50%);
+  z-index: 750;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 36px 32px 28px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 48px rgba(65, 52, 45, 0.18),
+    0 12px 24px rgba(65, 52, 45, 0.12),
+    0 2px 8px rgba(65, 52, 45, 0.08);
+  animation: onb-enter 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  overflow: hidden;
+}
+
+.onb-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(255, 255, 255, 0.9) 0%, transparent 55%),
+    radial-gradient(90% 70% at 85% 100%, rgba(244, 161, 93, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.onb-skip {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  z-index: 1;
+  padding: 4px 6px;
+  background: none;
+  border: none;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #6e625b;
+  opacity: 0.72;
+  cursor: pointer;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.onb-skip:hover {
+  opacity: 1;
+  color: #2a2420;
+}
+
+.onb-skip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(42, 36, 32, 0.18);
+  border-radius: 6px;
+}
+
+.onb-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 14px;
+  flex: 1;
+  justify-content: center;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.onb-copy--fading {
+  opacity: 0;
+}
+
+.onb-line {
+  margin: 0;
+  font-family: "Fraunces Variable", Fraunces, Georgia, serif;
+  font-size: 22px;
+  line-height: 1.32;
+  letter-spacing: -0.015em;
+  color: #2a2420;
+  text-wrap: balance;
+  font-variation-settings: "SOFT" 0, "WONK" 1;
+}
+
+.onb-line--second {
+  font-size: 18px;
+  line-height: 1.38;
+  font-weight: 400;
+  color: #3a332f;
+  opacity: 0.92;
+}
+
+.onb-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(42, 36, 32, 0.07);
+}
+
+.onb-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(42, 36, 32, 0.22);
+  background: transparent;
+  padding: 0;
+  flex-shrink: 0;
+  transition:
+    background 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.onb-dot--active {
+  background: #2a2420;
+  border-color: #2a2420;
+  transform: scale(1.08);
+}
+
+.onb-dot--attack {
+  background: linear-gradient(180deg, #f4a15d 0%, #df713e 100%);
+  border-color: #c95f32;
+  box-shadow: 0 1px 0 #ad4c29;
+  transform: scale(1.12);
+}
+
+.onb-action {
+  min-width: 104px;
+  height: 40px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    background 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  white-space: nowrap;
+}
+
+.onb-action--next {
+  background: #ffffff;
+  color: #2a2420;
+  border: 1px solid rgba(42, 36, 32, 0.14);
+  box-shadow: 0 1px 2px rgba(65, 52, 45, 0.06);
+}
+
+.onb-action--next:hover {
+  background: #fffefc;
+  border-color: rgba(42, 36, 32, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(65, 52, 45, 0.1);
+}
+
+.onb-action--next:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.onb-action--begin {
+  background: linear-gradient(180deg, #f4a15d 0%, #df713e 100%);
+  color: #ffffff;
+  border: 1px solid #c95f32;
+  box-shadow: 0 3px 0 #ad4c29;
+  font-family: Bungee, Impact, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.onb-action--begin:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #ad4c29, 0 8px 18px rgba(223, 113, 62, 0.32);
+}
+
+.onb-action--begin:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 1px 0 #ad4c29;
+}
+
+.onb-action:focus-visible {
+  box-shadow: 0 0 0 3px rgba(42, 36, 32, 0.18);
+}
+
+.onb-action--begin:focus-visible {
+  box-shadow: 0 3px 0 #ad4c29, 0 0 0 3px rgba(223, 113, 62, 0.35);
+}
+
+.onb-card--inert .onb-action,
+.onb-card--inert .onb-skip {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+@keyframes onb-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 10px)) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (max-width: 560px) {
+  .onb-card {
+    width: calc(100vw - 24px);
+    height: 400px;
+    padding: 32px 22px 24px;
+  }
+
+  .onb-line {
+    font-size: 19px;
+  }
+
+  .onb-line--second {
+    font-size: 16px;
+  }
+
+  .onb-skip {
+    top: 14px;
+    right: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .onb-card {
+    height: 420px;
+    padding: 30px 18px 22px;
+  }
+
+  .onb-line {
+    font-size: 17px;
+  }
+
+  .onb-line--second {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-card {
+    animation: none;
+  }
+
+  .onb-copy,
+  .onb-dot,
+  .onb-action,
+  .onb-skip {
+    transition: none;
+  }
+}
