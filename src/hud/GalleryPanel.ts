@@ -10,6 +10,7 @@ export interface StickerDef {
 const STICKER_DEFS: readonly StickerDef[] = [
   { src: "/avatars/adalat_sharma.png", label: "Adalat Sharma" },
   { src: "/avatars/chronology.png", label: "Chronology" },
+  { src: "/avatars/DNA-tihari.png", label: "DNA Tihari" },
   { src: "/avatars/ethanol.png", label: "Ethanol" },
   { src: "/avatars/gutter.png", label: "Gutter" },
   { src: "/avatars/kaleshi.png", label: "Kaleshi" },
@@ -19,6 +20,7 @@ const STICKER_DEFS: readonly StickerDef[] = [
   { src: "/avatars/petroleum.png", label: "Petroleum" },
   { src: "/avatars/reel-minister.png", label: "Reel Minister" },
   { src: "/avatars/republic.png", label: "Republic" },
+  { src: "/avatars/tax-tai.png", label: "Tax Tai" },
   { src: "/avatars/vishwaguru.png", label: "Vishwaguru" },
   { src: "/avatars/sticker_38.png", label: "Sticker 38" },
   { src: "/avatars/sticker_39.png", label: "Sticker 39" },
