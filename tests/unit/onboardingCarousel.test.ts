@@ -34,7 +34,15 @@ vi.mock("../../src/creatures/CreatureGrid", () => ({
     update(x: number, y: number): void {
       h.calls.push(`grid:update:${x},${y}`);
     }
-    setQuantity(): void {}
+    setQuantity(n: number): void {
+      h.calls.push(`grid:setQuantity:${n}`);
+    }
+    setRepulsor(x: number, y: number): void {
+      h.calls.push(`grid:setRepulsor:${x},${y}`);
+    }
+    clearRepulsor(): void {
+      h.calls.push("grid:clearRepulsor");
+    }
     setRepelMultiplier(): void {}
     switchMode(): void {}
     respawn(): void {}
@@ -44,9 +52,19 @@ vi.mock("../../src/creatures/CreatureGrid", () => ({
 vi.mock("../../src/creatures/poofEffect", () => ({
   spawnPoof: vi.fn((x: number, y: number) => {
     h.calls.push(`poof:${x},${y}`);
-    return new Promise<void>((resolve) => {
-      h.resolvePoof.fn = resolve;
+    let resolveCovered: () => void = () => {};
+    let resolveDone: () => void = () => {};
+    const covered = new Promise<void>((resolve) => {
+      resolveCovered = resolve;
     });
+    const done = new Promise<void>((resolve) => {
+      resolveDone = resolve;
+    });
+    h.resolvePoof.fn = () => {
+      resolveCovered();
+      resolveDone();
+    };
+    return { covered, done };
   }),
 }));
 
@@ -62,26 +80,6 @@ vi.mock("../../src/creatures/StickerOverlay", () => ({
     }
     destroy(): void {}
     setImage(): void {}
-  },
-}));
-
-vi.mock("../../src/creatures/DraggableAvatar", () => ({
-  DraggableAvatar: class {
-    el: HTMLElement;
-    constructor() {
-      this.el = document.createElement("img");
-    }
-    attach(): void {}
-    detach(): void {}
-    getPosition(): { x: number; y: number } {
-      return { x: 0, y: 0 };
-    }
-    getCenter(): { x: number; y: number } {
-      return { x: 0, y: 0 };
-    }
-    isDragging(): boolean {
-      return false;
-    }
   },
 }));
 
@@ -221,7 +219,7 @@ describe("OnboardingCarousel", () => {
       expect(action?.classList.contains("onb-action--begin")).toBe(true);
     });
 
-    it("keeps the card's own classes stable across beats (fixed-size card)", async () => {
+    it("keeps the card's own classes stable across beats", async () => {
       const card = host.querySelector<HTMLElement>(".onb-card");
       const before = card?.className;
       const action = host.querySelector<HTMLButtonElement>(".onb-action");
@@ -315,12 +313,14 @@ describe("main.ts onboarding wiring (mocked modules)", () => {
     document.body.innerHTML = "";
   });
 
-  it("seeds the crowd at 300 and defers the HUD until onboarding completes", async () => {
+  it("seeds a small crowd at 60, sets the card repulsor, and defers the HUD", async () => {
     await import("../../src/main");
     await vi.waitFor(() => expect(document.querySelector(".onb-card")).toBeTruthy());
 
-    expect(h.calls).toContain("grid:new:eyes:300");
+    expect(h.calls).toContain("grid:new:eyes:60");
+    expect(h.calls).toContain("grid:setRepulsor:512,384");
     expect(h.calls).not.toContain("hud:attach");
+    expect(h.calls).not.toContain("grid:setQuantity");
   });
 
   it("crowd follows the pointer during onboarding", async () => {
@@ -333,27 +333,32 @@ describe("main.ts onboarding wiring (mocked modules)", () => {
     expect(h.calls).toContain("grid:update:123,456");
   });
 
-  it("runs the exit sequence in order: poof, sticker centered on the card, then HUD", async () => {
+  it("runs the exit sequence in order: poof, sticker, HUD, then full crowd", async () => {
     await import("../../src/main");
     await vi.waitFor(() => expect(document.querySelector(".onb-card")).toBeTruthy());
 
     const card = document.querySelector<HTMLElement>(".onb-card")!;
-    vi.spyOn(card, "getBoundingClientRect").mockReturnValue(rect(100, 60, 520, 380));
+    vi.spyOn(card, "getBoundingClientRect").mockReturnValue(rect(100, 60, 360, 520));
     card.querySelector<HTMLButtonElement>(".onb-skip")?.click();
 
-    await vi.waitFor(() => expect(h.calls).toContain("poof:360,250"));
+    await vi.waitFor(() => expect(h.calls).toContain("poof:280,320"));
     expect(h.calls.some((c) => c.startsWith("sticker:"))).toBe(false);
     expect(h.calls).not.toContain("hud:attach");
 
     h.resolvePoof.fn?.();
-    await vi.waitFor(() => expect(h.calls).toContain("sticker:/avatars/test.png:280,170"));
+    await vi.waitFor(() => expect(h.calls).toContain("sticker:/avatars/test.png:200,240"));
     await vi.waitFor(() => expect(h.calls).toContain("hud:attach"));
 
-    const poofIdx = h.calls.indexOf("poof:360,250");
+    const poofIdx = h.calls.indexOf("poof:280,320");
     const stickerIdx = h.calls.findIndex((c) => c.startsWith("sticker:"));
     const hudIdx = h.calls.indexOf("hud:attach");
+    const clearRepulsorIdx = h.calls.indexOf("grid:clearRepulsor");
+    const setQuantityIdx = h.calls.indexOf("grid:setQuantity:300");
     expect(poofIdx).toBeLessThan(stickerIdx);
     expect(stickerIdx).toBeLessThan(hudIdx);
+    expect(clearRepulsorIdx).toBeGreaterThan(hudIdx);
+    expect(setQuantityIdx).toBeGreaterThan(clearRepulsorIdx);
     expect(document.querySelector(".onb-card")).toBeFalsy();
+    expect(document.querySelector("img")).toBeFalsy();
   });
 });

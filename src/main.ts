@@ -1,14 +1,17 @@
 import { Engine } from "./core/Engine";
 import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
-import { DraggableAvatar } from "./creatures/DraggableAvatar";
 import { spawnPoof } from "./creatures/poofEffect";
+import type { PoofHandle } from "./creatures/poofEffect";
 import { StickerOverlay } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getStickerDefs } from "./hud/GalleryPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
+
+const ONBOARDING_EYE_QUANTITY = 60;
+const FULL_EYE_QUANTITY = 300;
 
 async function main(): Promise<void> {
   const container = document.getElementById("stage");
@@ -22,9 +25,10 @@ async function main(): Promise<void> {
   const grid = new CreatureGrid({
     container,
     mode: "eyes",
-    initialQuantity: filterPanel.getQuantity(),
+    initialQuantity: ONBOARDING_EYE_QUANTITY,
   });
   await grid.init();
+  grid.setRepulsor(vw / 2, vh / 2);
 
   const bugSwarm = new BugSwarm(container);
 
@@ -62,9 +66,14 @@ async function main(): Promise<void> {
     }, 200);
   });
 
-  const poofElement = (el: HTMLElement): Promise<void> => {
+  const poofElement = (el: HTMLElement): PoofHandle => {
     const rect = el.getBoundingClientRect();
-    return spawnPoof(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return spawnPoof(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      rect.width,
+      rect.height,
+    );
   };
 
   const replaceOverlay = async (
@@ -79,8 +88,11 @@ async function main(): Promise<void> {
     if (activeOverlay) {
       const overlay = activeOverlay;
       activeOverlay = null;
-      poofDone = poofElement(overlay.el);
+      const poof = poofElement(overlay.el);
+      await poof.covered;
+      if (token !== replaceToken) return;
       overlay.destroy();
+      poofDone = poof.done;
     } else {
       poofDone = Promise.resolve();
     }
@@ -94,10 +106,6 @@ async function main(): Promise<void> {
   };
 
   const mountPostOnboarding = (): void => {
-    const avatar = new DraggableAvatar(vw / 2 - 70, vh / 2 - 70);
-    document.body.appendChild(avatar.el);
-    avatar.attach();
-
     const hud = new Hud();
     const hudRoot = document.getElementById("hud-root");
     if (!hudRoot) throw new Error("Missing #hud-root container");
@@ -142,9 +150,11 @@ async function main(): Promise<void> {
     galleryPanel.onTextSelect((font) => {
       if (activeOverlay instanceof TextOverlay) {
         const overlay = activeOverlay;
-        const poofDone = poofElement(overlay.el);
-        overlay.el.style.visibility = "hidden";
-        void poofDone.then(() => {
+        const poof = poofElement(overlay.el);
+        void poof.covered.then(() => {
+          overlay.el.style.visibility = "hidden";
+        });
+        void poof.done.then(() => {
           overlay.setFont(font);
           overlay.el.style.visibility = "visible";
         });
@@ -159,7 +169,7 @@ async function main(): Promise<void> {
   carousel.attachTo(document.body);
   carousel.onComplete(async (center) => {
     window.removeEventListener("pointermove", onPointerMove);
-    await spawnPoof(center.x, center.y);
+    await spawnPoof(center.x, center.y).done;
     const defs = getStickerDefs();
     const def = defs[Math.floor(Math.random() * defs.length)];
     const sticker = new StickerOverlay(def.src, center.x - 80, center.y - 80);
@@ -167,6 +177,8 @@ async function main(): Promise<void> {
     activeOverlay = sticker;
     currentAttractor = sticker;
     mountPostOnboarding();
+    grid.clearRepulsor();
+    grid.setQuantity(FULL_EYE_QUANTITY);
   });
 }
 

@@ -1,6 +1,19 @@
-const POP_COUNT = 6;
+const CLOUD_COUNT = 7;
 const SMOKE_COUNT = 6;
 const PUFF_Z_INDEX = 600;
+
+// Fraction of the animation spent growing the cloud to full coverage before
+// it starts dissipating — this is also roughly when callers should swap out
+// the covered content, so the swap reads as "hidden by smoke" not "vanished".
+const COVER_FRACTION = 0.18;
+const CLOUD_DURATION = 560;
+
+export interface PoofHandle {
+  /** Resolves once the cloud has grown to fully cover the source element. */
+  covered: Promise<void>;
+  /** Resolves once the whole burst (cloud + trailing smoke) has finished. */
+  done: Promise<void>;
+}
 
 function makePuff(cx: number, cy: number, size: number): HTMLDivElement {
   const puff = document.createElement("div");
@@ -20,42 +33,56 @@ function makePuff(cx: number, cy: number, size: number): HTMLDivElement {
 }
 
 /**
- * Spawns the two-layer poof burst. Returns a promise that resolves once the
- * sharp "pop" layer (the primary visual burst) finishes, so callers can
- * sequence content changes to land after the old content has visibly
- * vanished — the slower "smoke" layer keeps drifting in the background.
+ * Spawns a cartoon-style poof burst over the element's footprint: a cloud
+ * layer grows to fully cover the source content first (see `covered`), then
+ * dissipates outward alongside a softer trailing "smoke" layer.
  */
-export function spawnPoof(cx: number, cy: number): Promise<void> {
+export function spawnPoof(
+  cx: number,
+  cy: number,
+  width = 40,
+  height = 40,
+): PoofHandle {
   const animateSupported = typeof document.createElement("div").animate === "function";
-  const popFinished: Promise<void>[] = [];
 
-  // Layer 1: sharp, small, fast "pop" — the initial burst.
-  for (let i = 0; i < POP_COUNT; i++) {
-    const angle = (i / POP_COUNT) * Math.PI * 2 + Math.random() * 0.4;
-    const dist = 22 + Math.random() * 20;
-    const size = 14 + Math.random() * 14;
+  if (!animateSupported) {
+    return { covered: Promise.resolve(), done: Promise.resolve() };
+  }
+
+  const cloudFinished: Promise<void>[] = [];
+  const coverSize = Math.max(width, height) * 0.75;
+  const spreadX = width * 0.3;
+  const spreadY = height * 0.3;
+
+  // Layer 1: "cloud" — grows to fully cover the element, holds briefly
+  // opaque, then dissipates outward. Covers the swap so it reads as smoke
+  // hiding the content rather than the content abruptly vanishing.
+  for (let i = 0; i < CLOUD_COUNT; i++) {
+    const angle = (i / CLOUD_COUNT) * Math.PI * 2 + Math.random() * 0.4;
+    const originX = cx + (Math.random() * 2 - 1) * spreadX;
+    const originY = cy + (Math.random() * 2 - 1) * spreadY;
+    const dist = 26 + Math.random() * 24;
     const dx = Math.cos(angle) * dist;
     const dy = Math.sin(angle) * dist;
+    const size = coverSize * (0.75 + Math.random() * 0.5);
 
-    const puff = makePuff(cx, cy, size);
-
-    if (!animateSupported) {
-      puff.remove();
-      continue;
-    }
+    const puff = makePuff(originX, originY, size);
+    const duration = CLOUD_DURATION + Math.random() * 100;
 
     const anim = puff.animate(
       [
-        { transform: "translate(0,0) scale(0.4)", opacity: 0.9 },
-        { transform: `translate(${dx}px, ${dy}px) scale(1.5)`, opacity: 0 },
+        { transform: "translate(0,0) scale(0.3)", opacity: 0 },
+        { offset: COVER_FRACTION, transform: "translate(0,0) scale(1)", opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(1.6)`, opacity: 0 },
       ],
-      { duration: 380 + Math.random() * 120, easing: "ease-out" },
+      { duration, easing: "ease-out" },
     );
     anim.onfinish = () => puff.remove();
-    popFinished.push(anim.finished.then(() => undefined).catch(() => undefined));
+    cloudFinished.push(anim.finished.then(() => undefined).catch(() => undefined));
   }
 
-  // Layer 2: bigger, softer, slower "smoke" — drifts outward and up.
+  // Layer 2: bigger, softer, slower "smoke" — trails outward and up behind
+  // the cloud layer; purely decorative, not awaited by either promise.
   for (let i = 0; i < SMOKE_COUNT; i++) {
     const angle = (i / SMOKE_COUNT) * Math.PI * 2 + Math.random() * 0.6;
     const midDist = 18 + Math.random() * 20;
@@ -68,11 +95,6 @@ export function spawnPoof(cx: number, cy: number): Promise<void> {
 
     const puff = makePuff(cx, cy, size);
     puff.style.opacity = "0";
-
-    if (!animateSupported) {
-      puff.remove();
-      continue;
-    }
 
     const anim = puff.animate(
       [
@@ -89,6 +111,13 @@ export function spawnPoof(cx: number, cy: number): Promise<void> {
     anim.onfinish = () => puff.remove();
   }
 
-  if (popFinished.length === 0) return Promise.resolve();
-  return Promise.all(popFinished).then(() => undefined);
+  const covered = new Promise<void>((resolve) => {
+    setTimeout(resolve, CLOUD_DURATION * COVER_FRACTION);
+  });
+  const done =
+    cloudFinished.length === 0
+      ? Promise.resolve()
+      : Promise.all(cloudFinished).then(() => undefined);
+
+  return { covered, done };
 }

@@ -4,8 +4,8 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 520px;
-  height: 380px;
+  width: 360px;
+  height: 520px;
   max-width: calc(100vw - 32px);
   max-height: calc(100dvh - 32px);
   transform: translate(-50%, -50%);
@@ -64,7 +64,7 @@
 
 .onb-skip:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(42, 36, 32, 0.18);
+  box-shadow: 0 0 0 3px rgba(42, 36, 32, 0.42);
   border-radius: 6px;
 }
 
@@ -92,14 +92,13 @@
   letter-spacing: -0.015em;
   color: #2a2420;
   text-wrap: balance;
-  font-variation-settings: "SOFT" 0, "WONK" 1;
 }
 
 .onb-line--second {
   font-size: 18px;
   line-height: 1.38;
   font-weight: 400;
-  color: #3a332f;
+  color: #2a2420;
   opacity: 0.92;
 }
 
@@ -183,7 +182,7 @@
 }
 
 .onb-action--next:hover {
-  background: #fffefc;
+  background: #ffffff;
   border-color: rgba(42, 36, 32, 0.2);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(65, 52, 45, 0.1);
@@ -216,17 +215,11 @@
 }
 
 .onb-action:focus-visible {
-  box-shadow: 0 0 0 3px rgba(42, 36, 32, 0.18);
+  box-shadow: 0 0 0 3px rgba(42, 36, 32, 0.42);
 }
 
 .onb-action--begin:focus-visible {
   box-shadow: 0 3px 0 #ad4c29, 0 0 0 3px rgba(223, 113, 62, 0.35);
-}
-
-.onb-card--inert .onb-action,
-.onb-card--inert .onb-skip {
-  pointer-events: none;
-  opacity: 0.5;
 }
 
 @keyframes onb-enter {

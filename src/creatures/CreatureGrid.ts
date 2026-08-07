@@ -1,6 +1,6 @@
 import type { Creature, CreatureMode } from "./creatureTypes";
 import type { EyeCreature } from "./EyeCreature";
-import type { PhysicsParams } from "./creaturePhysics";
+import type { PhysicsParams, AvatarPos } from "./creaturePhysics";
 import { updateCreature } from "./creaturePhysics";
 import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg } from "./EyeCreature";
 import { createFingerCreature, getFingerRotation } from "./FingerCreature";
@@ -144,6 +144,7 @@ export class CreatureGrid {
   };
   private lastFadePickMs: number = 0;
   private lastRepopPickMs: number = 0;
+  private repulsor: AvatarPos | null = null;
 
   constructor(config: CreatureGridConfig) {
     this.container = config.container;
@@ -287,7 +288,7 @@ export class CreatureGrid {
     const now = Date.now();
 
     for (const c of this.creatures) {
-      updateCreature(c, avatar, this.physicsParams);
+      updateCreature(c, avatar, this.physicsParams, this.repulsor);
     }
 
     if (this.mode === 'eyes') {
@@ -363,6 +364,14 @@ export class CreatureGrid {
 
   setRepelMultiplier(multiplier: number): void {
     this.physicsParams.repelStrength = 120 * multiplier;
+  }
+
+  setRepulsor(x: number, y: number): void {
+    this.repulsor = { x, y };
+  }
+
+  clearRepulsor(): void {
+    this.repulsor = null;
   }
 
   getCreatureCount(): number {

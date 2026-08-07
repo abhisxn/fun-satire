@@ -1,4 +1,5 @@
 import "./onboarding.css";
+import { DURATION } from "../../config/tokens";
 import { BEATS } from "./beats";
 
 export class OnboardingCarousel {
@@ -12,7 +13,8 @@ export class OnboardingCarousel {
   private index = 0;
   private done = false;
   private firing = false;
-  private completeCb: ((center: { x: number; y: number }) => void) | null = null;
+  private fadeTimer: number | null = null;
+  private completeCb: ((center: { x: number; y: number }) => void | Promise<void>) | null = null;
 
   constructor() {
     const root = document.createElement("div");
@@ -79,7 +81,7 @@ export class OnboardingCarousel {
     container.appendChild(this.root);
   }
 
-  onComplete(cb: (center: { x: number; y: number }) => void): void {
+  onComplete(cb: (center: { x: number; y: number }) => void | Promise<void>): void {
     this.completeCb = cb;
   }
 
@@ -107,25 +109,31 @@ export class OnboardingCarousel {
     if (this.done || this.firing) return;
     this.firing = true;
     this.copy.classList.add("onb-copy--fading");
-    window.setTimeout(() => {
+    this.fadeTimer = window.setTimeout(() => {
+      if (this.done) return;
+      this.fadeTimer = null;
       this.index += 1;
       this.render();
+      this.firing = false;
       requestAnimationFrame(() => {
+        if (this.done) return;
         this.copy.classList.remove("onb-copy--fading");
-        this.firing = false;
       });
-    }, 200);
+    }, DURATION.base);
   }
 
   private finish(): void {
     if (this.done) return;
     this.done = true;
-    this.root.classList.add("onb-card--inert");
+    if (this.fadeTimer !== null) {
+      window.clearTimeout(this.fadeTimer);
+      this.fadeTimer = null;
+    }
     this.action.disabled = true;
     this.skip.disabled = true;
     const rect = this.root.getBoundingClientRect();
     const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     this.root.remove();
-    this.completeCb?.(center);
+    void Promise.resolve(this.completeCb?.(center)).catch(console.error);
   }
 }
