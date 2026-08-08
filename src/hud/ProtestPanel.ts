@@ -307,6 +307,9 @@ export class ProtestPanel {
 
   private async handleInstagramShare(): Promise<void> {
     const url = window.location.href;
+    const clipboardWrite = navigator.clipboard.writeText(url).catch(() => {
+      // clipboard unavailable — still attempt to open Instagram
+    });
 
     if (isMobileUserAgent(navigator.userAgent)) {
       window.open(buildInstagramDeepLink(), "_self");
@@ -320,11 +323,7 @@ export class ProtestPanel {
       window.open(buildInstagramWebUrl(), "_blank", "noopener,noreferrer");
     }
 
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      // clipboard unavailable — still attempt to open Instagram
-    }
+    await clipboardWrite;
     this.showToast("Link copied — paste it into your story!");
   }
 
