@@ -84,6 +84,153 @@ describe("hud/ProtestPanel", () => {
     });
   });
 
+  describe("share", () => {
+    afterEach(() => {
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+    });
+
+    it("renders a single primary Share button when navigator.share is available", () => {
+      const shareMock = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "share", { value: shareMock, configurable: true });
+
+      const localPanel = new ProtestPanel();
+      localPanel.attachTo(protestButton);
+      const root = localPanel.getRoot();
+
+      expect(root.querySelector(".protest-share-primary")).not.toBeNull();
+      expect(root.querySelector(".protest-share-fallback-row")).toBeNull();
+
+      localPanel.destroy();
+    });
+
+    it("calls navigator.share with title, text, and url when the primary button is clicked", async () => {
+      const shareMock = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "share", { value: shareMock, configurable: true });
+
+      const localPanel = new ProtestPanel();
+      localPanel.attachTo(protestButton);
+      const btn = localPanel.getRoot().querySelector<HTMLButtonElement>(".protest-share-primary");
+      btn?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(shareMock).toHaveBeenCalledWith({
+        title: "I just stood with the crowd. Come see for yourself.",
+        text: "I just stood with the crowd. Come see for yourself.",
+        url: window.location.href,
+      });
+
+      localPanel.destroy();
+    });
+
+    it("renders WhatsApp and Facebook fallback links when navigator.share is unavailable", () => {
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+
+      const localPanel = new ProtestPanel();
+      localPanel.attachTo(protestButton);
+      const root = localPanel.getRoot();
+
+      expect(root.querySelector(".protest-share-primary")).toBeNull();
+
+      const whatsapp = root.querySelector<HTMLAnchorElement>(".protest-share-icon-btn--whatsapp");
+      expect(whatsapp?.href).toBe(
+        `https://wa.me/?text=${encodeURIComponent("I just stood with the crowd. Come see for yourself. " + window.location.href)}`,
+      );
+      expect(whatsapp?.target).toBe("_blank");
+
+      const facebook = root.querySelector<HTMLAnchorElement>(".protest-share-icon-btn--facebook");
+      expect(facebook?.href).toBe(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
+      );
+
+      expect(root.querySelector(".protest-share-icon-btn--instagram")).not.toBeNull();
+
+      localPanel.destroy();
+    });
+
+    it("copies the link and shows a toast when the Instagram fallback button is clicked (desktop)", async () => {
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+      const writeTextMock = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText: writeTextMock }, configurable: true });
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        configurable: true,
+      });
+      const openMock = vi.spyOn(window, "open").mockReturnValue(null);
+
+      const localPanel = new ProtestPanel();
+      localPanel.attachTo(protestButton);
+      const instagramBtn = localPanel.getRoot().querySelector<HTMLButtonElement>(".protest-share-icon-btn--instagram");
+      instagramBtn?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(writeTextMock).toHaveBeenCalledWith(window.location.href);
+      expect(openMock).toHaveBeenCalledWith("https://instagram.com", "_blank", "noopener,noreferrer");
+      expect(localPanel.getRoot().querySelector(".protest-toast.visible")).not.toBeNull();
+
+      localPanel.destroy();
+      openMock.mockRestore();
+    });
+
+    it("attempts the Instagram app deep link then falls back to web after a timeout (mobile)", async () => {
+      vi.useFakeTimers();
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+      const writeTextMock = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText: writeTextMock }, configurable: true });
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+        configurable: true,
+      });
+      const openMock = vi.spyOn(window, "open").mockReturnValue(null);
+
+      const localPanel = new ProtestPanel();
+      localPanel.attachTo(protestButton);
+      const instagramBtn = localPanel.getRoot().querySelector<HTMLButtonElement>(".protest-share-icon-btn--instagram");
+      instagramBtn?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(openMock).toHaveBeenCalledWith("instagram://story-camera", "_self");
+
+      vi.advanceTimersByTime(1300);
+
+      expect(openMock).toHaveBeenCalledWith("https://instagram.com", "_blank", "noopener,noreferrer");
+
+      localPanel.destroy();
+      openMock.mockRestore();
+      vi.useRealTimers();
+    });
+
+    it("clears the pending Instagram fallback timer on destroy", () => {
+      vi.useFakeTimers();
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+      Object.defineProperty(navigator, "clipboard", {
+        value: { writeText: vi.fn().mockResolvedValue(undefined) },
+        configurable: true,
+      });
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+        configurable: true,
+      });
+      const openMock = vi.spyOn(window, "open").mockReturnValue(null);
+      const clearSpy = vi.spyOn(window, "clearTimeout");
+
+      const localPanel = new ProtestPanel();
+      localPanel.attachTo(protestButton);
+      const instagramBtn = localPanel.getRoot().querySelector<HTMLButtonElement>(".protest-share-icon-btn--instagram");
+      instagramBtn?.click();
+
+      localPanel.destroy();
+
+      expect(clearSpy).toHaveBeenCalled();
+
+      openMock.mockRestore();
+      clearSpy.mockRestore();
+      vi.useRealTimers();
+    });
+  });
+
   describe("open/close/toggle", () => {
     it("starts closed", () => {
       panel.attachTo(protestButton);
