@@ -88,4 +88,64 @@ describe("hud/ProtestPanel", () => {
       expect(panel.getRoot().classList.contains("open")).toBe(false);
     });
   });
+
+  describe("share buttons", () => {
+    it("renders WhatsApp, Facebook, Reddit, and native share buttons with correct hrefs", () => {
+      panel.attachTo(protestButton);
+      const root = panel.getRoot();
+
+      const whatsapp = root.querySelector<HTMLAnchorElement>(".protest-share-btn--whatsapp");
+      expect(whatsapp?.href).toBe(
+        `https://wa.me/?text=${encodeURIComponent("I just stood with the crowd. Come see for yourself. " + window.location.href)}`,
+      );
+      expect(whatsapp?.target).toBe("_blank");
+
+      const facebook = root.querySelector<HTMLAnchorElement>(".protest-share-btn--facebook");
+      expect(facebook?.href).toBe(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
+      );
+
+      const reddit = root.querySelector<HTMLAnchorElement>(".protest-share-btn--reddit");
+      expect(reddit?.href).toBe(
+        `https://www.reddit.com/submit?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent("I just stood with the crowd. Come see for yourself.")}`,
+      );
+
+      const native = root.querySelector<HTMLButtonElement>(".protest-share-btn--native");
+      expect(native?.textContent).toBe("Share");
+    });
+
+    it("calls navigator.share with title, text, and url when available", async () => {
+      const shareMock = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "share", { value: shareMock, configurable: true });
+
+      panel.attachTo(protestButton);
+      const nativeBtn = panel.getRoot().querySelector<HTMLButtonElement>(".protest-share-btn--native");
+      nativeBtn?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(shareMock).toHaveBeenCalledWith({
+        title: "I just stood with the crowd. Come see for yourself.",
+        text: "I just stood with the crowd. Come see for yourself.",
+        url: window.location.href,
+      });
+
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+    });
+
+    it("falls back to clipboard copy and shows feedback when navigator.share is unavailable", async () => {
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+      const writeTextMock = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText: writeTextMock }, configurable: true });
+
+      panel.attachTo(protestButton);
+      const nativeBtn = panel.getRoot().querySelector<HTMLButtonElement>(".protest-share-btn--native");
+      nativeBtn?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(writeTextMock).toHaveBeenCalledWith(window.location.href);
+      expect(nativeBtn?.textContent).toBe("Link copied!");
+    });
+  });
 });
