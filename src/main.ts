@@ -9,6 +9,8 @@ import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getStickerDefs } from "./hud/GalleryPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
+import { AudioManager } from "./audio/AudioManager";
+import { AudioWidget } from "./audio/AudioWidget";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
 const FULL_CREATURE_QUANTITY = 300;
@@ -165,6 +167,13 @@ async function main(): Promise<void> {
       void replaceOverlay(text);
     });
   };
+
+  // --- Sound bed (isolated init: owns its own AudioManager + widget. No
+  // other init block touches this one.) ---
+  const audioManager = new AudioManager();
+  const audioWidget = new AudioWidget(audioManager);
+  audioWidget.attachTo(document.body);
+  void audioWidget.attemptAutoplay();
 
   const carousel = new OnboardingCarousel();
   carousel.attachTo(document.body);
