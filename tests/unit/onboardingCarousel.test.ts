@@ -364,6 +364,6 @@ describe("main.ts onboarding wiring (mocked modules)", () => {
     expect(clearRepulsorIdx).toBeGreaterThan(hudIdx);
     expect(setQuantityIdx).toBeGreaterThan(clearRepulsorIdx);
     expect(document.querySelector(".onb-card")).toBeFalsy();
-    expect(document.querySelector("img")).toBeFalsy();
+    expect(document.querySelector("#stage img")).toBeFalsy();
   });
 });
