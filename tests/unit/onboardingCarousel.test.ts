@@ -114,7 +114,8 @@ vi.mock("../../src/hud/GalleryPanel", () => ({
     onTextSelect(): void {}
     destroy(): void {}
   },
-  getStickerDefs: () => [{ src: "/avatars/test.png", label: "Test" }],
+  getStickerDefs: () => [{ src: "/avatars/test.png", label: "Test", hasFace: true }],
+  getFaceStickerDefs: () => [{ src: "/avatars/test.png", label: "Test", hasFace: true }],
 }));
 
 vi.mock("../../src/creatures/TextOverlay", () => ({

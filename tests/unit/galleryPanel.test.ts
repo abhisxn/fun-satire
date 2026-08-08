@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { GalleryPanel } from "../../src/hud/GalleryPanel";
+import { GalleryPanel, getStickerDefs, getFaceStickerDefs } from "../../src/hud/GalleryPanel";
 
 describe("hud/GalleryPanel", () => {
   let panel: GalleryPanel;
@@ -19,6 +19,31 @@ describe("hud/GalleryPanel", () => {
     panel.destroy();
     document.body.innerHTML = "";
     vi.restoreAllMocks();
+  });
+
+  describe("getFaceStickerDefs", () => {
+    it("returns only entries tagged hasFace: true", () => {
+      const faceDefs = getFaceStickerDefs();
+      expect(faceDefs.length).toBeGreaterThan(0);
+      expect(faceDefs.every((def) => def.hasFace)).toBe(true);
+    });
+
+    it("excludes the text-only sticker_38\u201348 badge entries", () => {
+      const faceDefs = getFaceStickerDefs();
+      const faceSrcs = faceDefs.map((def) => def.src);
+      for (let n = 38; n <= 48; n++) {
+        expect(faceSrcs).not.toContain(`/avatars/sticker_${n}.png`);
+      }
+    });
+
+    it("is a strict subset of the full sticker roster and every def has a boolean hasFace", () => {
+      const allDefs = getStickerDefs();
+      const faceDefs = getFaceStickerDefs();
+      expect(faceDefs.length).toBeLessThan(allDefs.length);
+      for (const def of allDefs) {
+        expect(typeof def.hasFace).toBe("boolean");
+      }
+    });
   });
 
   describe("DOM structure", () => {
