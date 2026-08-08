@@ -94,11 +94,19 @@ export class ProtestPanel {
     const section = document.createElement("div");
     section.className = "protest-join";
     const link = document.createElement("a");
-    link.className = "protest-join-link";
+    link.className = "protest-rich-btn protest-join-link";
     link.href = JOIN_URL;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = "Join the Swarm";
+
+    const icon = document.createElement("span");
+    icon.className = "protest-rich-btn-icon";
+    icon.textContent = "🪳";
+    const label = document.createElement("span");
+    label.className = "protest-rich-btn-label";
+    label.textContent = "Join the Swarm";
+    link.append(icon, label);
+
     section.appendChild(link);
     return section;
   }

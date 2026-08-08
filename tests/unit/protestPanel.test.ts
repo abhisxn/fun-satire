@@ -37,6 +37,9 @@ describe("hud/ProtestPanel", () => {
       expect(joinLink?.href).toBe("https://www.thecockroachjantaparty.org.in/join");
       expect(joinLink?.target).toBe("_blank");
       expect(joinLink?.rel).toBe("noopener noreferrer");
+      expect(joinLink?.classList.contains("protest-rich-btn")).toBe(true);
+      expect(joinLink?.querySelector(".protest-rich-btn-icon")?.textContent).toBe("🪳");
+      expect(joinLink?.querySelector(".protest-rich-btn-label")?.textContent).toBe("Join the Swarm");
     });
   });
 
