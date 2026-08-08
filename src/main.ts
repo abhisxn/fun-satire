@@ -8,6 +8,7 @@ import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getStickerDefs } from "./hud/GalleryPanel";
+import { ProtestPanel } from "./hud/ProtestPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
@@ -113,9 +114,11 @@ async function main(): Promise<void> {
     hud.attachTo(hudRoot);
 
     const galleryPanel = new GalleryPanel();
+    const protestPanel = new ProtestPanel();
 
     filterPanel.attachTo(hud.getSettingsButton());
     galleryPanel.attachTo(hud.getGalleryButton());
+    protestPanel.attachTo(hud.getAttackButton());
 
     filterPanel.onQuantityChange((qty) => {
       grid.setQuantity(qty);
@@ -135,12 +138,20 @@ async function main(): Promise<void> {
 
     hud.getSettingsButton().addEventListener("click", () => {
       galleryPanel.close();
+      protestPanel.close();
       filterPanel.toggle();
     });
 
     hud.getGalleryButton().addEventListener("click", () => {
       filterPanel.close();
+      protestPanel.close();
       galleryPanel.toggle();
+    });
+
+    hud.onAttackPress(() => {
+      filterPanel.close();
+      galleryPanel.close();
+      protestPanel.toggle();
     });
 
     galleryPanel.onStickerSelect((src) => {
