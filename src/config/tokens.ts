@@ -41,3 +41,10 @@ export const MOTION = Object.freeze({
 export function motionScale(matchesReducedMotion: boolean): number {
   return matchesReducedMotion ? MOTION.reducedMultiplier : MOTION.multiplier;
 }
+
+// Shared creature-quantity bounds and default, so the slider (FilterPanel),
+// the live grid (CreatureGrid), and startup (main.ts) all agree on one
+// source of truth instead of duplicating literals.
+export const QTY_MIN = 10;
+export const QTY_MAX = 500;
+export const DEFAULT_CREATURE_QUANTITY = 300;

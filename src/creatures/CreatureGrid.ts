@@ -6,6 +6,7 @@ import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg } from ".
 import { createFingerCreature, getFingerRotation } from "./FingerCreature";
 import { createCockroachCreature, getCockroachRotation } from "./CockroachCreature";
 import { createPlacardCreature, getPlacardRotation } from "./PlacardCreature";
+import { QTY_MIN, QTY_MAX } from "../config/tokens";
 
 /** Whole batch of creatures finishes appearing within this window (ms). */
 export const SPAWN_WAVE_MS = 20000;
@@ -220,12 +221,13 @@ export class CreatureGrid {
   }
 
   setQuantity(targetCount: number): void {
+    const clampedTarget = Math.max(QTY_MIN, Math.min(QTY_MAX, targetCount));
     const current = this.creatures.length;
-    this.targetCount = targetCount;
-    if (targetCount === current) return;
+    this.targetCount = clampedTarget;
+    if (clampedTarget === current) return;
 
     const modeConfig = MODE_CONFIGS[this.mode];
-    const { cols, rows } = this.gridDimsFor(this.mode, targetCount);
+    const { cols, rows } = this.gridDimsFor(this.mode, clampedTarget);
 
     const vw = this.container.clientWidth || window.innerWidth;
     const vh = this.container.clientHeight || window.innerHeight;
@@ -233,8 +235,8 @@ export class CreatureGrid {
     const cellH = vh / rows;
     const batchStartMs = Date.now();
 
-    if (targetCount < current) {
-      const removed = this.creatures.splice(targetCount);
+    if (clampedTarget < current) {
+      const removed = this.creatures.splice(clampedTarget);
       for (const c of removed) {
         c.el.remove();
         const eyeIdx = this.eyeCreatures.indexOf(c as EyeCreature);
@@ -244,7 +246,7 @@ export class CreatureGrid {
 
     // Reflow every surviving/new creature onto the recomputed grid so the
     // whole layout stays evenly spaced instead of thinning from one edge.
-    for (let i = 0; i < targetCount; i++) {
+    for (let i = 0; i < clampedTarget; i++) {
       const c = Math.floor(i / rows);
       const r = i % rows;
       const hx = (c + 0.5) * cellW;

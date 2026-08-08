@@ -389,6 +389,16 @@ describe("hud/FilterPanel", () => {
 
       expect(panel.getQuantity()).toBe(500);
     });
+
+    it("notifies onQuantityChange so external callers stay in sync with the grid", () => {
+      panel.attachTo(settingsButton);
+      const cb = vi.fn();
+      panel.onQuantityChange(cb);
+
+      panel.setQuantity(300);
+
+      expect(cb).toHaveBeenCalledWith(300);
+    });
   });
 
   describe("setRepel", () => {

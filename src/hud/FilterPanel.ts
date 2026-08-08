@@ -1,7 +1,6 @@
 import "./filterPanel.css";
+import { QTY_MIN, QTY_MAX, DEFAULT_CREATURE_QUANTITY } from "../config/tokens";
 
-const QTY_MIN = 10;
-const QTY_MAX = 500;
 const QTY_STEP = 10;
 const REPEL_MIN = 0;
 const REPEL_MAX = 2;
@@ -25,7 +24,7 @@ export class FilterPanel {
   private boundOnDocumentClick: ((e: MouseEvent) => void) | null = null;
   private boundOnKeyDown: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(initialQuantity = 300, initialRepel = 1) {
+  constructor(initialQuantity = DEFAULT_CREATURE_QUANTITY, initialRepel = 1) {
     this.quantity = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(initialQuantity / QTY_STEP) * QTY_STEP));
     this.repel = Math.max(REPEL_MIN, Math.min(REPEL_MAX, initialRepel));
 
@@ -169,6 +168,7 @@ export class FilterPanel {
     this.qtyValue.textContent = String(clamped);
     this.qtyInput.value = String(clamped);
     this.updateQtyFill(clamped);
+    this.quantityChangeCb?.(clamped);
   }
 
   getQuantity(): number {

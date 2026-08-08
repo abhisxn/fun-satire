@@ -246,6 +246,22 @@ describe('CreatureGrid', () => {
         expect(updated[i].spawnPopAtMs).toBeLessThanOrEqual(after + SPAWN_WAVE_MS);
       }
     });
+
+    it('clamps a target above QTY_MAX (500) down to 500', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach');
+
+      grid.setQuantity(9999);
+      expect(grid.getCreatureCount()).toBe(500);
+    });
+
+    it('clamps a target below QTY_MIN (10) up to 10', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach');
+
+      grid.setQuantity(1);
+      expect(grid.getCreatureCount()).toBe(10);
+    });
   });
 
   describe('getCreatureCount', () => {
