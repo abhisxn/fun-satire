@@ -2,10 +2,10 @@ import type { Creature, CreatureMode } from "./creatureTypes";
 import type { EyeCreature } from "./EyeCreature";
 import type { PhysicsParams, Repulsor } from "./creaturePhysics";
 import { updateCreature } from "./creaturePhysics";
-import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg } from "./EyeCreature";
-import { createFingerCreature, getFingerRotation } from "./FingerCreature";
-import { createCockroachCreature, getCockroachRotation } from "./CockroachCreature";
-import { createPlacardCreature, getPlacardRotation } from "./PlacardCreature";
+import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg, triggerEyeHoverTone } from "./EyeCreature";
+import { createFingerCreature, getFingerRotation, triggerFingerHoverTone } from "./FingerCreature";
+import { createCockroachCreature, getCockroachRotation, triggerCockroachHoverTone } from "./CockroachCreature";
+import { createPlacardCreature, getPlacardRotation, triggerPlacardHoverTone } from "./PlacardCreature";
 
 /** Whole batch of creatures finishes appearing within this window (ms). */
 export const SPAWN_WAVE_MS = 20000;
@@ -21,6 +21,10 @@ export const FADE_OUT_MS = 400;
 export const REPOP_INTERVAL_MS = 2000;
 /** How many invisible creatures randomly pop back in per interval. */
 export const REPOP_COUNT = 3;
+/** Extra slack (px) beyond a creature's own rendered half-size for hover proximity. */
+export const HOVER_PROXIMITY_PADDING = 20;
+/** Minimum gap between hover tones, across ALL creatures — the voice-cap/anti-spam guard. */
+export const HOVER_TONE_COOLDOWN_MS = 90;
 
 function easeOutBack(t: number): number {
   const c1 = 1.70158;
@@ -80,6 +84,46 @@ function resolveSpawnState(creature: Creature, nowMs: number): { popScale: numbe
     return { popScale: spawnState.scale, opacity: spawnState.opacity };
   }
   return { popScale: 1, opacity: 1 };
+}
+
+/**
+ * Per-creature hover radius: the creature's own visual half-size plus a
+ * fixed padding, so bigger/closer creatures get an easier hover target
+ * than tiny background ones, and every creature stays hoverable even at
+ * small scales.
+ */
+export function hoverRadiusFor(creature: Creature): number {
+  return Math.max(creature.w, creature.h) / 2 + HOVER_PROXIMITY_PADDING;
+}
+
+/**
+ * Pure edge-detector: given the previous hover flag and the current
+ * cursor distance, returns whether the creature is hovered now and
+ * whether this frame is specifically a hover-ENTER transition
+ * (false -> true). Callers use `entered` to fire a one-shot side effect
+ * (a tone) exactly once per hover, not every frame the cursor stays over
+ * the creature.
+ */
+export function computeHoverEdge(
+  distance: number,
+  radius: number,
+  wasHovered: boolean,
+): { hovered: boolean; entered: boolean } {
+  const hovered = distance < radius;
+  return { hovered, entered: hovered && !wasHovered };
+}
+
+/**
+ * Simple global cooldown that doubles as a voice-cap: only allow one hover
+ * tone to start within `cooldownMs` of the previous one, no matter how
+ * many creatures cross into hover in the same frame/burst.
+ */
+export function canPlayHoverTone(
+  lastPlayedAtMs: number,
+  nowMs: number,
+  cooldownMs: number = HOVER_TONE_COOLDOWN_MS,
+): boolean {
+  return nowMs - lastPlayedAtMs >= cooldownMs;
 }
 
 interface ModeConfig {
@@ -145,6 +189,9 @@ export class CreatureGrid {
   private lastFadePickMs: number = 0;
   private lastRepopPickMs: number = 0;
   private repulsor: Repulsor | null = null;
+  private audioContext: AudioContext | null = null;
+  private hoverState = new WeakMap<Creature, boolean>();
+  private lastHoverToneAtMs = -Infinity;
 
   constructor(config: CreatureGridConfig) {
     this.container = config.container;
@@ -292,6 +339,22 @@ export class CreatureGrid {
       updateCreature(c, avatar, this.physicsParams, this.repulsor);
     }
 
+    // Hover-enter edge detection: fires at most one tone per cooldown
+    // window, however many creatures cross into hover this frame.
+    for (const c of this.creatures) {
+      const dx = avatarX - c.x;
+      const dy = avatarY - c.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const wasHovered = this.hoverState.get(c) ?? false;
+      const { hovered, entered } = computeHoverEdge(distance, hoverRadiusFor(c), wasHovered);
+      this.hoverState.set(c, hovered);
+
+      if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
+        this.lastHoverToneAtMs = now;
+        this.triggerHoverTone();
+      }
+    }
+
     if (this.mode === 'eyes') {
       const vw = this.container.clientWidth || window.innerWidth;
       for (const eye of this.eyeCreatures) {
@@ -365,6 +428,29 @@ export class CreatureGrid {
 
   setRepelMultiplier(multiplier: number): void {
     this.physicsParams.repelStrength = 120 * multiplier;
+  }
+
+  /** Shared AudioContext used to fire hover tones; pass null to silence them. */
+  setAudioContext(context: AudioContext | null): void {
+    this.audioContext = context;
+  }
+
+  private triggerHoverTone(): void {
+    if (!this.audioContext) return;
+    switch (this.mode) {
+      case 'eyes':
+        triggerEyeHoverTone(this.audioContext);
+        break;
+      case 'pointedFinger':
+        triggerFingerHoverTone(this.audioContext);
+        break;
+      case 'cockroach':
+        triggerCockroachHoverTone(this.audioContext);
+        break;
+      case 'placard':
+        triggerPlacardHoverTone(this.audioContext);
+        break;
+    }
   }
 
   setRepulsor(x: number, y: number, radius?: number): void {

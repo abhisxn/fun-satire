@@ -1,4 +1,5 @@
 import type { Creature } from "./creatureTypes.js";
+import { playHoverTone } from "../audio/hoverTones";
 
 export const COCKROACH_NAT_W = 420;
 export const COCKROACH_NAT_H = 216;
@@ -50,4 +51,9 @@ export function getCockroachRotation(
   const dx = avatarX - creature.x;
   const dy = avatarY - creature.y;
   return Math.atan2(dy, dx) * (180 / Math.PI) + 180;
+}
+
+/** Trigger point only: called by CreatureGrid on hover-enter for cockroach-mode creatures. */
+export function triggerCockroachHoverTone(context: AudioContext): void {
+  playHoverTone(context, "cockroach");
 }

@@ -1,4 +1,5 @@
 import type { Creature } from "./creatureTypes.js";
+import { playHoverTone } from "../audio/hoverTones";
 
 export const EYE_NAT_W = 115;
 export const EYE_NAT_H = 57;
@@ -132,6 +133,11 @@ export function updateEyeBlink(eye: EyeCreature): number {
   }
 
   return scaleY;
+}
+
+/** Trigger point only: called by CreatureGrid on hover-enter for eye-mode creatures. */
+export function triggerEyeHoverTone(context: AudioContext): void {
+  playHoverTone(context, "eyes");
 }
 
 export function loadEyeSvg(): Promise<string> {

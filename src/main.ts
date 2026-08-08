@@ -174,6 +174,9 @@ async function main(): Promise<void> {
   const audioWidget = new AudioWidget(audioManager);
   audioWidget.attachTo(document.body);
   void audioWidget.attemptAutoplay();
+  // Task 6's hover tones fire through the grid using this same shared
+  // AudioContext, so eyes/finger/cockroach/placard hovers share one voice.
+  grid.setAudioContext(audioManager.getAudioContext());
 
   const carousel = new OnboardingCarousel();
   carousel.attachTo(document.body);
