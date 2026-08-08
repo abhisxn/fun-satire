@@ -11,6 +11,8 @@ import { GalleryPanel, getFaceStickerDefs } from "./hud/GalleryPanel";
 import { ProtestPanel } from "./hud/ProtestPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
+import { AudioManager } from "./audio/AudioManager";
+import { AudioWidget } from "./audio/AudioWidget";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
 const ONBOARDING_CARD_REPULSOR_RADIUS = 300;
@@ -176,6 +178,16 @@ async function main(): Promise<void> {
       void replaceOverlay(text);
     });
   };
+
+  // --- Sound bed (isolated init: owns its own AudioManager + widget. No
+  // other init block touches this one.) ---
+  const audioManager = new AudioManager();
+  const audioWidget = new AudioWidget(audioManager);
+  audioWidget.attachTo(document.body);
+  void audioWidget.attemptAutoplay();
+  // Task 6's hover tones fire through the grid using this same shared
+  // AudioContext, so eyes/finger/cockroach/placard hovers share one voice.
+  grid.setAudioContext(audioManager.getAudioContext());
 
   const carousel = new OnboardingCarousel();
   carousel.attachTo(document.body);

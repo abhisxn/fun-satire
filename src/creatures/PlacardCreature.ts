@@ -1,4 +1,5 @@
 import type { Creature } from "./creatureTypes.js";
+import { playHoverTone } from "../audio/hoverTones";
 
 export const STICK_NAT_W = 36;
 export const STICK_NAT_H = 444;
@@ -114,4 +115,9 @@ export function getPlacardRotation(
   const dx = avatarX - creature.x;
   const dy = avatarY - creature.y;
   return Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+}
+
+/** Trigger point only: called by CreatureGrid on hover-enter for placard-mode creatures. */
+export function triggerPlacardHoverTone(context: AudioContext): void {
+  playHoverTone(context, "placard");
 }
