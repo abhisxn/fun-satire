@@ -23,17 +23,21 @@ describe("AudioManager", () => {
     vi.unstubAllGlobals();
   });
 
-  it("points the underlying audio element at the sound bed asset and loops it", () => {
+  it("points both underlying audio beds at the sound bed asset, looping manually (not via the loop attribute)", () => {
     const manager = new AudioManager();
-    const audio = (manager as unknown as { audio: HTMLAudioElement }).audio;
-    expect(audio.src).toContain(AUDIO_BED_SRC);
-    expect(audio.loop).toBe(true);
+    const beds = (manager as unknown as { beds: readonly [HTMLAudioElement, HTMLAudioElement] }).beds;
+    for (const bed of beds) {
+      expect(bed.src).toContain(AUDIO_BED_SRC);
+      // Looping is driven by the crossfade scheduler, not the native
+      // attribute, so consecutive cycles can overlap instead of hard-cutting.
+      expect(bed.loop).toBe(false);
+    }
   });
 
   it("accepts a custom src and initial volume", () => {
     const manager = new AudioManager({ src: "/audio/other.mp3", volume: 0.25 });
-    const audio = (manager as unknown as { audio: HTMLAudioElement }).audio;
-    expect(audio.src).toContain("/audio/other.mp3");
+    const beds = (manager as unknown as { beds: readonly [HTMLAudioElement, HTMLAudioElement] }).beds;
+    for (const bed of beds) expect(bed.src).toContain("/audio/other.mp3");
     expect(manager.getVolume()).toBeCloseTo(0.25);
   });
 

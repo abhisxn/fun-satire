@@ -13,6 +13,9 @@ import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
 import { AudioManager } from "./audio/AudioManager";
 import { AudioWidget } from "./audio/AudioWidget";
+import { playPoofTone } from "./audio/poofTone";
+import { ClickSound } from "./audio/clickSound";
+import { DragScratchSound } from "./audio/dragScratchSound";
 import { initAnalytics } from "./analytics/ga";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
@@ -75,6 +78,8 @@ async function main(): Promise<void> {
 
   const poofElement = (el: HTMLElement): PoofHandle => {
     const rect = el.getBoundingClientRect();
+    const audioContext = audioManager.getAudioContext();
+    if (audioContext) playPoofTone(audioContext);
     return spawnPoof(
       rect.left + rect.width / 2,
       rect.top + rect.height / 2,
@@ -117,6 +122,7 @@ async function main(): Promise<void> {
     const hudRoot = document.getElementById("hud-root");
     if (!hudRoot) throw new Error("Missing #hud-root container");
     hud.attachTo(hudRoot);
+    hud.setAudioContext(audioManager.getAudioContext());
 
     const galleryPanel = new GalleryPanel();
     const protestPanel = new ProtestPanel();
@@ -160,7 +166,14 @@ async function main(): Promise<void> {
     });
 
     galleryPanel.onStickerSelect((src) => {
-      const sticker = new StickerOverlay(src);
+      const sticker = new StickerOverlay(
+        src,
+        undefined,
+        undefined,
+        onOverlayDragStart,
+        onOverlayDragEnd,
+        onOverlayDragMove,
+      );
       void replaceOverlay(sticker);
     });
 
@@ -177,14 +190,21 @@ async function main(): Promise<void> {
         });
         return;
       }
-      const text = new TextOverlay(font);
+      const text = new TextOverlay(
+        font,
+        undefined,
+        undefined,
+        onOverlayDragStart,
+        onOverlayDragEnd,
+        onOverlayDragMove,
+      );
       void replaceOverlay(text);
     });
   };
 
   // --- Sound bed (isolated init: owns its own AudioManager + widget. No
   // other init block touches this one.) ---
-  const audioManager = new AudioManager();
+  const audioManager = new AudioManager({ volume: 0.16 });
   const audioWidget = new AudioWidget(audioManager);
   audioWidget.attachTo(document.body);
   void audioWidget.attemptAutoplay();
@@ -192,14 +212,39 @@ async function main(): Promise<void> {
   // AudioContext, so eyes/finger/cockroach/placard hovers share one voice.
   grid.setAudioContext(audioManager.getAudioContext());
 
+  // Stickers/text play a pickup click when grabbed, and a "writing" scratch
+  // sound scrubbed like a play slider — only sounding while pixels are
+  // actively shifting, pausing the moment movement stops (even mid-drag)
+  // and stopping outright the instant the drag ends.
+  const pickupClickSound = new ClickSound();
+  const dragScratchSound = new DragScratchSound();
+  const onOverlayDragStart = (): void => {
+    pickupClickSound.play();
+  };
+  const onOverlayDragMove = (): void => {
+    dragScratchSound.onMove();
+  };
+  const onOverlayDragEnd = (): void => {
+    dragScratchSound.stop();
+  };
+
   const carousel = new OnboardingCarousel();
   carousel.attachTo(document.body);
   carousel.onComplete(async (center) => {
     window.removeEventListener("pointermove", onPointerMove);
+    const audioContext = audioManager.getAudioContext();
+    if (audioContext) playPoofTone(audioContext);
     await spawnPoof(center.x, center.y).done;
     const defs = getFaceStickerDefs();
     const def = defs[Math.floor(Math.random() * defs.length)];
-    const sticker = new StickerOverlay(def.src, center.x - 80, center.y - 80);
+    const sticker = new StickerOverlay(
+      def.src,
+      center.x - 80,
+      center.y - 80,
+      onOverlayDragStart,
+      onOverlayDragEnd,
+      onOverlayDragMove,
+    );
     document.body.appendChild(sticker.el);
     activeOverlay = sticker;
     currentAttractor = sticker;

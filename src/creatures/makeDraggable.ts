@@ -13,6 +13,8 @@ export function attachDrag(
   initial: { x: number; y: number },
   onMove?: (x: number, y: number) => void,
   targetEl?: HTMLElement,
+  onDragStart?: () => void,
+  onDragEnd?: () => void,
 ): DragHandle {
   const target = targetEl ?? el;
   let x = initial.x;
@@ -21,6 +23,8 @@ export function attachDrag(
   let offsetX = 0;
   let offsetY = 0;
   const moveCb = onMove ?? (() => {});
+  const dragStartCb = onDragStart ?? (() => {});
+  const dragEndCb = onDragEnd ?? (() => {});
 
   target.style.position = 'absolute';
   target.style.left = `${x}px`;
@@ -34,6 +38,7 @@ export function attachDrag(
     const rect = target.getBoundingClientRect();
     x = rect.left;
     y = rect.top;
+    dragEndCb();
   };
 
   const handleMouseDown = (e: MouseEvent): void => {
@@ -43,6 +48,7 @@ export function attachDrag(
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
     e.preventDefault();
+    dragStartCb();
   };
 
   const handleMouseMove = (e: MouseEvent): void => {
@@ -69,6 +75,7 @@ export function attachDrag(
     offsetX = t.clientX - rect.left;
     offsetY = t.clientY - rect.top;
     e.preventDefault();
+    dragStartCb();
   };
 
   const handleTouchMove = (e: TouchEvent): void => {

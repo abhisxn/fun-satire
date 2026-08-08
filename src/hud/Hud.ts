@@ -2,6 +2,7 @@ import "./hud.css";
 import type { CreatureMode } from "../creatures/creatureTypes";
 import { snapToGrid } from "../creatures/snapGrid";
 import { updateSnapGuides, hideSnapGuides } from "../creatures/snapGuides";
+import { playHudSelectTone, playHudPressTone } from "../audio/hudTones";
 
 const SVG_DRAG_HANDLE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path fill-rule="evenodd" clip-rule="evenodd" d="M9.5 5C9.5 6.10455 8.60455 7 7.5 7C6.39545 7 5.5 6.10455 5.5 5C5.5 3.89543 6.39545 3 7.5 3C8.60455 3 9.5 3.89543 9.5 5ZM7.5 14C8.60455 14 9.5 13.1046 9.5 12C9.5 10.8954 8.60455 10 7.5 10C6.39545 10 5.5 10.8954 5.5 12C5.5 13.1046 6.39545 14 7.5 14ZM7.5 21C8.60455 21 9.5 20.1046 9.5 19C9.5 17.8954 8.60455 17 7.5 17C6.39545 17 5.5 17.8954 5.5 19C5.5 20.1046 6.39545 21 7.5 21Z" fill="#2a1f1a"/>
@@ -94,6 +95,7 @@ export class Hud {
   private dragOffsetY = 0;
   private boundOnPointerMove: ((e: PointerEvent) => void) | null = null;
   private boundOnPointerUp: ((e: PointerEvent) => void) | null = null;
+  private audioContext: AudioContext | null = null;
 
   constructor() {
     const root = el("div", "premium-hud");
@@ -189,6 +191,11 @@ export class Hud {
     return this.attackBtn;
   }
 
+  /** Shared AudioContext used for the HUD's button-press blips; pass null to silence them. */
+  setAudioContext(context: AudioContext | null): void {
+    this.audioContext = context;
+  }
+
   private buildDragHandle(): HTMLElement {
     const handle = el("div", "hud-drag-handle");
     handle.setAttribute("aria-label", "Drag to move");
@@ -212,6 +219,7 @@ export class Hud {
     btn.innerHTML = def.svg;
 
     btn.addEventListener("click", () => {
+      if (this.audioContext) playHudSelectTone(this.audioContext);
       this.activeMode = def.mode;
       this.setActiveMode(def.mode);
       this.modeChangeCb?.(def.mode);
@@ -231,6 +239,7 @@ export class Hud {
 
     btn.addEventListener("pointerdown", (e: PointerEvent) => {
       e.preventDefault();
+      if (this.audioContext) playHudPressTone(this.audioContext);
       this.attackPressCb?.();
     });
 
@@ -258,6 +267,9 @@ export class Hud {
     btn.dataset.tooltip = tooltip;
     btn.setAttribute("aria-label", tooltip);
     btn.innerHTML = svg;
+    btn.addEventListener("click", () => {
+      if (this.audioContext) playHudSelectTone(this.audioContext);
+    });
     return btn;
   }
 

@@ -18,7 +18,14 @@ export class TextOverlay {
   private fontSize: number;
   private currentFont: string;
 
-  constructor(fontFamily: string, initialX?: number, initialY?: number) {
+  constructor(
+    fontFamily: string,
+    initialX?: number,
+    initialY?: number,
+    onDragStart?: () => void,
+    onDragEnd?: () => void,
+    onDragMove?: (x: number, y: number) => void,
+  ) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const x = initialX ?? Math.max(20, vw / 2 - 160);
@@ -117,7 +124,7 @@ export class TextOverlay {
       this.dragHandle.style.opacity = "0";
     });
 
-    this.drag = attachDrag(this.dragHandle, { x, y }, undefined, this.el);
+    this.drag = attachDrag(this.dragHandle, { x, y }, onDragMove, this.el, onDragStart, onDragEnd);
     this.drag.attach();
     this.attachResize();
   }

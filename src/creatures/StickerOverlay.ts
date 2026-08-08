@@ -16,7 +16,14 @@ export class StickerOverlay {
   private currentSrc: string;
   private width: number;
 
-  constructor(src: string, initialX?: number, initialY?: number) {
+  constructor(
+    src: string,
+    initialX?: number,
+    initialY?: number,
+    onDragStart?: () => void,
+    onDragEnd?: () => void,
+    onDragMove?: (x: number, y: number) => void,
+  ) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const x = initialX ?? Math.max(20, vw / 2 - 80);
@@ -83,7 +90,7 @@ export class StickerOverlay {
       this.handle.style.opacity = "0";
     });
 
-    this.drag = attachDrag(this.el, { x, y });
+    this.drag = attachDrag(this.el, { x, y }, onDragMove, undefined, onDragStart, onDragEnd);
     this.drag.attach();
     this.attachResize();
   }
