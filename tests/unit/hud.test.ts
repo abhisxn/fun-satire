@@ -68,6 +68,12 @@ describe("Hud", () => {
       expect(settingsBtn).toBeTruthy();
       expect(galleryBtn).toBeTruthy();
     });
+
+    it("exposes the attack button via getAttackButton()", () => {
+      const attackBtn = hud.getAttackButton();
+      expect(attackBtn.classList.contains("hud-attack")).toBe(true);
+      expect(attackBtn).toBe(host.querySelector(".hud-attack"));
+    });
   });
 
   describe("mode buttons", () => {

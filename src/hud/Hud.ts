@@ -74,6 +74,7 @@ export class Hud {
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
+  private attackBtn: HTMLButtonElement | null = null;
   private activeMode: CreatureMode = "cockroach";
 
   private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
@@ -107,7 +108,8 @@ export class Hud {
     this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
     root.appendChild(this.galleryBtn);
 
-    root.appendChild(this.buildAttackBtn());
+    this.attackBtn = this.buildAttackBtn();
+    root.appendChild(this.attackBtn);
 
     this.setActiveMode("cockroach");
   }
@@ -157,6 +159,11 @@ export class Hud {
   getGalleryButton(): HTMLElement {
     if (!this.galleryBtn) throw new Error("Gallery button not initialized");
     return this.galleryBtn;
+  }
+
+  getAttackButton(): HTMLElement {
+    if (!this.attackBtn) throw new Error("Attack button not initialized");
+    return this.attackBtn;
   }
 
   private buildDragHandle(): HTMLElement {
