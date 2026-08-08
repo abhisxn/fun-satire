@@ -5,25 +5,25 @@ export interface OnboardingBeat {
 export const BEATS: readonly OnboardingBeat[] = [
   {
     lines: [
-      "Someone with a podium and a title looked down at all of us and picked a word.",
-      "Small. Disposable. Something you step on.",
+      "Another promise came and went. Then a word, tossed down like it would end the conversation:",
+      "disposable.",
     ],
   },
   {
     lines: [
-      "We didn't argue. We didn't ask for the word back.",
-      "We just... kept it. Turned out it fit better than they meant it to.",
+      "We didn't hand the word back. We picked it up and wore it.",
+      "Turns out it fits better than they meant it to.",
     ],
   },
   {
     lines: [
-      "They're used to being watched from a distance — a podium, a headline, a screen.",
-      "Not from this close. Not surrounded.",
+      "They're built for watching from far away — a podium, a headline, a scroll.",
+      "Not for this. Not for being surrounded.",
     ],
   },
   {
     lines: [
-      "This is the crowd now. It doesn't have a face — it has thousands.",
+      "No leader to arrest. No face to blame. Just thousands, done waiting.",
       "Move. They'll notice.",
     ],
   },
