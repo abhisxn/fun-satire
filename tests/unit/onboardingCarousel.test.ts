@@ -364,6 +364,9 @@ describe("main.ts onboarding wiring (mocked modules)", () => {
     expect(clearRepulsorIdx).toBeGreaterThan(hudIdx);
     expect(setQuantityIdx).toBeGreaterThan(clearRepulsorIdx);
     expect(document.querySelector(".onb-card")).toBeFalsy();
-    expect(document.querySelector("#stage img")).toBeFalsy();
+    const strayImages = Array.from(document.querySelectorAll("img")).filter(
+      (img) => !img.closest(".protest-panel-overlay"),
+    );
+    expect(strayImages).toHaveLength(0);
   });
 });
