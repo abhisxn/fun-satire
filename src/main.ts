@@ -10,9 +10,9 @@ import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getStickerDefs } from "./hud/GalleryPanel";
 import { ProtestPanel } from "./hud/ProtestPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
+import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
-const FULL_CREATURE_QUANTITY = 300;
 const ONBOARDING_CARD_REPULSOR_RADIUS = 300;
 
 async function main(): Promise<void> {
@@ -190,7 +190,7 @@ async function main(): Promise<void> {
     currentAttractor = sticker;
     mountPostOnboarding();
     grid.clearRepulsor();
-    grid.setQuantity(FULL_CREATURE_QUANTITY);
+    filterPanel.setQuantity(DEFAULT_CREATURE_QUANTITY);
   });
 }
 
