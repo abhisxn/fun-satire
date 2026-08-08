@@ -232,19 +232,19 @@ describe("OnboardingCarousel", () => {
     it("matches the spec copy verbatim for all four beats", () => {
       expect(BEATS).toHaveLength(4);
       expect(BEATS[0].lines).toEqual([
-        "Someone with a podium and a title looked down at all of us and picked a word.",
-        "Small. Disposable. Something you step on.",
+        "Another promise came and went. Then a word, tossed down like it would end the conversation:",
+        "disposable.",
       ]);
       expect(BEATS[1].lines).toEqual([
-        "We didn't argue. We didn't ask for the word back.",
-        "We just... kept it. Turned out it fit better than they meant it to.",
+        "We didn't hand the word back. We picked it up and wore it.",
+        "Turns out it fits better than they meant it to.",
       ]);
       expect(BEATS[2].lines).toEqual([
-        "They're used to being watched from a distance \u2014 a podium, a headline, a screen.",
-        "Not from this close. Not surrounded.",
+        "They're built for watching from far away \u2014 a podium, a headline, a scroll.",
+        "Not for this. Not for being surrounded.",
       ]);
       expect(BEATS[3].lines).toEqual([
-        "This is the crowd now. It doesn't have a face \u2014 it has thousands.",
+        "No leader to arrest. No face to blame. Just thousands, done waiting.",
         "Move. They'll notice.",
       ]);
     });
