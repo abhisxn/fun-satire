@@ -10,8 +10,9 @@ import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getStickerDefs } from "./hud/GalleryPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 
-const ONBOARDING_EYE_QUANTITY = 60;
-const FULL_EYE_QUANTITY = 300;
+const ONBOARDING_CREATURE_QUANTITY = 60;
+const FULL_CREATURE_QUANTITY = 300;
+const ONBOARDING_CARD_REPULSOR_RADIUS = 300;
 
 async function main(): Promise<void> {
   const container = document.getElementById("stage");
@@ -24,11 +25,11 @@ async function main(): Promise<void> {
 
   const grid = new CreatureGrid({
     container,
-    mode: "eyes",
-    initialQuantity: ONBOARDING_EYE_QUANTITY,
+    mode: "cockroach",
+    initialQuantity: ONBOARDING_CREATURE_QUANTITY,
   });
   await grid.init();
-  grid.setRepulsor(vw / 2, vh / 2);
+  grid.setRepulsor(vw / 2, vh / 2, ONBOARDING_CARD_REPULSOR_RADIUS);
 
   const bugSwarm = new BugSwarm(container);
 
@@ -178,7 +179,7 @@ async function main(): Promise<void> {
     currentAttractor = sticker;
     mountPostOnboarding();
     grid.clearRepulsor();
-    grid.setQuantity(FULL_EYE_QUANTITY);
+    grid.setQuantity(FULL_CREATURE_QUANTITY);
   });
 }
 

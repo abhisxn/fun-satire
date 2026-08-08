@@ -1,6 +1,6 @@
 import type { Creature, CreatureMode } from "./creatureTypes";
 import type { EyeCreature } from "./EyeCreature";
-import type { PhysicsParams, AvatarPos } from "./creaturePhysics";
+import type { PhysicsParams, Repulsor } from "./creaturePhysics";
 import { updateCreature } from "./creaturePhysics";
 import { createEyeCreature, updateEyePupil, updateEyeBlink, loadEyeSvg } from "./EyeCreature";
 import { createFingerCreature, getFingerRotation } from "./FingerCreature";
@@ -144,7 +144,7 @@ export class CreatureGrid {
   };
   private lastFadePickMs: number = 0;
   private lastRepopPickMs: number = 0;
-  private repulsor: AvatarPos | null = null;
+  private repulsor: Repulsor | null = null;
 
   constructor(config: CreatureGridConfig) {
     this.container = config.container;
@@ -154,9 +154,10 @@ export class CreatureGrid {
   }
 
   async init(): Promise<void> {
-    if (this.mode === 'eyes') {
-      this.svgMarkup = await loadEyeSvg();
-    }
+    // The grid may start in any mode, but the HUD can switch to eyes at any
+    // time, so always preload the eye SVG. A failed fetch must not break a
+    // non-eye startup; eyes only degrade if the user then switches to them.
+    this.svgMarkup = await loadEyeSvg().catch(() => '');
     this.spawn(this.mode);
   }
 
@@ -366,8 +367,8 @@ export class CreatureGrid {
     this.physicsParams.repelStrength = 120 * multiplier;
   }
 
-  setRepulsor(x: number, y: number): void {
-    this.repulsor = { x, y };
+  setRepulsor(x: number, y: number, radius?: number): void {
+    this.repulsor = { x, y, radius };
   }
 
   clearRepulsor(): void {

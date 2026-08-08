@@ -71,10 +71,10 @@ describe("Hud", () => {
   });
 
   describe("mode buttons", () => {
-    it("has eye mode active by default", () => {
-      const eyeBtn = host.querySelector(".hud-btn--eye");
-      expect(eyeBtn?.classList.contains("active")).toBe(true);
-      expect(eyeBtn?.getAttribute("aria-pressed")).toBe("true");
+    it("has cockroach mode active by default", () => {
+      const cockroachBtn = host.querySelector(".hud-btn--bug");
+      expect(cockroachBtn?.classList.contains("active")).toBe(true);
+      expect(cockroachBtn?.getAttribute("aria-pressed")).toBe("true");
     });
 
     it("toggles active state when clicked", () => {
@@ -239,7 +239,7 @@ describe("Hud", () => {
 
   describe("getActiveMode", () => {
     it("returns current active mode", () => {
-      expect(hud.getActiveMode()).toBe("eyes");
+      expect(hud.getActiveMode()).toBe("cockroach");
 
       hud.setActiveMode("cockroach");
       expect(hud.getActiveMode()).toBe("cockroach");

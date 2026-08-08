@@ -317,7 +317,7 @@ describe("main.ts onboarding wiring (mocked modules)", () => {
     await import("../../src/main");
     await vi.waitFor(() => expect(document.querySelector(".onb-card")).toBeTruthy());
 
-    expect(h.calls).toContain("grid:new:eyes:60");
+    expect(h.calls).toContain("grid:new:cockroach:60");
     expect(h.calls).toContain("grid:setRepulsor:512,384");
     expect(h.calls).not.toContain("hud:attach");
     expect(h.calls).not.toContain("grid:setQuantity");

@@ -52,7 +52,7 @@ describe("hud/GalleryPanel", () => {
       expect(stickerGrid).not.toBeNull();
 
       const stickerCards = root.querySelectorAll(".sticker-card");
-      expect(stickerCards.length).toBe(23);
+      expect(stickerCards.length).toBe(25);
 
       const textGrid = root.querySelector(".text-grid");
       expect(textGrid).not.toBeNull();

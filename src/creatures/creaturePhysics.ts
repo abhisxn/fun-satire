@@ -5,6 +5,10 @@ export interface AvatarPos {
   y: number;
 }
 
+export interface Repulsor extends AvatarPos {
+  radius?: number;
+}
+
 export interface PhysicsParams {
   repelRadius: number;
   repelStrength: number;
@@ -18,8 +22,10 @@ export function applyRepulsion(
   creature: Creature,
   source: AvatarPos,
   params: PhysicsParams,
+  radius?: number,
 ): void {
-  const { repelRadius, repelStrength } = params;
+  const repelRadius = radius ?? params.repelRadius;
+  const { repelStrength } = params;
   const dx = creature.x - source.x;
   const dy = creature.y - source.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
@@ -35,12 +41,12 @@ export function updateCreature(
   creature: Creature,
   avatar: AvatarPos,
   params: PhysicsParams,
-  repulsor?: AvatarPos | null,
+  repulsor?: Repulsor | null,
 ): void {
   const { springStrength, damping } = params;
 
   applyRepulsion(creature, avatar, params);
-  if (repulsor) applyRepulsion(creature, repulsor, params);
+  if (repulsor) applyRepulsion(creature, repulsor, params, repulsor.radius);
 
   // Spring to home
   creature.vx += (creature.hx - creature.x) * springStrength;

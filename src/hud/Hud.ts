@@ -74,7 +74,7 @@ export class Hud {
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
-  private activeMode: CreatureMode = "eyes";
+  private activeMode: CreatureMode = "cockroach";
 
   private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
   private attackPressCb: (() => void) | null = null;
@@ -109,7 +109,7 @@ export class Hud {
 
     root.appendChild(this.buildAttackBtn());
 
-    this.setActiveMode("eyes");
+    this.setActiveMode("cockroach");
   }
 
   attachTo(container: HTMLElement): void {

@@ -107,6 +107,24 @@ describe("creaturePhysics", () => {
       }).not.toThrow();
     });
 
+    it("repulsor with its own radius repels beyond the default repelRadius", () => {
+      const repulsor = { x: 380, y: 100, radius: 300 };
+      const farAvatar: AvatarPos = { x: 1000, y: 1000 };
+
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, repulsor);
+
+      expect(creature.x).toBeLessThan(100);
+    });
+
+    it("repulsor without a radius uses the default repelRadius", () => {
+      const repulsor = { x: 380, y: 100 };
+      const farAvatar: AvatarPos = { x: 1000, y: 1000 };
+
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, repulsor);
+
+      expect(creature.x).toBe(100);
+    });
+
     it("updates DOM transform with position, scale, and rotation", () => {
       creature.x = 150;
       creature.y = 200;
