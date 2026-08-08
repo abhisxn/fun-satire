@@ -13,11 +13,14 @@ import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
 import { AudioManager } from "./audio/AudioManager";
 import { AudioWidget } from "./audio/AudioWidget";
+import { initAnalytics } from "./analytics/ga";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
 const ONBOARDING_CARD_REPULSOR_RADIUS = 300;
 
 async function main(): Promise<void> {
+  initAnalytics();
+
   const container = document.getElementById("stage");
   if (!container) throw new Error("Missing #stage container");
 
