@@ -5,3 +5,6 @@ dist/
 .env
 
 .superpowers/
+
+# graphify regeneratable extraction cache
+graphify-out/cache/
