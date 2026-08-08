@@ -8,6 +8,14 @@ describe("Hud", () => {
   let hud: Hud;
 
   beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          text: () => Promise.resolve("<svg data-testid=\"placard-fetched\"></svg>"),
+        } as Response),
+      ),
+    );
     host = document.createElement("div");
     document.body.appendChild(host);
     hud = new Hud();
@@ -17,6 +25,7 @@ describe("Hud", () => {
   afterEach(() => {
     hud.destroy();
     host.remove();
+    vi.unstubAllGlobals();
   });
 
   describe("DOM structure", () => {
@@ -67,6 +76,34 @@ describe("Hud", () => {
 
       expect(settingsBtn).toBeTruthy();
       expect(galleryBtn).toBeTruthy();
+    });
+  });
+
+  describe("placard icon loading", () => {
+    it("fetches /creatures/placard_icon.svg and swaps it into the placard button", async () => {
+      await vi.waitFor(() => {
+        const placardBtn = host.querySelector(".hud-btn--placard");
+        expect(placardBtn?.innerHTML).toContain("placard-fetched");
+      });
+      expect(fetch).toHaveBeenCalledWith("/creatures/placard_icon.svg");
+    });
+
+    it("keeps the inline fallback icon if the fetch fails", async () => {
+      vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("network error"))));
+      const failHost = document.createElement("div");
+      document.body.appendChild(failHost);
+      const failHud = new Hud();
+      failHud.attachTo(failHost);
+
+      // Give the rejected fetch a tick to settle; the button should still
+      // render its non-empty fallback markup, not go blank.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const placardBtn = failHost.querySelector(".hud-btn--placard");
+      expect(placardBtn?.innerHTML.length).toBeGreaterThan(0);
+      expect(placardBtn?.innerHTML).not.toContain("placard-fetched");
+
+      failHud.destroy();
+      failHost.remove();
     });
   });
 

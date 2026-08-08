@@ -26,11 +26,19 @@ const SVG_COCKROACH = `<svg width="24" height="24" viewBox="0 0 24 24" fill="non
 <path d="M12 13C12 13 15 11.2091 15 9C15 6.79086 12 5 12 5C12 5 9 6.79086 9 9C9 11.2091 12 13 12 13ZM12 13V21.5" stroke="#2a1f1a" stroke-linecap="round"/>
 </svg>`;
 
+// Hand-drawn fallback, rendered immediately so the placard mode button never
+// appears blank before loadPlacardSvg() resolves (or if it fails).
 const SVG_PLACARD = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="4" y="4" width="16" height="10" rx="1" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M12 14V21" stroke="#2a1f1a" stroke-linecap="round"/>
   <path d="M8 21H16" stroke="#2a1f1a" stroke-linecap="round"/>
 </svg>`;
+
+// Mirrors EyeCreature.ts's loadEyeSvg() pattern: fetch the real static asset
+// at runtime instead of hand-drawing it inline.
+export function loadPlacardSvg(): Promise<string> {
+  return fetch("/creatures/placard_icon.svg").then((r) => r.text());
+}
 
 const SVG_GALLERY = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M5 7C5 5.89543 5.89543 5 7 5H11V9C11 10.1046 10.1046 11 9 11H5V7Z" stroke="#2a1f1a" stroke-linecap="round" stroke-linejoin="round"/>
@@ -110,6 +118,21 @@ export class Hud {
     root.appendChild(this.buildAttackBtn());
 
     this.setActiveMode("cockroach");
+
+    // Fire-and-forget: swap the placard button's fallback markup for the
+    // real static icon once it loads. If the fetch fails, the inline
+    // SVG_PLACARD fallback rendered by buildModeBtn() stays in place.
+    void this.loadPlacardIcon();
+  }
+
+  private async loadPlacardIcon(): Promise<void> {
+    try {
+      const svg = await loadPlacardSvg();
+      const btn = this.modeBtnEls.get("placard");
+      if (btn) btn.innerHTML = svg;
+    } catch {
+      // keep the inline fallback SVG_PLACARD already rendered
+    }
   }
 
   attachTo(container: HTMLElement): void {
