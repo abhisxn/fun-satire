@@ -2,7 +2,7 @@
 
 ## Context
 
-The app currently drops visitors straight into the eyes-mode crowd with the full HUD (mode buttons, power buttons, filter panel) mounted immediately (`main.ts:37-40`). There is no framing for what the crowd is, why it surrounds the cursor, or what the game is satirizing. This spec adds a narrative onboarding screen — a short card carousel shown before the HUD appears — that establishes the story and eases the player into the first interaction.
+The app currently drops visitors straight into the cockroach-mode crowd with the full HUD (mode buttons, power buttons, filter panel) mounted immediately (`main.ts:37-40`). There is no framing for what the crowd is, why it surrounds the cursor, or what the game is satirizing. This spec adds a narrative onboarding screen — a short card carousel shown before the HUD appears — that establishes the story and eases the player into the first interaction.
 
 The narrative is a fictionalized parallel to the real 2026 Indian Gen Z protest movement: a dismissive "cockroach" remark from a figure of authority was reclaimed as an identity by a youth-led satirical movement (the Cockroach Janta Party), which grew into mass protests and forced institutional accountability. This project's own prior spec already frames the crowd this way: *"the crowd represents us, the protestors, wanting change"* (`docs/superpowers/specs/2026-08-07-protest-mode-live-participation-design.md`). This onboarding screen makes that framing explicit for a first-time player, without naming any real party, official, or country — see "Reference level" below.
 
@@ -22,31 +22,31 @@ These three pillars anchor the onboarding copy and should inform any future writ
 
 Four beats, each its own carousel screen:
 
-**Beat 1**
-> Someone with a podium and a title looked down at all of us and picked a word.
-> Small. Disposable. Something you step on.
+**Beat 1** *(updated 2026-08-08 — see `docs/superpowers/plans/2026-08-08-crowd-fixes-plan.md`: tightened, adds a broken-promises thread)*
+> Another promise came and went. Then a word, tossed down like it would end the conversation:
+> disposable.
 
 **Beat 2**
-> We didn't argue. We didn't ask for the word back.
-> We just... kept it. Turned out it fit better than they meant it to.
+> We didn't hand the word back. We picked it up and wore it.
+> Turns out it fits better than they meant it to.
 
 **Beat 3**
-> They're used to being watched from a distance — a podium, a headline, a screen.
-> Not from this close. Not surrounded.
+> They're built for watching from far away — a podium, a headline, a scroll.
+> Not for this. Not for being surrounded.
 
 **Beat 4** *(implicit mechanics hint, no explicit tutorial list)*
-> This is the crowd now. It doesn't have a face — it has thousands.
+> No leader to arrest. No face to blame. Just thousands, done waiting.
 > Move. They'll notice.
 
 ## Screen & interaction design
 
-- **Layout:** a single card, centered on screen, over the live default eyes-mode `CreatureGrid` — the crowd behind the card is the real, running scene (cursor-reactive, not a static image or illustration). This reinforces that the game has already started; the card is commentary layered on top of it, not a separate splash screen.
+- **Layout:** a single card, centered on screen, over the live default cockroach-mode `CreatureGrid` — the crowd behind the card is the real, running scene (cursor-reactive, not a static image or illustration). This reinforces that the game has already started; the card is commentary layered on top of it, not a separate splash screen.
 - **Card visual treatment:** reuses `.sticker-card`'s existing visual language from `src/hud/galleryPanel.css` (white background, `12px` border-radius, drop-shadow on the container) but sized as a wide text card, not the gallery grid's 1:1 aspect ratio. The card is a plain, non-interactive positioned `div` — explicitly **not** a `StickerOverlay` (no drag handlers, no resize handle).
 - **Progress indicator:** small dot row, one dot per beat. Beats 1-3 show a neutral filled/unfilled dot state; on beat 4 the active dot switches to the "attack" orange gradient (`UI_TOKENS.ui.attack`) to visually flag it as the payoff/final step.
 - **Navigation button:** beats 1-3 show a neutral "Next →" button; beat 4 replaces it with a visually distinct "Begin" button using the existing attack-button gradient treatment (`UI_TOKENS.ui.attack.gradientStart/gradientEnd/border/lowerShadow`), signaling it's the action that ends onboarding rather than just advancing a beat.
 - **Skip:** a small, low-emphasis "Skip intro" text link is present on every beat (e.g. top-right of the card), letting a player jump straight into the game at any point. Clicking it triggers the same exit sequence as completing beat 4 (see below).
 - **Repeat visits:** the onboarding screen is shown on every visit — no localStorage flag suppresses it on return. The narrative framing is considered part of the experience each time, not a one-time tutorial.
-- **Background crowd during onboarding:** the eyes-mode crowd behind the card remains fully live and reactive to the cursor throughout — not frozen. This is a deliberate choice: the crowd already behaving normally underneath the card is itself part of the pitch ("this is the real game, and it's already watching you").
+- **Background crowd during onboarding:** the cockroach-mode crowd behind the card remains fully live and reactive to the cursor throughout — not frozen. This is a deliberate choice: the crowd already behaving normally underneath the card is itself part of the pitch ("this is the real game, and it's already watching you").
 - **Motion:** beat-to-beat transitions and the card's own entrance use the existing `EASE.fade` (`cubic-bezier(0.4, 0, 0.2, 1)`) at `DURATION.base` (200ms) from `src/config/tokens.ts` — no new easing curves introduced.
 
 ## Exit sequence (onboarding → game)

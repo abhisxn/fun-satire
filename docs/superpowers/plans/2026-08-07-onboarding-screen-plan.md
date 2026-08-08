@@ -2,7 +2,7 @@
 
 ## Context
 
-`docs/superpowers/specs/2026-08-07-onboarding-screen-design.md` (commit `baac904`) specifies a 4-beat narrative carousel shown before the HUD appears, over the live eyes-mode crowd. It has a spec but no plan, and two behavioral details weren't fully pinned down by the spec text — they were clarified with the user before this plan was written:
+`docs/superpowers/specs/2026-08-07-onboarding-screen-design.md` (commit `baac904`) specifies a 4-beat narrative carousel shown before the HUD appears, over the live cockroach-mode crowd. It has a spec but no plan, and two behavioral details weren't fully pinned down by the spec text — they were clarified with the user before this plan was written:
 
 1. **Repel behavior**: the card is visually styled like `.sticker-card`/text-overlay treatment (radius, shadow, hover lift) for family resemblance, but it does **not** become the crowd's attractor. The crowd keeps reacting to the cursor/avatar throughout onboarding, exactly as the spec's "Background crowd during onboarding" section already states.
 2. **Avatar visibility**: the draggable avatar ("Tax Tai") is **not** shown during onboarding. Since onboarding runs on every visit (no suppression, per spec) and its exit sequence already ends with a sticker becoming the crowd's permanent attractor — the same terminal state the app reaches today the first time a user manually picks a sticker — showing the avatar first just to immediately retire it adds a visual step with no payoff. The avatar is deferred out of the startup path entirely.
