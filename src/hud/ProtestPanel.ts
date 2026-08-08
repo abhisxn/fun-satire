@@ -1,25 +1,20 @@
 import "./protestPanel.css";
 import { buildWhatsAppShareUrl, buildFacebookShareUrl, buildRedditShareUrl } from "./shareLinks";
+import {
+  HERO_VIDEO,
+  GALLERY_ENTRIES,
+  buildYouTubeThumbnailUrl,
+  buildYouTubeWatchUrl,
+  type GalleryEntry,
+  type VideoEntry,
+  type SourceEntry,
+} from "./protestContent";
 
-interface LearnMoreLink {
-  readonly href: string;
-  readonly label: string;
-}
+const SVG_YOUTUBE_PLAY = `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="20" rx="5" fill="#FF0000"/><path d="M8 6.5L14 10L8 13.5V6.5Z" fill="#fff"/></svg>`;
 
 const HONEST_NOTE = "I made this as a toy. There's a real movement behind it.";
 const JOIN_URL = "https://www.thecockroachjantaparty.org.in/join";
 const SHARE_MESSAGE = "I just stood with the crowd. Come see for yourself.";
-
-const LEARN_MORE_LINKS: readonly LearnMoreLink[] = [
-  { href: "https://www.thecockroachjantaparty.org.in/voice", label: "Voice of the Swarm (CJP)" },
-  { href: "https://andhbhakt.org/", label: "Andhbhakt — PIB vs CAG tracker" },
-  { href: "https://www.youtube.com/@SarthakGoswamii", label: "Sarthak Goswami" },
-  { href: "https://www.youtube.com/@UNFILTEREDbySamdish", label: "Unfiltered by Samdish" },
-  { href: "https://www.newslaundry.com/", label: "Newslaundry" },
-  { href: "https://www.youtube.com/@ravishkumar.official", label: "Ravish Kumar" },
-  { href: "https://www.youtube.com/c/thedeshbhakt", label: "The Deshbhakt" },
-  { href: "https://www.youtube.com/@beinghonest/videos", label: "Being Honest" },
-];
 
 export class ProtestPanel {
   private readonly overlay: HTMLElement;
@@ -43,7 +38,7 @@ export class ProtestPanel {
 
     this.panel.appendChild(this.buildNoteSection());
     this.panel.appendChild(this.buildJoinSection());
-    this.panel.appendChild(this.buildLearnMoreSection());
+    this.panel.appendChild(this.buildGallerySection());
     this.panel.appendChild(this.buildShareSection());
   }
 
@@ -108,28 +103,100 @@ export class ProtestPanel {
     return section;
   }
 
-  private buildLearnMoreSection(): HTMLElement {
+  private buildGallerySection(): HTMLElement {
     const section = document.createElement("div");
-    section.className = "protest-learn";
+    section.className = "protest-gallery";
 
     const heading = document.createElement("h3");
     heading.textContent = "Learn more";
     section.appendChild(heading);
 
-    const list = document.createElement("ul");
-    list.className = "protest-learn-list";
-    for (const def of LEARN_MORE_LINKS) {
-      const item = document.createElement("li");
-      const link = document.createElement("a");
-      link.href = def.href;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = def.label;
-      item.appendChild(link);
-      list.appendChild(item);
+    section.appendChild(this.buildVideoTile(HERO_VIDEO, true));
+
+    const grid = document.createElement("div");
+    grid.className = "protest-gallery-grid";
+    for (const entry of GALLERY_ENTRIES) {
+      grid.appendChild(this.buildGalleryTile(entry));
     }
-    section.appendChild(list);
+    section.appendChild(grid);
+
     return section;
+  }
+
+  private buildGalleryTile(entry: GalleryEntry): HTMLElement {
+    return entry.kind === "video" ? this.buildVideoTile(entry, false) : this.buildSourceTile(entry);
+  }
+
+  private buildVideoTile(entry: VideoEntry, isHero: boolean): HTMLElement {
+    const link = document.createElement("a");
+    link.className = isHero ? "protest-tile protest-tile--hero" : "protest-tile protest-tile--video";
+    link.href = buildYouTubeWatchUrl(entry.videoId);
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const img = document.createElement("img");
+    img.className = "protest-tile-thumb";
+    img.src = buildYouTubeThumbnailUrl(entry.videoId);
+    img.alt = entry.title;
+    img.loading = "lazy";
+    img.addEventListener("error", () => {
+      this.replaceWithFallbackCard(link, entry.title);
+    });
+    link.appendChild(img);
+
+    const badge = document.createElement("span");
+    badge.className = "protest-tile-badge";
+    badge.innerHTML = SVG_YOUTUBE_PLAY;
+    link.appendChild(badge);
+
+    const caption = document.createElement("div");
+    caption.className = "protest-tile-caption";
+    const titleEl = document.createElement("span");
+    titleEl.className = "protest-tile-title";
+    titleEl.textContent = entry.title;
+    const channelEl = document.createElement("span");
+    channelEl.className = "protest-tile-channel";
+    channelEl.textContent = entry.channel;
+    caption.append(titleEl, channelEl);
+    link.appendChild(caption);
+
+    return link;
+  }
+
+  private buildSourceTile(entry: SourceEntry): HTMLElement {
+    const link = document.createElement("a");
+    link.className = "protest-tile protest-tile--source";
+    link.href = entry.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const icon = document.createElement("span");
+    icon.className = "protest-tile-icon";
+    icon.textContent = entry.icon;
+    link.appendChild(icon);
+
+    const label = document.createElement("span");
+    label.className = "protest-tile-label";
+    label.textContent = entry.label;
+    link.appendChild(label);
+
+    return link;
+  }
+
+  private replaceWithFallbackCard(link: HTMLAnchorElement, title: string): void {
+    link.classList.remove("protest-tile--video");
+    link.classList.add("protest-tile--source");
+    link.innerHTML = "";
+
+    const icon = document.createElement("span");
+    icon.className = "protest-tile-icon";
+    icon.textContent = "▶";
+    link.appendChild(icon);
+
+    const label = document.createElement("span");
+    label.className = "protest-tile-label";
+    label.textContent = title;
+    link.appendChild(label);
   }
 
   private buildShareSection(): HTMLElement {
