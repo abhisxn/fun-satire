@@ -7,7 +7,7 @@ import { StickerOverlay } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
 import { FilterPanel } from "./hud/FilterPanel";
-import { GalleryPanel, getStickerDefs } from "./hud/GalleryPanel";
+import { GalleryPanel, getFaceStickerDefs } from "./hud/GalleryPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
@@ -171,7 +171,7 @@ async function main(): Promise<void> {
   carousel.onComplete(async (center) => {
     window.removeEventListener("pointermove", onPointerMove);
     await spawnPoof(center.x, center.y).done;
-    const defs = getStickerDefs();
+    const defs = getFaceStickerDefs();
     const def = defs[Math.floor(Math.random() * defs.length)];
     const sticker = new StickerOverlay(def.src, center.x - 80, center.y - 80);
     document.body.appendChild(sticker.el);
