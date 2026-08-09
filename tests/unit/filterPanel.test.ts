@@ -47,7 +47,7 @@ describe("hud/FilterPanel", () => {
       expect(qtyInput).not.toBeNull();
       expect(qtyInput?.type).toBe("range");
       expect(qtyInput?.min).toBe("10");
-      expect(qtyInput?.max).toBe("500");
+      expect(qtyInput?.max).toBe("900");
       expect(qtyInput?.step).toBe("10");
       expect(qtyValue).not.toBeNull();
       expect(qtyValue?.textContent?.trim()).toBe("60");
@@ -97,17 +97,17 @@ describe("hud/FilterPanel", () => {
       expect(panel.getQuantity()).toBe(10);
     });
 
-    it("respects maximum bound (500)", () => {
-      panel = new FilterPanel(500, 1);
+    it("respects maximum bound (900)", () => {
+      panel = new FilterPanel(900, 1);
       panel.attachTo(settingsButton);
       const cb = vi.fn();
       panel.onQuantityChange(cb);
 
       const qtyInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-qty]");
-      qtyInput!.value = "500";
+      qtyInput!.value = "900";
       qtyInput?.dispatchEvent(new Event("input", { bubbles: true }));
 
-      expect(panel.getQuantity()).toBe(500);
+      expect(panel.getQuantity()).toBe(900);
     });
 
     it("updates display value", () => {
@@ -385,9 +385,9 @@ describe("hud/FilterPanel", () => {
 
     it("clamps to maximum", () => {
       panel.attachTo(settingsButton);
-      panel.setQuantity(600);
+      panel.setQuantity(1000);
 
-      expect(panel.getQuantity()).toBe(500);
+      expect(panel.getQuantity()).toBe(900);
     });
 
     it("notifies onQuantityChange so external callers stay in sync with the grid", () => {

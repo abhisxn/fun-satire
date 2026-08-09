@@ -247,12 +247,12 @@ describe('CreatureGrid', () => {
       }
     });
 
-    it('clamps a target above QTY_MAX (500) down to 500', () => {
+    it('clamps a target above QTY_MAX (900) down to 900', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('cockroach');
 
       grid.setQuantity(9999);
-      expect(grid.getCreatureCount()).toBe(500);
+      expect(grid.getCreatureCount()).toBe(900);
     });
 
     it('clamps a target below QTY_MIN (10) up to 10', () => {

@@ -46,5 +46,5 @@ export function motionScale(matchesReducedMotion: boolean): number {
 // the live grid (CreatureGrid), and startup (main.ts) all agree on one
 // source of truth instead of duplicating literals.
 export const QTY_MIN = 10;
-export const QTY_MAX = 500;
+export const QTY_MAX = 900;
 export const DEFAULT_CREATURE_QUANTITY = 300;
