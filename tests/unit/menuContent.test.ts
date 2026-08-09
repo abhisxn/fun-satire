@@ -4,9 +4,9 @@ import {
   buildYouTubeWatchUrl,
   HERO_VIDEO,
   GALLERY_ENTRIES,
-} from "../../src/hud/protestContent";
+} from "../../src/hud/menuContent";
 
-describe("hud/protestContent", () => {
+describe("hud/menuContent", () => {
   it("builds a YouTube thumbnail URL from a video id", () => {
     expect(buildYouTubeThumbnailUrl("abc123")).toBe(
       "https://img.youtube.com/vi/abc123/hqdefault.jpg",

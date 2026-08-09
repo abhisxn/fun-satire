@@ -36,4 +36,12 @@ export class MenuButton {
   setAudioContext(context: AudioContext | null): void {
     this.audioContext = context;
   }
+
+  hide(): void {
+    this.button.classList.add("hidden");
+  }
+
+  show(): void {
+    this.button.classList.remove("hidden");
+  }
 }

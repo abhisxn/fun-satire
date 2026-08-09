@@ -1,28 +1,28 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Krub:wght@500;700&family=Fraunces:opsz,wght@9..144,400&family=Bungee&display=swap");
 
 :root {
-  --protest-glass-bg: rgba(255, 255, 255, 0.7);
-  --protest-glass-border: rgba(255, 255, 255, 0.9);
-  --protest-text-primary: #000000;
-  --protest-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --protest-ease-spring-panel: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --menu-glass-bg: rgba(255, 255, 255, 0.7);
+  --menu-glass-border: rgba(255, 255, 255, 0.9);
+  --menu-text-primary: #000000;
+  --menu-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --menu-ease-spring-panel: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.protest-panel-overlay {
+.menu-panel-overlay {
   position: fixed;
   inset: 0;
   z-index: 900;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s var(--protest-ease-smooth);
+  transition: opacity 0.3s var(--menu-ease-smooth);
 }
 
-.protest-panel-overlay.open {
+.menu-panel-overlay.open {
   pointer-events: auto;
   opacity: 1;
 }
 
-.protest-panel {
+.menu-panel {
   position: absolute;
   top: 16px;
   right: 16px;
@@ -30,92 +30,92 @@
   width: 300px;
   max-width: calc(100vw - 32px);
   padding: 16px;
-  background: var(--protest-glass-bg);
+  background: var(--menu-glass-bg);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  border: 1px solid var(--protest-glass-border);
+  border: 1px solid var(--menu-glass-border);
   border-radius: 12px;
   box-shadow: -8px 0 40px rgba(97, 86, 80, 0.2);
   display: flex;
   flex-direction: column;
   gap: 20px;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
   transform: translateX(calc(100% + 16px));
-  transition: transform 0.6s var(--protest-ease-spring-panel);
+  transition: transform 0.6s var(--menu-ease-spring-panel);
   overflow-y: auto;
   overscroll-behavior: contain;
   box-sizing: border-box;
 }
 
-.protest-panel-overlay.open .protest-panel {
+.menu-panel-overlay.open .menu-panel {
   transform: translateX(0);
 }
 
-.protest-panel::-webkit-scrollbar { width: 4px; }
-.protest-panel::-webkit-scrollbar-track { background: transparent; }
-.protest-panel::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 2px; }
+.menu-panel::-webkit-scrollbar { width: 4px; }
+.menu-panel::-webkit-scrollbar-track { background: transparent; }
+.menu-panel::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 2px; }
 
-.protest-panel-body {
+.menu-panel-body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-.protest-menu,
-.protest-subscreen {
+.menu-panel-home,
+.menu-subscreen {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-.protest-menu {
+.menu-panel-home {
   flex: 1 1 auto;
 }
 
 /* Main menu — title/copy block */
-.protest-menu-text {
+.menu-panel-home-text {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 8px;
 }
 
-.protest-menu-title {
+.menu-panel-home-title {
   margin: 0;
   font-family: "Fraunces", serif;
   font-weight: 400;
   font-size: 24px;
   line-height: 1.25;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
 }
 
-.protest-menu-copy {
+.menu-panel-home-copy {
   margin: 0;
   font-family: "Krub", sans-serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 1.4;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
 }
 
 /* Section labels (Inter, uppercase, small caps) */
-.protest-section-label {
+.menu-section-label {
   margin: 0;
   font-family: "Inter", sans-serif;
   font-weight: 400;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
 }
 
-.protest-section-label--quick-links {
+.menu-section-label--quick-links {
   font-weight: 500;
 }
 
 /* Informed citizen tips */
-.protest-tips {
+.menu-tips {
   margin: 0;
   padding: 0 0 0 21px;
   list-style: disc;
@@ -123,31 +123,31 @@
   font-weight: 500;
   font-size: 14px;
   line-height: 1.4;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
 }
 
-.protest-tips li {
+.menu-tips li {
   margin-bottom: 12px;
 }
 
-.protest-tips li:last-child {
+.menu-tips li:last-child {
   margin-bottom: 0;
 }
 
 /* Quick links (main menu navigation) */
-.protest-quick-links-block {
+.menu-quick-links-block {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.protest-quick-links {
+.menu-quick-links {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.protest-quick-link {
+.menu-quick-link {
   width: 100%;
   display: flex;
   align-items: center;
@@ -159,20 +159,20 @@
   font-family: "Krub", sans-serif;
   font-weight: 500;
   font-size: 14px;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
   cursor: pointer;
-  transition: background 0.15s var(--protest-ease-smooth), filter 0.15s var(--protest-ease-smooth);
+  transition: background 0.15s var(--menu-ease-smooth), filter 0.15s var(--menu-ease-smooth);
 }
 
-.protest-quick-link:hover {
+.menu-quick-link:hover {
   filter: brightness(0.97);
 }
 
-.protest-quick-link-label {
+.menu-quick-link-label {
   text-align: left;
 }
 
-.protest-quick-link-arrow {
+.menu-quick-link-arrow {
   display: inline-flex;
   width: 9px;
   height: 7.35px;
@@ -180,13 +180,13 @@
   transform: rotate(-45deg);
 }
 
-.protest-quick-link-arrow svg {
+.menu-quick-link-arrow svg {
   width: 100%;
   height: 100%;
 }
 
 /* Sub-screen back navigation */
-.protest-back-btn {
+.menu-back-btn {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -194,16 +194,16 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
   opacity: 0.85;
-  transition: opacity 0.15s var(--protest-ease-smooth);
+  transition: opacity 0.15s var(--menu-ease-smooth);
 }
 
-.protest-back-btn:hover {
+.menu-back-btn:hover {
   opacity: 1;
 }
 
-.protest-back-btn-icon {
+.menu-back-btn-icon {
   display: inline-flex;
   width: 13.5px;
   height: 11px;
@@ -211,77 +211,77 @@
   transform: rotate(180deg);
 }
 
-.protest-back-btn-icon svg {
+.menu-back-btn-icon svg {
   width: 100%;
   height: 100%;
 }
 
-.protest-back-btn-label {
+.menu-back-btn-label {
   font-family: "Krub", sans-serif;
   font-weight: 500;
   font-size: 14px;
 }
 
-.protest-about {
+.menu-about {
   padding: 0 8px;
 }
 
-.protest-about p {
+.menu-about p {
   margin: 0 0 12px;
   font-family: "Krub", sans-serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 1.5;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
 }
 
-.protest-about p:last-child {
+.menu-about p:last-child {
   margin-bottom: 0;
 }
 
 /* Gallery */
-.protest-tile {
+.menu-tile {
   display: block;
   position: relative;
   border-radius: 12px;
   overflow: hidden;
   text-decoration: none;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
   background: #ffffff;
-  border: 1px solid var(--protest-glass-border);
+  border: 1px solid var(--menu-glass-border);
 }
 
-.protest-tile--video .protest-tile-thumb {
+.menu-tile--video .menu-tile-thumb {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   display: block;
 }
 
-.protest-tile--video:hover .protest-tile-thumb {
+.menu-tile--video:hover .menu-tile-thumb {
   filter: brightness(1.08);
 }
 
-.protest-gallery-list {
+.menu-gallery-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.protest-tile-badge {
+.menu-tile-badge {
   position: absolute;
   top: 6px;
   right: 6px;
 }
 
-.protest-tile-caption {
+.menu-tile-caption {
   padding: 8px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.protest-tile-title {
+.menu-tile-title {
   font-family: "Krub", sans-serif;
   font-weight: 700;
   font-size: 12px;
@@ -292,14 +292,14 @@
   overflow: hidden;
 }
 
-.protest-tile-channel {
+.menu-tile-channel {
   font-family: "Krub", sans-serif;
   font-weight: 500;
   font-size: 12px;
   opacity: 0.65;
 }
 
-.protest-tile--source {
+.menu-tile--source {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,19 +308,19 @@
   padding: 8px;
 }
 
-.protest-tile-icon {
+.menu-tile-icon {
   font-size: 20px;
   line-height: 1;
 }
 
-.protest-tile-label {
+.menu-tile-label {
   font-family: "Krub", sans-serif;
   font-weight: 700;
   font-size: 12px;
 }
 
 /* Share */
-.protest-share {
+.menu-share {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -330,16 +330,16 @@
   padding: 16px;
 }
 
-.protest-share-prompt {
+.menu-share-prompt {
   margin: 0;
   font-family: "Krub", sans-serif;
   font-weight: 500;
   font-size: 14px;
-  color: var(--protest-text-primary);
+  color: var(--menu-text-primary);
 }
 
 /* Share button — reuses the .hud-attack visual treatment exactly */
-.protest-share-btn {
+.menu-share-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -358,32 +358,32 @@
   letter-spacing: 0.02em;
   text-decoration: none;
   cursor: pointer;
-  transition: transform 0.15s var(--protest-ease-smooth), box-shadow 0.15s var(--protest-ease-smooth);
+  transition: transform 0.15s var(--menu-ease-smooth), box-shadow 0.15s var(--menu-ease-smooth);
 }
 
-.protest-share-btn:hover {
+.menu-share-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0px 6px 0px #b75040, 0px 8px 20px rgba(183, 80, 64, 0.4);
 }
 
-.protest-share-btn:active {
+.menu-share-btn:active {
   transform: translateY(2px);
   box-shadow: 0px 2px 0px #b75040;
 }
 
-.protest-share-btn-icon {
+.menu-share-btn-icon {
   font-size: 16px;
   line-height: 1;
   display: inline-flex;
 }
 
-.protest-share-fallback-row {
+.menu-share-fallback-row {
   display: flex;
   gap: 10px;
   justify-content: center;
 }
 
-.protest-share-icon-btn {
+.menu-share-icon-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -397,7 +397,7 @@
   padding: 0;
 }
 
-.protest-toast {
+.menu-toast {
   position: absolute;
   left: 50%;
   bottom: 12px;
@@ -410,16 +410,16 @@
   border-radius: 10px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s var(--protest-ease-smooth), transform 0.2s var(--protest-ease-smooth);
+  transition: opacity 0.2s var(--menu-ease-smooth), transform 0.2s var(--menu-ease-smooth);
   white-space: nowrap;
 }
 
-.protest-toast.visible {
+.menu-toast.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
 
-.protest-footer {
+.menu-footer {
   text-align: center;
   font-size: 10px;
   opacity: 0.5;

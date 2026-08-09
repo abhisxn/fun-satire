@@ -9,7 +9,7 @@ import { Hud } from "./hud/Hud";
 import { MenuButton } from "./hud/MenuButton";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getFaceStickerDefs } from "./hud/GalleryPanel";
-import { ProtestPanel } from "./hud/ProtestPanel";
+import { MenuPanel } from "./hud/MenuPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
 import { AudioManager } from "./audio/AudioManager";
@@ -130,11 +130,23 @@ async function main(): Promise<void> {
     menuButton.setAudioContext(audioManager.getAudioContext());
 
     const galleryPanel = new GalleryPanel();
-    const protestPanel = new ProtestPanel();
+    const menuPanel = new MenuPanel();
 
     filterPanel.attachTo(hud.getSettingsButton());
     galleryPanel.attachTo(hud.getGalleryButton());
-    protestPanel.attachTo(hud.getAttackButton());
+    menuPanel.attachTo(menuButton.getButton());
+
+    const syncMenuButtonVisibility = (): void => {
+      const anyPanelOpen = filterPanel.isPanelOpen() || galleryPanel.isPanelOpen() || menuPanel.isPanelOpen();
+      if (anyPanelOpen) {
+        menuButton.hide();
+      } else {
+        menuButton.show();
+      }
+    };
+    filterPanel.onOpenChange(syncMenuButtonVisibility);
+    galleryPanel.onOpenChange(syncMenuButtonVisibility);
+    menuPanel.onOpenChange(syncMenuButtonVisibility);
 
     filterPanel.onQuantityChange((qty) => {
       grid.setQuantity(qty);
@@ -154,20 +166,20 @@ async function main(): Promise<void> {
 
     hud.getSettingsButton().addEventListener("click", () => {
       galleryPanel.close();
-      protestPanel.close();
+      menuPanel.close();
       filterPanel.toggle();
     });
 
     hud.getGalleryButton().addEventListener("click", () => {
       filterPanel.close();
-      protestPanel.close();
+      menuPanel.close();
       galleryPanel.toggle();
     });
 
-    hud.onAttackPress(() => {
+    menuButton.getButton().addEventListener("click", () => {
       filterPanel.close();
       galleryPanel.close();
-      protestPanel.toggle();
+      menuPanel.toggle();
     });
 
     galleryPanel.onStickerSelect((src) => {

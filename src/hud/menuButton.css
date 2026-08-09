@@ -5,8 +5,8 @@
   position: fixed;
   top: 32px;
   right: 32px;
-  width: 62px;
-  height: 62px;
+  width: var(--hud-btn-size);
+  height: var(--hud-btn-size);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,18 +14,25 @@
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid var(--hud-glass-border);
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.4s var(--hud-ease-spring), box-shadow 0.4s var(--hud-ease-smooth);
+  transition: transform 0.4s var(--hud-ease-spring), box-shadow 0.4s var(--hud-ease-smooth),
+    opacity 0.3s var(--hud-ease-smooth);
   z-index: 1000;
 }
 
+.hud-menu-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85);
+}
+
 .hud-menu-btn svg {
-  width: 32px;
-  height: 32px;
+  width: 22px;
+  height: 22px;
   pointer-events: none;
 }
 
@@ -46,14 +53,14 @@
   .hud-menu-btn {
     top: 20px;
     right: 20px;
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
   }
 
   .hud-menu-btn svg {
-    width: 26px;
-    height: 26px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -61,21 +68,22 @@
   .hud-menu-btn {
     top: 16px;
     right: 16px;
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
   }
 
   .hud-menu-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hud-menu-btn,
   .hud-menu-btn:hover,
-  .hud-menu-btn:active {
+  .hud-menu-btn:active,
+  .hud-menu-btn.hidden {
     transition: none;
   }
 }
