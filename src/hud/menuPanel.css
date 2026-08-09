@@ -308,6 +308,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   height: 76px;
   text-align: center;
   padding: 8px;
@@ -323,6 +324,31 @@
   font-weight: 700;
   font-size: 12px;
 }
+
+/* Subtle per-card pastel colors, derived from the app's own palette (visualTokens.json) */
+.menu-tile--source:nth-child(1) { background: #f7f4ee; } /* cream */
+.menu-tile--source:nth-child(1) .menu-tile-icon { color: #a8875a; }
+
+.menu-tile--source:nth-child(2) { background: #e9eef1; } /* slate */
+.menu-tile--source:nth-child(2) .menu-tile-icon { color: #5b7a8c; }
+
+.menu-tile--source:nth-child(3) { background: #ebeee6; } /* sage */
+.menu-tile--source:nth-child(3) .menu-tile-icon { color: #6d7a5e; }
+
+.menu-tile--source:nth-child(4) { background: #edebe8; } /* ink */
+.menu-tile--source:nth-child(4) .menu-tile-icon { color: #2a2420; }
+
+.menu-tile--source:nth-child(5) { background: #fbeeec; } /* coral */
+.menu-tile--source:nth-child(5) .menu-tile-icon { color: #c97a6e; }
+
+.menu-tile--source:nth-child(6) { background: #e7eeea; } /* slate-sage blend */
+.menu-tile--source:nth-child(6) .menu-tile-icon { color: #4f6f68; }
+
+.menu-tile--source:nth-child(7) { background: #f8f0e6; } /* coral-cream blend */
+.menu-tile--source:nth-child(7) .menu-tile-icon { color: #c08a5c; }
+
+.menu-tile--source:nth-child(8) { background: #e8eaec; } /* ink-slate blend */
+.menu-tile--source:nth-child(8) .menu-tile-icon { color: #3e4a52; }
 
 /* Share */
 .menu-share {

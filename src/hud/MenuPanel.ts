@@ -358,6 +358,11 @@ export class MenuPanel {
     link.target = "_blank";
     link.rel = "noopener noreferrer";
 
+    const icon = document.createElement("span");
+    icon.className = "menu-tile-icon";
+    icon.textContent = entry.icon;
+    link.appendChild(icon);
+
     const label = document.createElement("span");
     label.className = "menu-tile-label";
     label.textContent = entry.label;
