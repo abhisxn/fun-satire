@@ -62,6 +62,18 @@ export const GALLERY_ENTRIES: readonly GalleryEntry[] = [
   },
   {
     kind: "source",
+    href: "https://www.youtube.com/@jistnews",
+    label: "Jist",
+    icon: "J",
+  },
+  {
+    kind: "source",
+    href: "https://www.youtube.com/@BrutIndia",
+    label: "Brut India",
+    icon: "B",
+  },
+  {
+    kind: "source",
     href: "https://www.thecockroachjantaparty.org.in/voice",
     label: "Voice of the Swarm (CJP)",
     icon: "🪳",
@@ -71,5 +83,23 @@ export const GALLERY_ENTRIES: readonly GalleryEntry[] = [
     href: "https://andhbhakt.org/",
     label: "Andhbhakt — PIB vs CAG tracker",
     icon: "🐊",
+  },
+  {
+    kind: "source",
+    href: "https://www.myneta.info/",
+    label: "MyNeta — candidate records",
+    icon: "🗳️",
+  },
+  {
+    kind: "source",
+    href: "https://rtionline.gov.in/",
+    label: "RTI Online — file a request",
+    icon: "📝",
+  },
+  {
+    kind: "source",
+    href: "https://voters.eci.gov.in/",
+    label: "ECI Voter Services",
+    icon: "🪪",
   },
 ];

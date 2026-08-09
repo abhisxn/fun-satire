@@ -57,4 +57,22 @@ describe("hud/menuContent", () => {
       expect(result).toEqual([B, C, A]);
     });
   });
+
+  describe("other resources entries", () => {
+    it("lists all outlets and civic tools in the expected order", () => {
+      const hrefs = GALLERY_ENTRIES.filter((e) => e.kind === "source").map((e) =>
+        e.kind === "source" ? e.href : "",
+      );
+      expect(hrefs).toEqual([
+        "https://www.newslaundry.com/",
+        "https://www.youtube.com/@jistnews",
+        "https://www.youtube.com/@BrutIndia",
+        "https://www.thecockroachjantaparty.org.in/voice",
+        "https://andhbhakt.org/",
+        "https://www.myneta.info/",
+        "https://rtionline.gov.in/",
+        "https://voters.eci.gov.in/",
+      ]);
+    });
+  });
 });
