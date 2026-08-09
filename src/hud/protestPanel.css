@@ -53,6 +53,13 @@
 .protest-panel::-webkit-scrollbar-track { background: transparent; }
 .protest-panel::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 2px; }
 
+.protest-menu,
+.protest-subscreen {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .protest-note p {
   margin: 0;
   font-size: 15px;
