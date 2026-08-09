@@ -20,6 +20,7 @@ export class FilterPanel {
   private quantityChangeCb: ((quantity: number) => void) | null = null;
   private repelChangeCb: ((multiplier: number) => void) | null = null;
   private bugModeChangeCb: ((active: boolean) => void) | null = null;
+  private openChangeCb: ((open: boolean) => void) | null = null;
 
   private boundOnDocumentClick: ((e: MouseEvent) => void) | null = null;
   private boundOnKeyDown: ((e: KeyboardEvent) => void) | null = null;
@@ -141,6 +142,7 @@ export class FilterPanel {
     this.root.style.display = "flex";
     this.updatePosition();
     this.addEventListeners();
+    this.openChangeCb?.(true);
   }
 
   close(): void {
@@ -148,6 +150,7 @@ export class FilterPanel {
     this.isOpen = false;
     this.root.style.display = "none";
     this.removeEventListeners();
+    this.openChangeCb?.(false);
   }
 
   toggle(): void {
@@ -156,6 +159,14 @@ export class FilterPanel {
     } else {
       this.open();
     }
+  }
+
+  isPanelOpen(): boolean {
+    return this.isOpen;
+  }
+
+  onOpenChange(cb: (open: boolean) => void): void {
+    this.openChangeCb = cb;
   }
 
   getRoot(): HTMLElement {

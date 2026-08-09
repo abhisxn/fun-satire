@@ -74,6 +74,7 @@ export class GalleryPanel {
   private readonly boundMouseMoveHandlers = new Map<HTMLElement, (e: MouseEvent) => void>();
   private stickerSelectListeners: Array<(src: string) => void> = [];
   private textSelectListeners: Array<(font: string) => void> = [];
+  private openChangeCb: ((open: boolean) => void) | null = null;
 
   private galleryButton: HTMLElement | null = null;
   private isOpen = false;
@@ -136,6 +137,7 @@ export class GalleryPanel {
     }
     this.addEventListeners();
     this.replayCardAnimations();
+    this.openChangeCb?.(true);
   }
 
   close(): void {
@@ -146,6 +148,7 @@ export class GalleryPanel {
       this.galleryButton.style.opacity = "";
     }
     this.removeEventListeners();
+    this.openChangeCb?.(false);
   }
 
   toggle(): void {
@@ -154,6 +157,14 @@ export class GalleryPanel {
     } else {
       this.open();
     }
+  }
+
+  isPanelOpen(): boolean {
+    return this.isOpen;
+  }
+
+  onOpenChange(cb: (open: boolean) => void): void {
+    this.openChangeCb = cb;
   }
 
   getRoot(): HTMLElement {
@@ -211,7 +222,7 @@ export class GalleryPanel {
     textBtn.type = "button";
     textBtn.className = "toggle-btn";
     textBtn.dataset.mode = "text";
-    textBtn.textContent = "Text";
+    textBtn.textContent = "Type your own";
 
     stickerBtn.addEventListener("click", () => this.setMode("sticker"));
     textBtn.addEventListener("click", () => this.setMode("text"));

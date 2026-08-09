@@ -95,12 +95,7 @@ vi.mock("../../src/hud/Hud", () => ({
     getGalleryButton(): HTMLElement {
       return document.createElement("button");
     }
-    getAttackButton(): HTMLElement {
-      return document.createElement("button");
-    }
     onModeChange(): void {}
-    onAttackPress(): void {}
-    onAttackRelease(): void {}
     destroy(): void {}
   },
 }));
@@ -177,11 +172,11 @@ describe("OnboardingCarousel", () => {
   });
 
   describe("structure", () => {
-    it("renders a dialog card, four dots, skip link, and a Next action", () => {
+    it("renders a dialog card, six dots, skip link, and a Next action", () => {
       const card = host.querySelector<HTMLElement>(".onb-card");
       expect(card).toBeTruthy();
       expect(card?.getAttribute("role")).toBe("dialog");
-      expect(card?.querySelectorAll(".onb-dot").length).toBe(4);
+      expect(card?.querySelectorAll(".onb-dot").length).toBe(BEATS.length);
       const skip = card?.querySelector<HTMLButtonElement>(".onb-skip");
       expect(skip?.textContent).toBe("Skip intro");
       const action = card?.querySelector<HTMLButtonElement>(".onb-action");
@@ -234,23 +229,31 @@ describe("OnboardingCarousel", () => {
       expect(card?.querySelector(".onb-line")).toBeTruthy();
     });
 
-    it("matches the spec copy verbatim for all four beats", () => {
-      expect(BEATS).toHaveLength(4);
+    it("matches the spec copy verbatim for all six beats", () => {
+      expect(BEATS).toHaveLength(6);
       expect(BEATS[0].lines).toEqual([
-        "Another promise came and went. Then a word, tossed down like it would end the conversation:",
-        "disposable.",
+        "You called us cockroaches. Gutter generation.",
+        "We picked the names up. We're still wearing them.",
       ]);
       expect(BEATS[1].lines).toEqual([
-        "We didn't hand the word back. We picked it up and wore it.",
-        "Turns out it fits better than they meant it to.",
+        "Different states. Different faiths. Same square.",
+        "That's not a mob. That's all of us.",
       ]);
       expect(BEATS[2].lines).toEqual([
-        "They're built for watching from far away \u2014 a podium, a headline, a scroll.",
-        "Not for this. Not for being surrounded.",
+        "Drop them in. Watch the crowd close in around them.",
+        "That's why we call this Gutter Generation.",
       ]);
       expect(BEATS[3].lines).toEqual([
-        "No leader to arrest. No face to blame. Just thousands, done waiting.",
-        "Move. They'll notice.",
+        "Every promise. Every price. Every quiet lie.",
+        "You forgot we were watching. We didn't.",
+      ]);
+      expect(BEATS[4].lines).toEqual([
+        "You hit hard. We laughed back \u2014 memes, reels, dance.",
+        "One of you stepped down. We didn't go home.",
+      ]);
+      expect(BEATS[5].lines).toEqual([
+        "No leader to arrest. No face to blame.",
+        "Just thousands of us. Move.",
       ]);
     });
   });
@@ -364,6 +367,9 @@ describe("main.ts onboarding wiring (mocked modules)", () => {
     expect(clearRepulsorIdx).toBeGreaterThan(hudIdx);
     expect(setQuantityIdx).toBeGreaterThan(clearRepulsorIdx);
     expect(document.querySelector(".onb-card")).toBeFalsy();
-    expect(document.querySelector("img")).toBeFalsy();
+    const strayImages = Array.from(document.querySelectorAll("img")).filter(
+      (img) => !img.closest(".menu-panel-overlay"),
+    );
+    expect(strayImages).toHaveLength(0);
   });
 });

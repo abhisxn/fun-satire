@@ -31,7 +31,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  bottom: 50px;
+  bottom: 130px;
   width: 320px;
   max-width: calc(100vw - 32px);
   padding: 24px 16px;
@@ -274,8 +274,18 @@
 .glass-panel-overlay.open .text-card:nth-child(7) { animation-delay: 0.38s; }
 .glass-panel-overlay.open .text-card:nth-child(8) { animation-delay: 0.43s; }
 
+/* Keep clearance above the fixed HUD toolbar in sync with its footprint
+   (see hud.css's own breakpoints) so the sticker grid never renders
+   underneath it. */
+@media (max-width: 768px) {
+  .glass-panel {
+    bottom: 100px;
+  }
+}
+
 @media (max-width: 380px) {
   .glass-panel {
+    bottom: 84px;
     width: calc(100vw - 16px);
     max-width: 100vw;
     padding: 16px 12px;

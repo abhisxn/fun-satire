@@ -60,6 +60,16 @@ export class AudioWidget {
 
     const toggle = el("button", "audio-widget__toggle");
     toggle.type = "button";
+    // Stop this button's own pointerdown/touchstart from bubbling to the
+    // window-level gesture-retry listener (armGestureRetry below): without
+    // this, clicking the toggle as the very first page interaction fires
+    // BOTH the retry's play() (on pointerdown) AND handleToggleClick's own
+    // play()-or-mute logic (on click) for the same gesture. The retry wins
+    // the race and starts playback first, so handleToggleClick then reads
+    // isPlaying()===true and immediately mutes it back off — the button
+    // looks completely dead on its first press.
+    toggle.addEventListener("pointerdown", (e) => e.stopPropagation());
+    toggle.addEventListener("touchstart", (e) => e.stopPropagation());
     toggle.addEventListener("click", () => {
       void this.handleToggleClick();
     });
@@ -80,7 +90,13 @@ export class AudioWidget {
     this.volumeInput = volume;
     this.updateVolumeFill(control.getVolume());
 
-    root.append(toggle, volume);
+    // Collapsed to a bare circular mute/unmute button by default; hovering
+    // (or focusing, for keyboard users) the widget expands this wrapper to
+    // reveal the vertical slider. See audioWidget.css for the transition.
+    const volumeWrap = el("div", "audio-widget__volume-wrap");
+    volumeWrap.append(volume);
+
+    root.append(toggle, volumeWrap);
     this.syncIcon();
   }
 

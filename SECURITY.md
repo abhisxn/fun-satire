@@ -1,6 +1,6 @@
 # Security Policy
 
-Fun Satire is a client-side canvas toy with no backend, no user accounts, and no persisted user data — the attack surface is small, but reports are still welcome.
+Gutter Generation is a client-side DOM toy with no backend, no user accounts, and no persisted user data — the attack surface is small, but reports are still welcome.
 
 ## Reporting a Vulnerability
 

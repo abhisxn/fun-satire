@@ -24,8 +24,17 @@ export const REPOP_INTERVAL_MS = 2000;
 export const REPOP_COUNT = 3;
 /** Extra slack (px) beyond a creature's own rendered half-size for hover proximity. */
 export const HOVER_PROXIMITY_PADDING = 20;
-/** Minimum gap between hover tones, across ALL creatures — the voice-cap/anti-spam guard. */
-export const HOVER_TONE_COOLDOWN_MS = 90;
+/**
+ * Minimum gap between hover tones, across ALL creatures — the voice-cap/
+ * anti-spam guard. Kept well above one hover-tone's own duration so
+ * sweeping the cursor quickly across a dense crowd (e.g. while dragging a
+ * sticker across it) reads as spaced-out pops, not a machine-gun rattle.
+ */
+export const HOVER_TONE_COOLDOWN_MS = 260;
+/** Peak extra scale (on top of the creature's own popScale) while hovered — the visual half of the hover feedback. */
+export const HOVER_SCALE_BUMP = 0.18;
+/** Per-frame approach rate toward the hover scale target — a simple decorative ease, not physics. */
+const HOVER_BOOST_LERP = 0.25;
 
 function easeOutBack(t: number): number {
   const c1 = 1.70158;
@@ -192,6 +201,7 @@ export class CreatureGrid {
   private repulsor: Repulsor | null = null;
   private audioContext: AudioContext | null = null;
   private hoverState = new WeakMap<Creature, boolean>();
+  private hoverBoost = new WeakMap<Creature, number>();
   private lastHoverToneAtMs = -Infinity;
 
   constructor(config: CreatureGridConfig) {
@@ -348,8 +358,20 @@ export class CreatureGrid {
       const dy = avatarY - c.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       const wasHovered = this.hoverState.get(c) ?? false;
-      const { hovered, entered } = computeHoverEdge(distance, hoverRadiusFor(c), wasHovered);
+      // The crowd actively flees the cursor (see applyRepulsion in
+      // creaturePhysics.ts), and repelRadius (180px) is well outside a
+      // creature's own tight hoverRadiusFor(c) (~half its size + 20px). If
+      // hover only used hoverRadiusFor, the cursor could almost never catch
+      // a creature close enough to register — it's already fleeing by the
+      // time it would. Using whichever radius is larger means hover fires
+      // as soon as a creature enters the repulsion field it's reacting to.
+      const radius = Math.max(hoverRadiusFor(c), this.physicsParams.repelRadius);
+      const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
       this.hoverState.set(c, hovered);
+
+      const prevBoost = this.hoverBoost.get(c) ?? 0;
+      const targetBoost = hovered ? 1 : 0;
+      this.hoverBoost.set(c, prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP);
 
       if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
         this.lastHoverToneAtMs = now;
@@ -374,8 +396,9 @@ export class CreatureGrid {
         const rotation = fullAngle * eye.rotFactor * halfSign;
 
         const spawn = resolveSpawnState(eye, now);
+        const hoverScale = 1 + (this.hoverBoost.get(eye) ?? 0) * HOVER_SCALE_BUMP;
         eye.el.style.opacity = String(spawn.opacity);
-        eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scale(${spawn.popScale}) scaleY(${scaleY})`;
+        eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scale(${spawn.popScale * hoverScale}) scaleY(${scaleY})`;
       }
     } else {
       for (const c of this.creatures) {
@@ -395,8 +418,9 @@ export class CreatureGrid {
         }
 
         const spawn = resolveSpawnState(c, now);
+        const hoverScale = 1 + (this.hoverBoost.get(c) ?? 0) * HOVER_SCALE_BUMP;
         c.el.style.opacity = String(spawn.opacity);
-        c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg) scale(${spawn.popScale})`;
+        c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg) scale(${spawn.popScale * hoverScale})`;
       }
     }
 

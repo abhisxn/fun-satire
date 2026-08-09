@@ -1,6 +1,6 @@
-# Fun Satire — Project Instructions
+# Gutter Generation — Project Instructions
 
-Interactive canvas app: cursor-driven "eyes"/"subjects" crowd with physics-based force fields, staged burn/destroy effects, and a DOM HUD. Vite + TypeScript, vitest for tests.
+Interactive DOM app: a cursor-driven crowd of creatures (eyes, cockroaches, pointed fingers, placards) with physics-based force fields and a DOM HUD (gallery, filters, protest panel, onboarding carousel). No canvas rendering and no burn/destroy effects — creatures are DOM elements repelled/animated directly; the only staged effect is a lightweight poof (spawn/despawn). Vite + TypeScript, vitest for tests.
 
 **Full architecture, ADRs, and data-flow diagram**: [docs/superpowers/system-architecture.md](docs/superpowers/system-architecture.md) — read that before making structural changes. This file only covers conventions and pointers.
 
@@ -8,29 +8,31 @@ Interactive canvas app: cursor-driven "eyes"/"subjects" crowd with physics-based
 
 - TypeScript 5.x+, ES2022+, `erasableSyntaxOnly`, `verbatimModuleSyntax` (`import type` required), `noUnusedLocals`.
 - Every module is a pure export; side effects live only in `src/main.ts`.
-- `Entity.content` is `Readonly`; `EntityStore.get()` snapshots via `structuredClone` by default.
 - Physics: semi-implicit Euler (`v += a*dt; p += v*dt`).
-- New creature types are added via registries (`Registry` maps string IDs → Drawer/Behavior factories) — see ADR 001. Adding content should be additive, not require engine changes.
-- `ForceField.ts` is otherwise closed to extension — ADR 006 is the one sanctioned exception (pairwise separation). Any new touch to `ForceField.ts`, `Engine.ts`, `StateMachine.ts`, or `EntityStore.ts` should be treated as a deliberate, reviewed exception, not a routine edit.
+- `CreatureMode` (`'eyes' | 'pointedFinger' | 'cockroach' | 'placard'`) selects behavior/rendering per creature in `CreatureGrid`/`creaturePhysics.ts` — adding a mode should stay additive there rather than forking the grid/physics loop.
+- `ForceField.ts` (pairwise repel from cursor/avatar) and `Engine.ts` (RAF tick loop) are small, load-bearing, and shared by every creature — treat any touch to them as a deliberate, reviewed exception, not a routine edit.
+
+> Note: `docs/superpowers/system-architecture.md`'s ADRs (001-006) and data-flow diagram describe an earlier `entities/` + canvas-`render/` + `effects/`/`powers/` architecture that has since been replaced by the flatter `creatures/`+DOM structure below. Treat that doc as historical until it's refreshed to match.
 
 ## Human testing
 
-After completing any task that touches `physics/`, `render/`, `effects/`, or `hud/`, run `npm run dev` and verify the change in a browser before reporting the task complete. Unit tests don't catch visual/feel regressions in this canvas app. Test at the task level, not deferred to phase/sprint end — catching a regression at the task that introduced it beats debugging it several tasks later.
+After completing any task that touches `physics/`, `creatures/`, `audio/`, or `hud/`, run `npm run dev` and verify the change in a browser before reporting the task complete. Unit tests don't catch visual/feel regressions in this app. Test at the task level, not deferred to phase/sprint end — catching a regression at the task that introduced it beats debugging it several tasks later.
 
 ## Layout
 
 ```text
 src/
-  core/       Engine (RAF loop), Clock, EventBus, Rng
-  physics/    ForceField, Integrator, SpringHome, LookAt
-  entities/   Entity, EntityFactory, EntityStore, behaviors/ (StateMachine, EyeBehavior, SubjectBehavior)
-  effects/    EffectSystem (staged timeline), ParticleSystem, RespawnScheduler, effectDefs/
-  powers/     PowerController-triggered effects (laserBurn, ...)
-  input/      PointerTracker, DragController, PowerController
-  render/     Renderer, CanvasUtils, paperCut, pupilTrack, drawers/ (per-entity draw fns)
-  content/    manifestLoader, schema, manifests/ (*.roster.json — content-as-data)
-  hud/        Hud (DOM-based, SVG-masked paper-cut edges — ADR 004)
-  config/     tokens.ts
+  core/       Engine (RAF loop), Clock, Rng
+  physics/    ForceField (cursor repel), Integrator
+  creatures/  CreatureGrid, creaturePhysics, creatureTypes, per-type modules
+              (EyeCreature, CockroachCreature, FingerCreature, PlacardCreature, BugSwarm),
+              poofEffect (spawn/despawn), DraggableAvatar, makeDraggable, snapGrid/snapGuides,
+              StickerOverlay, TextOverlay
+  input/      PointerTracker
+  audio/      AudioManager, AudioWidget, clickSound, dragScratchSound, hoverTones, hudTones, poofTone
+  hud/        Hud, FilterPanel, GalleryPanel, ProtestPanel, shareLinks, onboarding/ (OnboardingCarousel, beats)
+  analytics/  ga.ts (Google Analytics)
+  config/     tokens.ts, visualTokens.ts
 tests/unit/   vitest — one file per module/feature, run via `npm test`
 docs/superpowers/
   system-architecture.md   ADRs, core definitions, data-flow diagram
@@ -60,5 +62,6 @@ No `.md` file in this project should exceed 500 lines. If a doc grows past that,
 - [docs/superpowers/plans/](docs/superpowers/plans/) — active implementation/sprint plans matching each spec
 - [docs/superpowers/archive/](docs/superpowers/archive/) — shipped features' specs/plans (v1, merged-eyes, subject mechanic, browser matrix)
 - [README.md](README.md) — project brief, status, quick start
+- [ABOUT.md](ABOUT.md) — why this exists, what it's an ode to, key takeaways, what you can do as a responsible citizen
 - [SECURITY.md](SECURITY.md) — reporting a vulnerability
 - [graphify-out/GRAPH_REPORT.md](graphify-out/GRAPH_REPORT.md) — knowledge graph of the whole corpus (code + docs); useful for finding cross-cutting relationships before a refactor

@@ -1,5 +1,5 @@
 /* ============================================
-   PREMIUM HUD — Fun Satire
+   PREMIUM HUD — Gutter Generation
    Glass-morphism toolbar with magnetic interactions
    ============================================ */
 
@@ -17,11 +17,6 @@
   --hud-btn-size: 46px;
   --hud-btn-gap: 12px;
   --hud-padding-v: 12px;
-  --hud-padding-h: 24px;
-  --hud-attack-from: #de7666;
-  --hud-attack-to: #e9975d;
-  --hud-attack-border: #a74333;
-  --hud-attack-shadow: 0px 4px 0px #b75040;
   --hud-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --hud-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -37,7 +32,7 @@
   display: flex;
   align-items: center;
   gap: var(--hud-btn-gap);
-  padding: var(--hud-padding-v) var(--hud-padding-h) var(--hud-padding-v) var(--hud-padding-v);
+  padding: var(--hud-padding-v);
   background: var(--hud-glass-bg);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
@@ -261,90 +256,6 @@
 }
 
 /* ============================================
-   Attack Button — Gradient & Interactions
-   ============================================ */
-.hud-attack {
-  position: relative;
-  height: 39px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(180deg, var(--hud-attack-from) 0%, var(--hud-attack-to) 100%);
-  border: 1px solid var(--hud-attack-border);
-  border-radius: 12px;
-  box-shadow: var(--hud-attack-shadow);
-  color: white;
-  font-family: "Bungee", cursive;
-  font-size: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: all 0.4s var(--hud-ease-spring);
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-  overflow: hidden;
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
-  opacity: 0;
-}
-
-.hud-attack::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    rgba(255, 255, 255, 0) 50%,
-    rgba(0, 0, 0, 0.1) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.4s var(--hud-ease-smooth);
-}
-
-.hud-attack::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s var(--hud-ease-spring), height 0.6s var(--hud-ease-spring);
-}
-
-.hud-attack:hover {
-  transform: translateY(-2px);
-  box-shadow: 0px 6px 0px #b75040, 0px 8px 20px rgba(183, 80, 64, 0.4);
-}
-
-.hud-attack:hover::before {
-  opacity: 1;
-}
-
-.hud-attack:active {
-  transform: translateY(2px);
-  box-shadow: 0px 2px 0px #b75040;
-  transition-duration: 0.1s;
-}
-
-.hud-attack:active::after {
-  width: 200px;
-  height: 200px;
-  transition-duration: 0.3s;
-}
-
-.hud-attack:focus-visible {
-  box-shadow: var(--hud-attack-shadow), 0 0 0 3px rgba(222, 118, 102, 0.4);
-}
-
-.hud-attack span {
-  position: relative;
-  z-index: 1;
-}
-
-/* ============================================
    Tooltips — Pseudo-element with Fade-in
    ============================================ */
 .hud-btn[data-tooltip]::after {
@@ -411,7 +322,6 @@
 .hud-divider { animation-delay: 0.28s; }
 .hud-btn:nth-child(7) { animation-delay: 0.35s; }
 .hud-btn:nth-child(8) { animation-delay: 0.4s; }
-.hud-attack { animation-delay: 0.5s; }
 
 .premium-hud.hud--dragging,
 .premium-hud.hud--dragging:hover {
@@ -421,16 +331,13 @@
 }
 
 .premium-hud.hud--dragging .hud-btn,
-.premium-hud.hud--dragging .hud-attack,
 .premium-hud.hud--dragging .hud-divider {
   animation: none;
   opacity: 1;
 }
 
 .premium-hud.hud--dragging .hud-btn:hover,
-.premium-hud.hud--dragging .hud-btn:active,
-.premium-hud.hud--dragging .hud-attack:hover,
-.premium-hud.hud--dragging .hud-attack:active {
+.premium-hud.hud--dragging .hud-btn:active {
   transform: none;
   transition: none;
 }
@@ -446,7 +353,7 @@
 @media (max-width: 768px) {
   .premium-hud {
     bottom: 24px;
-    padding: 10px 16px 10px 10px;
+    padding: 10px;
     gap: 8px;
   }
 
@@ -470,12 +377,6 @@
     height: 20px;
   }
 
-  .hud-attack {
-    height: 34px;
-    padding: 0 12px;
-    font-size: 14px;
-  }
-
   .hud-btn[data-tooltip]::after {
     display: none;
   }
@@ -487,7 +388,7 @@
 @media (max-width: 380px) {
   .premium-hud {
     bottom: 16px;
-    padding: 8px 12px 8px 8px;
+    padding: 8px;
     gap: 6px;
     border-radius: 60px;
   }
@@ -511,13 +412,6 @@
     width: 18px;
     height: 18px;
   }
-
-  .hud-attack {
-    height: 30px;
-    padding: 0 10px;
-    font-size: 12px;
-    border-radius: 10px;
-  }
 }
 
 /* ============================================
@@ -526,17 +420,14 @@
 @media (prefers-reduced-motion: reduce) {
   .premium-hud,
   .hud-drag-handle,
-  .hud-btn,
-  .hud-attack {
+  .hud-btn {
     animation: none;
     opacity: 1;
   }
 
   .premium-hud:hover,
   .hud-btn:hover,
-  .hud-btn:active,
-  .hud-attack:hover,
-  .hud-attack:active {
+  .hud-btn:active {
     transition: none;
   }
 
@@ -546,10 +437,6 @@
   }
 
   .hud-btn[data-tooltip]::after {
-    transition: none;
-  }
-
-  .hud-attack::after {
     transition: none;
   }
 }

@@ -1,4 +1,4 @@
-# Fun Satire — Agent Instructions
+# Gutter Generation — Agent Instructions
 
 Interactive DOM app: draggable-avatar-driven crowd with three creature modes (eyes, bugs, pointedFinger), simple repulsion + spring + damping physics, and a consolidated DOM HUD with filter and gallery panels. Vite + TypeScript, vitest for tests.
 
@@ -56,5 +56,6 @@ No `.md` file in this project should exceed 500 lines. If a doc grows past that,
 - [docs/superpowers/plans/](docs/superpowers/plans/) — active implementation/sprint plans
 - [docs/superpowers/archive/](docs/superpowers/archive/) — shipped features' specs/plans (v1, v2 expansion, merged-eyes, subject mechanic, browser matrix)
 - [README.md](README.md) — project brief, status, quick start
+- [ABOUT.md](ABOUT.md) — why this exists, what it's an ode to, key takeaways, what you can do as a responsible citizen
 - [SECURITY.md](SECURITY.md) — reporting a vulnerability
 - [graphify-out/GRAPH_REPORT.md](graphify-out/GRAPH_REPORT.md) — knowledge graph of the whole corpus (code + docs); useful for finding cross-cutting relationships before a refactor

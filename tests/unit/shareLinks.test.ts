@@ -1,5 +1,12 @@
+// tests/unit/shareLinks.test.ts
 import { describe, it, expect } from "vitest";
-import { buildWhatsAppShareUrl, buildFacebookShareUrl, buildRedditShareUrl } from "../../src/hud/shareLinks";
+import {
+  buildWhatsAppShareUrl,
+  buildFacebookShareUrl,
+  buildInstagramDeepLink,
+  buildInstagramWebUrl,
+  isMobileUserAgent,
+} from "../../src/hud/shareLinks";
 
 describe("hud/shareLinks", () => {
   const message = "I just protested with the crowd.";
@@ -17,9 +24,25 @@ describe("hud/shareLinks", () => {
     );
   });
 
-  it("builds a Reddit share URL with url and title", () => {
-    expect(buildRedditShareUrl(url, message)).toBe(
-      "https://www.reddit.com/submit?url=https%3A%2F%2Fexample.com%2F&title=I%20just%20protested%20with%20the%20crowd.",
-    );
+  it("builds the Instagram app deep link", () => {
+    expect(buildInstagramDeepLink()).toBe("instagram://story-camera");
+  });
+
+  it("builds the Instagram web fallback URL", () => {
+    expect(buildInstagramWebUrl()).toBe("https://instagram.com");
+  });
+
+  describe("isMobileUserAgent", () => {
+    it("returns true for an iPhone user agent", () => {
+      expect(isMobileUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)")).toBe(true);
+    });
+
+    it("returns true for an Android user agent", () => {
+      expect(isMobileUserAgent("Mozilla/5.0 (Linux; Android 14; Pixel 8)")).toBe(true);
+    });
+
+    it("returns false for a desktop user agent", () => {
+      expect(isMobileUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)")).toBe(false);
+    });
   });
 });
