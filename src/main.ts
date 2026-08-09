@@ -244,6 +244,7 @@ async function main(): Promise<void> {
       onOverlayDragStart,
       onOverlayDragEnd,
       onOverlayDragMove,
+      true,
     );
     document.body.appendChild(sticker.el);
     activeOverlay = sticker;

@@ -15,6 +15,8 @@ export class StickerOverlay {
   private readonly drag: DragHandle;
   private currentSrc: string;
   private width: number;
+  private dragHint: HTMLDivElement | null = null;
+  private dragHintTimeout: number | undefined;
 
   constructor(
     src: string,
@@ -23,6 +25,7 @@ export class StickerOverlay {
     onDragStart?: () => void,
     onDragEnd?: () => void,
     onDragMove?: (x: number, y: number) => void,
+    showDragHint?: boolean,
   ) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -90,9 +93,63 @@ export class StickerOverlay {
       this.handle.style.opacity = "0";
     });
 
-    this.drag = attachDrag(this.el, { x, y }, onDragMove, undefined, onDragStart, onDragEnd);
+    if (showDragHint) {
+      this.dragHint = this.buildDragHint();
+      this.el.appendChild(this.dragHint);
+    }
+
+    this.drag = attachDrag(
+      this.el,
+      { x, y },
+      onDragMove,
+      undefined,
+      () => {
+        this.hideDragHint();
+        onDragStart?.();
+      },
+      onDragEnd,
+    );
     this.drag.attach();
     this.attachResize();
+  }
+
+  private buildDragHint(): HTMLDivElement {
+    const hint = document.createElement("div");
+    hint.className = "sticker-overlay-drag-hint";
+    hint.textContent = "Drag me";
+    hint.style.cssText = [
+      "position:absolute",
+      "left:50%",
+      "top:-8px",
+      "transform:translate(-50%, -100%)",
+      "background:rgba(20,20,20,0.92)",
+      "color:#fff",
+      "font:600 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+      "padding:6px 10px",
+      "border-radius:6px",
+      "white-space:nowrap",
+      "pointer-events:none",
+      "box-shadow:0 2px 6px rgba(0,0,0,0.25)",
+      "opacity:0",
+      "transition:opacity 0.2s ease",
+      "z-index:2",
+    ].join(";");
+
+    requestAnimationFrame(() => {
+      if (hint.isConnected) hint.style.opacity = "1";
+    });
+
+    this.dragHintTimeout = window.setTimeout(() => this.hideDragHint(), 4000);
+    return hint;
+  }
+
+  private hideDragHint(): void {
+    if (!this.dragHint) return;
+    clearTimeout(this.dragHintTimeout);
+    const hint = this.dragHint;
+    this.dragHint = null;
+    hint.style.opacity = "0";
+    window.setTimeout(() => hint.remove(), 200);
   }
 
   setImage(src: string): void {
@@ -110,6 +167,7 @@ export class StickerOverlay {
   }
 
   destroy(): void {
+    clearTimeout(this.dragHintTimeout);
     this.drag.detach();
     this.handle.removeEventListener("mousedown", this.handleResizeStart);
     this.handle.removeEventListener("touchstart", this.handleResizeStart);

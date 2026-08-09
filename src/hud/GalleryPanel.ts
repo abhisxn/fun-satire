@@ -211,7 +211,7 @@ export class GalleryPanel {
     textBtn.type = "button";
     textBtn.className = "toggle-btn";
     textBtn.dataset.mode = "text";
-    textBtn.textContent = "Text";
+    textBtn.textContent = "Type your own";
 
     stickerBtn.addEventListener("click", () => this.setMode("sticker"));
     textBtn.addEventListener("click", () => this.setMode("text"));
