@@ -20,9 +20,12 @@ const SVG_WHATSAPP = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="htt
 const SVG_FACEBOOK = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="11" fill="#1877F2"/><path d="M13.2 11.3h-1.6v5.4h-2.2v-5.4H8.2V9.4h1.2V8.2c0-1.5.7-2.6 2.5-2.6h1.7v1.9h-1.1c-.5 0-.6.3-.6.7v1.2h1.7l-.2 1.9z" fill="#fff"/></svg>`;
 const SVG_INSTAGRAM = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="protest-ig-grad" x1="0" y1="22" x2="22" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset="0.4" stop-color="#D62976"/><stop offset="0.7" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><circle cx="11" cy="11" r="11" fill="url(#protest-ig-grad)"/><rect x="6" y="6" width="10" height="10" rx="3" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="11" cy="11" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="14.2" cy="7.8" r="0.7" fill="#fff"/></svg>`;
 const SVG_SHARE = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="13.5" cy="4.5" r="2.3" stroke="#fff" stroke-width="1.4"/><circle cx="4.5" cy="9" r="2.3" stroke="#fff" stroke-width="1.4"/><circle cx="13.5" cy="13.5" r="2.3" stroke="#fff" stroke-width="1.4"/><path d="M6.5 7.8L11.5 5.3M6.5 10.2L11.5 12.7" stroke="#fff" stroke-width="1.4"/></svg>`;
+const SVG_ARROW = `<svg viewBox="0 0 13.5 11.0459" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0.75 4.77297C0.335786 4.77297 0 5.10876 0 5.52297C0 5.93718 0.335786 6.27297 0.75 6.27297V5.52297V4.77297ZM13.2803 6.0533C13.5732 5.76041 13.5732 5.28553 13.2803 4.99264L8.50736 0.21967C8.21447 -0.0732231 7.73959 -0.0732231 7.4467 0.21967C7.15381 0.512564 7.15381 0.987437 7.4467 1.28033L11.6893 5.52297L7.4467 9.76561C7.15381 10.0585 7.15381 10.5334 7.4467 10.8263C7.73959 11.1192 8.21447 11.1192 8.50736 10.8263L13.2803 6.0533ZM0.75 5.52297V6.27297H12.75V5.52297V4.77297H0.75V5.52297Z"/></svg>`;
 
-const HONEST_NOTE =
-  "A crowd that watches back. No leader to arrest. No face to blame — just people, staying informed and staying loud.";
+const MENU_TITLE = "A crowd that watches back.";
+const MENU_COPY =
+  "No leader to arrest. No face to blame — just people, staying informed and staying loud.";
+const SHARE_PROMPT = "A crowd only grows if someone passes it on.";
 const SHARE_MESSAGE = "I just stood with the crowd. Come see for yourself.";
 
 const INFORMED_CITIZEN_TIPS = [
@@ -129,20 +132,36 @@ export class ProtestPanel {
     this.overlay.remove();
   }
 
-  private buildNoteSection(): HTMLElement {
-    const section = document.createElement("div");
-    section.className = "protest-note";
-    const p = document.createElement("p");
-    p.textContent = HONEST_NOTE;
-    section.appendChild(p);
-    return section;
+  private buildMenuTextBlock(): HTMLElement {
+    const block = document.createElement("div");
+    block.className = "protest-menu-text";
+
+    const title = document.createElement("h2");
+    title.className = "protest-menu-title";
+    title.textContent = MENU_TITLE;
+    block.appendChild(title);
+
+    const copy = document.createElement("p");
+    copy.className = "protest-menu-copy";
+    copy.textContent = MENU_COPY;
+    block.appendChild(copy);
+
+    return block;
   }
 
   private buildMenuScreen(): HTMLElement {
     const container = document.createElement("div");
     container.className = "protest-menu";
 
-    container.appendChild(this.buildNoteSection());
+    container.appendChild(this.buildMenuTextBlock());
+
+    const quickLinksBlock = document.createElement("div");
+    quickLinksBlock.className = "protest-quick-links-block";
+
+    const quickLinksLabel = document.createElement("div");
+    quickLinksLabel.className = "protest-section-label protest-section-label--quick-links";
+    quickLinksLabel.textContent = "Quick Links";
+    quickLinksBlock.appendChild(quickLinksLabel);
 
     const quickLinks = document.createElement("div");
     quickLinks.className = "protest-quick-links";
@@ -156,18 +175,24 @@ export class ProtestPanel {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "protest-quick-link";
-      btn.textContent = label;
+
+      const labelEl = document.createElement("span");
+      labelEl.className = "protest-quick-link-label";
+      labelEl.textContent = label;
+      btn.appendChild(labelEl);
+
+      const arrow = document.createElement("span");
+      arrow.className = "protest-quick-link-arrow";
+      arrow.innerHTML = SVG_ARROW;
+      btn.appendChild(arrow);
+
       btn.addEventListener("click", () => {
         this.navigateTo(screen);
       });
       quickLinks.appendChild(btn);
     }
-    container.appendChild(quickLinks);
-
-    const sharePrompt = document.createElement("p");
-    sharePrompt.className = "protest-share-prompt";
-    sharePrompt.textContent = "A crowd only grows if someone passes it on.";
-    container.appendChild(sharePrompt);
+    quickLinksBlock.appendChild(quickLinks);
+    container.appendChild(quickLinksBlock);
 
     container.appendChild(this.buildShareSection());
 
@@ -181,13 +206,24 @@ export class ProtestPanel {
     const backBtn = document.createElement("button");
     backBtn.type = "button";
     backBtn.className = "protest-back-btn";
-    backBtn.textContent = "← Menu";
+
+    const backIcon = document.createElement("span");
+    backIcon.className = "protest-back-btn-icon";
+    backIcon.innerHTML = SVG_ARROW;
+    backBtn.appendChild(backIcon);
+
+    const backLabel = document.createElement("span");
+    backLabel.className = "protest-back-btn-label";
+    backLabel.textContent = "Menu";
+    backBtn.appendChild(backLabel);
+
     backBtn.addEventListener("click", () => {
       this.navigateTo("menu");
     });
     container.appendChild(backBtn);
 
     const headingEl = document.createElement("h3");
+    headingEl.className = "protest-section-label";
     headingEl.textContent = heading;
     container.appendChild(headingEl);
 
@@ -295,11 +331,6 @@ export class ProtestPanel {
     link.target = "_blank";
     link.rel = "noopener noreferrer";
 
-    const icon = document.createElement("span");
-    icon.className = "protest-tile-icon";
-    icon.textContent = entry.icon;
-    link.appendChild(icon);
-
     const label = document.createElement("span");
     label.className = "protest-tile-label";
     label.textContent = entry.label;
@@ -328,9 +359,10 @@ export class ProtestPanel {
     const section = document.createElement("div");
     section.className = "protest-share";
 
-    const heading = document.createElement("h3");
-    heading.textContent = "Share";
-    section.appendChild(heading);
+    const sharePrompt = document.createElement("p");
+    sharePrompt.className = "protest-share-prompt";
+    sharePrompt.textContent = SHARE_PROMPT;
+    section.appendChild(sharePrompt);
 
     section.appendChild(this.nativeShare ? this.buildPrimaryShareButton() : this.buildFallbackShareRow());
 
@@ -344,13 +376,13 @@ export class ProtestPanel {
   private buildPrimaryShareButton(): HTMLElement {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "protest-rich-btn protest-share-primary";
+    btn.className = "protest-share-btn protest-share-primary";
 
     const icon = document.createElement("span");
-    icon.className = "protest-rich-btn-icon";
+    icon.className = "protest-share-btn-icon";
     icon.innerHTML = SVG_SHARE;
     const label = document.createElement("span");
-    label.className = "protest-rich-btn-label";
+    label.className = "protest-share-btn-label";
     label.textContent = "Share";
     btn.append(icon, label);
 
