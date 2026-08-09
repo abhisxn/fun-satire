@@ -394,5 +394,23 @@ describe("hud/ProtestPanel", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
       expect(panel.getRoot().classList.contains("open")).toBe(false);
     });
+
+    it("closes when clicking outside the panel from a sub-screen", () => {
+      panel.attachTo(protestButton);
+      panel.open();
+      const root = panel.getRoot();
+      clickQuickLink(root, "About Project");
+      document.body.click();
+      expect(panel.getRoot().classList.contains("open")).toBe(false);
+    });
+
+    it("closes on Escape key from a sub-screen", () => {
+      panel.attachTo(protestButton);
+      panel.open();
+      const root = panel.getRoot();
+      clickQuickLink(root, "About Project");
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+      expect(panel.getRoot().classList.contains("open")).toBe(false);
+    });
   });
 });
