@@ -3,8 +3,8 @@
    ============================================ */
 .hud-menu-btn {
   position: fixed;
-  top: 32px;
-  right: 32px;
+  top: calc(16px + var(--hud-density) * 0.03571429);
+  right: calc(16px + var(--hud-density) * 0.03571429);
   width: var(--hud-btn-size);
   height: var(--hud-btn-size);
   display: flex;
@@ -14,7 +14,7 @@
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--hud-glass-border);
-  border-radius: 16px;
+  border-radius: calc(12px + var(--hud-density) * 0.00892857);
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   cursor: pointer;
   outline: none;
@@ -31,8 +31,8 @@
 }
 
 .hud-menu-btn svg {
-  width: 22px;
-  height: 22px;
+  width: calc(18px + var(--hud-density) * 0.00892857);
+  height: calc(18px + var(--hud-density) * 0.00892857);
   pointer-events: none;
 }
 
@@ -49,36 +49,8 @@
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer), 0 0 0 3px rgba(97, 86, 80, 0.3);
 }
 
-@media (max-width: 768px) {
-  .hud-menu-btn {
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
-  }
-
-  .hud-menu-btn svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-@media (max-width: 380px) {
-  .hud-menu-btn {
-    top: 16px;
-    right: 16px;
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-  }
-
-  .hud-menu-btn svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
+/* Sizing above is fully fluid via --hud-density (defined in hud.css's
+   :root); no width breakpoints needed here. */
 @media (prefers-reduced-motion: reduce) {
   .hud-menu-btn,
   .hud-menu-btn:hover,
