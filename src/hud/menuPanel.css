@@ -470,3 +470,46 @@
     bottom: 84px;
   }
 }
+
+/* Compress vertical spacing/type on short viewports so more content is
+   visible before scrolling kicks in (mirrors the max-width tiers above). */
+@media (max-height: 700px) {
+  .menu-panel {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .menu-panel-home,
+  .menu-subscreen {
+    gap: 16px;
+  }
+
+  .menu-panel-home-text {
+    gap: 8px;
+    padding: 4px;
+  }
+
+  .menu-panel-home-title {
+    font-size: 20px;
+  }
+
+  .menu-quick-links-block,
+  .menu-quick-links {
+    gap: 6px;
+  }
+
+  .menu-quick-link {
+    padding: 12px;
+  }
+
+  .menu-share {
+    gap: 10px;
+    padding: 12px;
+  }
+}
+
+@media (max-height: 460px) {
+  .menu-panel-home-copy {
+    display: none;
+  }
+}

@@ -7,6 +7,6 @@
 :root {
   --hud-glass-bg: rgba(255, 255, 255, 0.7);
   --hud-glass-border: rgba(255, 255, 255, 0.9);
-  --hud-glass-blur: 20px;
+  --hud-glass-blur: 14px;
   --hud-glass-bg-fallback: rgba(255, 255, 255, 0.92);
 }
