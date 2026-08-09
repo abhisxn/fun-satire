@@ -31,7 +31,7 @@
   gap: var(--hud-btn-gap);
   padding: var(--hud-padding-v);
   background: var(--hud-glass-bg);
-  backdrop-filter: blur(var(--hud-glass-blur));
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
   border-radius: 82px;
@@ -263,7 +263,7 @@
   transform: translateX(-50%) translateY(8px);
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 8px;

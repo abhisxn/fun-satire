@@ -14,7 +14,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px) !important;
   -webkit-backdrop-filter: blur(30px);
   box-shadow: 0 18px 44px rgba(65, 52, 45, 0.14), 0 2px 8px rgba(65, 52, 45, 0.08);
   transition: gap 200ms ease;

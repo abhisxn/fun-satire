@@ -32,7 +32,7 @@
   max-width: calc(100vw - 32px);
   padding: 24px 16px;
   background: var(--hud-glass-bg);
-  backdrop-filter: blur(var(--hud-glass-blur));
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
   border-radius: 20px;
