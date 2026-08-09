@@ -2,8 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   buildYouTubeThumbnailUrl,
   buildYouTubeWatchUrl,
-  HERO_VIDEO,
+  shuffleVideos,
   GALLERY_ENTRIES,
+  type VideoEntry,
 } from "../../src/hud/menuContent";
 
 describe("hud/menuContent", () => {
@@ -15,13 +16,6 @@ describe("hud/menuContent", () => {
 
   it("builds a YouTube watch URL from a video id", () => {
     expect(buildYouTubeWatchUrl("abc123")).toBe("https://www.youtube.com/watch?v=abc123");
-  });
-
-  it("exposes a hero video entry", () => {
-    expect(HERO_VIDEO.kind).toBe("video");
-    expect(HERO_VIDEO.videoId.length).toBeGreaterThan(0);
-    expect(HERO_VIDEO.title.length).toBeGreaterThan(0);
-    expect(HERO_VIDEO.channel.length).toBeGreaterThan(0);
   });
 
   it("exposes gallery entries mixing video and source kinds", () => {
@@ -40,5 +34,45 @@ describe("hud/menuContent", () => {
         expect(entry.icon.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  describe("shuffleVideos", () => {
+    const A: VideoEntry = { kind: "video", videoId: "aaa", title: "A", channel: "Chan A" };
+    const B: VideoEntry = { kind: "video", videoId: "bbb", title: "B", channel: "Chan B" };
+    const C: VideoEntry = { kind: "video", videoId: "ccc", title: "C", channel: "Chan C" };
+    const entries: VideoEntry[] = [A, B, C];
+
+    it("returns a permutation of the input without mutating it", () => {
+      const original = [...entries];
+      const result = shuffleVideos(entries, () => 0);
+
+      expect(result).not.toBe(entries);
+      expect(entries).toEqual(original);
+      const byId = (x: VideoEntry, y: VideoEntry) => x.videoId.localeCompare(y.videoId);
+      expect([...result].sort(byId)).toEqual([...entries].sort(byId));
+    });
+
+    it("shuffles deterministically for a given rng (Fisher-Yates)", () => {
+      const result = shuffleVideos(entries, () => 0);
+      expect(result).toEqual([B, C, A]);
+    });
+  });
+
+  describe("other resources entries", () => {
+    it("lists all outlets and civic tools in the expected order", () => {
+      const hrefs = GALLERY_ENTRIES.filter((e) => e.kind === "source").map((e) =>
+        e.kind === "source" ? e.href : "",
+      );
+      expect(hrefs).toEqual([
+        "https://www.newslaundry.com/",
+        "https://www.youtube.com/@jistnews",
+        "https://www.youtube.com/@BrutIndia",
+        "https://www.thecockroachjantaparty.org.in/voice",
+        "https://andhbhakt.org/",
+        "https://www.myneta.info/",
+        "https://rtionline.gov.in/",
+        "https://voters.eci.gov.in/",
+      ]);
+    });
   });
 });

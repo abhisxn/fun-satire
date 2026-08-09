@@ -7,10 +7,10 @@ import {
   isMobileUserAgent,
 } from "./shareLinks";
 import {
-  HERO_VIDEO,
   GALLERY_ENTRIES,
   buildYouTubeThumbnailUrl,
   buildYouTubeWatchUrl,
+  shuffleVideos,
   type VideoEntry,
   type SourceEntry,
 } from "./menuContent";
@@ -290,7 +290,7 @@ export class MenuPanel {
   }
 
   private buildMediaScreen(): HTMLElement {
-    const videoEntries: VideoEntry[] = [HERO_VIDEO, ...GALLERY_ENTRIES.filter((e) => e.kind === "video")];
+    const videoEntries = shuffleVideos(GALLERY_ENTRIES.filter((e) => e.kind === "video"));
 
     const videoList = document.createElement("div");
     videoList.className = "menu-gallery-list";
