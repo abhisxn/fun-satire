@@ -22,6 +22,12 @@ export const FADE_OUT_MS = 400;
 export const REPOP_INTERVAL_MS = 2000;
 /** How many invisible creatures randomly pop back in per interval. */
 export const REPOP_COUNT = 3;
+/** Grace period before an idle sticker starts draining the crowd (ms). */
+export const IDLE_GRACE_MS = 20_000;
+/** How long the decay ramp takes, from grace-end to the floor (ms). */
+export const IDLE_DECAY_MS = 300_000;
+/** Idle floor as a fraction of the current target quantity. */
+export const IDLE_FLOOR_FRACTION = 0.02;
 /** Extra slack (px) beyond a creature's own rendered half-size for hover proximity. */
 export const HOVER_PROXIMITY_PADDING = 20;
 /**
@@ -67,6 +73,23 @@ export function computeSpawnProgress(spawnPopAtMs: number, nowMs: number): Spawn
     opacity: Math.min(1, progress / 0.6),
     done: false,
   };
+}
+
+/**
+ * Pure function: how much of the target crowd should be visible right now,
+ * given how long the sticker has sat still. 1 while within the grace
+ * period, ramping linearly down to IDLE_FLOOR_FRACTION over IDLE_DECAY_MS,
+ * then holding there.
+ */
+export function idleVisibleFraction(idleMs: number): number {
+  if (idleMs <= IDLE_GRACE_MS) return 1;
+  const t = Math.min(1, (idleMs - IDLE_GRACE_MS) / IDLE_DECAY_MS);
+  return 1 - t * (1 - IDLE_FLOOR_FRACTION);
+}
+
+/** Pure function: drag speed in px/ms from a frame's movement distance and elapsed time. */
+export function dragSpeedPxPerMs(distancePx: number, dtMs: number): number {
+  return distancePx / dtMs;
 }
 
 /**
