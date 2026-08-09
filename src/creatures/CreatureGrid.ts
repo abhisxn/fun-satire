@@ -28,6 +28,12 @@ export const IDLE_GRACE_MS = 20_000;
 export const IDLE_DECAY_MS = 300_000;
 /** Idle floor as a fraction of the current target quantity. */
 export const IDLE_FLOOR_FRACTION = 0.02;
+/** Sub-pixel jitter below this doesn't count as sticker movement. */
+export const MOVEMENT_NOISE_PX = 1.5;
+/** Drag speed (px/ms) above which a movement counts as a "fast" resurge trigger. */
+export const FAST_DRAG_SPEED_PX_MS = 1.2;
+/** How long a fast-drag burst window stays open after the last qualifying movement (ms). */
+export const BURST_DURATION_MS = 3_000;
 /** Extra slack (px) beyond a creature's own rendered half-size for hover proximity. */
 export const HOVER_PROXIMITY_PADDING = 20;
 /**
@@ -221,6 +227,11 @@ export class CreatureGrid {
   };
   private lastFadePickMs: number = 0;
   private lastRepopPickMs: number = 0;
+  private lastAvatarX: number | null = null;
+  private lastAvatarY: number | null = null;
+  private lastFrameMs: number = 0;
+  private lastActivityMs: number = Date.now();
+  private burstUntilMs: number = 0;
   private repulsor: Repulsor | null = null;
   private audioContext: AudioContext | null = null;
   private hoverState = new WeakMap<Creature, boolean>();
@@ -369,6 +380,22 @@ export class CreatureGrid {
   update(avatarX: number, avatarY: number): void {
     const avatar = { x: avatarX, y: avatarY };
     const now = Date.now();
+
+    if (this.lastAvatarX !== null && this.lastAvatarY !== null) {
+      const dx = avatarX - this.lastAvatarX;
+      const dy = avatarY - this.lastAvatarY;
+      const dist = Math.hypot(dx, dy);
+      if (dist > MOVEMENT_NOISE_PX) {
+        this.lastActivityMs = now;
+        const dt = Math.max(1, now - this.lastFrameMs);
+        if (dragSpeedPxPerMs(dist, dt) > FAST_DRAG_SPEED_PX_MS) {
+          this.burstUntilMs = now + BURST_DURATION_MS;
+        }
+      }
+    }
+    this.lastAvatarX = avatarX;
+    this.lastAvatarY = avatarY;
+    this.lastFrameMs = now;
 
     for (const c of this.creatures) {
       updateCreature(c, avatar, this.physicsParams, this.repulsor);
