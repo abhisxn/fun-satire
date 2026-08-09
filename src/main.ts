@@ -6,6 +6,7 @@ import type { PoofHandle } from "./creatures/poofEffect";
 import { StickerOverlay } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
+import { MenuButton } from "./hud/MenuButton";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getFaceStickerDefs } from "./hud/GalleryPanel";
 import { ProtestPanel } from "./hud/ProtestPanel";
@@ -123,6 +124,10 @@ async function main(): Promise<void> {
     if (!hudRoot) throw new Error("Missing #hud-root container");
     hud.attachTo(hudRoot);
     hud.setAudioContext(audioManager.getAudioContext());
+
+    const menuButton = new MenuButton();
+    menuButton.attachTo(hudRoot);
+    menuButton.setAudioContext(audioManager.getAudioContext());
 
     const galleryPanel = new GalleryPanel();
     const protestPanel = new ProtestPanel();

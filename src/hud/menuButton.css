@@ -1,0 +1,81 @@
+/* ============================================
+   Menu Button — Floating Glass Button (top-right)
+   ============================================ */
+.hud-menu-btn {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  width: 62px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.4s var(--hud-ease-spring), box-shadow 0.4s var(--hud-ease-smooth);
+  z-index: 1000;
+}
+
+.hud-menu-btn svg {
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+}
+
+.hud-menu-btn:hover {
+  transform: scale(1.08);
+}
+
+.hud-menu-btn:active {
+  transform: scale(0.95);
+  transition-duration: 0.15s;
+}
+
+.hud-menu-btn:focus-visible {
+  box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer), 0 0 0 3px rgba(97, 86, 80, 0.3);
+}
+
+@media (max-width: 768px) {
+  .hud-menu-btn {
+    top: 20px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+  }
+
+  .hud-menu-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (max-width: 380px) {
+  .hud-menu-btn {
+    top: 16px;
+    right: 16px;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .hud-menu-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-menu-btn,
+  .hud-menu-btn:hover,
+  .hud-menu-btn:active {
+    transition: none;
+  }
+}
