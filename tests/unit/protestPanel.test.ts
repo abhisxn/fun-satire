@@ -23,7 +23,7 @@ describe("hud/ProtestPanel", () => {
   });
 
   describe("DOM structure", () => {
-    it("creates overlay and panel with note and join link", () => {
+    it("creates overlay and panel with the watchdog note", () => {
       panel.attachTo(protestButton);
       const root = panel.getRoot();
 
@@ -31,56 +31,67 @@ describe("hud/ProtestPanel", () => {
       expect(root.querySelector(".protest-panel")).not.toBeNull();
 
       const note = root.querySelector(".protest-note p");
-      expect(note?.textContent).toBe("I made this as a toy. There's a real movement behind it.");
+      expect(note?.textContent).toBe(
+        "A crowd that watches back. No leader to arrest. No face to blame — just people, staying informed and staying loud.",
+      );
 
-      const joinLink = root.querySelector<HTMLAnchorElement>(".protest-join-link");
-      expect(joinLink?.href).toBe("https://www.thecockroachjantaparty.org.in/join");
-      expect(joinLink?.target).toBe("_blank");
-      expect(joinLink?.rel).toBe("noopener noreferrer");
-      expect(joinLink?.classList.contains("protest-rich-btn")).toBe(true);
-      expect(joinLink?.querySelector(".protest-rich-btn-icon")?.textContent).toBe("🪳");
-      expect(joinLink?.querySelector(".protest-rich-btn-label")?.textContent).toBe("Join the Swarm");
+      expect(root.querySelector(".protest-join-link")).toBeNull();
+      expect(root.querySelector(".protest-footer")?.textContent).toBe("© thatguyabhishek");
     });
   });
 
-  describe("gallery", () => {
-    it("renders a hero video tile linking to the YouTube watch URL", () => {
+  describe("informed citizen section", () => {
+    it("renders seven tips", () => {
       panel.attachTo(protestButton);
-      const hero = panel.getRoot().querySelector<HTMLAnchorElement>(".protest-tile--hero");
-
-      expect(hero).not.toBeNull();
-      expect(hero?.href).toBe(`https://www.youtube.com/watch?v=${HERO_VIDEO.videoId}`);
-      expect(hero?.target).toBe("_blank");
-      expect(hero?.querySelector(".protest-tile-thumb")).not.toBeNull();
+      const items = panel.getRoot().querySelectorAll(".protest-tips li");
+      expect(items.length).toBe(7);
     });
 
-    it("renders a grid blending video and source tiles for every gallery entry", () => {
+    it("renders the hero video among the Videos list, linking to the YouTube watch URL", () => {
       panel.attachTo(protestButton);
       const root = panel.getRoot();
 
-      const tiles = root.querySelectorAll(".protest-gallery-grid .protest-tile");
-      expect(tiles.length).toBe(GALLERY_ENTRIES.length);
+      const videoTiles = root.querySelectorAll(".protest-gallery-list .protest-tile--video");
+      const videoCount = GALLERY_ENTRIES.filter((e) => e.kind === "video").length + 1;
+      expect(videoTiles.length).toBe(videoCount);
 
-      const videoCount = GALLERY_ENTRIES.filter((e) => e.kind === "video").length;
+      const heroTile = Array.from(videoTiles).find(
+        (t) => (t as HTMLAnchorElement).href === `https://www.youtube.com/watch?v=${HERO_VIDEO.videoId}`,
+      ) as HTMLAnchorElement | undefined;
+      expect(heroTile).not.toBeUndefined();
+      expect(heroTile?.target).toBe("_blank");
+      expect(heroTile?.querySelector(".protest-tile-thumb")).not.toBeNull();
+    });
+
+    it("renders a labeled outlets list with a source tile per source entry", () => {
+      panel.attachTo(protestButton);
+      const root = panel.getRoot();
+
       const sourceCount = GALLERY_ENTRIES.filter((e) => e.kind === "source").length;
-      expect(root.querySelectorAll(".protest-gallery-grid .protest-tile--video").length).toBe(videoCount);
-      expect(root.querySelectorAll(".protest-gallery-grid .protest-tile--source").length).toBe(sourceCount);
+      expect(root.querySelectorAll(".protest-gallery-list .protest-tile--source").length).toBe(sourceCount);
 
       const firstSource = GALLERY_ENTRIES.find((e) => e.kind === "source");
-      const sourceTile = root.querySelector<HTMLAnchorElement>(".protest-gallery-grid .protest-tile--source");
+      const sourceTile = root.querySelector<HTMLAnchorElement>(".protest-gallery-list .protest-tile--source");
       expect(sourceTile?.href).toBe(firstSource && firstSource.kind === "source" ? firstSource.href : "");
+
+      const labels = Array.from(root.querySelectorAll(".protest-gallery-label")).map((el) => el.textContent);
+      expect(labels).toEqual(["Videos", "Independent Outlets"]);
     });
 
     it("falls back to a source-style card when a video thumbnail fails to load", () => {
       panel.attachTo(protestButton);
-      const heroThumb = panel.getRoot().querySelector<HTMLImageElement>(".protest-tile--hero .protest-tile-thumb");
+      const firstThumb = panel.getRoot().querySelector<HTMLImageElement>(
+        ".protest-gallery-list .protest-tile--video .protest-tile-thumb",
+      );
+      const tileLink = firstThumb?.closest("a");
+      const title = firstThumb?.alt ?? "";
 
-      heroThumb?.dispatchEvent(new Event("error"));
+      firstThumb?.dispatchEvent(new Event("error"));
 
-      const heroTile = panel.getRoot().querySelector(".protest-tile--hero");
-      expect(heroTile?.classList.contains("protest-tile--source")).toBe(true);
-      expect(heroTile?.querySelector(".protest-tile-thumb")).toBeNull();
-      expect(heroTile?.querySelector(".protest-tile-label")?.textContent).toBe(HERO_VIDEO.title);
+      expect(tileLink?.classList.contains("protest-tile--video")).toBe(false);
+      expect(tileLink?.classList.contains("protest-tile--source")).toBe(true);
+      expect(tileLink?.querySelector(".protest-tile-thumb")).toBeNull();
+      expect(tileLink?.querySelector(".protest-tile-label")?.textContent).toBe(title);
     });
   });
 

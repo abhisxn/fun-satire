@@ -94,8 +94,8 @@
   line-height: 1;
 }
 
-/* Gallery */
-.protest-gallery h3,
+/* Informed citizen tips */
+.protest-informed h3,
 .protest-share h3 {
   margin: 0 0 8px;
   font-size: 12px;
@@ -104,6 +104,30 @@
   opacity: 0.7;
 }
 
+.protest-tips {
+  margin: 0 0 14px;
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.protest-gallery-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.protest-gallery-label:not(:first-of-type) {
+  margin-top: 12px;
+}
+
+/* Gallery */
 .protest-tile {
   display: block;
   position: relative;
@@ -115,11 +139,6 @@
   border: 1px solid var(--protest-glass-border);
 }
 
-.protest-tile--hero {
-  margin-bottom: 8px;
-}
-
-.protest-tile--hero .protest-tile-thumb,
 .protest-tile--video .protest-tile-thumb {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -127,14 +146,13 @@
   display: block;
 }
 
-.protest-tile--hero:hover .protest-tile-thumb,
 .protest-tile--video:hover .protest-tile-thumb {
   filter: brightness(1.08);
 }
 
-.protest-gallery-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.protest-gallery-list {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -228,4 +246,10 @@
 .protest-toast.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+.protest-footer {
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.5;
 }
