@@ -14,8 +14,8 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(30px) !important;
-  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 18px 44px rgba(65, 52, 45, 0.14), 0 2px 8px rgba(65, 52, 45, 0.08);
   transition: gap 200ms ease;
 }
@@ -45,6 +45,13 @@
   padding: 0;
   box-shadow: inset 0 1px 2px rgba(42, 36, 32, 0.06), 0 1px 2px rgba(42, 36, 32, 0.08);
   transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Visually last (bottom) in the column while staying first in the DOM
+     (see AudioWidget.ts) so tab order still hits the toggle before the
+     slider. .audio-widget is bottom-anchored (position: fixed; bottom),
+     so keeping the toggle as the bottom flex item pins it to that fixed
+     edge — the volume-wrap above it grows upward on hover instead of
+     pushing the toggle up. */
+  order: 2;
 }
 
 .audio-widget__toggle:hover {
@@ -68,6 +75,11 @@
  * slider inside it.
  */
 .audio-widget__volume-wrap {
+  /* Wide enough to hold the 14px round thumb (+ its 1.5px border) centered
+     on the 3px track without overflow:hidden below clipping it flat. */
+  width: 18px;
+  display: flex;
+  justify-content: center;
   height: 0;
   overflow: hidden;
   transition: height 200ms ease;
