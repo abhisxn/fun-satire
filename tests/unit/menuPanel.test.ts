@@ -5,7 +5,7 @@ import { HERO_VIDEO, GALLERY_ENTRIES } from "../../src/hud/menuContent";
 
 const QUICK_LINKS: Array<[string, string]> = [
   ["About Project", "About This Project"],
-  ["How to Be a Better Citizen", "How to Be a More Informed Citizen"],
+  ["Be a More Informed Citizen", "Be a More Informed Citizen"],
   ["Support Independent Media", "Support Independent Media"],
   ["Other Resources", "Other Resources"],
 ];
@@ -67,7 +67,7 @@ describe("hud/MenuPanel", () => {
       const labels = Array.from(links).map((el) => el.textContent);
       expect(labels).toEqual([
         "About Project",
-        "How to Be a Better Citizen",
+        "Be a More Informed Citizen",
         "Support Independent Media",
         "Other Resources",
       ]);
@@ -146,7 +146,7 @@ describe("hud/MenuPanel", () => {
     it("renders an intro line, eight tips, and no gallery content", () => {
       panel.attachTo(menuButton);
       const root = panel.getRoot();
-      clickQuickLink(root, "How to Be a Better Citizen");
+      clickQuickLink(root, "Be a More Informed Citizen");
 
       expect(root.querySelector(".menu-informed-intro")?.textContent).toBe(
         "A protest gets you heard once. What you do after is what keeps you heard.",

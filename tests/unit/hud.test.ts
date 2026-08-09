@@ -63,25 +63,12 @@ describe("Hud", () => {
       expect(classNames[3]).toContain("hud-btn--placard");
     });
 
-    it("creates attack button", () => {
-      const attackBtn = host.querySelector(".hud-attack");
-      expect(attackBtn).toBeTruthy();
-      expect(attackBtn?.getAttribute("aria-label")).toBe("Attack");
-      expect(attackBtn?.querySelector("span")?.textContent).toBe("Protest");
-    });
-
     it("creates utility buttons", () => {
       const settingsBtn = host.querySelector(".hud-btn--settings");
       const galleryBtn = host.querySelector(".hud-btn--gallery");
 
       expect(settingsBtn).toBeTruthy();
       expect(galleryBtn).toBeTruthy();
-    });
-
-    it("exposes the attack button via getAttackButton()", () => {
-      const attackBtn = hud.getAttackButton();
-      expect(attackBtn.classList.contains("hud-attack")).toBe(true);
-      expect(attackBtn).toBe(host.querySelector(".hud-attack"));
     });
   });
 
@@ -172,32 +159,6 @@ describe("Hud", () => {
     });
   });
 
-  describe("attack button", () => {
-    it("fires attack press event on pointerdown", () => {
-      let pressed = false;
-      hud.onAttackPress(() => {
-        pressed = true;
-      });
-
-      const attackBtn = host.querySelector<HTMLButtonElement>(".hud-attack");
-      attackBtn?.dispatchEvent(new PointerEvent("pointerdown"));
-
-      expect(pressed).toBe(true);
-    });
-
-    it("fires attack release event on pointerup", () => {
-      let released = false;
-      hud.onAttackRelease(() => {
-        released = true;
-      });
-
-      const attackBtn = host.querySelector<HTMLButtonElement>(".hud-attack");
-      attackBtn?.dispatchEvent(new PointerEvent("pointerup"));
-
-      expect(released).toBe(true);
-    });
-  });
-
   describe("drag handle", () => {
     it("supports mouse drag", () => {
       const handle = host.querySelector<HTMLDivElement>(".hud-drag-handle");
@@ -249,7 +210,6 @@ describe("Hud", () => {
       const eyeBtn = host.querySelector(".hud-btn--eye");
       const cockroachBtn = host.querySelector(".hud-btn--bug");
       const handBtn = host.querySelector(".hud-btn--hand");
-      const attackBtn = host.querySelector(".hud-attack");
       const placardBtn = host.querySelector(".hud-btn--placard");
       const settingsBtn = host.querySelector(".hud-btn--settings");
       const galleryBtn = host.querySelector(".hud-btn--gallery");
@@ -257,7 +217,6 @@ describe("Hud", () => {
       expect(eyeBtn?.getAttribute("aria-label")).toBe("Eye Mode");
       expect(cockroachBtn?.getAttribute("aria-label")).toBe("Cockroach Mode");
       expect(handBtn?.getAttribute("aria-label")).toBe("Point Mode");
-      expect(attackBtn?.getAttribute("aria-label")).toBe("Attack");
       expect(placardBtn?.getAttribute("aria-label")).toBe("Placard Mode");
       expect(settingsBtn?.getAttribute("aria-label")).toBe("Settings");
       expect(galleryBtn?.getAttribute("aria-label")).toBe("Grid View");
@@ -271,12 +230,6 @@ describe("Hud", () => {
         const svg = btn.querySelector("svg");
         expect(svg).toBeTruthy();
       });
-    });
-
-    it("has text content in attack button", () => {
-      const attackBtn = host.querySelector(".hud-attack");
-      const span = attackBtn?.querySelector("span");
-      expect(span?.textContent).toBe("Protest");
     });
   });
 

@@ -95,12 +95,7 @@ vi.mock("../../src/hud/Hud", () => ({
     getGalleryButton(): HTMLElement {
       return document.createElement("button");
     }
-    getAttackButton(): HTMLElement {
-      return document.createElement("button");
-    }
     onModeChange(): void {}
-    onAttackPress(): void {}
-    onAttackRelease(): void {}
     destroy(): void {}
   },
 }));

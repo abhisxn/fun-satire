@@ -183,7 +183,7 @@ export class MenuPanel {
     quickLinks.className = "menu-quick-links";
     const links: Array<[string, MenuScreen]> = [
       ["About Project", "about"],
-      ["How to Be a Better Citizen", "informed"],
+      ["Be a More Informed Citizen", "informed"],
       ["Support Independent Media", "media"],
       ["Other Resources", "resources"],
     ];
@@ -286,7 +286,7 @@ export class MenuPanel {
     }
     container.appendChild(tips);
 
-    return this.buildSubScreen("How to Be a More Informed Citizen", container);
+    return this.buildSubScreen("Be a More Informed Citizen", container);
   }
 
   private buildMediaScreen(): HTMLElement {

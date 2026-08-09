@@ -137,14 +137,13 @@ async function main(): Promise<void> {
     menuPanel.attachTo(menuButton.getButton());
 
     const syncMenuButtonVisibility = (): void => {
-      const anyPanelOpen = filterPanel.isPanelOpen() || galleryPanel.isPanelOpen() || menuPanel.isPanelOpen();
+      const anyPanelOpen = galleryPanel.isPanelOpen() || menuPanel.isPanelOpen();
       if (anyPanelOpen) {
         menuButton.hide();
       } else {
         menuButton.show();
       }
     };
-    filterPanel.onOpenChange(syncMenuButtonVisibility);
     galleryPanel.onOpenChange(syncMenuButtonVisibility);
     menuPanel.onOpenChange(syncMenuButtonVisibility);
 

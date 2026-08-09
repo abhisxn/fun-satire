@@ -26,7 +26,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  bottom: 50px;
+  bottom: 130px;
   width: 300px;
   max-width: calc(100vw - 32px);
   padding: 16px;
@@ -59,7 +59,6 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 
 .menu-panel-home,
@@ -199,7 +198,7 @@
 .menu-back-btn {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   background: none;
   border: none;
   padding: 0;
@@ -233,7 +232,7 @@
 }
 
 .menu-about {
-  padding: 0 8px;
+  padding: 0 8px 16px;
 }
 
 .menu-about p {
@@ -348,7 +347,7 @@
   color: var(--menu-text-primary);
 }
 
-/* Share button — reuses the .hud-attack visual treatment exactly */
+/* Share button — Bungee gradient CTA */
 .menu-share-btn {
   display: flex;
   align-items: center;
@@ -433,4 +432,19 @@
   text-align: center;
   font-size: 10px;
   opacity: 0.5;
+}
+
+/* Keep clearance above the fixed HUD toolbar in sync with its footprint
+   (see hud.css's own breakpoints) so panel content/footer never renders
+   underneath it. */
+@media (max-width: 768px) {
+  .menu-panel {
+    bottom: 100px;
+  }
+}
+
+@media (max-width: 380px) {
+  .menu-panel {
+    bottom: 84px;
+  }
 }
