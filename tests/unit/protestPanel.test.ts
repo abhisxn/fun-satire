@@ -45,9 +45,12 @@ describe("hud/ProtestPanel", () => {
       expect(root.classList.contains("protest-panel-overlay")).toBe(true);
       expect(root.querySelector(".protest-panel")).not.toBeNull();
 
-      const note = root.querySelector(".protest-note p");
-      expect(note?.textContent).toBe(
-        "A crowd that watches back. No leader to arrest. No face to blame — just people, staying informed and staying loud.",
+      const title = root.querySelector(".protest-menu-title");
+      expect(title?.textContent).toBe("A crowd that watches back.");
+
+      const copy = root.querySelector(".protest-menu-copy");
+      expect(copy?.textContent).toBe(
+        "No leader to arrest. No face to blame — just people, staying informed and staying loud.",
       );
 
       expect(root.querySelector(".protest-join-link")).toBeNull();
@@ -96,7 +99,7 @@ describe("hud/ProtestPanel", () => {
         clickQuickLink(root, linkLabel);
 
         const backBtn = root.querySelector<HTMLButtonElement>(".protest-back-btn");
-        expect(backBtn?.textContent).toBe("← Menu");
+        expect(backBtn?.textContent).toBe("Menu");
 
         const headingEl = root.querySelector(".protest-subscreen h3");
         expect(headingEl?.textContent).toBe(heading);
@@ -423,7 +426,7 @@ describe("hud/ProtestPanel", () => {
       panel.open();
 
       const backBtn = root.querySelector<HTMLButtonElement>(".protest-back-btn");
-      expect(backBtn?.textContent).toBe("← Menu");
+      expect(backBtn?.textContent).toBe("Menu");
 
       const headingEl = root.querySelector(".protest-subscreen h3");
       expect(headingEl?.textContent).toBe("About This Project");
