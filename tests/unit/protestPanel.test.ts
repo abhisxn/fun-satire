@@ -412,5 +412,25 @@ describe("hud/ProtestPanel", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
       expect(panel.getRoot().classList.contains("open")).toBe(false);
     });
+
+    it("resumes on the same sub-screen after close() then open() (open() does not reset navigation)", () => {
+      panel.attachTo(protestButton);
+      panel.open();
+      const root = panel.getRoot();
+      clickQuickLink(root, "About Project");
+
+      panel.close();
+      panel.open();
+
+      const backBtn = root.querySelector<HTMLButtonElement>(".protest-back-btn");
+      expect(backBtn?.textContent).toBe("← Menu");
+
+      const headingEl = root.querySelector(".protest-subscreen h3");
+      expect(headingEl?.textContent).toBe("About This Project");
+
+      // Main-menu-only content should still be absent.
+      expect(root.querySelector(".protest-quick-links")).toBeNull();
+      expect(root.querySelector(".protest-menu")).toBeNull();
+    });
   });
 });
