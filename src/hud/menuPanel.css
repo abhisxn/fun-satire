@@ -2,6 +2,19 @@
   --menu-text-primary: #000000;
   --menu-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   --menu-ease-spring-panel: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Fluid density budget: 0px at/below 720px viewport height, rising 1:1
+     with viewport height up to a 180px cap at 900px+. Each property below
+     adds var(--menu-density) * <its own slope> to its minimum, so spacing/
+     type-size scale continuously with viewport height instead of jumping
+     at a breakpoint — a breakpoint cliff is exactly what caused content to
+     scroll unnecessarily just above the old 700/860px thresholds. The
+     720px floor isn't arbitrary: measured minimum content height is
+     ~565-605px, which needs the full ~146px top+bottom clearance below it
+     to avoid scrolling — interpolating any earlier reintroduces the same
+     overflow this is meant to fix. Slope per property = (max - min) / 180,
+     precomputed as a plain decimal since CSS calc() can't divide one
+     length by another to get a unitless ratio. */
+  --menu-density: clamp(0px, calc(100vh - 720px), 180px);
 }
 
 .menu-panel-overlay {
@@ -22,10 +35,10 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  bottom: 130px;
+  bottom: calc(84px + var(--hud-density) * 0.10267857);
   width: 300px;
   max-width: calc(100vw - 32px);
-  padding: 16px;
+  padding: calc(12px + var(--menu-density) * 0.02222222);
   background: var(--hud-glass-bg);
   backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
@@ -34,7 +47,7 @@
   box-shadow: -8px 0 40px rgba(97, 86, 80, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: calc(12px + var(--menu-density) * 0.04444444);
   color: var(--menu-text-primary);
   transform: translateX(calc(100% + 16px));
   transition: transform 0.6s var(--menu-ease-spring-panel);
@@ -61,7 +74,7 @@
 .menu-subscreen {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: calc(16px + var(--menu-density) * 0.04444444);
 }
 
 .menu-panel-home {
@@ -72,15 +85,15 @@
 .menu-panel-home-text {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 8px;
+  gap: calc(8px + var(--menu-density) * 0.04444444);
+  padding: calc(4px + var(--menu-density) * 0.02222222);
 }
 
 .menu-panel-home-title {
   margin: 0;
   font-family: "Fraunces", serif;
   font-weight: 400;
-  font-size: 24px;
+  font-size: calc(20px + var(--menu-density) * 0.02222222);
   line-height: 1.25;
   color: var(--menu-text-primary);
 }
@@ -143,13 +156,13 @@
 .menu-quick-links-block {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: calc(6px + var(--menu-density) * 0.01111111);
 }
 
 .menu-quick-links {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: calc(6px + var(--menu-density) * 0.01111111);
 }
 
 .menu-quick-link {
@@ -157,7 +170,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  padding: calc(12px + var(--menu-density) * 0.02222222);
   border-radius: 12px;
   background: #ffffff;
   border: 1px solid rgba(56, 51, 47, 0.1);
@@ -354,11 +367,11 @@
 .menu-share {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: calc(10px + var(--menu-density) * 0.03333333);
   margin-top: auto;
   background: #ffffff;
   border-radius: 12px;
-  padding: 16px;
+  padding: calc(12px + var(--menu-density) * 0.02222222);
 }
 
 .menu-share-prompt {
@@ -456,58 +469,26 @@
   opacity: 0.5;
 }
 
-/* Keep clearance above the fixed HUD toolbar in sync with its footprint
-   (see hud.css's own breakpoints) so panel content/footer never renders
-   underneath it. */
-@media (max-width: 768px) {
+/* Clearance above the fixed HUD toolbar scales fluidly with --hud-density
+   (defined in hud.css's :root), matching the toolbar's own fluid footprint
+   — see the file-level comment above for why a hard cliff here previously
+   caused unnecessary scrolling. */
+
+/* Above ~1055px wide, the toolbar (centered, ~423px wide by default) and
+   this panel (fixed 300px, anchored to the right edge) never share the
+   same horizontal band, so the toolbar clearance is dead space — reclaim
+   it. Threshold has a buffer since the toolbar is user-draggable and this
+   can't account for a dragged position. */
+@media (min-width: 1100px) {
   .menu-panel {
-    bottom: 100px;
+    bottom: 16px;
   }
 }
 
-@media (max-width: 380px) {
-  .menu-panel {
-    bottom: 84px;
-  }
-}
-
-/* Compress vertical spacing/type on short viewports so more content is
-   visible before scrolling kicks in (mirrors the max-width tiers above). */
-@media (max-height: 700px) {
-  .menu-panel {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .menu-panel-home,
-  .menu-subscreen {
-    gap: 16px;
-  }
-
-  .menu-panel-home-text {
-    gap: 8px;
-    padding: 4px;
-  }
-
-  .menu-panel-home-title {
-    font-size: 20px;
-  }
-
-  .menu-quick-links-block,
-  .menu-quick-links {
-    gap: 6px;
-  }
-
-  .menu-quick-link {
-    padding: 12px;
-  }
-
-  .menu-share {
-    gap: 10px;
-    padding: 12px;
-  }
-}
-
+/* Vertical spacing/type size above scale fluidly with viewport height via
+   --menu-density (defined in :root). Below 460px viewport height the intro
+   copy no longer has room at all, so it's dropped outright — a structural
+   cut, not something to interpolate. */
 @media (max-height: 460px) {
   .menu-panel-home-copy {
     display: none;

@@ -10,12 +10,20 @@
 :root {
   --hud-shadow-outer: 0px 24px 40px rgba(97, 86, 80, 0.25);
   --hud-shadow-inner: 0px 4px 0px rgba(255, 255, 255, 1);
-  --hud-icon-size: 32px;
-  --hud-btn-size: 46px;
-  --hud-btn-gap: 12px;
-  --hud-padding-v: 12px;
   --hud-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --hud-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Fluid density budget: 0px at/below 320px viewport width, rising 1:1
+     with width up to a 448px cap at 768px+ (768 was already the point the
+     toolbar reached full size, so that ceiling is unchanged — only the
+     stepped 380/768px cliffs in between are replaced with a continuous
+     ramp, same reasoning as --menu-density in menuPanel.css). Slope per
+     property = (max - min) / 448, precomputed since calc() can't divide
+     one length by another to get a unitless ratio. */
+  --hud-density: clamp(0px, calc(100vw - 320px), 448px);
+  --hud-icon-size: calc(24px + var(--hud-density) * 0.01785714);
+  --hud-btn-size: calc(36px + var(--hud-density) * 0.02232143);
+  --hud-btn-gap: calc(6px + var(--hud-density) * 0.01339286);
+  --hud-padding-v: calc(8px + var(--hud-density) * 0.00892857);
 }
 
 /* ============================================
@@ -23,7 +31,7 @@
    ============================================ */
 .premium-hud {
   position: fixed;
-  bottom: 48px;
+  bottom: calc(16px + var(--hud-density) * 0.07142857);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -34,7 +42,7 @@
   backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
-  border-radius: 82px;
+  border-radius: calc(60px + var(--hud-density) * 0.04910714);
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   z-index: 1000;
   animation: hud-slide-up 0.8s var(--hud-ease-spring) forwards;
@@ -45,8 +53,8 @@
    Drag Handle — Grip Icon
    ============================================ */
 .hud-drag-handle {
-  width: 28px;
-  height: 28px;
+  width: calc(18px + var(--hud-density) * 0.02232143);
+  height: calc(18px + var(--hud-density) * 0.02232143);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,8 +82,8 @@
 }
 
 .hud-drag-handle svg {
-  width: 24px;
-  height: 24px;
+  width: calc(18px + var(--hud-density) * 0.01339286);
+  height: calc(18px + var(--hud-density) * 0.01339286);
   pointer-events: none;
 }
 
@@ -345,69 +353,14 @@
 }
 
 /* ============================================
-   Responsive — Tablet (768px)
+   Responsive — button/icon/gap sizing above is fully fluid via
+   --hud-density (defined in :root); only a genuine structural toggle
+   remains here — tooltips have no room to render on narrow screens, so
+   they're dropped outright rather than shrunk.
    ============================================ */
 @media (max-width: 768px) {
-  .premium-hud {
-    bottom: 24px;
-    padding: 10px;
-    gap: 8px;
-  }
-
-  .hud-btn {
-    width: 40px;
-    height: 40px;
-  }
-
-  .hud-btn svg {
-    width: 28px;
-    height: 28px;
-  }
-
-  .hud-drag-handle {
-    width: 20px;
-    height: 20px;
-  }
-
-  .hud-drag-handle svg {
-    width: 20px;
-    height: 20px;
-  }
-
   .hud-btn[data-tooltip]::after {
     display: none;
-  }
-}
-
-/* ============================================
-   Responsive — Mobile (380px)
-   ============================================ */
-@media (max-width: 380px) {
-  .premium-hud {
-    bottom: 16px;
-    padding: 8px;
-    gap: 6px;
-    border-radius: 60px;
-  }
-
-  .hud-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .hud-btn svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  .hud-drag-handle {
-    width: 18px;
-    height: 18px;
-  }
-
-  .hud-drag-handle svg {
-    width: 18px;
-    height: 18px;
   }
 }
 
