@@ -1,7 +1,10 @@
 /* Single consolidated Google Fonts request for every HUD component.
    Was previously 5 separate @import requests (one per component file, each
    a distinct URL), which staggered font-swap timing on slow connections —
-   most visibly on the Bungee-set share button. display=optional avoids a
-   visible swap altogether: renders with the fallback for that load rather
-   than snapping to the webfont after paint. */
-@import url("https://fonts.googleapis.com/css2?family=Bungee&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Anton&family=Caveat:wght@400;700&family=Playfair+Display:wght@400;700&family=Archivo+Black&family=DM+Serif+Display&family=Inter:wght@400;500;600&family=Krub:wght@500;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Fraunces:wght@400;700&display=optional");
+   most visibly on the Bungee-set share button. display=swap paints with
+   the fallback immediately and swaps in the webfont once it arrives;
+   display=optional was tried first but this request is a cross-origin,
+   two-hop fetch (googleapis.com CSS -> gstatic.com font binary) that
+   almost never lands inside optional's ~100ms window, so it just fell
+   back permanently instead of rendering the intended fonts. */
+@import url("https://fonts.googleapis.com/css2?family=Bungee&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&family=Anton&family=Caveat:wght@400;700&family=Playfair+Display:wght@400;700&family=Archivo+Black&family=DM+Serif+Display&family=Inter:wght@400;500;600&family=Krub:wght@500;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Fraunces:wght@400;700&display=swap");
