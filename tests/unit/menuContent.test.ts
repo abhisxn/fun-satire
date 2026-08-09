@@ -3,7 +3,6 @@ import {
   buildYouTubeThumbnailUrl,
   buildYouTubeWatchUrl,
   shuffleVideos,
-  HERO_VIDEO,
   GALLERY_ENTRIES,
   type VideoEntry,
 } from "../../src/hud/menuContent";
@@ -17,13 +16,6 @@ describe("hud/menuContent", () => {
 
   it("builds a YouTube watch URL from a video id", () => {
     expect(buildYouTubeWatchUrl("abc123")).toBe("https://www.youtube.com/watch?v=abc123");
-  });
-
-  it("exposes a hero video entry", () => {
-    expect(HERO_VIDEO.kind).toBe("video");
-    expect(HERO_VIDEO.videoId.length).toBeGreaterThan(0);
-    expect(HERO_VIDEO.title.length).toBeGreaterThan(0);
-    expect(HERO_VIDEO.channel.length).toBeGreaterThan(0);
   });
 
   it("exposes gallery entries mixing video and source kinds", () => {

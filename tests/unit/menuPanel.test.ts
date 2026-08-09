@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { MenuPanel } from "../../src/hud/MenuPanel";
-import { HERO_VIDEO, GALLERY_ENTRIES } from "../../src/hud/menuContent";
+import { GALLERY_ENTRIES } from "../../src/hud/menuContent";
 
 const QUICK_LINKS: Array<[string, string]> = [
   ["About Project", "About This Project"],
@@ -161,21 +161,25 @@ describe("hud/MenuPanel", () => {
   });
 
   describe("support independent media screen", () => {
-    it("renders the hero video among the video tiles, linking to the YouTube watch URL, with no source tiles", () => {
+    it("renders a video tile per video entry, linking to the YouTube watch URL, with no source tiles", () => {
       panel.attachTo(menuButton);
       const root = panel.getRoot();
       clickQuickLink(root, "Support Independent Media");
 
-      const videoTiles = root.querySelectorAll(".menu-gallery-list .menu-tile--video");
-      const videoCount = GALLERY_ENTRIES.filter((e) => e.kind === "video").length + 1;
-      expect(videoTiles.length).toBe(videoCount);
+      const videoEntries = GALLERY_ENTRIES.filter((e) => e.kind === "video");
+      const videoTiles = root.querySelectorAll<HTMLAnchorElement>(".menu-gallery-list .menu-tile--video");
+      expect(videoTiles.length).toBe(videoEntries.length);
 
-      const heroTile = Array.from(videoTiles).find(
-        (t) => (t as HTMLAnchorElement).href === `https://www.youtube.com/watch?v=${HERO_VIDEO.videoId}`,
-      ) as HTMLAnchorElement | undefined;
-      expect(heroTile).not.toBeUndefined();
-      expect(heroTile?.target).toBe("_blank");
-      expect(heroTile?.querySelector(".menu-tile-thumb")).not.toBeNull();
+      const expectedHrefs = new Set(
+        videoEntries.map((e) => `https://www.youtube.com/watch?v=${e.videoId}`),
+      );
+      const actualHrefs = new Set(Array.from(videoTiles).map((t) => t.href));
+      expect(actualHrefs).toEqual(expectedHrefs);
+
+      for (const tile of Array.from(videoTiles)) {
+        expect(tile.target).toBe("_blank");
+        expect(tile.querySelector(".menu-tile-thumb")).not.toBeNull();
+      }
 
       expect(root.querySelectorAll(".menu-gallery-list .menu-tile--source").length).toBe(0);
     });
