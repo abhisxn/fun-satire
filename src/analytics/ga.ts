@@ -6,7 +6,7 @@
  * module silently no-ops, so local development and pre-ID deploys do
  * not fire tracking events.
  */
-const GA_MEASUREMENT_ID = "G-XXXXXXXXXX";
+const GA_MEASUREMENT_ID = "G-F9Y64XRK3M";
 
 declare global {
   interface Window {
