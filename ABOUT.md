@@ -1,10 +1,10 @@
-# About Fun Satire
+# About Gutter Generation
 
 ## About this project
 
 Gutter Generation is a playful, and dead serious, take on something real: a generation that got called cockroaches and gutter generation, and wore both as badges instead of insults.
 
-For weeks, thousands of us filled Jantar Mantar, in the capital — different states, different faiths, different castes. Turns out none of that mattered as much as we'd been told it would. One voice, one demand: show up, or step down. No single leader. No face to arrest. Just numbers, and numbers don't scare that easily.
+For weeks, thousands of us filled Jantar Mantar, in the capital — different states, different faiths, different castes. Turns out none of that mattered as much as we'd been told it would. One voice, one demand: show up, or step down. No single leader. No face to arrest. No face to blame. Just numbers, and numbers don't scare that easily.
 
 Independent journalists stayed on the ground asking the questions officials wouldn't answer. People who couldn't make it sent food, ran errands for those who could, or just refreshed their feed for updates — living the protest through a screen instead of the square. When it turned physical, we didn't disappear. We danced. We memed. We kept showing up. Some of us got hurt doing it. One of them stepped down. Nobody went home.
 

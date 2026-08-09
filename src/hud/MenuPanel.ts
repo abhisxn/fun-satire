@@ -22,11 +22,11 @@ const SVG_INSTAGRAM = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="ht
 const SVG_SHARE = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="13.5" cy="4.5" r="2.3" stroke="#fff" stroke-width="1.4"/><circle cx="4.5" cy="9" r="2.3" stroke="#fff" stroke-width="1.4"/><circle cx="13.5" cy="13.5" r="2.3" stroke="#fff" stroke-width="1.4"/><path d="M6.5 7.8L11.5 5.3M6.5 10.2L11.5 12.7" stroke="#fff" stroke-width="1.4"/></svg>`;
 const SVG_ARROW = `<svg viewBox="0 0 13.5 11.0459" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0.75 4.77297C0.335786 4.77297 0 5.10876 0 5.52297C0 5.93718 0.335786 6.27297 0.75 6.27297V5.52297V4.77297ZM13.2803 6.0533C13.5732 5.76041 13.5732 5.28553 13.2803 4.99264L8.50736 0.21967C8.21447 -0.0732231 7.73959 -0.0732231 7.4467 0.21967C7.15381 0.512564 7.15381 0.987437 7.4467 1.28033L11.6893 5.52297L7.4467 9.76561C7.15381 10.0585 7.15381 10.5334 7.4467 10.8263C7.73959 11.1192 8.21447 11.1192 8.50736 10.8263L13.2803 6.0533ZM0.75 5.52297V6.27297H12.75V5.52297V4.77297H0.75V5.52297Z"/></svg>`;
 
-const MENU_TITLE = "A crowd that watches back.";
+const MENU_TITLE = "A crowd that watches back";
 const MENU_COPY =
   "No leader to arrest. No face to blame — just thousands of us, and we're not going anywhere.";
 const SHARE_PROMPT =
-  "Every share adds one more eye, one more finger, one more cockroach to the crowd. Gutter Generation only grows when you share it.";
+  "Every share adds one more eye, one more finger, one more cockroach, one more placard to the crowd. Gutter Generation only grows when you share it.";
 const SHARE_MESSAGE =
   "I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it.";
 

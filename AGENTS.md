@@ -1,4 +1,4 @@
-# Fun Satire — Agent Instructions
+# Gutter Generation — Agent Instructions
 
 Interactive DOM app: draggable-avatar-driven crowd with three creature modes (eyes, bugs, pointedFinger), simple repulsion + spring + damping physics, and a consolidated DOM HUD with filter and gallery panels. Vite + TypeScript, vitest for tests.
 

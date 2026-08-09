@@ -1,4 +1,4 @@
-# Fun Satire — Project Instructions
+# Gutter Generation — Project Instructions
 
 Interactive DOM app: a cursor-driven crowd of creatures (eyes, cockroaches, pointed fingers, placards) with physics-based force fields and a DOM HUD (gallery, filters, protest panel, onboarding carousel). No canvas rendering and no burn/destroy effects — creatures are DOM elements repelled/animated directly; the only staged effect is a lightweight poof (spawn/despawn). Vite + TypeScript, vitest for tests.
 

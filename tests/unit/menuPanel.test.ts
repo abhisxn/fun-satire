@@ -46,7 +46,7 @@ describe("hud/MenuPanel", () => {
       expect(root.querySelector(".menu-panel")).not.toBeNull();
 
       const title = root.querySelector(".menu-panel-home-title");
-      expect(title?.textContent).toBe("A crowd that watches back.");
+      expect(title?.textContent).toBe("A crowd that watches back");
 
       const copy = root.querySelector(".menu-panel-home-copy");
       expect(copy?.textContent).toBe(
@@ -82,7 +82,7 @@ describe("hud/MenuPanel", () => {
       panel.attachTo(menuButton);
       const prompt = panel.getRoot().querySelector(".menu-share-prompt");
       expect(prompt?.textContent).toBe(
-        "Every share adds one more eye, one more finger, one more cockroach to the crowd. Gutter Generation only grows when you share it.",
+        "Every share adds one more eye, one more finger, one more cockroach, one more placard to the crowd. Gutter Generation only grows when you share it.",
       );
     });
 
