@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   buildYouTubeThumbnailUrl,
   buildYouTubeWatchUrl,
+  shuffleVideos,
   HERO_VIDEO,
   GALLERY_ENTRIES,
+  type VideoEntry,
 } from "../../src/hud/menuContent";
 
 describe("hud/menuContent", () => {
@@ -40,5 +42,27 @@ describe("hud/menuContent", () => {
         expect(entry.icon.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  describe("shuffleVideos", () => {
+    const A: VideoEntry = { kind: "video", videoId: "aaa", title: "A", channel: "Chan A" };
+    const B: VideoEntry = { kind: "video", videoId: "bbb", title: "B", channel: "Chan B" };
+    const C: VideoEntry = { kind: "video", videoId: "ccc", title: "C", channel: "Chan C" };
+    const entries: VideoEntry[] = [A, B, C];
+
+    it("returns a permutation of the input without mutating it", () => {
+      const original = [...entries];
+      const result = shuffleVideos(entries, () => 0);
+
+      expect(result).not.toBe(entries);
+      expect(entries).toEqual(original);
+      const byId = (x: VideoEntry, y: VideoEntry) => x.videoId.localeCompare(y.videoId);
+      expect([...result].sort(byId)).toEqual([...entries].sort(byId));
+    });
+
+    it("shuffles deterministically for a given rng (Fisher-Yates)", () => {
+      const result = shuffleVideos(entries, () => 0);
+      expect(result).toEqual([B, C, A]);
+    });
   });
 });

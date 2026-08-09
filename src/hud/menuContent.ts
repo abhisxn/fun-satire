@@ -22,6 +22,20 @@ export function buildYouTubeWatchUrl(videoId: string): string {
   return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
+export function shuffleVideos(
+  entries: readonly VideoEntry[],
+  rng: () => number = Math.random,
+): VideoEntry[] {
+  const result = [...entries];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const temp = result[i];
+    result[i] = result[j];
+    result[j] = temp;
+  }
+  return result;
+}
+
 // CONTENT DEPENDENCY: videoId values below are placeholders (REPLACE_ME_*).
 // Swap each for the real YouTube video id before shipping — see Task 7 of
 // docs/superpowers/plans/2026-08-09-protest-panel-visual-redesign.md.
