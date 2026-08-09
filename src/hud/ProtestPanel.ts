@@ -35,11 +35,15 @@ const INFORMED_CITIZEN_TIPS = [
   "Show up, keep showing up. Attention is what keeps power honest.",
 ];
 
+type ProtestScreen = "menu" | "about" | "informed" | "media" | "resources";
+
 export class ProtestPanel {
   private readonly overlay: HTMLElement;
   private readonly panel: HTMLElement;
+  private readonly body: HTMLElement;
   private protestButton: HTMLElement | null = null;
   private isOpen = false;
+  private screen: ProtestScreen = "menu";
 
   private readonly nativeShare: ((data: ShareData) => Promise<void>) | undefined = (
     navigator as Navigator & { share?: (data: ShareData) => Promise<void> }
@@ -59,10 +63,28 @@ export class ProtestPanel {
     this.panel.className = "protest-panel";
     this.overlay.appendChild(this.panel);
 
-    this.panel.appendChild(this.buildNoteSection());
-    this.panel.appendChild(this.buildInformedCitizenSection());
-    this.panel.appendChild(this.buildShareSection());
+    this.body = document.createElement("div");
+    this.body.className = "protest-panel-body";
+    this.panel.appendChild(this.body);
     this.panel.appendChild(this.buildFooter());
+
+    this.navigateTo("menu");
+  }
+
+  private navigateTo(screen: ProtestScreen): void {
+    this.screen = screen;
+    this.body.innerHTML = "";
+    const content =
+      this.screen === "menu"
+        ? this.buildMenuScreen()
+        : this.screen === "about"
+          ? this.buildAboutScreen()
+          : this.screen === "informed"
+            ? this.buildInformedScreen()
+            : this.screen === "media"
+              ? this.buildMediaScreen()
+              : this.buildResourcesScreen();
+    this.body.appendChild(content);
   }
 
   attachTo(protestButton: HTMLElement): void {
@@ -116,14 +138,83 @@ export class ProtestPanel {
     return section;
   }
 
-  private buildInformedCitizenSection(): HTMLElement {
-    const section = document.createElement("div");
-    section.className = "protest-informed";
+  private buildMenuScreen(): HTMLElement {
+    const container = document.createElement("div");
+    container.className = "protest-menu";
 
-    const heading = document.createElement("h3");
-    heading.textContent = "How to Be a More Informed Citizen";
-    section.appendChild(heading);
+    container.appendChild(this.buildNoteSection());
 
+    const quickLinks = document.createElement("div");
+    quickLinks.className = "protest-quick-links";
+    const links: Array<[string, ProtestScreen]> = [
+      ["About Project", "about"],
+      ["How to Be a Better Citizen", "informed"],
+      ["Support Independent Media", "media"],
+      ["Other Resources", "resources"],
+    ];
+    for (const [label, screen] of links) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "protest-quick-link";
+      btn.textContent = label;
+      btn.addEventListener("click", () => {
+        this.navigateTo(screen);
+      });
+      quickLinks.appendChild(btn);
+    }
+    container.appendChild(quickLinks);
+
+    const sharePrompt = document.createElement("p");
+    sharePrompt.className = "protest-share-prompt";
+    sharePrompt.textContent = "A crowd only grows if someone passes it on.";
+    container.appendChild(sharePrompt);
+
+    container.appendChild(this.buildShareSection());
+
+    return container;
+  }
+
+  private buildSubScreen(heading: string, content: HTMLElement): HTMLElement {
+    const container = document.createElement("div");
+    container.className = "protest-subscreen";
+
+    const backBtn = document.createElement("button");
+    backBtn.type = "button";
+    backBtn.className = "protest-back-btn";
+    backBtn.textContent = "← Menu";
+    backBtn.addEventListener("click", () => {
+      this.navigateTo("menu");
+    });
+    container.appendChild(backBtn);
+
+    const headingEl = document.createElement("h3");
+    headingEl.textContent = heading;
+    container.appendChild(headingEl);
+
+    container.appendChild(content);
+
+    return container;
+  }
+
+  private buildAboutScreen(): HTMLElement {
+    const content = document.createElement("div");
+    content.className = "protest-about";
+
+    const paragraphs = [
+      "This is a satirical toy. You are the crowd — eyes, cockroaches, fingers, placards — surrounding whoever you place on screen. The faces you drag in? Those are the ones in power.",
+      "Underneath the mechanics is a real idea: power behaves differently when it knows it's being watched. A leaderless crowd is harder to arrest, harder to silence, and harder to ignore.",
+      "Nothing here tracks you, stores what you do, or sends your data anywhere. It's just a browser, a cursor, and a crowd that doesn't look away.",
+    ];
+    for (const text of paragraphs) {
+      const p = document.createElement("p");
+      p.textContent = text;
+      content.appendChild(p);
+    }
+
+    return this.buildSubScreen("About This Project", content);
+  }
+
+  private buildInformedScreen(): HTMLElement {
     const tips = document.createElement("ul");
     tips.className = "protest-tips";
     for (const tip of INFORMED_CITIZEN_TIPS) {
@@ -131,38 +222,34 @@ export class ProtestPanel {
       item.textContent = tip;
       tips.appendChild(item);
     }
-    section.appendChild(tips);
 
+    return this.buildSubScreen("How to Be a More Informed Citizen", tips);
+  }
+
+  private buildMediaScreen(): HTMLElement {
     const videoEntries: VideoEntry[] = [HERO_VIDEO, ...GALLERY_ENTRIES.filter((e) => e.kind === "video")];
-    const sourceEntries: SourceEntry[] = GALLERY_ENTRIES.filter(
-      (e): e is SourceEntry => e.kind === "source",
-    );
-
-    const videosLabel = document.createElement("h4");
-    videosLabel.className = "protest-gallery-label";
-    videosLabel.textContent = "Videos";
-    section.appendChild(videosLabel);
 
     const videoList = document.createElement("div");
     videoList.className = "protest-gallery-list";
     for (const entry of videoEntries) {
       videoList.appendChild(this.buildVideoTile(entry));
     }
-    section.appendChild(videoList);
 
-    const outletsLabel = document.createElement("h4");
-    outletsLabel.className = "protest-gallery-label";
-    outletsLabel.textContent = "Independent Outlets";
-    section.appendChild(outletsLabel);
+    return this.buildSubScreen("Support Independent Media", videoList);
+  }
+
+  private buildResourcesScreen(): HTMLElement {
+    const sourceEntries: SourceEntry[] = GALLERY_ENTRIES.filter(
+      (e): e is SourceEntry => e.kind === "source",
+    );
 
     const outletList = document.createElement("div");
     outletList.className = "protest-gallery-list";
     for (const entry of sourceEntries) {
       outletList.appendChild(this.buildSourceTile(entry));
     }
-    section.appendChild(outletList);
 
-    return section;
+    return this.buildSubScreen("Other Resources", outletList);
   }
 
   private buildVideoTile(entry: VideoEntry): HTMLElement {
