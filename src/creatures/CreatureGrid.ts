@@ -19,15 +19,21 @@ export const FADE_PICK_COUNT = 4;
 /** Duration of the fade-out before a creature becomes invisible (ms). */
 export const FADE_OUT_MS = 400;
 /** Random re-pop cadence for invisible creatures (ms between batches). */
-export const REPOP_INTERVAL_MS = 2000;
-/** How many invisible creatures randomly pop back in per interval. */
-export const REPOP_COUNT = 3;
+export const REPOP_INTERVAL_MS = 1500;
+/** How many invisible creatures randomly pop back in per interval outside a burst. */
+export const REPOP_COUNT = 5;
+/** Per-tick re-pop cap during a fast-drag burst, as a fraction of the target quantity. */
+export const REPOP_COUNT_BURST_FRACTION = 0.15;
+/** Floor for the burst cap so small target quantities still flood back quickly. */
+export const REPOP_COUNT_BURST_MIN = 40;
 /** Grace period before an idle sticker starts draining the crowd (ms). */
 export const IDLE_GRACE_MS = 20_000;
 /** How long the decay ramp takes, from grace-end to the floor (ms). */
 export const IDLE_DECAY_MS = 300_000;
 /** Idle floor as a fraction of the current target quantity. */
 export const IDLE_FLOOR_FRACTION = 0.02;
+/** Absolute minimum visible count at the idle floor, regardless of target quantity. */
+export const IDLE_FLOOR_MIN_COUNT = 3;
 /** Sub-pixel jitter below this doesn't count as sticker movement. */
 export const MOVEMENT_NOISE_PX = 1.5;
 /** Drag speed (px/ms) above which a movement counts as a "fast" resurge trigger. */
@@ -264,6 +270,8 @@ export class CreatureGrid {
   spawn(mode: CreatureMode): void {
     this.clear();
     this.mode = mode;
+    this.lastActivityMs = Date.now();
+    this.burstUntilMs = 0;
     const modeConfig = MODE_CONFIGS[mode];
     const { cols, rows } = this.gridDimsFor(mode, this.targetCount);
 
@@ -487,12 +495,28 @@ export class CreatureGrid {
       }
     }
 
-    // Random respawn: invisible creatures pop back in independently.
+    // Demand-driven respawn: closes the gap toward how much of the crowd
+    // should be visible right now (full while active, decaying toward the
+    // idle floor the longer the sticker sits still), capped per tick so the
+    // recovery still animates rather than jumping instantly. A fast drag
+    // opens a burst window that raises the cap so the crowd floods back.
     if (now - this.lastRepopPickMs >= REPOP_INTERVAL_MS) {
-      const waiting = this.creatures.filter((c) => c.waitingRespawn);
-      if (waiting.length > 0) {
-        this.lastRepopPickMs = now;
-        const count = Math.min(REPOP_COUNT, waiting.length);
+      this.lastRepopPickMs = now;
+      const idleMs = now - this.lastActivityMs;
+      const desiredVisibleCount = Math.max(
+        IDLE_FLOOR_MIN_COUNT,
+        Math.round(this.targetCount * idleVisibleFraction(idleMs)),
+      );
+      const visibleCount = this.creatures.filter((c) => !c.waitingRespawn).length;
+      const deficit = desiredVisibleCount - visibleCount;
+      if (deficit > 0) {
+        const waiting = this.creatures.filter((c) => c.waitingRespawn);
+        const burstCap = Math.max(
+          REPOP_COUNT_BURST_MIN,
+          Math.round(this.targetCount * REPOP_COUNT_BURST_FRACTION),
+        );
+        const cap = now < this.burstUntilMs ? burstCap : REPOP_COUNT;
+        const count = Math.min(cap, deficit, waiting.length);
         for (let i = 0; i < count; i++) {
           const picked = waiting.splice(Math.floor(Math.random() * waiting.length), 1)[0];
           picked.waitingRespawn = false;
