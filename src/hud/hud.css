@@ -3,14 +3,11 @@
    Glass-morphism toolbar with magnetic interactions
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
-
 /* ============================================
    CSS Custom Properties
+   (--hud-glass-bg/-border/-blur come from hudGlass.css)
    ============================================ */
 :root {
-  --hud-glass-bg: rgba(255, 255, 255, 0.7);
-  --hud-glass-border: rgba(255, 255, 255, 0.9);
   --hud-shadow-outer: 0px 24px 40px rgba(97, 86, 80, 0.25);
   --hud-shadow-inner: 0px 4px 0px rgba(255, 255, 255, 1);
   --hud-icon-size: 32px;
@@ -34,8 +31,8 @@
   gap: var(--hud-btn-gap);
   padding: var(--hud-padding-v);
   background: var(--hud-glass-bg);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(var(--hud-glass-blur));
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
   border-radius: 82px;
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);

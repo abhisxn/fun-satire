@@ -1,8 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=Space+Grotesk:wght@400;700&family=Anton&family=Caveat:wght@400;700&family=Playfair+Display:wght@400;700&family=Archivo+Black&family=DM+Serif+Display&family=Bungee&family=Bungee+Tint&family=Orbitron:wght@400;700&display=swap");
-
 :root {
-  --gallery-glass-bg: rgba(255, 255, 255, 0.7);
-  --gallery-glass-border: rgba(255, 255, 255, 0.9);
   --gallery-card-bg: #ffffff;
   --gallery-text-primary: #000000;
   --gallery-toggle-bg: #dbcec6;
@@ -35,10 +31,10 @@
   width: 320px;
   max-width: calc(100vw - 32px);
   padding: 24px 16px;
-  background: var(--gallery-glass-bg);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid var(--gallery-glass-border);
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(var(--hud-glass-blur));
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
+  border: 1px solid var(--hud-glass-border);
   border-radius: 20px;
   box-shadow: -8px 0 40px rgba(97, 86, 80, 0.2);
   display: flex;
@@ -61,7 +57,7 @@
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-panel {
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--hud-glass-bg-fallback);
   }
 }
 

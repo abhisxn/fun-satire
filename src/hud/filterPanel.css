@@ -1,8 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
-
 :root {
-  --filter-glass-bg: rgba(255, 255, 255, 0.72);
-  --filter-glass-border: rgba(255, 255, 255, 0.92);
   --filter-glass-elevation: 0 18px 44px rgba(65, 52, 45, 0.14), 0 2px 8px rgba(65, 52, 45, 0.08);
   --filter-text-primary: #2a2420;
   --filter-text-muted: #7d6f67;
@@ -19,10 +15,10 @@
   width: 192px;
   padding: 36px 32px;
   border-radius: 18px;
-  background: var(--filter-glass-bg);
-  border: 1px solid var(--filter-glass-border);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: var(--hud-glass-bg);
+  border: 1px solid var(--hud-glass-border);
+  backdrop-filter: blur(var(--hud-glass-blur));
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   box-shadow: var(--filter-glass-elevation), inset 0 1px 1px rgba(255, 255, 255, 0.6);
   color: var(--filter-text-primary);
   font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -45,7 +41,7 @@
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .filter-panel-popover {
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--hud-glass-bg-fallback);
   }
 }
 

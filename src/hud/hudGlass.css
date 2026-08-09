@@ -1,0 +1,12 @@
+/* Shared glassmorphism tokens for every HUD surface (toolbar, panels,
+   onboarding card). Was previously redeclared per-component with near-
+   identical values (--hud-glass-bg, --filter-glass-bg, --gallery-glass-bg,
+   --menu-glass-bg, --onb-glass-bg) — centralized here as one source of
+   truth. Component files keep their own non-glass tokens (text colors,
+   easing curves, etc.) locally. */
+:root {
+  --hud-glass-bg: rgba(255, 255, 255, 0.7);
+  --hud-glass-border: rgba(255, 255, 255, 0.9);
+  --hud-glass-blur: 30px;
+  --hud-glass-bg-fallback: rgba(255, 255, 255, 0.92);
+}

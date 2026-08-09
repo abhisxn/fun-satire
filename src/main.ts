@@ -1,3 +1,5 @@
+import "./hud/hudFonts.css";
+import "./hud/hudGlass.css";
 import { Engine } from "./core/Engine";
 import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
