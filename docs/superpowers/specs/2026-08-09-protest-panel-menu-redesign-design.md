@@ -79,3 +79,7 @@ Unchanged: video thumbnail `onerror` fallback (`replaceWithFallbackCard`) still 
 ## Content dependencies
 
 None — all copy (About paragraphs, share prompt, Quick Link labels, screen headings) is fully specified above.
+
+## Superseded (2026-08-10)
+
+The "About This Project" paragraphs (§Design, Sub-screen content) were rewritten by [the content narrative redesign spec](2026-08-09-content-narrative-redesign-design.md#addendum-reconciled-with-the-concurrent-menu-panel-redesign-2026-08-10) — now 5 paragraphs including real-place references (Jantar Mantar, the capital), replacing the 3 paragraphs specified here. The Informed Citizen screen's tip *content* also grew to 8 tips plus an intro line (same spec); the screen model, navigation, and everything else in this doc (media/resources screens, footer, back-button behavior) is unaffected.

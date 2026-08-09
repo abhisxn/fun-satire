@@ -50,7 +50,7 @@ describe("hud/MenuPanel", () => {
 
       const copy = root.querySelector(".menu-panel-home-copy");
       expect(copy?.textContent).toBe(
-        "No leader to arrest. No face to blame — just people, staying informed and staying loud.",
+        "No leader to arrest. No face to blame — just thousands of us, and we're not going anywhere.",
       );
 
       expect(root.querySelector(".menu-join-link")).toBeNull();
@@ -81,7 +81,9 @@ describe("hud/MenuPanel", () => {
     it("renders the share prompt", () => {
       panel.attachTo(menuButton);
       const prompt = panel.getRoot().querySelector(".menu-share-prompt");
-      expect(prompt?.textContent).toBe("A crowd only grows if someone passes it on.");
+      expect(prompt?.textContent).toBe(
+        "Every share adds one more eye, one more finger, one more cockroach to the crowd. Gutter Generation only grows when you share it.",
+      );
     });
 
     it("renders the footer on the initial menu screen", () => {
@@ -124,28 +126,34 @@ describe("hud/MenuPanel", () => {
   });
 
   describe("about screen", () => {
-    it("renders exactly three paragraphs with the expected copy", () => {
+    it("renders exactly five paragraphs with the expected copy", () => {
       panel.attachTo(menuButton);
       const root = panel.getRoot();
       clickQuickLink(root, "About Project");
 
       const paragraphs = Array.from(root.querySelectorAll(".menu-about p")).map((p) => p.textContent);
       expect(paragraphs).toEqual([
-        "This is a satirical toy. You are the crowd — eyes, cockroaches, fingers, placards — surrounding whoever you place on screen. The faces you drag in? Those are the ones in power.",
-        "Underneath the mechanics is a real idea: power behaves differently when it knows it's being watched. A leaderless crowd is harder to arrest, harder to silence, and harder to ignore.",
-        "Nothing here tracks you, stores what you do, or sends your data anywhere. It's just a browser, a cursor, and a crowd that doesn't look away.",
+        "Gutter Generation is a playful, and dead serious, take on something real: a generation that got called cockroaches and gutter generation, and wore both as badges instead of insults.",
+        "For weeks, thousands of us filled Jantar Mantar, in the capital — different states, different faiths, different castes. Turns out none of that mattered as much as we'd been told it would. One voice, one demand: show up, or step down. No single leader. No face to arrest. Just numbers, and numbers don't scare that easily.",
+        "Independent journalists stayed on the ground asking the questions officials wouldn't answer. People who couldn't make it sent food, ran errands for those who could, or just refreshed their feed for updates — living the protest through a screen instead of the square. When it turned physical, we didn't disappear. We danced. We memed. We kept showing up. Some of us got hurt doing it. One of them stepped down. Nobody went home.",
+        "This app is that story, turned into a toy. Drop a sticker of anyone you want into the crowd, and watch: eyes track them, fingers point, cockroaches swarm, placards go up. Nowhere left to hide, nothing left unwatched. That's why it's called Gutter Generation — the name they used against us is now the thing surrounding you.",
+        "I built it to push past what I'd normally do with AI — not a static page, something with real feel: physics, timing, a crowd that actually reacts. Started as a weekend project. The crowd had other plans.",
       ]);
     });
   });
 
   describe("informed citizen screen", () => {
-    it("renders seven tips and no gallery content", () => {
+    it("renders an intro line, eight tips, and no gallery content", () => {
       panel.attachTo(menuButton);
       const root = panel.getRoot();
       clickQuickLink(root, "How to Be a Better Citizen");
 
+      expect(root.querySelector(".menu-informed-intro")?.textContent).toBe(
+        "A protest gets you heard once. What you do after is what keeps you heard.",
+      );
+
       const items = root.querySelectorAll(".menu-tips li");
-      expect(items.length).toBe(7);
+      expect(items.length).toBe(8);
 
       expect(root.querySelector(".menu-gallery-list")).toBeNull();
       expect(root.querySelector(".menu-tile")).toBeNull();
@@ -241,8 +249,9 @@ describe("hud/MenuPanel", () => {
       await Promise.resolve();
 
       expect(shareMock).toHaveBeenCalledWith({
-        title: "I just stood with the crowd. Come see for yourself.",
-        text: "I just stood with the crowd. Come see for yourself.",
+        title:
+          "I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it.",
+        text: "I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it.",
         url: window.location.href,
       });
 
@@ -260,7 +269,7 @@ describe("hud/MenuPanel", () => {
 
       const whatsapp = root.querySelector<HTMLAnchorElement>(".menu-share-icon-btn--whatsapp");
       expect(whatsapp?.href).toBe(
-        `https://wa.me/?text=${encodeURIComponent("I just stood with the crowd. Come see for yourself. " + window.location.href)}`,
+        `https://wa.me/?text=${encodeURIComponent("I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it. " + window.location.href)}`,
       );
       expect(whatsapp?.target).toBe("_blank");
 

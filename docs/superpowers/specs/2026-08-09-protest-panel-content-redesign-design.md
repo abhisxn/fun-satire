@@ -62,3 +62,7 @@ Unchanged from the visual redesign — thumbnail `onerror` fallback (`replaceWit
 ## Content dependencies
 
 None — all copy is fully specified above, no placeholder text, no outstanding video ID decisions (those were already flagged as a pre-existing follow-up in the visual redesign spec, unaffected by this pass).
+
+## Superseded (2026-08-10)
+
+The "How to Be a More Informed Citizen" tips (§Goals, 7 tips) and the "no reference to the specific real-world movement" decision (§Non-goals) were revised by [the content narrative redesign spec](2026-08-09-content-narrative-redesign-design.md#addendum-reconciled-with-the-concurrent-menu-panel-redesign-2026-08-10)'s later addendum — the user explicitly chose to allow real-place references (Jantar Mantar, the capital) in the panel after all, and the tips list grew to 8. Everything else here (gallery restructuring, footer, opening-note callback, non-goals around share mechanics) is unaffected.

@@ -54,3 +54,7 @@ Beat 5
 ## Files touched (implementation, not part of this design doc)
 
 - `src/hud/onboarding/beats.ts` — replace the 4-entry `BEATS` array with the 5-entry version above.
+
+## Follow-up: tone feedback (2026-08-09)
+
+Post-ship read on the 5-beat chant register: it's landing as too dramatic. **Resolved** by [the content narrative redesign spec](2026-08-09-content-narrative-redesign-design.md), which moves the carousel to a 6-beat direct-address register and dials back the crackdown-arc intensity while keeping the solidarity and accountability beats that were working.

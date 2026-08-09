@@ -24,18 +24,23 @@ const SVG_ARROW = `<svg viewBox="0 0 13.5 11.0459" fill="currentColor" xmlns="ht
 
 const MENU_TITLE = "A crowd that watches back.";
 const MENU_COPY =
-  "No leader to arrest. No face to blame — just people, staying informed and staying loud.";
-const SHARE_PROMPT = "A crowd only grows if someone passes it on.";
-const SHARE_MESSAGE = "I just stood with the crowd. Come see for yourself.";
+  "No leader to arrest. No face to blame — just thousands of us, and we're not going anywhere.";
+const SHARE_PROMPT =
+  "Every share adds one more eye, one more finger, one more cockroach to the crowd. Gutter Generation only grows when you share it.";
+const SHARE_MESSAGE =
+  "I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it.";
+
+const INFORMED_CITIZEN_INTRO = "A protest gets you heard once. What you do after is what keeps you heard.";
 
 const INFORMED_CITIZEN_TIPS = [
   "Check before you share — a screenshot isn't a source.",
   "Follow reporters directly. Algorithms bury the ones that matter.",
   "Cross-check big claims against more than one outlet.",
-  "Vote for your local representative — not just one face on a poster.",
-  "Question those in power. Accountability doesn't end at the ballot box.",
+  "Vote, and vote wisely — for your local representative, on their record, not one face on a poster.",
+  "Question authorities and agencies, always. They exist to serve you, not the other way round.",
+  "Make room for discussion, not fights. Disagreement isn't the enemy; contempt is.",
   "Stay united — division is the easiest propaganda to sell.",
-  "Show up, keep showing up. Attention is what keeps power honest.",
+  "Show up, and keep showing up. Attention is what keeps power honest.",
 ];
 
 type MenuScreen = "menu" | "about" | "informed" | "media" | "resources";
@@ -248,9 +253,11 @@ export class MenuPanel {
     content.className = "menu-about";
 
     const paragraphs = [
-      "This is a satirical toy. You are the crowd — eyes, cockroaches, fingers, placards — surrounding whoever you place on screen. The faces you drag in? Those are the ones in power.",
-      "Underneath the mechanics is a real idea: power behaves differently when it knows it's being watched. A leaderless crowd is harder to arrest, harder to silence, and harder to ignore.",
-      "Nothing here tracks you, stores what you do, or sends your data anywhere. It's just a browser, a cursor, and a crowd that doesn't look away.",
+      "Gutter Generation is a playful, and dead serious, take on something real: a generation that got called cockroaches and gutter generation, and wore both as badges instead of insults.",
+      "For weeks, thousands of us filled Jantar Mantar, in the capital — different states, different faiths, different castes. Turns out none of that mattered as much as we'd been told it would. One voice, one demand: show up, or step down. No single leader. No face to arrest. Just numbers, and numbers don't scare that easily.",
+      "Independent journalists stayed on the ground asking the questions officials wouldn't answer. People who couldn't make it sent food, ran errands for those who could, or just refreshed their feed for updates — living the protest through a screen instead of the square. When it turned physical, we didn't disappear. We danced. We memed. We kept showing up. Some of us got hurt doing it. One of them stepped down. Nobody went home.",
+      "This app is that story, turned into a toy. Drop a sticker of anyone you want into the crowd, and watch: eyes track them, fingers point, cockroaches swarm, placards go up. Nowhere left to hide, nothing left unwatched. That's why it's called Gutter Generation — the name they used against us is now the thing surrounding you.",
+      "I built it to push past what I'd normally do with AI — not a static page, something with real feel: physics, timing, a crowd that actually reacts. Started as a weekend project. The crowd had other plans.",
     ];
     for (const text of paragraphs) {
       const p = document.createElement("p");
@@ -262,6 +269,14 @@ export class MenuPanel {
   }
 
   private buildInformedScreen(): HTMLElement {
+    const container = document.createElement("div");
+    container.className = "menu-informed";
+
+    const intro = document.createElement("p");
+    intro.className = "menu-informed-intro";
+    intro.textContent = INFORMED_CITIZEN_INTRO;
+    container.appendChild(intro);
+
     const tips = document.createElement("ul");
     tips.className = "menu-tips";
     for (const tip of INFORMED_CITIZEN_TIPS) {
@@ -269,8 +284,9 @@ export class MenuPanel {
       item.textContent = tip;
       tips.appendChild(item);
     }
+    container.appendChild(tips);
 
-    return this.buildSubScreen("How to Be a More Informed Citizen", tips);
+    return this.buildSubScreen("How to Be a More Informed Citizen", container);
   }
 
   private buildMediaScreen(): HTMLElement {

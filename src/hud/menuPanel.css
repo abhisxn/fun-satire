@@ -114,7 +114,17 @@
   font-weight: 500;
 }
 
-/* Informed citizen tips */
+/* Informed citizen screen */
+.menu-informed-intro {
+  margin: 0 0 16px;
+  font-family: "Krub", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--menu-text-primary);
+  opacity: 0.85;
+}
+
 .menu-tips {
   margin: 0;
   padding: 0 0 0 21px;

@@ -5,26 +5,38 @@ export interface OnboardingBeat {
 export const BEATS: readonly OnboardingBeat[] = [
   {
     lines: [
-      "Another promise came and went. Then a word, tossed down like it would end the conversation:",
-      "disposable.",
+      "You called us cockroaches. Gutter generation.",
+      "We picked the names up. We're still wearing them.",
     ],
   },
   {
     lines: [
-      "We didn't hand the word back. We picked it up and wore it.",
-      "Turns out it fits better than they meant it to.",
+      "Different states. Different faiths. Same square.",
+      "That's not a mob. That's all of us.",
     ],
   },
   {
     lines: [
-      "They're built for watching from far away — a podium, a headline, a scroll.",
-      "Not for this. Not for being surrounded.",
+      "Drop them in. Watch the crowd close in around them.",
+      "That's why we call this Gutter Generation.",
     ],
   },
   {
     lines: [
-      "No leader to arrest. No face to blame. Just thousands, done waiting.",
-      "Move. They'll notice.",
+      "Every promise. Every price. Every quiet lie.",
+      "You forgot we were watching. We didn't.",
+    ],
+  },
+  {
+    lines: [
+      "You hit hard. We laughed back — memes, reels, dance.",
+      "One of you stepped down. We didn't go home.",
+    ],
+  },
+  {
+    lines: [
+      "No leader to arrest. No face to blame.",
+      "Just thousands of us. Move.",
     ],
   },
 ] as const;
