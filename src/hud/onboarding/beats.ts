@@ -5,7 +5,7 @@ export interface OnboardingBeat {
 export const BEATS: readonly OnboardingBeat[] = [
   {
     lines: [
-      "You called us cockroaches. Gutter generation.",
+      "They called us cockroaches. Gutter generation.",
       "We picked the names up. We're still wearing them.",
     ],
   },
@@ -24,13 +24,13 @@ export const BEATS: readonly OnboardingBeat[] = [
   {
     lines: [
       "Every promise. Every price. Every quiet lie.",
-      "You forgot we were watching. We didn't.",
+      "They forgot we were watching. We didn't.",
     ],
   },
   {
     lines: [
-      "You hit hard. We laughed back — memes, reels, dance.",
-      "One of you stepped down. We didn't go home.",
+      "They hit hard. We laughed back — memes, reels, dance.",
+      "One of them stepped down. We didn't go home.",
     ],
   },
   {
