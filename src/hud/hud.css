@@ -21,7 +21,7 @@
      one length by another to get a unitless ratio. */
   --hud-density: clamp(0px, calc(100vw - 320px), 448px);
   --hud-icon-size: calc(24px + var(--hud-density) * 0.01785714);
-  --hud-btn-size: calc(36px + var(--hud-density) * 0.02232143);
+  --hud-btn-size: calc(44px + var(--hud-density) * 0.01785714);
   --hud-btn-gap: calc(6px + var(--hud-density) * 0.01339286);
   --hud-padding-v: calc(8px + var(--hud-density) * 0.00892857);
 }
@@ -104,6 +104,10 @@
   transition: all 0.5s var(--hud-ease-spring);
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  /* Removes the double-tap-to-zoom gesture disambiguation delay on mobile,
+     so quick successive taps (e.g. switching modes) register immediately
+     instead of occasionally being swallowed. */
+  touch-action: manipulation;
   animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
   opacity: 0;
 }
