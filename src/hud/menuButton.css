@@ -19,6 +19,7 @@
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: transform 0.4s var(--hud-ease-spring), box-shadow 0.4s var(--hud-ease-smooth),
     opacity 0.3s var(--hud-ease-smooth);
   z-index: 1000;

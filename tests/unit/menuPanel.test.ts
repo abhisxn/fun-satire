@@ -429,7 +429,7 @@ describe("hud/MenuPanel", () => {
       expect(panel.getRoot().classList.contains("open")).toBe(false);
     });
 
-    it("resumes on the same sub-screen after close() then open() (open() does not reset navigation)", () => {
+    it("resets to the main menu after close() then open(), even from a sub-screen", () => {
       panel.attachTo(menuButton);
       panel.open();
       const root = panel.getRoot();
@@ -438,15 +438,10 @@ describe("hud/MenuPanel", () => {
       panel.close();
       panel.open();
 
-      const backBtn = root.querySelector<HTMLButtonElement>(".menu-back-btn");
-      expect(backBtn?.textContent).toBe("Menu");
-
-      const headingEl = root.querySelector(".menu-subscreen h3");
-      expect(headingEl?.textContent).toBe("About This Project");
-
-      // Main-menu-only content should still be absent.
-      expect(root.querySelector(".menu-quick-links")).toBeNull();
-      expect(root.querySelector(".menu-panel-home")).toBeNull();
+      // Should land back on the main menu, not the previously open sub-screen.
+      expect(root.querySelector(".menu-panel-home")).not.toBeNull();
+      expect(root.querySelector(".menu-quick-links")).not.toBeNull();
+      expect(root.querySelector(".menu-subscreen")).toBeNull();
     });
   });
 });

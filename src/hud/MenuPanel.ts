@@ -114,6 +114,7 @@ export class MenuPanel {
     this.isOpen = false;
     this.overlay.classList.remove("open");
     this.removeEventListeners();
+    if (this.screen !== "menu") this.navigateTo("menu");
     this.openChangeCb?.(false);
   }
 

@@ -20,6 +20,9 @@ function clampVolume(volume: number): number {
 /** How long before the loop boundary the next cycle starts, overlapping with the outgoing one. */
 const CROSSFADE_SEC = 2.5;
 
+/** How long a manual mute/volume change ramps, so toggling never hard-cuts the bed. */
+const VOLUME_RAMP_SEC = 0.25;
+
 interface CrossfadeState {
   readonly standbyIndex: 0 | 1;
   readonly startedAtMs: number;
@@ -42,6 +45,7 @@ export class AudioManager {
   private playing = false;
   private crossfadeState: CrossfadeState | null = null;
   private rafId: number | null = null;
+  private rampRafId: number | null = null;
   private context: AudioContext | null = null;
   private contextResumeArmed = false;
   private readonly onTimeUpdate = (): void => this.checkCrossfadeTrigger();
@@ -82,6 +86,7 @@ export class AudioManager {
   pause(): void {
     this.playing = false;
     this.cancelCrossfade();
+    this.cancelVolumeRamp();
     for (const bed of this.beds) bed.pause();
   }
 
@@ -115,7 +120,34 @@ export class AudioManager {
   /** No-op mid-crossfade: the rAF tick in tickCrossfade() owns both beds' volume then. */
   private applyVolumeToActive(): void {
     if (this.crossfadeState) return;
-    this.active.volume = this.effectiveVolume();
+    this.rampVolumeTo(this.effectiveVolume());
+  }
+
+  /** Ramps the active bed's volume smoothly instead of snapping it, so mute/unmute never hard-cuts. */
+  private rampVolumeTo(target: number): void {
+    this.cancelVolumeRamp();
+    const bed = this.active;
+    const start = bed.volume;
+    if (start === target) return;
+
+    const startedAtMs = performance.now();
+    const tick = (): void => {
+      const t = Math.min(1, (performance.now() - startedAtMs) / 1000 / VOLUME_RAMP_SEC);
+      bed.volume = start + (target - start) * t;
+      if (t >= 1) {
+        this.rampRafId = null;
+        return;
+      }
+      this.rampRafId = requestAnimationFrame(tick);
+    };
+    this.rampRafId = requestAnimationFrame(tick);
+  }
+
+  private cancelVolumeRamp(): void {
+    if (this.rampRafId !== null) {
+      cancelAnimationFrame(this.rampRafId);
+      this.rampRafId = null;
+    }
   }
 
   private checkCrossfadeTrigger(): void {
@@ -212,6 +244,7 @@ export class AudioManager {
   destroy(): void {
     this.disarmContextResumeRetry();
     this.cancelCrossfade();
+    this.cancelVolumeRamp();
     for (const bed of this.beds) {
       bed.removeEventListener("timeupdate", this.onTimeUpdate);
       bed.pause();
