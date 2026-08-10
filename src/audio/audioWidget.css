@@ -146,3 +146,14 @@
     transition: none;
   }
 }
+
+/* Lower blur radius on narrow/mobile viewports, same reasoning as
+   --hud-glass-blur in hudGlass.css — this widget isn't part of that shared
+   token (different visual weight, 20px vs the HUD's 14px, intentionally),
+   so it gets its own scoped reduction instead of being unified with it. */
+@media (max-width: 768px) {
+  .audio-widget {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
