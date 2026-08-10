@@ -67,6 +67,9 @@ export function attachDrag(
   };
 
   const handleTouchStart = (e: TouchEvent): void => {
+    // A second finger means the user is pinching (see pinchZoom.ts), not
+    // dragging — leave multi-touch starts alone.
+    if (e.touches.length !== 1) return;
     dragging = true;
     target.classList.add('dragging');
     const rect = target.getBoundingClientRect();
@@ -80,6 +83,12 @@ export function attachDrag(
 
   const handleTouchMove = (e: TouchEvent): void => {
     if (!dragging) return;
+    // A second finger joined mid-drag: hand off to the pinch gesture
+    // instead of silently tracking only touches[0].
+    if (e.touches.length !== 1) {
+      finalize();
+      return;
+    }
     const t = e.touches[0];
     if (!t) return;
     x = t.clientX - offsetX;
