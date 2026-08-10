@@ -131,4 +131,41 @@ describe('StickerOverlay', () => {
     expect(handle.style.opacity).toBe('1');
     Reflect.deleteProperty(window, 'ontouchstart');
   });
+
+  it('ignores pinch-zoom while a corner-handle resize is already in progress', () => {
+    const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
+    const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
+
+    // Start a corner-handle resize with one finger on the handle.
+    handle.dispatchEvent(new TouchEvent('touchstart', {
+      touches: [new Touch({ identifier: 0, target: handle, clientX: 100, clientY: 100 })],
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    // A second finger lands elsewhere on the overlay while the handle-drag
+    // is still active — this must NOT start a competing pinch resize.
+    s.el.dispatchEvent(new TouchEvent('touchstart', {
+      touches: [
+        new Touch({ identifier: 0, target: handle, clientX: 100, clientY: 100 }),
+        new Touch({ identifier: 1, target: s.el, clientX: 300, clientY: 100 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.dispatchEvent(new TouchEvent('touchmove', {
+      touches: [
+        new Touch({ identifier: 0, target: handle, clientX: 100, clientY: 100 }),
+        new Touch({ identifier: 1, target: s.el, clientX: 5000, clientY: 100 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    // Once a second finger is down, the corner-handle's own move-tracking
+    // also defers (single-finger only, mirroring makeDraggable.ts), so
+    // width should be untouched by both mechanisms — still the default
+    // (160), not driven toward MAX_WIDTH by the pinch formula.
+    expect(parseFloat(s.el.querySelector('img')!.style.width)).toBeCloseTo(160);
+  });
 });
