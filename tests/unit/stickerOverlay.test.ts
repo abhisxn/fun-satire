@@ -76,4 +76,59 @@ describe('StickerOverlay', () => {
     s.destroy();
     expect(document.querySelector('.sticker-overlay')).toBeNull();
   });
+
+  it('scales via two-finger pinch, clamped within bounds', () => {
+    const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
+
+    s.el.dispatchEvent(new TouchEvent('touchstart', {
+      touches: [
+        new Touch({ identifier: 0, target: s.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: s.el, clientX: 100, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.dispatchEvent(new TouchEvent('touchmove', {
+      touches: [
+        new Touch({ identifier: 0, target: s.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: s.el, clientX: 200, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    // Default width is 160; pinch factor 2 -> 320, within [48, 480].
+    expect(parseFloat(s.el.querySelector('img')!.style.width)).toBeCloseTo(320);
+  });
+
+  it('clamps pinch scaling within MIN_WIDTH/MAX_WIDTH bounds', () => {
+    const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
+
+    s.el.dispatchEvent(new TouchEvent('touchstart', {
+      touches: [
+        new Touch({ identifier: 0, target: s.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: s.el, clientX: 100, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.dispatchEvent(new TouchEvent('touchmove', {
+      touches: [
+        new Touch({ identifier: 0, target: s.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: s.el, clientX: 10000, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    expect(parseFloat(s.el.querySelector('img')!.style.width)).toBeLessThanOrEqual(480);
+  });
+
+  it('shows the resize handle by default on touch devices instead of relying on hover', () => {
+    Object.defineProperty(window, 'ontouchstart', { value: null, configurable: true });
+    const s = new StickerOverlay('/avatars/ethanol.png');
+    const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
+    expect(handle.style.opacity).toBe('1');
+    Reflect.deleteProperty(window, 'ontouchstart');
+  });
 });
