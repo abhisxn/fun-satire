@@ -11,8 +11,8 @@
   align-items: center;
   justify-content: center;
   background: var(--hud-glass-bg);
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
   border-radius: calc(12px + var(--hud-density) * 0.00892857);
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);

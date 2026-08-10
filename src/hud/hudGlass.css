@@ -10,3 +10,15 @@
   --hud-glass-blur: 14px;
   --hud-glass-bg-fallback: rgba(255, 255, 255, 0.92);
 }
+
+/* Lower blur radius on narrow/mobile viewports — backdrop-filter is a
+   significant GPU/compositing cost on mobile WebKit and mid-range Android,
+   and this app has several overlapping glass surfaces at once (HUD,
+   panels, onboarding card). Desktop keeps the full 14px; mobile drops to
+   6px, which still reads as "frosted glass" but is meaningfully cheaper to
+   composite. */
+@media (max-width: 768px) {
+  :root {
+    --hud-glass-blur: 6px;
+  }
+}
