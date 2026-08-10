@@ -186,6 +186,46 @@ describe("AudioWidget", () => {
     });
   });
 
+  describe("platforms with no JS volume control (iOS Safari)", () => {
+    it("omits the volume slider entirely, leaving mute as the only control", () => {
+      const control = createFakeControl({ isVolumeControlSupported: vi.fn(() => false) });
+      const widget = new AudioWidget(control);
+      widget.attachTo(host);
+
+      expect(host.querySelector('input[type="range"]')).toBeNull();
+      expect(widget.getRoot().classList.contains("audio-widget--no-volume")).toBe(true);
+      expect(widget.getToggleButton()).toBeTruthy();
+    });
+
+    it("keeps the slider when volume control is supported", () => {
+      const control = createFakeControl({ isVolumeControlSupported: vi.fn(() => true) });
+      const widget = new AudioWidget(control);
+      widget.attachTo(host);
+
+      expect(host.querySelector('input[type="range"]')).toBeTruthy();
+    });
+  });
+
+  it("re-syncs its icon when the control reports a state change (e.g. auto-pause on backgrounding)", () => {
+    let playing = true;
+    let listener: (() => void) | null = null;
+    const control = createFakeControl({
+      isPlaying: vi.fn(() => playing),
+      setStateChangeListener: vi.fn((fn: (() => void) | null) => {
+        listener = fn;
+      }),
+    });
+    const widget = new AudioWidget(control);
+    widget.attachTo(host);
+    expect(widget.getToggleButton().getAttribute("aria-pressed")).toBe("true");
+
+    playing = false;
+    expect(listener).toBeTypeOf("function");
+    listener!();
+
+    expect(widget.getToggleButton().getAttribute("aria-pressed")).toBe("false");
+  });
+
   it("destroy() removes the widget from the DOM", () => {
     const control = createFakeControl();
     const widget = new AudioWidget(control);

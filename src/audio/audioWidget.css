@@ -29,6 +29,7 @@
   gap: 12px;
 }
 
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .audio-widget {
     background: rgba(255, 255, 255, 0.92);
