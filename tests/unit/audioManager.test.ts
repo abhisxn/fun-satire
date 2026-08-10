@@ -99,4 +99,39 @@ describe("AudioManager", () => {
     expect(manager.isPlaying()).toBe(false);
     expect(ctx.close).toHaveBeenCalledTimes(1);
   });
+
+  it("completes an in-progress crossfade immediately when the page is backgrounded, instead of leaving both beds audible", async () => {
+    const manager = new AudioManager();
+    await manager.play();
+
+    const internals = manager as unknown as {
+      beds: readonly [HTMLAudioElement, HTMLAudioElement];
+      activeIndex: 0 | 1;
+      crossfadeState: { readonly standbyIndex: 0 | 1; readonly startedAtMs: number } | null;
+      startCrossfade(): void;
+    };
+
+    internals.startCrossfade();
+    expect(internals.crossfadeState).not.toBeNull();
+    const standbyIndex = internals.crossfadeState!.standbyIndex;
+    const outgoingIndex = internals.activeIndex;
+
+    // Simulate the fade being mid-flight when the tab is backgrounded: both
+    // beds partially audible (as tickCrossfade() would have left them).
+    internals.beds[outgoingIndex].volume = 0.08;
+    internals.beds[standbyIndex].volume = 0.08;
+
+    Object.defineProperty(document, "hidden", { value: true, configurable: true });
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    // Crossfade must resolve synchronously on backgrounding: exactly one bed
+    // left audible, the other paused and reset, no lingering fade state.
+    expect(internals.crossfadeState).toBeNull();
+    expect(internals.activeIndex).toBe(standbyIndex);
+    expect(internals.beds[standbyIndex].volume).toBeCloseTo(manager.getVolume());
+    expect(internals.beds[outgoingIndex].paused).toBe(true);
+    expect(internals.beds[outgoingIndex].volume).toBe(0);
+
+    Object.defineProperty(document, "hidden", { value: false, configurable: true });
+  });
 });
