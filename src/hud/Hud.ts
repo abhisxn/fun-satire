@@ -158,6 +158,14 @@ export class Hud {
     this.root.remove();
   }
 
+  hide(): void {
+    this.root.classList.add("hidden");
+  }
+
+  show(): void {
+    this.root.classList.remove("hidden");
+  }
+
   getRoot(): HTMLElement {
     return this.root;
   }

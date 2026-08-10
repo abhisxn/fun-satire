@@ -332,6 +332,15 @@
 .hud-btn:nth-child(7) { animation-delay: 0.35s; }
 .hud-btn:nth-child(8) { animation-delay: 0.4s; }
 
+/* Hidden while the text editor (TextOverlay) has focus on mobile — the
+   fixed-position toolbar would otherwise sit on top of the on-screen
+   keyboard/typed text. Mirrors .hud-menu-btn.hidden in menuButton.css. */
+.premium-hud.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--hud-ease-smooth);
+}
+
 .premium-hud.hud--dragging,
 .premium-hud.hud--dragging:hover {
   transform: none;

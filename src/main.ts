@@ -216,6 +216,15 @@ async function main(): Promise<void> {
         onOverlayDragEnd,
         onOverlayDragMove,
       );
+      const editor = text.getEditor();
+      editor.addEventListener("focus", () => {
+        hud.hide();
+        menuButton.hide();
+      });
+      editor.addEventListener("blur", () => {
+        hud.show();
+        syncMenuButtonVisibility();
+      });
       void replaceOverlay(text);
     });
   };
