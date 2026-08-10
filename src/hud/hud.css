@@ -334,10 +334,16 @@
 
 /* Hidden while the text editor (TextOverlay) has focus on mobile — the
    fixed-position toolbar would otherwise sit on top of the on-screen
-   keyboard/typed text. Mirrors .hud-menu-btn.hidden in menuButton.css. */
+   keyboard/typed text. Mirrors .hud-menu-btn.hidden in menuButton.css.
+   animation: none is required — .premium-hud's entrance animation
+   (hud-slide-up, below) uses `forwards` fill, which keeps forcibly pinning
+   opacity:1 from its final keyframe indefinitely after it completes,
+   silently overriding this rule's opacity:0 unless the animation itself is
+   cancelled. Same fix already applied to .hud--dragging below. */
 .premium-hud.hidden {
   opacity: 0;
   pointer-events: none;
+  animation: none;
   transition: opacity 0.3s var(--hud-ease-smooth);
 }
 
