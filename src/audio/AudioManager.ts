@@ -49,6 +49,9 @@ export class AudioManager {
   private context: AudioContext | null = null;
   private contextResumeArmed = false;
   private readonly onTimeUpdate = (): void => this.checkCrossfadeTrigger();
+  private readonly onVisibilityChange = (): void => {
+    if (document.hidden) this.resolveCrossfadeImmediately();
+  };
   private readonly retryContextResume = (): void => {
     if (!this.context || this.context.state !== "suspended") {
       this.disarmContextResumeRetry();
@@ -61,6 +64,7 @@ export class AudioManager {
     const src = options.src ?? AUDIO_BED_SRC;
     this.volume = clampVolume(options.volume ?? 0.5);
     this.beds = [this.createBed(src), this.createBed(src)];
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
   }
 
   private createBed(src: string): HTMLAudioElement {
@@ -192,6 +196,33 @@ export class AudioManager {
     this.rafId = requestAnimationFrame(() => this.tickCrossfade());
   }
 
+  /**
+   * Snaps an in-progress crossfade straight to its end state instead of
+   * leaving it to the next requestAnimationFrame tick — rAF stops firing
+   * while the document is hidden, so without this an in-flight fade freezes
+   * mid-mix (both beds partially audible) for as long as the tab stays
+   * backgrounded.
+   */
+  private resolveCrossfadeImmediately(): void {
+    const state = this.crossfadeState;
+    if (!state) return;
+
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    this.cancelVolumeRamp();
+
+    const outgoing = this.beds[this.activeIndex];
+    outgoing.pause();
+    outgoing.currentTime = 0;
+    outgoing.volume = 0;
+
+    this.beds[state.standbyIndex].volume = this.effectiveVolume();
+    this.activeIndex = state.standbyIndex;
+    this.crossfadeState = null;
+  }
+
   private cancelCrossfade(): void {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
@@ -242,6 +273,7 @@ export class AudioManager {
   }
 
   destroy(): void {
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
     this.disarmContextResumeRetry();
     this.cancelCrossfade();
     this.cancelVolumeRamp();

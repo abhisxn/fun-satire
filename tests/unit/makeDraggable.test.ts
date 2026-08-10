@@ -145,5 +145,53 @@ describe('makeDraggable/attachDrag', () => {
 
       handle.detach();
     });
+
+    it('cancels the drag when a second finger touches down mid-drag', () => {
+      const onMove = vi.fn();
+      const handle = attachDrag(el, { x: 100, y: 200 }, onMove);
+      handle.attach();
+
+      const mockRect = { left: 100, top: 200, right: 240, bottom: 340, width: 140, height: 140, x: 100, y: 200, toJSON: () => ({}) };
+      vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(mockRect);
+
+      el.dispatchEvent(new TouchEvent('touchstart', {
+        touches: [new Touch({ identifier: 0, target: el, clientX: 120, clientY: 220 })],
+        bubbles: true,
+        cancelable: true,
+      }));
+      expect(handle.isDragging()).toBe(true);
+
+      // A second finger joins: drag must cancel, not silently keep tracking touches[0].
+      document.dispatchEvent(new TouchEvent('touchmove', {
+        touches: [
+          new Touch({ identifier: 0, target: el, clientX: 150, clientY: 250 }),
+          new Touch({ identifier: 1, target: el, clientX: 300, clientY: 250 }),
+        ],
+        bubbles: true,
+        cancelable: true,
+      }));
+
+      expect(handle.isDragging()).toBe(false);
+      expect(el.classList.contains('dragging')).toBe(false);
+
+      handle.detach();
+    });
+
+    it('ignores touchstart when two fingers land at once', () => {
+      const handle = attachDrag(el, { x: 0, y: 0 });
+      handle.attach();
+
+      el.dispatchEvent(new TouchEvent('touchstart', {
+        touches: [
+          new Touch({ identifier: 0, target: el, clientX: 0, clientY: 0 }),
+          new Touch({ identifier: 1, target: el, clientX: 100, clientY: 0 }),
+        ],
+        bubbles: true,
+        cancelable: true,
+      }));
+
+      expect(handle.isDragging()).toBe(false);
+      handle.detach();
+    });
   });
 });

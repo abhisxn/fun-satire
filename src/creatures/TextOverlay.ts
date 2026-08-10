@@ -1,5 +1,8 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
+import { attachPinchZoom } from "./pinchZoom";
+import type { PinchZoomHandle } from "./pinchZoom";
+import { isTouchDevice } from "./touchSupport";
 
 // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
 export const TEXT_Z_INDEX = 100;
@@ -15,6 +18,9 @@ export class TextOverlay {
   private readonly handle: HTMLDivElement;
   private readonly dragHandle: HTMLDivElement;
   private readonly drag: DragHandle;
+  private readonly pinch: PinchZoomHandle;
+  private pinchStartFontSize = 0;
+  private cornerResizing = false;
   private fontSize: number;
   private currentFont: string;
 
@@ -63,7 +69,7 @@ export class TextOverlay {
       "border:1px solid rgba(0,0,0,0.25)",
       "cursor:grab",
       "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
-      "opacity:0",
+      `opacity:${isTouchDevice() ? "1" : "0"}`,
       "transition:opacity 0.15s",
       "z-index:2",
     ].join(";");
@@ -108,7 +114,7 @@ export class TextOverlay {
       "border-radius:50%",
       "cursor:nwse-resize",
       "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
-      "opacity:0",
+      `opacity:${isTouchDevice() ? "1" : "0"}`,
       "transition:opacity 0.15s",
       "touch-action:none",
       "z-index:1",
@@ -127,6 +133,21 @@ export class TextOverlay {
     this.drag = attachDrag(this.dragHandle, { x, y }, onDragMove, this.el, onDragStart, onDragEnd);
     this.drag.attach();
     this.attachResize();
+
+    this.pinch = attachPinchZoom(
+      this.el,
+      (factor) => {
+        if (this.cornerResizing) return;
+        const next = clamp(this.pinchStartFontSize * factor, MIN_FONT_SIZE, MAX_FONT_SIZE);
+        this.fontSize = next;
+        this.editor.style.fontSize = fontSize(next);
+      },
+      () => {
+        if (this.cornerResizing) return;
+        this.pinchStartFontSize = this.fontSize;
+      },
+    );
+    this.pinch.attach();
   }
 
   setFont(fontFamily: string): void {
@@ -149,6 +170,7 @@ export class TextOverlay {
 
   destroy(): void {
     this.drag.detach();
+    this.pinch.detach();
     this.handle.removeEventListener("mousedown", this.handleResizeStart);
     this.handle.removeEventListener("touchstart", this.handleResizeStart);
     this.el.remove();
@@ -162,9 +184,14 @@ export class TextOverlay {
   private readonly handleResizeStart = (e: MouseEvent | TouchEvent): void => {
     e.preventDefault();
     e.stopPropagation();
+    this.cornerResizing = true;
     const startSize = this.fontSize;
     const startY = pointerY(e);
     const onMove = (ev: MouseEvent | TouchEvent): void => {
+      // A second finger joining means this is now a pinch gesture (see
+      // attachPinchZoom above) — stop reacting to touches[0] so the two
+      // resize mechanisms don't fight over font size on the same event.
+      if ("touches" in ev && ev.touches.length !== 1) return;
       const y = pointerY(ev);
       const dy = y - startY;
       const next = clamp(startSize + dy, MIN_FONT_SIZE, MAX_FONT_SIZE);
@@ -172,6 +199,7 @@ export class TextOverlay {
       this.editor.style.fontSize = fontSize(next);
     };
     const onUp = (): void => {
+      this.cornerResizing = false;
       document.removeEventListener("mousemove", onMove as EventListener);
       document.removeEventListener("mouseup", onUp as EventListener);
       document.removeEventListener("touchmove", onMove as EventListener);

@@ -1,5 +1,8 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
+import { attachPinchZoom } from "./pinchZoom";
+import type { PinchZoomHandle } from "./pinchZoom";
+import { isTouchDevice } from "./touchSupport";
 
 // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
 export const STICKER_Z_INDEX = 100;
@@ -13,6 +16,9 @@ export class StickerOverlay {
   private readonly img: HTMLImageElement;
   private readonly handle: HTMLDivElement;
   private readonly drag: DragHandle;
+  private readonly pinch: PinchZoomHandle;
+  private pinchStartWidth = 0;
+  private cornerResizing = false;
   private currentSrc: string;
   private width: number;
   private dragHint: HTMLDivElement | null = null;
@@ -79,7 +85,7 @@ export class StickerOverlay {
       "border-radius:50%",
       "cursor:nwse-resize",
       "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
-      "opacity:0",
+      `opacity:${isTouchDevice() ? "1" : "0"}`,
       "transition:opacity 0.15s",
       "touch-action:none",
       "z-index:1",
@@ -111,6 +117,22 @@ export class StickerOverlay {
     );
     this.drag.attach();
     this.attachResize();
+
+    this.pinch = attachPinchZoom(
+      this.el,
+      (factor) => {
+        if (this.cornerResizing) return;
+        const next = clamp(this.pinchStartWidth * factor, MIN_WIDTH, MAX_WIDTH);
+        this.width = next;
+        this.img.style.width = `${next}px`;
+      },
+      () => {
+        if (this.cornerResizing) return;
+        this.hideDragHint();
+        this.pinchStartWidth = this.width;
+      },
+    );
+    this.pinch.attach();
   }
 
   private buildDragHint(): HTMLDivElement {
@@ -169,6 +191,7 @@ export class StickerOverlay {
   destroy(): void {
     clearTimeout(this.dragHintTimeout);
     this.drag.detach();
+    this.pinch.detach();
     this.handle.removeEventListener("mousedown", this.handleResizeStart);
     this.handle.removeEventListener("touchstart", this.handleResizeStart);
     this.el.remove();
@@ -182,9 +205,14 @@ export class StickerOverlay {
   private readonly handleResizeStart = (e: MouseEvent | TouchEvent): void => {
     e.preventDefault();
     e.stopPropagation();
+    this.cornerResizing = true;
     const startWidth = this.width;
     const startX = pointerX(e);
     const onMove = (ev: MouseEvent | TouchEvent): void => {
+      // A second finger joining means this is now a pinch gesture (see
+      // attachPinchZoom above) — stop reacting to touches[0] so the two
+      // resize mechanisms don't fight over width on the same event.
+      if ("touches" in ev && ev.touches.length !== 1) return;
       const x = pointerX(ev);
       const dx = x - startX;
       const next = clamp(startWidth + dx, MIN_WIDTH, MAX_WIDTH);
@@ -192,6 +220,7 @@ export class StickerOverlay {
       this.img.style.width = `${next}px`;
     };
     const onUp = (): void => {
+      this.cornerResizing = false;
       document.removeEventListener("mousemove", onMove as EventListener);
       document.removeEventListener("mouseup", onUp as EventListener);
       document.removeEventListener("touchmove", onMove as EventListener);

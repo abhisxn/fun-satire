@@ -252,4 +252,17 @@ describe("Hud", () => {
       expect(host.querySelector(".premium-hud")).toBeFalsy();
     });
   });
+
+  describe("hide/show", () => {
+    it("hides the toolbar via a CSS class and reports it back through the API", () => {
+      const root = host.querySelector<HTMLElement>(".premium-hud")!;
+      expect(root.classList.contains("hidden")).toBe(false);
+
+      hud.hide();
+      expect(root.classList.contains("hidden")).toBe(true);
+
+      hud.show();
+      expect(root.classList.contains("hidden")).toBe(false);
+    });
+  });
 });
