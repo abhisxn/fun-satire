@@ -1,5 +1,8 @@
 import { attachDrag } from "./makeDraggable";
 import type { DragHandle } from "./makeDraggable";
+import { attachPinchZoom } from "./pinchZoom";
+import type { PinchZoomHandle } from "./pinchZoom";
+import { isTouchDevice } from "./touchSupport";
 
 // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
 export const TEXT_Z_INDEX = 100;
@@ -15,6 +18,8 @@ export class TextOverlay {
   private readonly handle: HTMLDivElement;
   private readonly dragHandle: HTMLDivElement;
   private readonly drag: DragHandle;
+  private readonly pinch: PinchZoomHandle;
+  private pinchStartFontSize = 0;
   private fontSize: number;
   private currentFont: string;
 
@@ -63,7 +68,7 @@ export class TextOverlay {
       "border:1px solid rgba(0,0,0,0.25)",
       "cursor:grab",
       "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
-      "opacity:0",
+      `opacity:${isTouchDevice() ? "1" : "0"}`,
       "transition:opacity 0.15s",
       "z-index:2",
     ].join(";");
@@ -108,7 +113,7 @@ export class TextOverlay {
       "border-radius:50%",
       "cursor:nwse-resize",
       "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
-      "opacity:0",
+      `opacity:${isTouchDevice() ? "1" : "0"}`,
       "transition:opacity 0.15s",
       "touch-action:none",
       "z-index:1",
@@ -127,6 +132,19 @@ export class TextOverlay {
     this.drag = attachDrag(this.dragHandle, { x, y }, onDragMove, this.el, onDragStart, onDragEnd);
     this.drag.attach();
     this.attachResize();
+
+    this.pinch = attachPinchZoom(
+      this.el,
+      (factor) => {
+        const next = clamp(this.pinchStartFontSize * factor, MIN_FONT_SIZE, MAX_FONT_SIZE);
+        this.fontSize = next;
+        this.editor.style.fontSize = fontSize(next);
+      },
+      () => {
+        this.pinchStartFontSize = this.fontSize;
+      },
+    );
+    this.pinch.attach();
   }
 
   setFont(fontFamily: string): void {
@@ -149,6 +167,7 @@ export class TextOverlay {
 
   destroy(): void {
     this.drag.detach();
+    this.pinch.detach();
     this.handle.removeEventListener("mousedown", this.handleResizeStart);
     this.handle.removeEventListener("touchstart", this.handleResizeStart);
     this.el.remove();

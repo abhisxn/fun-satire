@@ -71,4 +71,59 @@ describe('TextOverlay', () => {
     t.destroy();
     expect(document.querySelector('.text-overlay')).toBeNull();
   });
+
+  it('scales font size via two-finger pinch, clamped within bounds', () => {
+    const t = new TextOverlay('"Anton", sans-serif', 100, 100);
+
+    t.el.dispatchEvent(new TouchEvent('touchstart', {
+      touches: [
+        new Touch({ identifier: 0, target: t.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: t.el, clientX: 100, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.dispatchEvent(new TouchEvent('touchmove', {
+      touches: [
+        new Touch({ identifier: 0, target: t.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: t.el, clientX: 200, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    // Default font size is 56; pinch factor 2 -> 112, within [16, 240].
+    expect(parseFloat(t.getEditor().style.fontSize)).toBeCloseTo(112);
+  });
+
+  it('clamps pinch scaling within MIN_FONT_SIZE/MAX_FONT_SIZE bounds', () => {
+    const t = new TextOverlay('"Anton", sans-serif', 100, 100);
+
+    t.el.dispatchEvent(new TouchEvent('touchstart', {
+      touches: [
+        new Touch({ identifier: 0, target: t.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: t.el, clientX: 100, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.dispatchEvent(new TouchEvent('touchmove', {
+      touches: [
+        new Touch({ identifier: 0, target: t.el, clientX: 0, clientY: 0 }),
+        new Touch({ identifier: 1, target: t.el, clientX: 10000, clientY: 0 }),
+      ],
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    expect(parseFloat(t.getEditor().style.fontSize)).toBeLessThanOrEqual(240);
+  });
+
+  it('shows the resize handle by default on touch devices instead of relying on hover', () => {
+    Object.defineProperty(window, 'ontouchstart', { value: null, configurable: true });
+    const t = new TextOverlay('"Anton", sans-serif');
+    const handle = t.el.querySelector<HTMLElement>('.text-overlay-resize')!;
+    expect(handle.style.opacity).toBe('1');
+    Reflect.deleteProperty(window, 'ontouchstart');
+  });
 });
