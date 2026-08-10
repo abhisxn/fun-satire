@@ -13,6 +13,10 @@ export interface SoundBedControl {
   getVolume(): number;
   setMuted(muted: boolean): void;
   isMuted(): boolean;
+  /** Absent or true means "assume volume UI is usable" (see AudioManager). */
+  isVolumeControlSupported?(): boolean;
+  /** Optional hook so the icon can follow state the widget did not trigger. */
+  setStateChangeListener?(listener: (() => void) | null): void;
 }
 
 const SVG_SPEAKER_ON = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -45,7 +49,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLEl
 export class AudioWidget {
   private readonly root: HTMLElement;
   private readonly toggleBtn: HTMLButtonElement;
-  private readonly volumeInput: HTMLInputElement;
+  private readonly volumeInput: HTMLInputElement | null;
   private readonly control: SoundBedControl;
   private gestureRetryArmed = false;
   private boundGestureRetry: (() => void) | null = null;
@@ -75,28 +79,44 @@ export class AudioWidget {
     });
     this.toggleBtn = toggle;
 
-    const volume = el("input", "audio-widget__volume") as HTMLInputElement;
-    volume.type = "range";
-    volume.min = "0";
-    volume.max = "1";
-    volume.step = "0.05";
-    volume.value = String(control.getVolume());
-    volume.setAttribute("aria-label", "Sound bed volume");
-    volume.addEventListener("input", () => {
-      const value = Number.parseFloat(volume.value);
-      this.control.setVolume(value);
-      this.updateVolumeFill(value);
-    });
-    this.volumeInput = volume;
-    this.updateVolumeFill(control.getVolume());
+    // iOS keeps the audio level under the user's physical control, so a
+    // slider there would be dead UI: it would move and change nothing. On
+    // those platforms the widget is mute-only and the hardware volume keys
+    // do the rest.
+    const volumeUsable = control.isVolumeControlSupported?.() ?? true;
 
-    // Collapsed to a bare circular mute/unmute button by default; hovering
-    // (or focusing, for keyboard users) the widget expands this wrapper to
-    // reveal the vertical slider. See audioWidget.css for the transition.
-    const volumeWrap = el("div", "audio-widget__volume-wrap");
-    volumeWrap.append(volume);
+    if (!volumeUsable) {
+      this.volumeInput = null;
+      root.classList.add("audio-widget--no-volume");
+      root.append(toggle);
+    } else {
+      const volume = el("input", "audio-widget__volume") as HTMLInputElement;
+      volume.type = "range";
+      volume.min = "0";
+      volume.max = "1";
+      volume.step = "0.05";
+      volume.value = String(control.getVolume());
+      volume.setAttribute("aria-label", "Sound bed volume");
+      volume.addEventListener("input", () => {
+        const value = Number.parseFloat(volume.value);
+        this.control.setVolume(value);
+        this.updateVolumeFill(value);
+      });
+      this.volumeInput = volume;
+      this.updateVolumeFill(control.getVolume());
 
-    root.append(toggle, volumeWrap);
+      // Collapsed to a bare circular mute/unmute button by default; hovering
+      // (or focusing, for keyboard users) the widget expands this wrapper to
+      // reveal the vertical slider. See audioWidget.css for the transition.
+      const volumeWrap = el("div", "audio-widget__volume-wrap");
+      volumeWrap.append(volume);
+      root.append(toggle, volumeWrap);
+    }
+
+    // The control can pause itself (backgrounding), so the icon has to follow
+    // state this widget never asked for.
+    this.control.setStateChangeListener?.(() => this.syncIcon());
+
     this.syncIcon();
   }
 
@@ -129,6 +149,7 @@ export class AudioWidget {
 
   destroy(): void {
     this.disarmGestureRetry();
+    this.control.setStateChangeListener?.(null);
     this.root.remove();
   }
 
@@ -190,6 +211,7 @@ export class AudioWidget {
   }
 
   private updateVolumeFill(value: number): void {
+    if (!this.volumeInput) return;
     const pct = Math.max(0, Math.min(1, value)) * 100;
     this.volumeInput.style.setProperty("--audio-widget-volume-fill", `${pct}%`);
   }
