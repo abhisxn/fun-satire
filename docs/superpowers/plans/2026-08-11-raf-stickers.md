@@ -22,10 +22,10 @@ Use the following prompt:
 
 Path: `public/assets/stickers/raf-stickers-1`
 
-- [ ] **Step 2: Verify Sheet 1**
+- [x] **Step 2: Verify Sheet 1**
 Check for: **Exactly 12 stickers** arranged in a **3x4 grid**, blue camo/helmets, 70° angle, dark grey background, marker/halftone style, white borders.
 
-- [ ] **Step 3: Commit Sheet 1**
+- [x] **Step 3: Commit Sheet 1**
 ```bash
 git add public/assets/stickers/raf-stickers-1.png
 git commit -m "fix: enforce 3x4 grid and 12-sticker count for RAF sheet 1 (70 degree angle)"
