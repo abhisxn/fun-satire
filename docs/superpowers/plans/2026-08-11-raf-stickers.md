@@ -15,20 +15,20 @@
 **Files:**
 - Create: `public/assets/stickers/raf-stickers-1.png`
 
-- [x] **Step 1: Invoke image generation for Sheet 1**
+- [x] **Step 1: Invoke image generation for Sheet 1 (Fix: Exactly 12 stickers in 3x4 grid)**
 
 Use the following prompt:
-"A high-quality sticker sheet containing **exactly 12 unique and diverse** caricatured Indian Rapid Action Force (RAF) male personnel in blue camouflage uniforms and blue helmets, arranged in a **strict 3x4 grid**. Every character is a different individual with unique faces, ages, and mustache styles. **Dark grey background (#1a1a1a).** Poses include pointing, holding lathis, and walkie-talkies. Expressions are varied **intense angry disgust**. **Extreme high angle drone shot looking down at the characters. Viewed from directly above at a 70-degree angle. Tops of blue helmets and shoulders are very prominent. Significant foreshortening of the faces as seen from above. Bird's eye view perspective.** Style: bold marker illustration, thick black outlines, color halftone shading. Each sticker has a thick white die-cut border. No overlap."
+"A high-quality sticker sheet containing **exactly 12 individual stickers**, arranged in a **strict uniform grid of 3 rows and 4 columns (3x4 grid layout)**. Each sticker features a unique and diverse caricatured Indian Rapid Action Force (RAF) male soldier in blue camouflage uniform and a blue helmet. Every character is a different individual with unique faces, ages, and mustache styles. **Dark grey background (#1a1a1a).** Poses include pointing, holding lathis, and walkie-talkies. Expressions are varied **intense angry disgust**. **Extreme high angle drone shot looking down at the characters. Viewed from directly above at a 70-degree angle. Tops of blue helmets and shoulders are very prominent. Significant foreshortening of the faces as seen from above. Bird's eye view perspective.** Style: bold marker illustration, thick black outlines, color halftone shading. Each sticker has a thick white die-cut border. **Clean separation between all 12 stickers with no overlap.**"
 
 Path: `public/assets/stickers/raf-stickers-1`
 
-- [x] **Step 2: Verify Sheet 1**
-Check for: 12 unique characters, blue camo/helmets, 70° angle, dark grey background, marker/halftone style, white borders.
+- [ ] **Step 2: Verify Sheet 1**
+Check for: **Exactly 12 stickers** arranged in a **3x4 grid**, blue camo/helmets, 70° angle, dark grey background, marker/halftone style, white borders.
 
-- [x] **Step 3: Commit Sheet 1**
+- [ ] **Step 3: Commit Sheet 1**
 ```bash
 git add public/assets/stickers/raf-stickers-1.png
-git commit -m "fix: steepen perspective for RAF sticker sheet 1 (70 degree drone angle)"
+git commit -m "fix: enforce 3x4 grid and 12-sticker count for RAF sheet 1 (70 degree angle)"
 ```
 
 ### Task 2: Generate RAF Sticker Sheet 2 (75° Angle)
