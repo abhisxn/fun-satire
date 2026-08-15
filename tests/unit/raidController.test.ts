@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { detectShake, RaidController, pickPulseKinds } from '../../src/creatures/RaidController';
 import type { MoveSample } from '../../src/creatures/RaidController';
 import { CreatureGrid } from '../../src/creatures/CreatureGrid';
+import { SECURITY_SHRINK_MS } from '../../src/creatures/SecurityCreature';
 
 vi.mock('animejs', () => {
   const makeInstance = () => ({ pause: vi.fn() });
@@ -189,8 +190,7 @@ describe('RaidController', () => {
     now.mockRestore();
   });
 
-  it('startRecovery poofs units out one by one and ramps the crowd to QTY_MAX', () => {
-    vi.useFakeTimers();
+  it('startRecovery marks every unit shrinking immediately but removes none synchronously', () => {
     const now = vi.spyOn(Date, 'now');
     let t = 0;
     now.mockImplementation(() => t);
@@ -204,20 +204,41 @@ describe('RaidController', () => {
     expect(spawned).toBeGreaterThan(0);
 
     raid.startRecovery();
-    expect(raid.getState()).toBe('recovering');
-    expect(raid.getSecurityUnits().length).toBe(spawned - 1);
 
-    vi.advanceTimersByTime(350 * spawned);
+    expect(raid.getState()).toBe('recovering');
+    expect(raid.getSecurityUnits().length).toBe(spawned);
+    expect(grid.getCreatureCount()).toBe(900); // QTY_MAX, applied immediately
+
+    now.mockRestore();
+  });
+
+  it('tick() sweeps units out one at a time on their staggered shrink schedule, then goes idle', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    const spawned = raid.getSecurityUnits().length;
+
+    raid.startRecovery();
+
+    for (let i = 0; i < spawned; i++) {
+      t += SECURITY_SHRINK_MS;
+      raid.tick(t);
+      expect(raid.getSecurityUnits().length).toBe(spawned - (i + 1));
+    }
 
     expect(raid.getSecurityUnits().length).toBe(0);
     expect(raid.getState()).toBe('idle');
-    expect(grid.getCreatureCount()).toBe(900); // QTY_MAX
 
     now.mockRestore();
   });
 
   it('startRecovery is a no-op when already recovering (re-entry safe)', () => {
-    vi.useFakeTimers();
     const now = vi.spyOn(Date, 'now');
     let t = 0;
     now.mockImplementation(() => t);
@@ -228,20 +249,19 @@ describe('RaidController', () => {
       t += 20;
     }
     const spawned = raid.getSecurityUnits().length;
-    expect(spawned).toBeGreaterThan(0);
 
     raid.startRecovery();
     expect(raid.getState()).toBe('recovering');
-    const afterFirstCall = raid.getSecurityUnits().length;
-    expect(afterFirstCall).toBe(spawned - 1);
 
-    // Second call while already recovering must not pop another unit or
-    // touch the pending timer chain.
+    // Second call while already recovering must not disturb the shrink schedule.
     raid.startRecovery();
     expect(raid.getState()).toBe('recovering');
-    expect(raid.getSecurityUnits().length).toBe(afterFirstCall);
+    expect(raid.getSecurityUnits().length).toBe(spawned);
 
-    vi.advanceTimersByTime(350 * afterFirstCall);
+    for (let i = 0; i < spawned; i++) {
+      t += SECURITY_SHRINK_MS;
+      raid.tick(t);
+    }
 
     expect(raid.getSecurityUnits().length).toBe(0);
     expect(raid.getState()).toBe('idle');
@@ -249,8 +269,7 @@ describe('RaidController', () => {
     now.mockRestore();
   });
 
-  it('destroy() mid-recovery cancels the pending poof and does not fire further state changes', () => {
-    vi.useFakeTimers();
+  it('destroy() mid-recovery removes all units immediately and further ticks do nothing', () => {
     const now = vi.spyOn(Date, 'now');
     let t = 0;
     now.mockImplementation(() => t);
@@ -261,19 +280,16 @@ describe('RaidController', () => {
       t += 20;
     }
     const spawned = raid.getSecurityUnits().length;
-    expect(spawned).toBeGreaterThan(0);
 
     raid.startRecovery();
     expect(raid.getState()).toBe('recovering');
-    expect(raid.getSecurityUnits().length).toBe(spawned - 1);
 
     raid.destroy();
     expect(raid.getState()).toBe('idle');
     expect(raid.getSecurityUnits()).toEqual([]);
 
-    // Advancing timers past when the pending pop would have fired must not
-    // change anything further — the timer was cancelled by destroy().
-    vi.advanceTimersByTime(350 * spawned);
+    t += SECURITY_SHRINK_MS * spawned;
+    raid.tick(t);
     expect(raid.getState()).toBe('idle');
     expect(raid.getSecurityUnits()).toEqual([]);
 

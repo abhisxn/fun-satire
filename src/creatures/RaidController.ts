@@ -1,6 +1,13 @@
 import { CreatureGrid } from "./CreatureGrid";
 import type { SecurityUnit } from "./CreatureGrid";
-import { createSecurityUnit, removeSecurityUnit, startSecurityWander, pickSecurityKind } from "./SecurityCreature";
+import {
+  createSecurityUnit,
+  removeSecurityUnit,
+  startSecurityWander,
+  pickSecurityKind,
+  computeSecurityShrinkFraction,
+  SECURITY_SHRINK_MS,
+} from "./SecurityCreature";
 import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
 import { QTY_MAX, QTY_MIN } from "../config/tokens";
 
@@ -75,10 +82,7 @@ export const SPAWN_MIN_PER_PULSE = 2;
 export const SPAWN_MAX_PER_PULSE = 3;
 /** Crowd never drops below this fraction of its size when the raid started. */
 export const RAID_FLOOR_FRACTION = 0.25;
-/** Stagger between each security unit poofing away during recovery (ms). */
-export const RECOVERY_POOF_INTERVAL_MS = 350;
-
-export type RaidState = "idle" | "raiding" | "recovering";
+export type RaidState = "idle" | "raiding" | "recovering" | "charging";
 
 export interface RaidControllerConfig {
   container: HTMLElement;
@@ -114,7 +118,6 @@ export class RaidController {
   private moveBuffer: MoveSample[] = [];
   private lastPulseAtMs = -Infinity;
   private raidStartCount = 0;
-  private recoveryTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -162,10 +165,14 @@ export class RaidController {
 
   /** Current security units, in the shape CreatureGrid.update() expects for repulsion/catching. */
   getSecurityUnits(): SecurityUnit[] {
+    const now = Date.now();
     return this.units.map((u) => ({
       x: u.x,
       y: u.y,
-      repelRadius: SECURITY_REPEL_RADIUS,
+      repelRadius:
+        u.phase === "shrinking"
+          ? SECURITY_REPEL_RADIUS * computeSecurityShrinkFraction(u.phaseStartMs, now)
+          : SECURITY_REPEL_RADIUS,
       catchRadius: SECURITY_CATCH_RADIUS,
     }));
   }
@@ -180,9 +187,12 @@ export class RaidController {
     return this.state;
   }
 
-  /** Wired to the Protest button: ends the raid, poofing security away and rebuilding the crowd. */
+  /** Instantly triggers full recovery without a hold — a direct entry point kept for
+   * callers that don't go through the charge mechanic (a later task). Marks every unit
+   * shrinking on a staggered schedule (SECURITY_SHRINK_MS apart) so they pop out one
+   * after another as tick() sweeps them, rather than all vanishing at once. */
   startRecovery(): void {
-    if (this.state === "recovering") return;
+    if (this.state === "recovering" || this.state === "charging") return;
 
     this.grid.setQuantity(QTY_MAX);
 
@@ -192,31 +202,35 @@ export class RaidController {
     }
 
     this.state = "recovering";
-    this.popNextUnit();
+    const now = Date.now();
+    this.units.forEach((unit, i) => {
+      unit.phase = "shrinking";
+      unit.phaseStartMs = now + i * SECURITY_SHRINK_MS;
+    });
   }
 
-  private popNextUnit(): void {
-    const unit = this.units.shift();
-    if (unit) {
-      this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
-      removeSecurityUnit(unit);
+  /** Call every engine frame (wired in a later task). Sweeps out any unit whose shrink window has
+   * elapsed, firing the despawn poof and removing it from the DOM. Transitions
+   * 'recovering' -> 'idle' once every unit has been swept. */
+  tick(nowMs: number): void {
+    for (let i = this.units.length - 1; i >= 0; i--) {
+      const unit = this.units[i]!;
+      if (unit.phase === "shrinking" && nowMs - unit.phaseStartMs >= SECURITY_SHRINK_MS) {
+        this.units.splice(i, 1);
+        this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
+        removeSecurityUnit(unit);
+      }
     }
 
-    if (this.units.length === 0) {
-      this.state = "idle";
-      this.recoveryTimer = null;
+    if (this.state === "recovering") {
+      if (this.units.length === 0) this.state = "idle";
       return;
     }
-
-    this.recoveryTimer = setTimeout(() => this.popNextUnit(), RECOVERY_POOF_INTERVAL_MS);
   }
 
-  /** Full teardown — call when tearing this controller down (mid-recovery or otherwise): cancels any pending recovery poof timer, removes all remaining security units from the DOM, and resets to idle. */
+  /** Full teardown — call when tearing this controller down: removes all remaining
+   * security units from the DOM and resets to idle. */
   destroy(): void {
-    if (this.recoveryTimer !== null) {
-      clearTimeout(this.recoveryTimer);
-      this.recoveryTimer = null;
-    }
     for (const unit of this.units) {
       removeSecurityUnit(unit);
     }
