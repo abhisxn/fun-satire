@@ -1720,7 +1720,502 @@ button tracking RaidController.getChargeFraction()."
 
 ---
 
-## Task 12: Long-session GPU/CPU profiling pass
+## Task 12: Avatar's repel radius shrinks on a full-power win
+
+**Files:**
+- Modify: `src/creatures/creaturePhysics.ts` (`updateCreature` — add an optional avatar-radius override)
+- Modify: `src/creatures/CreatureGrid.ts` (`setAvatarRepelRadius`/`getAvatarRepelRadius`, thread through `update()`)
+- Modify: `src/creatures/RaidController.ts` (`spawnPulse`, `tick`)
+- Test: `tests/unit/creaturePhysics.test.ts`, `tests/unit/creatureGrid.test.ts`, `tests/unit/raidController.test.ts`
+
+When a full-power hold clears a raid (Task 11's `tick()` completion branch), the avatar's own repel radius should shrink too — the crowd can gather right up close in the moment of winning, instead of still being held at arm's length by the normal 180px field. It resets back to normal the moment the next raid starts (`spawnPulse`'s idle→raiding transition), so it's a one-raid-cycle "victory" effect, not a permanent change. `applyRepulsion` already accepts an optional `radius` override (used today only for security units); this threads that same capability through to the avatar's own repulsion call, which currently never uses it.
+
+- [ ] **Step 1: Write the failing test for `updateCreature`'s new override**
+
+Add to `tests/unit/creaturePhysics.test.ts`, inside `describe('updateCreature', ...)`:
+
+```typescript
+    it('uses avatarRepelRadius to override the avatar-vs-creature repel radius when given', () => {
+      // Creature sits 100px from the avatar — inside the default 180px repelRadius,
+      // but outside a reduced 60px override. hx/hy are moved to match x/y and
+      // springStrength is zeroed so only the repulsion term is being observed
+      // (otherwise the spring-to-home force alone would make vx nonzero).
+      creature.x = 200;
+      creature.y = 100;
+      creature.hx = 200;
+      creature.hy = 100;
+      const avatar: AvatarPos = { x: 100, y: 100 };
+      const noSpringParams: PhysicsParams = { ...DEFAULT_PARAMS, springStrength: 0 };
+
+      updateCreature(creature, avatar, noSpringParams, [], 60);
+
+      expect(creature.vx).toBe(0);
+      expect(creature.vy).toBe(0);
+    });
+
+    it('falls back to params.repelRadius when no avatarRepelRadius override is given', () => {
+      creature.x = 200;
+      creature.y = 100;
+      creature.hx = 200;
+      creature.hy = 100;
+      const avatar: AvatarPos = { x: 100, y: 100 };
+      const noSpringParams: PhysicsParams = { ...DEFAULT_PARAMS, springStrength: 0 };
+
+      updateCreature(creature, avatar, noSpringParams);
+
+      expect(creature.vx).not.toBe(0);
+    });
+```
+
+- [ ] **Step 2: Run tests to verify the new one fails**
+
+Run: `npm test -- creaturePhysics -t "avatarRepelRadius"`
+Expected: FAIL — `updateCreature` doesn't accept a 5th argument yet, so the override has no effect and the creature at 100px still gets repelled by the default 180px radius.
+
+- [ ] **Step 3: Thread the override through `updateCreature`**
+
+In `src/creatures/creaturePhysics.ts`, change the signature and the avatar's `applyRepulsion` call:
+
+```typescript
+export function updateCreature(
+  creature: Creature,
+  avatar: AvatarPos,
+  params: PhysicsParams,
+  repulsors: Repulsor[] = [],
+  avatarRepelRadius?: number,
+): void {
+  const { springStrength, damping } = params;
+
+  applyRepulsion(creature, avatar, params, avatarRepelRadius);
+  for (const repulsor of repulsors) {
+    applyRepulsion(creature, repulsor, params, repulsor.radius);
+  }
+
+  // Spring to home
+  creature.vx += (creature.hx - creature.x) * springStrength;
+  creature.vy += (creature.hy - creature.y) * springStrength;
+
+  // Damping
+  creature.vx *= damping;
+  creature.vy *= damping;
+
+  // Position update (semi-implicit Euler)
+  creature.x += creature.vx;
+  creature.y += creature.vy;
+}
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `npm test -- creaturePhysics`
+Expected: PASS (full file)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/creatures/creaturePhysics.ts tests/unit/creaturePhysics.test.ts
+git commit -m "feat: updateCreature accepts an avatar-only repel radius override"
+```
+
+- [ ] **Step 6: Write the failing test for `CreatureGrid.setAvatarRepelRadius`**
+
+Add to `tests/unit/creatureGrid.test.ts` (a new `describe` block, e.g. after the `'security units'` block):
+
+```typescript
+  describe('setAvatarRepelRadius', () => {
+    it('defaults to the normal repelRadius (creature 100px away is repelled)', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      // hx/hy moved to match x/y so the spring-to-home force can't also move vx —
+      // only the avatar repulsion term is being observed.
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.update(200, 100); // avatar 100px away, well inside the default 180px radius
+
+      expect(target.vx).not.toBe(0);
+    });
+
+    it('overriding to a smaller radius stops repulsion just outside it', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.setAvatarRepelRadius(60);
+      grid.update(200, 100); // avatar 100px away — inside the default radius, outside the 60px override
+
+      expect(target.vx).toBe(0);
+    });
+
+    it('passing null restores the default radius', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.setAvatarRepelRadius(60);
+      grid.setAvatarRepelRadius(null);
+      grid.update(200, 100);
+
+      expect(target.vx).not.toBe(0);
+    });
+
+    it('getAvatarRepelRadius reflects the last value set', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      expect(grid.getAvatarRepelRadius()).toBeNull();
+
+      grid.setAvatarRepelRadius(60);
+      expect(grid.getAvatarRepelRadius()).toBe(60);
+
+      grid.setAvatarRepelRadius(null);
+      expect(grid.getAvatarRepelRadius()).toBeNull();
+    });
+  });
+```
+
+- [ ] **Step 7: Run tests to verify they fail**
+
+Run: `npm test -- creatureGrid -t "setAvatarRepelRadius"`
+Expected: FAIL — `setAvatarRepelRadius`/`getAvatarRepelRadius` don't exist yet.
+
+- [ ] **Step 8: Add the field, getter/setter, and thread it into `update()`**
+
+Add a private field to the `CreatureGrid` class (alongside `repulsor`):
+
+```typescript
+  private avatarRepelRadius: number | null = null;
+```
+
+Add these public methods (near `setRepulsor`/`clearRepulsor`):
+
+```typescript
+  /** Overrides the avatar-vs-creature repel radius (independent of security units' own
+   * radii). Pass null to restore the default (`physicsParams.repelRadius`). */
+  setAvatarRepelRadius(radius: number | null): void {
+    this.avatarRepelRadius = radius;
+  }
+
+  getAvatarRepelRadius(): number | null {
+    return this.avatarRepelRadius;
+  }
+```
+
+In `update()`, change the physics loop:
+
+```typescript
+    for (const c of this.creatures) {
+      updateCreature(c, avatar, this.physicsParams, repulsors, this.avatarRepelRadius ?? undefined);
+    }
+```
+
+- [ ] **Step 9: Run tests to verify they pass**
+
+Run: `npm test -- creatureGrid -t "setAvatarRepelRadius"`
+Expected: PASS
+
+- [ ] **Step 10: Run the full CreatureGrid suite**
+
+Run: `npm test -- creatureGrid`
+Expected: PASS
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add src/creatures/CreatureGrid.ts tests/unit/creatureGrid.test.ts
+git commit -m "feat: CreatureGrid.setAvatarRepelRadius overrides the avatar's own repel field"
+```
+
+- [ ] **Step 12: Write the failing RaidController tests**
+
+Add to `tests/unit/raidController.test.ts`, inside `describe('RaidController', ...)`:
+
+```typescript
+  it('shrinks the avatar repel radius once a full-power charge clears the raid', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    expect(grid.getAvatarRepelRadius()).toBeNull();
+
+    raid.startCharging();
+    t += 1800; // CHARGE_DURATION_MS
+    raid.tick(t);
+    t += SECURITY_SHRINK_MS;
+    raid.tick(t);
+
+    expect(raid.getState()).toBe('idle');
+    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
+
+    now.mockRestore();
+  });
+
+  it('restores the default avatar repel radius once a new raid starts', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    raid.startCharging();
+    t += 1800;
+    raid.tick(t);
+    t += SECURITY_SHRINK_MS;
+    raid.tick(t);
+    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
+
+    // A fresh shake starts a new raid.
+    t += SHAKE_PULSE_COOLDOWN_MS;
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    expect(raid.getState()).toBe('raiding');
+    expect(grid.getAvatarRepelRadius()).toBeNull();
+
+    now.mockRestore();
+  });
+
+  it('does not shrink the avatar repel radius via the legacy instant startRecovery() path', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    raid.startRecovery();
+    const spawned = raid.getSecurityUnits().length;
+    for (let i = 0; i < spawned; i++) {
+      t += SECURITY_SHRINK_MS;
+      raid.tick(t);
+    }
+
+    expect(raid.getState()).toBe('idle');
+    expect(grid.getAvatarRepelRadius()).toBeNull();
+
+    now.mockRestore();
+  });
+```
+
+Add `AVATAR_REPEL_RADIUS_AFTER_WIN` and `SHAKE_PULSE_COOLDOWN_MS` to this test file's existing import from `'../../src/creatures/RaidController'` (both already exist as exports — `SHAKE_PULSE_COOLDOWN_MS` since the original file, `AVATAR_REPEL_RADIUS_AFTER_WIN` added in the next step).
+
+- [ ] **Step 13: Run tests to verify they fail**
+
+Run: `npm test -- raidController -t "avatar repel radius"`
+Expected: FAIL — `AVATAR_REPEL_RADIUS_AFTER_WIN` doesn't exist, and neither `spawnPulse` nor `tick` touch the grid's avatar repel radius yet.
+
+- [ ] **Step 14: Wire it into `RaidController`**
+
+Add this exported constant near `SECURITY_REPEL_RADIUS`:
+
+```typescript
+/** How far the avatar's own repel radius shrinks once a raid fully clears via a full-power
+ * hold — the crowd can gather right up close in the moment of winning, instead of still
+ * being held at arm's length by the normal repel field. Reset the moment the next raid
+ * starts (see spawnPulse). */
+export const AVATAR_REPEL_RADIUS_AFTER_WIN = 60;
+```
+
+In `spawnPulse()`, reset the override the moment a new raid begins:
+
+```typescript
+  private spawnPulse(x: number, y: number): void {
+    if (this.state === "idle") {
+      this.state = "raiding";
+      this.raidStartCount = this.grid.getCreatureCount();
+      this.grid.setAvatarRepelRadius(null);
+    }
+```
+
+In `tick()`, apply it exactly at the full-charge completion branch:
+
+```typescript
+    if (fraction >= 1 && this.units.length === 0) {
+      this.state = "idle";
+      this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
+    }
+```
+
+(This is scoped to the charge-completion path only — the legacy `startRecovery()` instant path isn't wired to any UI control after Task 11 and intentionally doesn't trigger this "win" effect, matching the ask specifically about the press-and-hold full-power case.)
+
+- [ ] **Step 15: Run tests to verify they pass**
+
+Run: `npm test -- raidController`
+Expected: PASS (full file)
+
+- [ ] **Step 16: Run the full unit suite**
+
+Run: `npm test`
+Expected: PASS
+
+- [ ] **Step 17: Manually verify**
+
+Run: `npm run dev`. Shake the avatar to start a raid, hold the Protest button to full charge, and confirm the crowd visibly presses in closer around the avatar right after the win than it did before the raid — then shake again to start a new raid and confirm the crowd goes back to keeping its normal distance.
+
+- [ ] **Step 18: Commit**
+
+```bash
+git add src/creatures/RaidController.ts tests/unit/raidController.test.ts
+git commit -m "feat: avatar repel radius shrinks on a full-power protest win
+
+Clearing a raid via a full 1.8s hold now also pulls the avatar's own
+repel field in from 180px to 60px, so the crowd can gather in close
+around the avatar in the moment of winning. Resets to normal the
+instant the next raid starts."
+```
+
+---
+
+## Task 13: Lower the default crowd quantity to 160
+
+**Files:**
+- Modify: `src/config/tokens.ts:50`
+
+`DEFAULT_CREATURE_QUANTITY` (currently 300) is the single source of truth for both the FilterPanel slider's initial value and the crowd size set once onboarding completes (`main.ts`'s `mountPostOnboarding()`/`carousel.onComplete()` call `filterPanel.setQuantity(DEFAULT_CREATURE_QUANTITY)`) — changing the one constant updates both call sites.
+
+- [ ] **Step 1: Update the constant**
+
+In `src/config/tokens.ts`, change:
+
+```typescript
+export const DEFAULT_CREATURE_QUANTITY = 300;
+```
+
+to:
+
+```typescript
+export const DEFAULT_CREATURE_QUANTITY = 160;
+```
+
+- [ ] **Step 2: Run the full unit suite**
+
+Run: `npm test`
+Expected: PASS — no test in the suite asserts this literal value (confirmed by grep before writing this task), so nothing else should need updating.
+
+- [ ] **Step 3: Manually verify**
+
+Run: `npm run dev`, complete onboarding, confirm the crowd spawns at 160 and the FilterPanel's quantity slider starts at 160.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/config/tokens.ts
+git commit -m "tweak: lower default crowd quantity from 300 to 160"
+```
+
+---
+
+## Task 14: Raise the idle floor from a 2%-of-target minimum to an absolute 30
+
+**Files:**
+- Modify: `src/creatures/CreatureGrid.ts:36`
+- Test: `tests/unit/creatureGridIdleResurge.test.ts`
+
+The idle-decay floor is `Math.max(IDLE_FLOOR_MIN_COUNT, Math.round(this.targetCount * idleVisibleFraction(idleMs)))` (`CreatureGrid.ts` around line 527) — `idleVisibleFraction` ramps down to `IDLE_FLOOR_FRACTION` (2%) of the target quantity, floored at `IDLE_FLOOR_MIN_COUNT`. At the old default of 300 that floor rarely mattered (2% of 300 = 6, still tiny); at the new default of 160 (Task 13) 2% is ~3, and `IDLE_FLOOR_MIN_COUNT` is currently only 3 — a fully idle crowd could visually thin out to almost nothing. Raise the absolute floor to 30 so an idle crowd never reads as empty, regardless of target quantity.
+
+- [ ] **Step 1: Update the failing test**
+
+In `tests/unit/creatureGridIdleResurge.test.ts`, replace the `'stops replenishing once the crowd has decayed to the idle floor'` test's loop bound and final assertion:
+
+```typescript
+  it('stops replenishing once the crowd has decayed to the idle floor', () => {
+    const grid = new CreatureGrid(config);
+    grid.spawn('cockroach'); // 240 creatures
+    const creatures = (grid as unknown as {
+      creatures: Array<{ waitingRespawn: boolean; spawnDone: boolean }>;
+    }).creatures;
+    for (let i = 0; i < creatures.length - 27; i++) {
+      creatures[i].waitingRespawn = true;
+      creatures[i].spawnDone = false;
+    }
+    const state = grid as unknown as {
+      lastActivityMs: number;
+      lastFadePickMs: number;
+      lastRepopPickMs: number;
+    };
+    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_DECAY_MS + 60_000);
+    state.lastFadePickMs = Date.now();
+    state.lastRepopPickMs = 0;
+
+    grid.update(400, 300);
+
+    // Floor for 240 creatures is max(IDLE_FLOOR_MIN_COUNT=30, round(240*0.02)=5) = 30 —
+    // the absolute floor now dominates the percentage for typical crowd sizes. 27 start
+    // visible, deficit is 30 - 27 = 3, closeable in one tick (REPOP_COUNT=5).
+    expect(creatures.filter((c) => !c.waitingRespawn).length).toBe(30);
+  });
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm test -- creatureGridIdleResurge -t "stops replenishing"`
+Expected: FAIL — with the current `IDLE_FLOOR_MIN_COUNT = 3`, the floor is `max(3, 5) = 5`, not 30, so the deficit/final count math doesn't match.
+
+- [ ] **Step 3: Update the constant**
+
+In `src/creatures/CreatureGrid.ts`, change:
+
+```typescript
+export const IDLE_FLOOR_MIN_COUNT = 3;
+```
+
+to:
+
+```typescript
+export const IDLE_FLOOR_MIN_COUNT = 30;
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `npm test -- creatureGridIdleResurge -t "stops replenishing"`
+Expected: PASS
+
+- [ ] **Step 5: Run the full CreatureGrid/idle-resurge suite**
+
+Run: `npm test -- creatureGrid`
+Expected: PASS — the other idle-resurge tests (`fully refills a small deficit`, `uses the larger burst cap`, `falls back to the normal per-tick cap`) all set `lastActivityMs` to "now" (fully active, not idle), so the floor value doesn't affect them.
+
+- [ ] **Step 6: Manually verify**
+
+Run: `npm run dev`, let the sticker sit idle for several minutes (or temporarily lower `IDLE_GRACE_MS`/`IDLE_DECAY_MS` locally to speed up observation, then revert), confirm the crowd never visibly thins below roughly 30 creatures.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/creatures/CreatureGrid.ts tests/unit/creatureGridIdleResurge.test.ts
+git commit -m "tweak: raise the idle-decay floor from 3 to an absolute 30
+
+2% of target quantity floored at 3 could read as an almost-empty
+screen once the default crowd size dropped to 160 (Task 13) — an
+idle crowd should never thin out below a legible ~30 creatures
+regardless of target quantity."
+```
+
+---
+
+## Task 15: Long-session GPU/CPU profiling pass
 
 **Files:**
 - None (investigation task) — findings get appended to the spec if they surface further work.
@@ -1743,6 +2238,14 @@ In the recorded flame chart / summary:
 - Check the `anime.js`-driven `startSecurityWander` calls: with up to 24 units wandering continuously, confirm the number of live animation instances stays bounded (it should — a unit only ever has one `posAnim` active at a time, replaced on each leg's `complete`).
 - Check `removeSecurityUnit`'s `posAnim.pause()` is actually being hit for every removed unit (no orphaned running animations after a unit is swept by `tick()`).
 - Look for any single frame exceeding 16ms consistently once the crowd is large — note which function dominates it, if any.
+
+Also try these three targeted, codebase-specific experiments (each is cheap to test and revert if it doesn't help — vetted against what this app actually does, not applied blind):
+
+- **`translate3d` for the main crowd.** `CreatureGrid`'s per-creature transform (written in its per-mode render loop) uses 2D `translate(...)`, unlike `SecurityCreature.ts`/`BugSwarm.ts`, which already use `translate3d(...)`. Try switching `CreatureGrid.ts`'s transform strings to `translate3d(${x}px,${y}px,0)` and re-profile at max crowd quantity — compare Composite/Paint time before and after.
+- **CSS containment.** Add `contain: layout style paint;` to the `#stage` container (or the creature grid's own container element) and re-profile — scopes recalculation to that subtree instead of the whole document. Cheap to try, cheap to revert.
+- **`will-change: transform`.** Worth *measuring*, not applying by default — promoting hundreds of simultaneously-animating elements to their own compositing layer can cost more GPU memory than it saves at this app's creature counts (up to 900). Try it on the crowd container only (not per-creature), profile memory + paint time both ways, and keep it only if it's a net win.
+
+(Spatial partitioning, object pooling, pointer-event throttling, and fixed-timestep/dt-clamping were considered and ruled out for this codebase specifically: there's no creature-creature repulsion to partition, the steady-state per-frame loop doesn't allocate objects, pointer events are already decoupled from the physics tick, and `Clock.ts` already clamps `dt` to `MAX_DT_MS = 250`.)
 
 - [ ] **Step 3: Record findings**
 
@@ -1768,7 +2271,7 @@ git commit -m "docs: record long-session profiling findings for the raid perf pa
 
 ---
 
-## Task 13: Full manual QA pass
+## Task 16: Full manual QA pass
 
 **Files:** None — verification only, per this project's convention that unit tests don't catch visual/feel regressions.
 
@@ -1792,7 +2295,10 @@ Run: `npm run dev` and verify, in order:
 - **Spawn entrance/mix/disperse**: trigger a fresh pulse — units pop in from scale 0 at the avatar's position, in a mix of police/raf, and burst outward before settling into wander.
 - **Poof timing**: trigger recovery (via full charge) — each unit visibly shrinks briefly before its poof cloud appears, not vanishing instantly under the cloud.
 - **Hold-to-charge/release**: covered in Task 11 Step 7 — re-verify once more after all other changes land, since later tasks touch the same button.
+- **Avatar repel radius on win**: hold to a full-power win — the crowd gathers noticeably closer around the avatar right after; shake again to start a new raid and confirm the normal repel distance returns.
 - **Button padding**: Protest button's proportions match the Figma reference (node `189:4623`).
+- **Default quantity**: a fresh onboarding completion spawns 160 creatures, and the FilterPanel slider starts at 160.
+- **Idle floor**: leave the sticker idle well past `IDLE_GRACE_MS + IDLE_DECAY_MS` — the crowd decays but never visibly thins below roughly 30 creatures.
 
 - [ ] **Step 3: Report completion**
 

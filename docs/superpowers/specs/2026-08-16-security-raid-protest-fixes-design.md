@@ -90,6 +90,13 @@ click undoes an entire raid. New behavior: recovery must be *earned* by holding.
 `releaseCharge()` (replacing the current single `startRecovery()` call site in `main.ts`), while
 `startRecovery()` itself can stay internally as what fires once charge reaches 1.0.
 
+- **Avatar repel radius on a full-power win**: clearing a raid via a full 1.8s hold also pulls the avatar's
+  own repel radius in from its normal 180px to a tighter 60px, so the crowd can gather in close around the
+  avatar in the moment of winning instead of still being held at arm's length. Resets to the default the
+  instant the next raid starts (the same `spawnPulse` idle→raiding transition that already resets other
+  per-raid state). Scoped to the charge-completion path only — the legacy instant `startRecovery()` isn't
+  wired to any UI control after this change and doesn't trigger the effect.
+
 ## C. Protest button — Figma padding fix
 
 Figma (node `189:4623`) specs the Protest CTA pill as its own fixed box: `height:39px`, `padding:12px` on all
@@ -110,6 +117,19 @@ implementation plan as a distinct, ordered step — likely covering some combina
 expensive-filter element counts, verifying `posAnim` cleanup in `removeSecurityUnit` (currently pauses but
 doesn't appear to be nulled/GC'd early), and confirming `RaidController.destroy()` is actually invoked on
 every teardown path.
+
+A second round of candidate fixes was checked against the actual codebase rather than applied on general
+principle. Worth trying (added to the implementation plan's investigation task): promoting `CreatureGrid`'s
+main crowd transform to `translate3d` (it's currently 2D `translate`, unlike `SecurityCreature.ts`/
+`BugSwarm.ts`, which already use `translate3d`); CSS containment (`contain: layout style paint`) on the
+crowd container; and `will-change: transform` on the crowd container specifically, measured rather than
+applied by default since promoting hundreds of simultaneously-animating elements to their own compositing
+layer can cost more GPU memory than it saves at this app's creature counts. Ruled out as inapplicable to
+this codebase: spatial partitioning (there's no creature-creature repulsion to partition — only
+avatar/security-vs-creature, already linear), object pooling (the steady-state per-frame loop doesn't
+allocate; DOM churn only happens on discrete mode/quantity changes), pointer-event throttling (already
+decoupled — `pointermove` just writes to a ref, the RAF tick does the real work once per frame regardless of
+event rate), and fixed-timestep/dt clamping (`Clock.ts` already clamps `dt` to `MAX_DT_MS = 250`).
 
 ## E. Complexity & dependency recommendations
 
@@ -164,6 +184,17 @@ state to the same files. Findings, most concrete first:
    state should keep flowing through the existing `getSecurityUnits()` / `getRaidFloor()` read-only
    accessors, with a new `getChargeFraction()`-style accessor added the same way if `CreatureGrid` ever needs
    it for rendering.
+
+## F. Crowd quantity defaults
+
+- **Lower the default spawn quantity**: `DEFAULT_CREATURE_QUANTITY` drops from 300 to 160. It's the single
+  source of truth for both the FilterPanel slider's initial value and the crowd size set once onboarding
+  completes, so changing the one constant updates both.
+- **Raise the idle-decay floor**: the idle-decay floor is `max(IDLE_FLOOR_MIN_COUNT, round(targetCount *
+  idleVisibleFraction(idleMs)))`. `IDLE_FLOOR_MIN_COUNT` is currently 3, so at the new lower default quantity
+  the percentage-based floor (2% of target) is small enough that an idle crowd could visually thin out to
+  almost nothing. Raise `IDLE_FLOOR_MIN_COUNT` to 30 so an idle crowd never reads as empty, regardless of
+  target quantity.
 
 ## Testing
 
