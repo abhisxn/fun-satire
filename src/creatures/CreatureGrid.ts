@@ -557,6 +557,7 @@ export class CreatureGrid {
         for (let i = this.creatures.length - 1; i >= 0 && caughtThisUnit < CATCH_MAX_PER_UNIT_PER_TICK; i--) {
           if (this.targetCount <= raidFloor) break;
           const c = this.creatures[i]!;
+          if (!c.spawnDone || c.fadeStartMs !== 0 || c.waitingRespawn) continue;
           const dx = c.x - unit.x;
           const dy = c.y - unit.y;
           if (Math.sqrt(dx * dx + dy * dy) >= unit.catchRadius) continue;
