@@ -348,6 +348,54 @@ describe('CreatureGrid', () => {
     });
   });
 
+  describe('security units', () => {
+    it('removes a creature caught within a security unit catchRadius and calls onCreatureTerminated', () => {
+      const terminated: Array<{ x: number; y: number; w: number; h: number }> = [];
+      const grid = new CreatureGrid({
+        ...config,
+        initialQuantity: 20,
+        onCreatureTerminated: (x, y, w, h) => terminated.push({ x, y, w, h }),
+      });
+      grid.spawn('cockroach');
+      const before = grid.getCreatureCount();
+
+      // Security unit sitting exactly on top of wherever creature 0 spawned.
+      const target = (grid as unknown as { creatures: { x: number; y: number }[] }).creatures[0]!;
+      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160, catchRadius: 50 }];
+
+      grid.update(-1000, -1000, securityUnits, 0);
+
+      expect(grid.getCreatureCount()).toBeLessThan(before);
+      expect(terminated.length).toBeGreaterThan(0);
+    });
+
+    it('does not remove creatures once targetCount is at or below raidFloor', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+
+      const target = (grid as unknown as { creatures: { x: number; y: number }[] }).creatures[0]!;
+      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160, catchRadius: 50 }];
+
+      grid.update(-1000, -1000, securityUnits, 5);
+
+      expect(grid.getCreatureCount()).toBe(5);
+    });
+
+    it('repels creatures away from a security unit like it does the avatar', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 20 });
+      grid.spawn('cockroach');
+
+      const target = (grid as unknown as { creatures: { x: number; y: number; vx: number }[] }).creatures[0]!;
+      const startVx = target.vx;
+      const securityUnits = [{ x: target.x - 50, y: target.y, repelRadius: 160, catchRadius: 1 }];
+
+      // Avatar far away so only the security unit's repulsion is in play.
+      grid.update(-5000, -5000, securityUnits, 20);
+
+      expect(target.vx).not.toBe(startVx);
+    });
+  });
+
   describe('setRepelMultiplier', () => {
     it('updates physics params', () => {
       const grid = new CreatureGrid(config);

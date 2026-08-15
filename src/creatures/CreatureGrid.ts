@@ -51,6 +51,18 @@ export const HOVER_PROXIMITY_PADDING = 20;
 export const HOVER_TONE_COOLDOWN_MS = 260;
 /** Peak extra scale (on top of the creature's own popScale) while hovered — the visual half of the hover feedback. */
 export const HOVER_SCALE_BUMP = 0.18;
+/** How often the catch-radius check runs against security units (ms). */
+export const CATCH_CHECK_INTERVAL_MS = 400;
+/** Max creatures a single security unit can catch per check interval. */
+export const CATCH_MAX_PER_UNIT_PER_TICK = 3;
+
+/** A wandering security sprite's current position and its two effect radii. */
+export interface SecurityUnit {
+  x: number;
+  y: number;
+  repelRadius: number;
+  catchRadius: number;
+}
 /** Per-frame approach rate toward the hover scale target — a simple decorative ease, not physics. */
 const HOVER_BOOST_LERP = 0.25;
 
@@ -213,6 +225,7 @@ export interface CreatureGridConfig {
   container: HTMLElement;
   mode: CreatureMode;
   initialQuantity?: number;
+  onCreatureTerminated?: (x: number, y: number, w: number, h: number) => void;
 }
 
 export class CreatureGrid {
@@ -232,6 +245,7 @@ export class CreatureGrid {
     damping: 0.88,
   };
   private lastFadePickMs: number = 0;
+  private lastCatchPickMs: number = 0;
   private lastRepopPickMs: number = 0;
   private lastAvatarX: number | null = null;
   private lastAvatarY: number | null = null;
@@ -239,6 +253,7 @@ export class CreatureGrid {
   private lastActivityMs: number = Date.now();
   private burstUntilMs: number = 0;
   private repulsor: Repulsor | null = null;
+  private onCreatureTerminated: ((x: number, y: number, w: number, h: number) => void) | null = null;
   private audioContext: AudioContext | null = null;
   private hoverState = new WeakMap<Creature, boolean>();
   private hoverBoost = new WeakMap<Creature, number>();
@@ -249,6 +264,7 @@ export class CreatureGrid {
     this.mode = config.mode;
     const modeConfig = MODE_CONFIGS[this.mode];
     this.targetCount = config.initialQuantity ?? modeConfig.cols * modeConfig.rows;
+    this.onCreatureTerminated = config.onCreatureTerminated ?? null;
   }
 
   async init(): Promise<void> {
@@ -385,7 +401,7 @@ export class CreatureGrid {
     }
   }
 
-  update(avatarX: number, avatarY: number): void {
+  update(avatarX: number, avatarY: number, securityUnits: SecurityUnit[] = [], raidFloor: number = QTY_MIN): void {
     const avatar = { x: avatarX, y: avatarY };
     const now = Date.now();
 
@@ -405,8 +421,12 @@ export class CreatureGrid {
     this.lastAvatarY = avatarY;
     this.lastFrameMs = now;
 
+    const repulsors: Repulsor[] = this.repulsor ? [this.repulsor] : [];
+    for (const unit of securityUnits) {
+      repulsors.push({ x: unit.x, y: unit.y, radius: unit.repelRadius });
+    }
     for (const c of this.creatures) {
-      updateCreature(c, avatar, this.physicsParams, this.repulsor);
+      updateCreature(c, avatar, this.physicsParams, repulsors);
     }
 
     // Hover-enter edge detection: fires at most one tone per cooldown
@@ -521,6 +541,33 @@ export class CreatureGrid {
           const picked = waiting.splice(Math.floor(Math.random() * waiting.length), 1)[0];
           picked.waitingRespawn = false;
           picked.spawnPopAtMs = now;
+        }
+      }
+    }
+
+    // Security catch: throttled pass that permanently removes creatures
+    // caught within a security unit's tight catchRadius, down to raidFloor.
+    // Kept separate from the fade/respawn cycle above — a catch is a
+    // permanent removal, not a temporary despawn that repop can undo.
+    if (securityUnits.length > 0 && now - this.lastCatchPickMs >= CATCH_CHECK_INTERVAL_MS) {
+      this.lastCatchPickMs = now;
+      for (const unit of securityUnits) {
+        if (this.targetCount <= raidFloor) break;
+        let caughtThisUnit = 0;
+        for (let i = this.creatures.length - 1; i >= 0 && caughtThisUnit < CATCH_MAX_PER_UNIT_PER_TICK; i--) {
+          if (this.targetCount <= raidFloor) break;
+          const c = this.creatures[i]!;
+          const dx = c.x - unit.x;
+          const dy = c.y - unit.y;
+          if (Math.sqrt(dx * dx + dy * dy) >= unit.catchRadius) continue;
+
+          this.creatures.splice(i, 1);
+          const eyeIdx = this.eyeCreatures.indexOf(c as EyeCreature);
+          if (eyeIdx >= 0) this.eyeCreatures.splice(eyeIdx, 1);
+          this.onCreatureTerminated?.(c.x, c.y, c.w * c.scale, c.h * c.scale);
+          c.el.remove();
+          this.targetCount--;
+          caughtThisUnit++;
         }
       }
     }
