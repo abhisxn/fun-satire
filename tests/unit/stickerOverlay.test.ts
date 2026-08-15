@@ -168,4 +168,20 @@ describe('StickerOverlay', () => {
     // (160), not driven toward MAX_WIDTH by the pinch formula.
     expect(parseFloat(s.el.querySelector('img')!.style.width)).toBeCloseTo(160);
   });
+
+  it('shows a drag-hint tooltip that mentions both drag and shake', () => {
+    const sticker = new StickerOverlay(
+      '/some.png',
+      100,
+      100,
+      undefined,
+      undefined,
+      undefined,
+      true, // showDragHint
+    );
+    document.body.appendChild(sticker.el);
+
+    const hint = sticker.el.querySelector('.sticker-overlay-drag-hint');
+    expect(hint?.textContent).toBe('Drag or Shake Me');
+  });
 });

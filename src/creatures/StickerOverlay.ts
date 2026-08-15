@@ -138,7 +138,7 @@ export class StickerOverlay {
   private buildDragHint(): HTMLDivElement {
     const hint = document.createElement("div");
     hint.className = "sticker-overlay-drag-hint";
-    hint.textContent = "Drag me";
+    hint.textContent = "Drag or Shake Me";
     hint.style.cssText = [
       "position:absolute",
       "left:50%",
