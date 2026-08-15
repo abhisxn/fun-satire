@@ -48,3 +48,10 @@ export function motionScale(matchesReducedMotion: boolean): number {
 export const QTY_MIN = 10;
 export const QTY_MAX = 900;
 export const DEFAULT_CREATURE_QUANTITY = 300;
+
+// Repel radius (px) bounds and default, shared by the filter panel slider
+// and the live grid's physics params.
+export const REPEL_RADIUS_MIN = 60;
+export const REPEL_RADIUS_MAX = 360;
+export const REPEL_RADIUS_STEP = 10;
+export const DEFAULT_REPEL_RADIUS = 180;

@@ -29,7 +29,10 @@ describe('TextOverlay', () => {
     const editor = t.getEditor();
     expect(editor.contentEditable).toBe('true');
     expect(editor.style.fontFamily).toContain('Anton');
-    expect(editor.textContent).toBe('Type here');
+    // Empty (not real text) so the CSS `:empty::before` placeholder shows
+    // "Type here" until the user types — no click-and-delete needed.
+    expect(editor.textContent).toBe('');
+    expect(editor.dataset.placeholder).toBe('Type here');
   });
 
   it('updates font via setFont', () => {
@@ -92,8 +95,8 @@ describe('TextOverlay', () => {
       cancelable: true,
     }));
 
-    // Default font size is 56; pinch factor 2 -> 112, within [16, 240].
-    expect(parseFloat(t.getEditor().style.fontSize)).toBeCloseTo(112);
+    // Default font size is 36; pinch factor 2 -> 72, within [16, 240].
+    expect(parseFloat(t.getEditor().style.fontSize)).toBeCloseTo(72);
   });
 
   it('clamps pinch scaling within MIN_FONT_SIZE/MAX_FONT_SIZE bounds', () => {
@@ -159,8 +162,8 @@ describe('TextOverlay', () => {
 
     // Once a second finger is down, the corner-handle's own move-tracking
     // also defers (single-finger only, mirroring makeDraggable.ts), so font
-    // size should be untouched by both mechanisms — still the default (56),
+    // size should be untouched by both mechanisms — still the default (36),
     // not driven toward MAX_FONT_SIZE by the pinch formula.
-    expect(parseFloat(t.getEditor().style.fontSize)).toBeCloseTo(56);
+    expect(parseFloat(t.getEditor().style.fontSize)).toBeCloseTo(36);
   });
 });

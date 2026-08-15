@@ -348,33 +348,33 @@ describe('CreatureGrid', () => {
     });
   });
 
-  describe('setRepelMultiplier', () => {
+  describe('setRepelRadius', () => {
     it('updates physics params', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('cockroach');
 
-      grid.setRepelMultiplier(2);
+      grid.setRepelRadius(240);
 
-      const physicsParams = (grid as unknown as { physicsParams: { repelStrength: number } }).physicsParams;
-      expect(physicsParams.repelStrength).toBe(240);
+      const physicsParams = (grid as unknown as { physicsParams: { repelRadius: number } }).physicsParams;
+      expect(physicsParams.repelRadius).toBe(240);
     });
 
-    it('scales repel strength linearly', () => {
+    it('sets radius directly', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('cockroach');
 
-      grid.setRepelMultiplier(0.5);
-      const physicsParams = (grid as unknown as { physicsParams: { repelStrength: number } }).physicsParams;
-      expect(physicsParams.repelStrength).toBe(60);
+      grid.setRepelRadius(60);
+      const physicsParams = (grid as unknown as { physicsParams: { repelRadius: number } }).physicsParams;
+      expect(physicsParams.repelRadius).toBe(60);
     });
 
-    it('handles zero multiplier', () => {
+    it('clamps negative radius to zero', () => {
       const grid = new CreatureGrid(config);
       grid.spawn('cockroach');
 
-      grid.setRepelMultiplier(0);
-      const physicsParams = (grid as unknown as { physicsParams: { repelStrength: number } }).physicsParams;
-      expect(physicsParams.repelStrength).toBe(0);
+      grid.setRepelRadius(-10);
+      const physicsParams = (grid as unknown as { physicsParams: { repelRadius: number } }).physicsParams;
+      expect(physicsParams.repelRadius).toBe(0);
     });
   });
 });
