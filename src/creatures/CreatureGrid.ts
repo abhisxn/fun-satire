@@ -497,6 +497,39 @@ export class CreatureGrid {
       }
     }
 
+    // Security catch: throttled pass that permanently removes creatures
+    // caught within a security unit's tight catchRadius, down to raidFloor.
+    // Kept separate from the fade/respawn cycle below — a catch is a
+    // permanent removal, not a temporary despawn that repop can undo. Must
+    // run before the demand-driven respawn block: repop can revive a
+    // waitingRespawn creature within this same tick, and a creature must
+    // not be catchable in the instant it reappears — this ordering
+    // evaluates catch eligibility on each creature's state as it stood at
+    // the start of the tick.
+    if (securityUnits.length > 0 && this.shouldRunThrottled(this.lastCatchPickMs, CATCH_CHECK_INTERVAL_MS, now)) {
+      this.lastCatchPickMs = now;
+      for (const unit of securityUnits) {
+        if (this.targetCount <= raidFloor) break;
+        let caughtThisUnit = 0;
+        for (let i = this.creatures.length - 1; i >= 0 && caughtThisUnit < CATCH_MAX_PER_UNIT_PER_TICK; i--) {
+          if (this.targetCount <= raidFloor) break;
+          const c = this.creatures[i]!;
+          if (c.fadeStartMs !== 0 || c.waitingRespawn) continue;
+          const dx = c.x - unit.x;
+          const dy = c.y - unit.y;
+          if (Math.sqrt(dx * dx + dy * dy) >= unit.catchRadius) continue;
+
+          this.creatures.splice(i, 1);
+          const eyeIdx = this.eyeCreatures.indexOf(c as EyeCreature);
+          if (eyeIdx >= 0) this.eyeCreatures.splice(eyeIdx, 1);
+          this.onCreatureTerminated?.(c.x, c.y, c.w * c.scale, c.h * c.scale);
+          c.el.remove();
+          this.targetCount--;
+          caughtThisUnit++;
+        }
+      }
+    }
+
     // Demand-driven respawn: closes the gap toward how much of the crowd
     // should be visible right now (full while active, decaying toward the
     // idle floor the longer the sticker sits still), capped per tick so the
@@ -523,34 +556,6 @@ export class CreatureGrid {
           const picked = waiting.splice(Math.floor(Math.random() * waiting.length), 1)[0];
           picked.waitingRespawn = false;
           picked.spawnPopAtMs = now;
-        }
-      }
-    }
-
-    // Security catch: throttled pass that permanently removes creatures
-    // caught within a security unit's tight catchRadius, down to raidFloor.
-    // Kept separate from the fade/respawn cycle above — a catch is a
-    // permanent removal, not a temporary despawn that repop can undo.
-    if (securityUnits.length > 0 && this.shouldRunThrottled(this.lastCatchPickMs, CATCH_CHECK_INTERVAL_MS, now)) {
-      this.lastCatchPickMs = now;
-      for (const unit of securityUnits) {
-        if (this.targetCount <= raidFloor) break;
-        let caughtThisUnit = 0;
-        for (let i = this.creatures.length - 1; i >= 0 && caughtThisUnit < CATCH_MAX_PER_UNIT_PER_TICK; i--) {
-          if (this.targetCount <= raidFloor) break;
-          const c = this.creatures[i]!;
-          if (!c.spawnDone || c.fadeStartMs !== 0 || c.waitingRespawn) continue;
-          const dx = c.x - unit.x;
-          const dy = c.y - unit.y;
-          if (Math.sqrt(dx * dx + dy * dy) >= unit.catchRadius) continue;
-
-          this.creatures.splice(i, 1);
-          const eyeIdx = this.eyeCreatures.indexOf(c as EyeCreature);
-          if (eyeIdx >= 0) this.eyeCreatures.splice(eyeIdx, 1);
-          this.onCreatureTerminated?.(c.x, c.y, c.w * c.scale, c.h * c.scale);
-          c.el.remove();
-          this.targetCount--;
-          caughtThisUnit++;
         }
       }
     }

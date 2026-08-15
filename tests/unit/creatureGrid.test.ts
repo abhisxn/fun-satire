@@ -413,6 +413,34 @@ describe('CreatureGrid', () => {
       expect(terminated.length).toBe(0);
     });
 
+    it('removes a creature that is still mid-spawn-pop (not spawnDone) as long as it is not fading or waiting to respawn', () => {
+      const terminated: Array<{ x: number; y: number; w: number; h: number }> = [];
+      const grid = new CreatureGrid({
+        ...config,
+        initialQuantity: 20,
+        onCreatureTerminated: (x, y, w, h) => terminated.push({ x, y, w, h }),
+      });
+      grid.spawn('cockroach');
+      const before = grid.getCreatureCount();
+
+      const target = (
+        grid as unknown as {
+          creatures: { x: number; y: number; spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number; waitingRespawn: boolean }[];
+        }
+      ).creatures[0]!;
+      // Still mid pop-in (not spawnDone), but present, not fading, not waiting to respawn.
+      target.spawnDone = false;
+      target.fadeStartMs = 0;
+      target.waitingRespawn = false;
+
+      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160, catchRadius: 50 }];
+
+      grid.update(-1000, -1000, securityUnits, 0);
+
+      expect(grid.getCreatureCount()).toBeLessThan(before);
+      expect(terminated.length).toBeGreaterThan(0);
+    });
+
     it('does not remove creatures once targetCount is at or below raidFloor', () => {
       const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
       grid.spawn('cockroach');
