@@ -6,7 +6,7 @@ import { isTouchDevice } from "./touchSupport";
 
 // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
 export const TEXT_Z_INDEX = 100;
-const DEFAULT_FONT_SIZE = 56;
+const DEFAULT_FONT_SIZE = 36;
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 240;
 const HANDLE_SIZE = 14;
@@ -69,7 +69,7 @@ export class TextOverlay {
       "border:1px solid rgba(0,0,0,0.25)",
       "cursor:grab",
       "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
-      `opacity:${isTouchDevice() ? "1" : "0"}`,
+      `opacity:${isTouchDevice() ? "1" : "0.65"}`,
       "transition:opacity 0.15s",
       "z-index:2",
     ].join(";");
@@ -98,7 +98,6 @@ export class TextOverlay {
       "user-select:text",
       "-webkit-user-select:text",
     ].join(";");
-    this.editor.textContent = "Type here";
     this.el.appendChild(this.editor);
 
     this.handle = document.createElement("div");
@@ -114,7 +113,7 @@ export class TextOverlay {
       "border-radius:50%",
       "cursor:nwse-resize",
       "box-shadow:0 1px 3px rgba(0,0,0,0.2)",
-      `opacity:${isTouchDevice() ? "1" : "0"}`,
+      `opacity:${isTouchDevice() ? "1" : "0.65"}`,
       "transition:opacity 0.15s",
       "touch-action:none",
       "z-index:1",

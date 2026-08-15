@@ -43,7 +43,7 @@ vi.mock("../../src/creatures/CreatureGrid", () => ({
     clearRepulsor(): void {
       h.calls.push("grid:clearRepulsor");
     }
-    setRepelMultiplier(): void {}
+    setRepelRadius(): void {}
     setAudioContext(): void {}
     switchMode(): void {}
     respawn(): void {}

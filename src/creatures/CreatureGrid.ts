@@ -526,8 +526,8 @@ export class CreatureGrid {
     }
   }
 
-  setRepelMultiplier(multiplier: number): void {
-    this.physicsParams.repelStrength = 120 * multiplier;
+  setRepelRadius(radius: number): void {
+    this.physicsParams.repelRadius = Math.max(0, radius);
   }
 
   /** Shared AudioContext used to fire hover tones; pass null to silence them. */
