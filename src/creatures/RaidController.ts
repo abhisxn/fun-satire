@@ -11,11 +11,11 @@ export interface MoveSample {
 }
 
 /** Sliding window over which reversals are counted (ms). */
-export const SHAKE_WINDOW_MS = 900;
+export const SHAKE_WINDOW_MS = 600;
 /** Direction reversals required within the window to count as a shake. */
-export const SHAKE_REVERSAL_THRESHOLD = 4;
+export const SHAKE_REVERSAL_THRESHOLD = 3;
 /** Below this speed (px/ms) a movement doesn't count toward a reversal. */
-export const SHAKE_MIN_SPEED_PX_MS = 1.2;
+export const SHAKE_MIN_SPEED_PX_MS = 0.9;
 /** Minimum gap between shake pulses, so one shake reads as a wave, not a machine-gun spawn. */
 export const SHAKE_PULSE_COOLDOWN_MS = 500;
 

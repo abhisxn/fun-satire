@@ -65,25 +65,23 @@ describe('detectShake', () => {
     expect(detectShake([...old, ...recent])).toBe(false);
   });
 
-  it('returns false at 3 reversals, just below the threshold', () => {
+  it('returns false at 2 reversals, just below the threshold', () => {
     const samples: MoveSample[] = [
       sample(0, 0, 0),
       sample(60, 0, 20),
       sample(0, 0, 40),
       sample(60, 0, 60),
-      sample(0, 0, 80),
     ];
     expect(detectShake(samples)).toBe(false);
   });
 
-  it('returns true at exactly 4 reversals, the threshold', () => {
+  it('returns true at exactly 3 reversals, the threshold', () => {
     const samples: MoveSample[] = [
       sample(0, 0, 0),
       sample(60, 0, 20),
       sample(0, 0, 40),
       sample(60, 0, 60),
       sample(0, 0, 80),
-      sample(60, 0, 100),
     ];
     expect(detectShake(samples)).toBe(true);
   });
