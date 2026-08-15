@@ -111,7 +111,7 @@ describe("creaturePhysics", () => {
       const repulsor = { x: 380, y: 100, radius: 300 };
       const farAvatar: AvatarPos = { x: 1000, y: 1000 };
 
-      updateCreature(creature, farAvatar, DEFAULT_PARAMS, repulsor);
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, [repulsor]);
 
       expect(creature.x).toBeLessThan(100);
     });
@@ -120,9 +120,21 @@ describe("creaturePhysics", () => {
       const repulsor = { x: 380, y: 100 };
       const farAvatar: AvatarPos = { x: 1000, y: 1000 };
 
-      updateCreature(creature, farAvatar, DEFAULT_PARAMS, repulsor);
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, [repulsor]);
 
       expect(creature.x).toBe(100);
+    });
+
+    it("applies repulsion from multiple repulsors in the same call", () => {
+      const repulsorA = { x: 380, y: 100, radius: 300 };
+      const repulsorB = { x: 100, y: 380, radius: 300 };
+      const farAvatar: AvatarPos = { x: 1000, y: 1000 };
+
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, [repulsorA, repulsorB]);
+
+      // Pushed away from A (leftward, x decreases) AND away from B (upward, y decreases)
+      expect(creature.x).toBeLessThan(100);
+      expect(creature.y).toBeLessThan(100);
     });
 
     it("updates DOM transform with position, scale, and rotation", () => {

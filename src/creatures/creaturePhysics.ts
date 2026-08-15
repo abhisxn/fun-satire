@@ -41,12 +41,14 @@ export function updateCreature(
   creature: Creature,
   avatar: AvatarPos,
   params: PhysicsParams,
-  repulsor?: Repulsor | null,
+  repulsors: Repulsor[] = [],
 ): void {
   const { springStrength, damping } = params;
 
   applyRepulsion(creature, avatar, params);
-  if (repulsor) applyRepulsion(creature, repulsor, params, repulsor.radius);
+  for (const repulsor of repulsors) {
+    applyRepulsion(creature, repulsor, params, repulsor.radius);
+  }
 
   // Spring to home
   creature.vx += (creature.hx - creature.x) * springStrength;
