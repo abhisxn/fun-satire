@@ -14,15 +14,21 @@ vi.mock('../../src/creatures/EyeCreature', async (importOriginal) => {
     createEyeCreature: (hx: number, hy: number, scale: number, _svgMarkup: string, _uid: string) => {
       const el = document.createElement('div');
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', '40.25');
-      circle.setAttribute('cy', '28.75');
-      circle.setAttribute('r', '10');
-      svg.appendChild(circle);
+      const iris = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      iris.setAttribute('cx', '40.25');
+      iris.setAttribute('cy', '28.75');
+      iris.setAttribute('r', '10');
+      const pupil = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      pupil.setAttribute('cx', '40.25');
+      pupil.setAttribute('cy', '28.75');
+      pupil.setAttribute('r', '3.5');
+      svg.appendChild(iris);
+      svg.appendChild(pupil);
       el.appendChild(svg);
       return {
         el,
-        pupil: circle,
+        iris,
+        pupil,
         hx,
         hy,
         x: hx,
