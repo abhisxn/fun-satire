@@ -5,6 +5,7 @@ import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { spawnPoof } from "./creatures/poofEffect";
 import type { PoofHandle } from "./creatures/poofEffect";
+import { RaidController } from "./creatures/RaidController";
 import { StickerOverlay } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
@@ -35,13 +36,41 @@ async function main(): Promise<void> {
 
   const filterPanel = new FilterPanel();
 
+  let audioManagerRef: AudioManager | null = null;
+
   const grid = new CreatureGrid({
     container,
     mode: "cockroach",
     initialQuantity: ONBOARDING_CREATURE_QUANTITY,
+    onCreatureTerminated: (x, y, w, h) => {
+      const audioContext = audioManagerRef?.getAudioContext();
+      if (audioContext) playPoofTone(audioContext);
+      void spawnPoof(x, y, w, h);
+    },
   });
   await grid.init();
   grid.setRepulsor(vw / 2, vh / 2, ONBOARDING_CARD_REPULSOR_RADIUS);
+
+  // --- Sound bed (isolated init: owns its own AudioManager + widget. No
+  // other init block touches this one.) ---
+  const audioManager = new AudioManager({ volume: 0.16 });
+  audioManagerRef = audioManager;
+  const audioWidget = new AudioWidget(audioManager);
+  audioWidget.attachTo(document.body);
+  void audioWidget.attemptAutoplay();
+  // Task 6's hover tones fire through the grid using this same shared
+  // AudioContext, so eyes/finger/cockroach/placard hovers share one voice.
+  grid.setAudioContext(audioManager.getAudioContext());
+
+  const raidController = new RaidController({
+    container,
+    grid,
+    onSecurityRemoved: (x, y, w, h) => {
+      const audioContext = audioManager.getAudioContext();
+      if (audioContext) playPoofTone(audioContext);
+      void spawnPoof(x, y, w, h);
+    },
+  });
 
   const bugSwarm = new BugSwarm(container);
 
@@ -67,7 +96,7 @@ async function main(): Promise<void> {
   const engine = new Engine();
   engine.onTick(() => {
     const center = currentAttractor.getCenter();
-    grid.update(center.x, center.y);
+    grid.update(center.x, center.y, raidController.getSecurityUnits(), raidController.getRaidFloor());
   });
   engine.start();
 
@@ -183,6 +212,10 @@ async function main(): Promise<void> {
       menuPanel.toggle();
     });
 
+    hud.getProtestButton().addEventListener("click", () => {
+      raidController.startRecovery();
+    });
+
     galleryPanel.onStickerSelect((src) => {
       const sticker = new StickerOverlay(
         src,
@@ -229,16 +262,6 @@ async function main(): Promise<void> {
     });
   };
 
-  // --- Sound bed (isolated init: owns its own AudioManager + widget. No
-  // other init block touches this one.) ---
-  const audioManager = new AudioManager({ volume: 0.16 });
-  const audioWidget = new AudioWidget(audioManager);
-  audioWidget.attachTo(document.body);
-  void audioWidget.attemptAutoplay();
-  // Task 6's hover tones fire through the grid using this same shared
-  // AudioContext, so eyes/finger/cockroach/placard hovers share one voice.
-  grid.setAudioContext(audioManager.getAudioContext());
-
   // Stickers/text play a pickup click when grabbed, and a "writing" scratch
   // sound scrubbed like a play slider — only sounding while pixels are
   // actively shifting, pausing the moment movement stops (even mid-drag)
@@ -248,8 +271,11 @@ async function main(): Promise<void> {
   const onOverlayDragStart = (): void => {
     pickupClickSound.play();
   };
-  const onOverlayDragMove = (): void => {
+  const onOverlayDragMove = (x: number, y: number): void => {
     dragScratchSound.onMove();
+    if (activeOverlay instanceof StickerOverlay) {
+      raidController.onAvatarMove(x, y);
+    }
   };
   const onOverlayDragEnd = (): void => {
     dragScratchSound.stop();
