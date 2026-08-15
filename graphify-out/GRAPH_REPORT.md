@@ -1,59 +1,67 @@
-# Graph Report - .  (2026-08-08)
+# Graph Report - .  (2026-08-15)
 
 ## Corpus Check
-- 0 files · ~99,999 words
-- Verdict: corpus is large enough that graph structure adds value.
+- Large corpus: 330 files · ~2,300,064 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder, or use --no-semantic to run AST-only.
 
 ## Summary
-- 984 nodes · 1224 edges · 144 communities detected
-- Extraction: 77% EXTRACTED · 22% INFERRED · 1% AMBIGUOUS · INFERRED: 267 edges (avg confidence: 0.77)
+- 1316 nodes · 1698 edges · 174 communities detected
+- Extraction: 74% EXTRACTED · 25% INFERRED · 1% AMBIGUOUS · INFERRED: 420 edges (avg confidence: 0.76)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Premium Visual & Collective Attack (PR1) Design Spec|Premium Visual & Collective Attack (PR1) Design Spec]]
-- [[_COMMUNITY_Crowd Fixes Implementation Plan (2026-08-08)|Crowd Fixes Implementation Plan (2026-08-08)]]
-- [[_COMMUNITY_Fun Satire v2 — Expansion — Design Spec|Fun Satire v2 — Expansion — Design Spec]]
-- [[_COMMUNITY_CreatureGrid|CreatureGrid]]
-- [[_COMMUNITY_main.ts (entry orchestration)|main.ts (entry orchestration)]]
-- [[_COMMUNITY_CreatureGrid|CreatureGrid]]
-- [[_COMMUNITY_Subject Mechanic & Visual Polish Implementation Plan|Subject Mechanic & Visual Polish Implementation Plan]]
-- [[_COMMUNITY_PointerTracker|PointerTracker]]
-- [[_COMMUNITY_CreatureGrid|CreatureGrid]]
-- [[_COMMUNITY_main()|main()]]
-- [[_COMMUNITY_TextOverlay|TextOverlay]]
-- [[_COMMUNITY_onboardingCarousel.test.ts|onboardingCarousel.test.ts]]
-- [[_COMMUNITY_Hud|Hud]]
-- [[_COMMUNITY_export-figma-assets.mjs (orchestration entrypoint --write--|export-figma-assets.mjs (orchestration entrypoint --write/--]]
-- [[_COMMUNITY_AudioWidget|AudioWidget]]
-- [[_COMMUNITY_ProtestPanel|ProtestPanel]]
-- [[_COMMUNITY_GalleryPanel|GalleryPanel]]
-- [[_COMMUNITY_graphify-outGRAPH_REPORT_COMMUNITIES|graphify-out/GRAPH_REPORT_COMMUNITIES.md]]
-- [[_COMMUNITY_BugSwarm|BugSwarm]]
-- [[_COMMUNITY_StubAudioContext|StubAudioContext]]
-- [[_COMMUNITY_effectsEffectSystem.ts (module)|effects/EffectSystem.ts (module)]]
-- [[_COMMUNITY_Rng|Rng]]
-- [[_COMMUNITY_Eye Large 02 (Large tier, dark pupil, gaze down-right)|Eye Large 02 (Large tier, dark pupil, gaze down-right)]]
-- [[_COMMUNITY_Scene Control Icon - Bug Body (Large, Oval Head + Stem)|Scene Control Icon - Bug Body (Large, Oval Head + Stem)]]
-- [[_COMMUNITY_Eye Icon (Outline with Pupil, Figma variant icn=eye)|Eye Icon (Outline with Pupil, Figma variant icn=eye)]]
-- [[_COMMUNITY_Lotus Surrounded by Cockroach Swarm (Gemini Reference)|Lotus Surrounded by Cockroach Swarm (Gemini Reference)]]
-- [[_COMMUNITY_Integrator.ts|Integrator.ts]]
-- [[_COMMUNITY_Cockroach SVG Sprite|Cockroach SVG Sprite]]
-- [[_COMMUNITY_Control Icons Design Reference (Toolbar Icon Set)|Control Icons Design Reference (Toolbar Icon Set)]]
-- [[_COMMUNITY_Filter Line Icon (Control variant)|Filter Line Icon (Control variant)]]
-- [[_COMMUNITY_Bug Outline Icon (Control, small)|Bug Outline Icon (Control, small)]]
-- [[_COMMUNITY_Eye Giant 01 (Taupe Iris)|Eye Giant 01 (Taupe Iris)]]
-- [[_COMMUNITY_Cockroach Creature Sprite|Cockroach Creature Sprite]]
-- [[_COMMUNITY_Control Hand Finger Curve Icon (small)|Control: Hand Finger Curve Icon (small)]]
-- [[_COMMUNITY_Clock (frame dt + clamp)|Clock (frame dt + clamp)]]
-- [[_COMMUNITY_AudioManager + Sound Bed Widget (azaadi.mp3)|AudioManager + Sound Bed Widget (azaadi.mp3)]]
+- [[_COMMUNITY_CreatureGrid + main.ts (entry orchestration)|CreatureGrid + main.ts (entry orchestration)]]
+- [[_COMMUNITY_Premium Visual & Collective Attack (PR1) Design Spec & related|Premium Visual & Collective Attack (PR1) Design Spec & related]]
+- [[_COMMUNITY_CreatureGrid + .update()|CreatureGrid + .update()]]
+- [[_COMMUNITY_PointerTracker & related|PointerTracker & related]]
+- [[_COMMUNITY_AudioManager & related|AudioManager & related]]
+- [[_COMMUNITY_Crowd Fixes Implementation Plan (2026-08-08) & related|Crowd Fixes Implementation Plan (2026-08-08) & related]]
+- [[_COMMUNITY_Fun Satire v2 — Expansion — Design Spec & related|Fun Satire v2 — Expansion — Design Spec & related]]
+- [[_COMMUNITY_CreatureGrid + Hud class (consolidated toolbar)|CreatureGrid + Hud class (consolidated toolbar)]]
+- [[_COMMUNITY_export-figma-assets.mjs (orchestration entrypoint --write--verify) & related|export-figma-assets.mjs (orchestration entrypoint --write/--verify) & related]]
+- [[_COMMUNITY_Hud & related|Hud & related]]
+- [[_COMMUNITY_Subject Mechanic & Visual Polish Implementation Plan & related|Subject Mechanic & Visual Polish Implementation Plan & related]]
+- [[_COMMUNITY_main() & related|main() & related]]
+- [[_COMMUNITY_MenuPanel & related|MenuPanel & related]]
+- [[_COMMUNITY_playHoverTone() & related|playHoverTone() & related]]
+- [[_COMMUNITY_onboardingCarousel.test.ts & related|onboardingCarousel.test.ts & related]]
+- [[_COMMUNITY_Content Narrative Redesign Design & related|Content Narrative Redesign Design & related]]
+- [[_COMMUNITY_main.ts & related|main.ts & related]]
+- [[_COMMUNITY_GalleryPanel & related|GalleryPanel & related]]
+- [[_COMMUNITY_Mobile Pinch-Scale, Audio Crossfade, Text-Edit HUD-Overlap Fixes Plan & related|Mobile Pinch-Scale, Audio Crossfade, Text-Edit HUD-Overlap Fixes Plan & related]]
+- [[_COMMUNITY_AGENTS.md conventions & related|AGENTS.md conventions & related]]
+- [[_COMMUNITY_MenuPanel class & related|MenuPanel class & related]]
+- [[_COMMUNITY_BugSwarm & related|BugSwarm & related]]
+- [[_COMMUNITY_Placard stick handle sprite & related|Placard stick handle sprite & related]]
+- [[_COMMUNITY_effectsEffectSystem.ts (module) & related|effects/EffectSystem.ts (module) & related]]
+- [[_COMMUNITY_CreatureGrid.update (main tick) & related|CreatureGrid.update (main tick) & related]]
+- [[_COMMUNITY_RAF Sticker Sheet 1 (60-degree angle, light bg) & related|RAF Sticker Sheet 1 (60-degree angle, light bg) & related]]
+- [[_COMMUNITY_Eye Large 02 (Large tier, dark pupil, gaze down-right) & related|Eye Large 02 (Large tier, dark pupil, gaze down-right) & related]]
+- [[_COMMUNITY_Republic Gooswamy Caricature & related|Republic Gooswamy Caricature & related]]
+- [[_COMMUNITY_Rng & related|Rng & related]]
+- [[_COMMUNITY_Scene Control Icon - Bug Body (Large, Oval Head + Stem) & related|Scene Control Icon - Bug Body (Large, Oval Head + Stem) & related]]
+- [[_COMMUNITY_Eye Icon (Outline with Pupil, Figma variant icn=eye) & related|Eye Icon (Outline with Pupil, Figma variant icn=eye) & related]]
+- [[_COMMUNITY_Lotus Surrounded by Cockroach Swarm (Gemini Reference) & related|Lotus Surrounded by Cockroach Swarm (Gemini Reference) & related]]
+- [[_COMMUNITY_Integrator.ts & related|Integrator.ts & related]]
+- [[_COMMUNITY_Control Icons Design Reference (Toolbar Icon Set) & related|Control Icons Design Reference (Toolbar Icon Set) & related]]
+- [[_COMMUNITY_Filter Line Icon (Control variant) & related|Filter Line Icon (Control variant) & related]]
+- [[_COMMUNITY_Bug Outline Icon (Control, small) & related|Bug Outline Icon (Control, small) & related]]
+- [[_COMMUNITY_Eye Giant 01 (Taupe Iris) & related|Eye Giant 01 (Taupe Iris) & related]]
+- [[_COMMUNITY_Cockroach Creature Sprite & related|Cockroach Creature Sprite & related]]
+- [[_COMMUNITY_Control Hand Finger Curve Icon (small) & related|Control: Hand Finger Curve Icon (small) & related]]
+- [[_COMMUNITY_Clock (frame dt + clamp) & related|Clock (frame dt + clamp) & related]]
+- [[_COMMUNITY_AudioManager + Sound Bed Widget (azaadi.mp3) & related|AudioManager + Sound Bed Widget (azaadi.mp3) & related]]
+- [[_COMMUNITY_attachDrag & related|attachDrag & related]]
+- [[_COMMUNITY_Chronology Chacha (Amit Shah caricature) & related|Chronology Chacha (Amit Shah caricature) & related]]
+- [[_COMMUNITY_Placard Sab Yaad Rakha Jaega & related|Placard: Sab Yaad Rakha Jaega & related]]
 - [[_COMMUNITY_pointerTracker.test.ts|pointerTracker.test.ts]]
 - [[_COMMUNITY_Grain Texture (grain.png)|Grain Texture (grain.png)]]
 - [[_COMMUNITY_makePuff()|makePuff()]]
 - [[_COMMUNITY_Eye Compact 01 (Dark Iris)|Eye Compact 01 (Dark Iris)]]
 - [[_COMMUNITY_Compact Eye Variant 06|Compact Eye Variant 06]]
 - [[_COMMUNITY_Security Hardening Design Spec|Security Hardening Design Spec]]
+- [[_COMMUNITY_attachPinchZoom|attachPinchZoom]]
+- [[_COMMUNITY_Favicon Icon|Favicon Icon]]
 - [[_COMMUNITY_readText()|readText()]]
-- [[_COMMUNITY_Hud.ts (Hud class)|Hud.ts (Hud class)]]
 - [[_COMMUNITY_ADR 004 DOM HUD vs Canvas HUD|ADR 004: DOM HUD vs Canvas HUD]]
 - [[_COMMUNITY_AGENTS|AGENTS.md]]
 - [[_COMMUNITY_createMockElement()|createMockElement()]]
@@ -62,16 +70,31 @@
 - [[_COMMUNITY_AddPlus Icon (Cross of Two Lines)|Add/Plus Icon (Cross of Two Lines)]]
 - [[_COMMUNITY_GalleryGrid View Icon (2x2 Rounded Squares)|Gallery/Grid View Icon (2x2 Rounded Squares)]]
 - [[_COMMUNITY_Control Eye Pupil Dot Icon|Control: Eye Pupil Dot Icon]]
-- [[_COMMUNITY_Filter Panel RepelTrack Divider Line|Filter Panel: Repel/Track Divider Line]]
 - [[_COMMUNITY_Control Gallery Tile Tertiary Corner Bracket|Control: Gallery Tile Tertiary Corner Bracket]]
+- [[_COMMUNITY_Filter Panel RepelTrack Divider Line|Filter Panel: Repel/Track Divider Line]]
 - [[_COMMUNITY_Control Icon - Gallery Tile (Primary, Rounded Square)|Control Icon - Gallery Tile (Primary, Rounded Square)]]
 - [[_COMMUNITY_Eye Compact 02 (Dark Iris, Default State)|Eye Compact 02 (Dark Iris, Default State)]]
-- [[_COMMUNITY_draggableAvatar.test.ts suite|draggableAvatar.test.ts suite]]
 - [[_COMMUNITY_filterPanel.test.ts suite|filterPanel.test.ts suite]]
+- [[_COMMUNITY_draggableAvatar.test.ts suite|draggableAvatar.test.ts suite]]
 - [[_COMMUNITY_createFakeAudioContext()|createFakeAudioContext()]]
 - [[_COMMUNITY_FakeAudioContext|FakeAudioContext]]
 - [[_COMMUNITY_createFakeControl()|createFakeControl()]]
 - [[_COMMUNITY_Post-Deploy curl Header Verification|Post-Deploy curl Header Verification]]
+- [[_COMMUNITY_byId()|byId()]]
+- [[_COMMUNITY_clickQuickLink()|clickQuickLink()]]
+- [[_COMMUNITY_touch()|touch()]]
+- [[_COMMUNITY_playKnockBurst|playKnockBurst]]
+- [[_COMMUNITY_isTouchDevice|isTouchDevice]]
+- [[_COMMUNITY_hudshareLinks|hud/shareLinks]]
+- [[_COMMUNITY_Bed crossfade scheduler|Bed crossfade scheduler]]
+- [[_COMMUNITY_MenuPanel.handleInstagramShare|MenuPanel.handleInstagramShare]]
+- [[_COMMUNITY_shuffleVideos|shuffleVideos]]
+- [[_COMMUNITY_Aajtak Wali Didi Sticker Text|Aajtak Wali Didi Sticker Text]]
+- [[_COMMUNITY_Badbola Patra Sticker Text|Badbola Patra Sticker Text]]
+- [[_COMMUNITY_DNA Tihari Sticker Text|DNA Tihari Sticker Text]]
+- [[_COMMUNITY_Gutter Didi (Mamata Banerjee caricature)|Gutter Didi (Mamata Banerjee caricature)]]
+- [[_COMMUNITY_Placard Jai Hind|Placard: Jai Hind]]
+- [[_COMMUNITY_Placard Chai Bna Chtiya Nahi|Placard: Chai Bna Ch*tiya Nahi]]
 - [[_COMMUNITY_vite.config.ts|vite.config.ts]]
 - [[_COMMUNITY_integrator.test.ts|integrator.test.ts]]
 - [[_COMMUNITY_core.test.ts|core.test.ts]]
@@ -102,14 +125,14 @@
 - [[_COMMUNITY_textOverlay.test.ts|textOverlay.test.ts]]
 - [[_COMMUNITY_vite-env.d.ts|vite-env.d.ts]]
 - [[_COMMUNITY_figma-asset-audit.mjs (validationgeometrysafety module)|figma-asset-audit.mjs (validation/geometry/safety module)]]
-- [[_COMMUNITY_resampleRgbaSrgb() - linear-light bilinear resample w premu|resampleRgbaSrgb() - linear-light bilinear resample w/ premu]]
-- [[_COMMUNITY_Fun Satire v2 Expansion Design Spec (external, cited by ADR|Fun Satire v2 Expansion Design Spec (external, cited by ADR ]]
-- [[_COMMUNITY_Viewport 768×1024 (Tablet Portrait) — full HUD toolbar row a|Viewport 768×1024 (Tablet Portrait) — full HUD toolbar row a]]
-- [[_COMMUNITY_Viewport 1440×900 (Desktop Landscape) — HUD toolbar shows 'L|Viewport 1440×900 (Desktop Landscape) — HUD toolbar shows 'L]]
-- [[_COMMUNITY_Viewport 1024×768 (Tablet Landscape) — HUD toolbar shows onl|Viewport 1024×768 (Tablet Landscape) — HUD toolbar shows onl]]
-- [[_COMMUNITY_Viewport 1280×832 (Laptop Landscape) — HUD toolbar shows 'LA|Viewport 1280×832 (Laptop Landscape) — HUD toolbar shows 'LA]]
-- [[_COMMUNITY_Viewport 390×844 (Mobile Portrait) — toolbar overflow bug a|Viewport 390×844 (Mobile Portrait) — toolbar overflow bug: a]]
-- [[_COMMUNITY_Viewport 844×390 (Mobile Landscape) — HUD toolbar fits clean|Viewport 844×390 (Mobile Landscape) — HUD toolbar fits clean]]
+- [[_COMMUNITY_resampleRgbaSrgb() - linear-light bilinear resample w premultiplied alpha|resampleRgbaSrgb() - linear-light bilinear resample w/ premultiplied alpha]]
+- [[_COMMUNITY_Fun Satire v2 Expansion Design Spec (external, cited by ADR 005006)|Fun Satire v2 Expansion Design Spec (external, cited by ADR 005/006)]]
+- [[_COMMUNITY_Viewport 768×1024 (Tablet Portrait) — full HUD toolbar row at bottom; eye entity appears to peek from behind top-right volume panel (possible z-orderclipping issue)|Viewport 768×1024 (Tablet Portrait) — full HUD toolbar row at bottom; eye entity appears to peek from behind top-right volume panel (possible z-order/clipping issue)]]
+- [[_COMMUNITY_Viewport 1440×900 (Desktop Landscape) — HUD toolbar shows 'LASER BURN' label with a hand-cursor icon overlapping the text; volume slider docked bottom-right|Viewport 1440×900 (Desktop Landscape) — HUD toolbar shows 'LASER BURN' label with a hand-cursor icon overlapping the text; volume slider docked bottom-right]]
+- [[_COMMUNITY_Viewport 1024×768 (Tablet Landscape) — HUD toolbar shows only ATTACK (no 'LASER BURN' label rendered); volume slider docked top-right|Viewport 1024×768 (Tablet Landscape) — HUD toolbar shows only ATTACK (no 'LASER BURN' label rendered); volume slider docked top-right]]
+- [[_COMMUNITY_Viewport 1280×832 (Laptop Landscape) — HUD toolbar shows 'LASER BURN' label with the same hand-cursor icon overlapping the text as seen at 1440×900; volume slider docked bottom-right|Viewport 1280×832 (Laptop Landscape) — HUD toolbar shows 'LASER BURN' label with the same hand-cursor icon overlapping the text as seen at 1440×900; volume slider docked bottom-right]]
+- [[_COMMUNITY_Viewport 390×844 (Mobile Portrait) — toolbar overflow bug a stray hand icon wraps onto a second row below the main toolbar, and the -20+ counter is clipped at the right edge; volume panel also clipped at top-right edge|Viewport 390×844 (Mobile Portrait) — toolbar overflow bug: a stray hand icon wraps onto a second row below the main toolbar, and the -/20/+ counter is clipped at the right edge; volume panel also clipped at top-right edge]]
+- [[_COMMUNITY_Viewport 844×390 (Mobile Landscape) — HUD toolbar fits cleanly on a single row, volume panel fully visible top-right, no layout issues observed|Viewport 844×390 (Mobile Landscape) — HUD toolbar fits cleanly on a single row, volume panel fully visible top-right, no layout issues observed]]
 - [[_COMMUNITY_Controls Icon (EqualizerSliders Glyph)|Controls Icon (Equalizer/Sliders Glyph)]]
 - [[_COMMUNITY_Finger Creature Sprite|Finger Creature Sprite]]
 - [[_COMMUNITY_Eye Creature Sprite|Eye Creature Sprite]]
@@ -125,14 +148,14 @@
 - [[_COMMUNITY_Gallery Tile Icon - Secondary (Rounded Corner Card)|Gallery Tile Icon - Secondary (Rounded Corner Card)]]
 - [[_COMMUNITY_Eye - Large 06 (slate blue-gray iris, gaze right)|Eye - Large 06 (slate blue-gray iris, gaze right)]]
 - [[_COMMUNITY_Eye - Large 04 (near-black iris, gaze right-down)|Eye - Large 04 (near-black iris, gaze right-down)]]
-- [[_COMMUNITY_Eye - Small 01 (near-black iris, gaze right-up, smallest of|Eye - Small 01 (near-black iris, gaze right-up, smallest of ]]
-- [[_COMMUNITY_Eye - Large 05 (near-black iris, gaze right, near-centered v|Eye - Large 05 (near-black iris, gaze right, near-centered v]]
+- [[_COMMUNITY_Eye - Small 01 (near-black iris, gaze right-up, smallest of set)|Eye - Small 01 (near-black iris, gaze right-up, smallest of set)]]
+- [[_COMMUNITY_Eye - Large 05 (near-black iris, gaze right, near-centered vertically)|Eye - Large 05 (near-black iris, gaze right, near-centered vertically)]]
 - [[_COMMUNITY_Eye - Medium 03 (warm brown iris, gaze right-down)|Eye - Medium 03 (warm brown iris, gaze right-down)]]
-- [[_COMMUNITY_Eye - Large 08 (near-black iris, gaze right-down; geometrica|Eye - Large 08 (near-black iris, gaze right-down; geometrica]]
-- [[_COMMUNITY_Eye - Medium 02 (warm brown iris, gaze right-up, oversized d|Eye - Medium 02 (warm brown iris, gaze right-up, oversized d]]
+- [[_COMMUNITY_Eye - Large 08 (near-black iris, gaze right-down; geometrically identical to Large 04)|Eye - Large 08 (near-black iris, gaze right-down; geometrically identical to Large 04)]]
+- [[_COMMUNITY_Eye - Medium 02 (warm brown iris, gaze right-up, oversized dimensions vs other mediums)|Eye - Medium 02 (warm brown iris, gaze right-up, oversized dimensions vs other mediums)]]
 - [[_COMMUNITY_Eye - Medium 01 (olive green iris, gaze right-up)|Eye - Medium 01 (olive green iris, gaze right-up)]]
-- [[_COMMUNITY_Eye - Medium 05 (near-black iris, gaze right, near-centered|Eye - Medium 05 (near-black iris, gaze right, near-centered ]]
-- [[_COMMUNITY_Eye - Medium 04 (near-black iris, gaze right-down; shares ir|Eye - Medium 04 (near-black iris, gaze right-down; shares ir]]
+- [[_COMMUNITY_Eye - Medium 05 (near-black iris, gaze right, near-centered vertically)|Eye - Medium 05 (near-black iris, gaze right, near-centered vertically)]]
+- [[_COMMUNITY_Eye - Medium 04 (near-black iris, gaze right-down; shares iris geometry with Medium 03)|Eye - Medium 04 (near-black iris, gaze right-down; shares iris geometry with Medium 03)]]
 - [[_COMMUNITY_ADR 005 Mode-Locked Power Pairing|ADR 005: Mode-Locked Power Pairing]]
 - [[_COMMUNITY_ADR 008 Content Guardrail (flat-illustrated)|ADR 008: Content Guardrail (flat-illustrated)]]
 - [[_COMMUNITY_ADR 009 Curated Avatar Guardrail|ADR 009: Curated Avatar Guardrail]]
@@ -151,301 +174,86 @@
 - [[_COMMUNITY_stickerOverlay.test.ts suite|stickerOverlay.test.ts suite]]
 - [[_COMMUNITY_textOverlay.test.ts suite|textOverlay.test.ts suite]]
 - [[_COMMUNITY_shareLinks.test.ts|shareLinks.test.ts]]
-- [[_COMMUNITY_protestPanel.test.ts|protestPanel.test.ts]]
 - [[_COMMUNITY_creatureGridHoverTones.test.ts|creatureGridHoverTones.test.ts]]
 - [[_COMMUNITY_beats.ts|beats.ts]]
+- [[_COMMUNITY_touchSupport.test.ts|touchSupport.test.ts]]
+- [[_COMMUNITY_creatureGridIdleResurge.test.ts|creatureGridIdleResurge.test.ts]]
+- [[_COMMUNITY_AudioManager class|AudioManager class]]
+- [[_COMMUNITY_setHoverToneStyle (devtools hook)|setHoverToneStyle (devtools hook)]]
+- [[_COMMUNITY_Jantar Mantar protest|Jantar Mantar protest]]
+- [[_COMMUNITY_Key Takeaways section|Key Takeaways section]]
+- [[_COMMUNITY_robots.txt|robots.txt]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `main()` - 23 edges
-2. `Hud` - 23 edges
-3. `FilterPanel` - 22 edges
-4. `GalleryPanel` - 19 edges
-5. `CreatureGrid` - 17 edges
-6. `ProtestPanel` - 17 edges
-7. `PointerTracker` - 14 edges
-8. `export-figma-assets.mjs (orchestration entrypoint --write/--verify)` - 14 edges
-9. `Premium Visual & Collective Attack (PR1) Design Spec` - 14 edges
-10. `Fun Satire v2 — Expansion — Design Spec` - 13 edges
+1. `AudioManager` - 31 edges
+2. `MenuPanel` - 30 edges
+3. `Hud` - 26 edges
+4. `main()` - 25 edges
+5. `FilterPanel` - 24 edges
+6. `GalleryPanel` - 21 edges
+7. `CreatureGrid` - 18 edges
+8. `PointerTracker` - 14 edges
+9. `export-figma-assets.mjs (orchestration entrypoint --write/--verify)` - 14 edges
+10. `Premium Visual & Collective Attack (PR1) Design Spec` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `ROLE_POLICY (role -> category/format/id-regex map)` --semantically_similar_to--> `ADR 009: Curated Avatar Guardrail`  [INFERRED] [semantically similar]
+  scripts/figma-asset-audit.mjs → graphify-out/GRAPH_REPORT_COMMUNITIES_2.md
 - `ADR 012: Simplified Physics (repulsion+spring+damping)` --conceptually_related_to--> `ForceField.ts (guardrail-closed)`  [INFERRED]
   docs/superpowers/system-architecture.md → src/physics/ForceField.ts
+- `AGENTS.md conventions` --rationale_for--> `Hud class (consolidated toolbar)`  [INFERRED]
+  AGENTS.md → src/hud/Hud.ts
 - `Security scope: src/, vite.config.ts, vercel.json, runtime-reachable deps` --conceptually_related_to--> `assertSafeSvg() - SaxesParser-based SVG sanitizer`  [INFERRED]
   SECURITY.md → scripts/figma-asset-audit.mjs
 - `creaturePhysics (repulsion+spring+damping)` --implements--> `ADR 012: Simplified Physics (repulsion+spring+damping)`  [INFERRED]
   src/creatures/creaturePhysics.ts → docs/superpowers/system-architecture.md
-- `creatureTypes (Creature, CreatureMode)` --implements--> `Creature Plain-Object Model`  [INFERRED]
-  src/creatures/creatureTypes.ts → docs/superpowers/system-architecture.md
-- `createPlacardCreature` --implements--> `Placard/Stick Runtime DOM Compositing`  [INFERRED]
-  src/creatures/PlacardCreature.ts → docs/superpowers/specs/2026-08-06-placard-stick-compositing-design.md
 
 ## Hyperedges (group relationships)
-- **Onboarding Exit Handoff: card poof → sticker attractor → HUD mount** — onboardingplan_exit_sequence, onboardingplan_mount_post_onboarding, onboardingplan_pointer_follow_attractor, crowdfixesplan_single_write_path, crowdfixesplan_face_only_stickers [EXTRACTED 0.90]
-- **Custom-Domain Launch Hardening Stack** — securityspec_csp, securityplan_vercel_headers, securityplan_robots_txt, securityspec_deployment_protection, securityspec_dns_layer, securityplan_curl_verification [EXTRACTED 0.90]
-- **Honest Handoff: toy app → real movement narrative and action** — protestspec_honesty_framing, protestplan_join_the_swarm, protestplan_learn_more_links, onboardingspec_cjp_movement, onboardingspec_reference_level [INFERRED 0.80]
+- **Figma Asset Export/Verify Pipeline (audit module + orchestration script + MCP server)** — figma_asset_audit_module, export_figma_assets_script, figma_dev_mode_mcp_server [INFERRED 0.85]
+- **v1 Core Loop Decision Trio (design spec fixes decision -> plan implements it -> ADR retroactively documents it)** — fun_satire_design_spec_doc, v1_core_loop_plan_doc, adr_007_canvas_ts_over_htmx [EXTRACTED 0.85]
+- **Gate-Driven Human/Reviewer Approval Pattern Across Both Overhaul Eras** — pvcaPlan_showcaseGates, figmaDesign_blockingGates, figmaP3_releaseAudits [INFERRED 0.65]
+- **Figma-First Overhaul Phase Sequence (Umbrella -> Phase 1 -> Phase 2 -> Phase 3)** — figmaUmbrella_doc, figmaP1_doc, figmaP2_doc, figmaP3_doc [EXTRACTED 1.00]
+- **DOM-First Re-architecture (ADR 011/012/013 from plan 2026-07-29)** — plan_dom_first, adr011_dom_first_rendering, adr012_simplified_physics, adr013_consolidated_hud [EXTRACTED 1.00]
+- **ADR 005/006 as v2 design gates enforced through orchestration review** — sysarch_adr005, sysarch_adr006, orchestration_adrgate, v2spec_modelockedpower, v2spec_nooverlap [EXTRACTED 0.85]
+- **PR1/PR2 Two-PR Premium Visual & Multi-Subject Overhaul (Kilo-era)** — pvcaPlan_doc, pvcaSpec_doc, mstPlan_doc, mstSpec_doc [EXTRACTED 0.90]
+- **Figma Component Variant Set (icn= naming property: bug/eye/hand)** — icon_bug_outline, icon_eye_outline, icon_hand [EXTRACTED 1.00]
+- **Figma-exported 24x24 UI Toolbar Icon Set** — icon_drag_handle, icon_gallery, icon_reduce, icon_add, icon_text [INFERRED 0.80]
+- **Hand/Finger Gesture Control Icon Set (drag-point indicators)** — control_hand_finger, control_hand_thumb, scene_control_hand_finger, scene_control_hand_index [INFERRED 0.75]
+- **Creature-Type Selector Icons (Bug / Eye / Hand)** — control_bug_outline_icon, scene_control_bug_outline_icon, scene_control_eye_pupil_icon, control_hand_wrist_icon [INFERRED 0.60]
+- **Control vs Scene-Control Icon Sizing Convention** — control_bug_outline_icon, scene_control_bug_outline_icon, control_drag_handle_icon, scene_control_drag_handle_icon, control_filter_lines_icon, scene_control_filter_lines_icon [INFERRED 0.80]
+- **Filter Panel UI Icon Set** — control_filter_lines_icon, scene_control_filter_lines_icon, filter_panel_divider_icon [INFERRED 0.75]
+- **Creature/Subject Type Selector Icon Set (Eye, Bug, Subject)** — scene_control_eye_outline_icon, scene_control_bug_body_icon, scene_control_text_subject_icon, control_eye_outline_icon, control_bug_body_icon [INFERRED 0.65]
+- **Figma-derived HUD Control Icon Set (this chunk)** — scene_control_text_subject_icon, control_gallery_tile_primary_icon, scene_control_eye_outline_icon, scene_control_bug_body_icon, control_quantity_plus_icon, control_eye_outline_icon, scene_control_hand_thumb_icon, scene_control_hand_palm_icon, control_hand_index_icon, control_bug_body_icon [INFERRED 0.70]
+- **Hand Icon Composite (Thumb + Palm/Finger + Index Finger Segments)** — scene_control_hand_thumb_icon, scene_control_hand_palm_icon, control_hand_index_icon [INFERRED 0.75]
+- **Dark Brown/Black Pupil Color Family (#38332F)** — eye_compact_08_eye, eye_compact_09_eye, eye_small_03_eye, eye_small_04_eye, eye_large_02_eye [INFERRED 0.70]
+- **Small Size-Class Eye Variants (148x75.6)** — eye_small_02_eye, eye_small_03_eye, eye_small_04_eye, eye_small_05_eye [INFERRED 0.80]
+- **Large Size-Class Eye Variants (234.8x120)** — eye_large_01_eye, eye_large_02_eye, eye_large_03_eye, eye_large_07_eye [INFERRED 0.80]
+- **Large-size eye variants (234.78x120, iris r=48.26)** — eye_large_06, eye_large_04, eye_large_05, eye_large_08 [INFERRED 0.85]
+- **Shared near-black iris color (#38332F) across sizes** — eye_large_04, eye_large_05, eye_large_08, eye_medium_04, eye_medium_05, eye_small_01 [INFERRED 0.70]
+- **Medium-size eye variants (~180x92, iris r=~37)** — eye_medium_01, eye_medium_02, eye_medium_03, eye_medium_04, eye_medium_05 [INFERRED 0.85]
+- **Giant Size-Class Eye Variants** — eye_giant_01, eye_giant_02, eye_giant_03 [INFERRED 0.85]
+- **Compact Size-Class Eye Variants** — eye_compact_01, eye_compact_02, eye_compact_02_attack, eye_compact_03, eye_compact_04, eye_compact_05 [INFERRED 0.85]
+- **Shared Dark Iris (#38332F) Color Token Across Size Tiers** — eye_compact_01, eye_compact_02, eye_compact_03, eye_compact_05, eye_giant_02 [INFERRED 0.65]
+- **Sticker/text drag audio feedback wiring** — main_ts, clickSound_ts, dragScratchSound_ts [EXTRACTED 0.90]
+- **Onboarding completion exit sequence (poof -> sticker -> HUD)** — main_ts, onboardingCarousel_class, stickerOverlay_class, hud_class [EXTRACTED 0.85]
+- **Shared open/close/toggle/outside-click/escape UX pattern across HUD panels** — filterPanel_class, menuPanel_class, galleryPanel_class [INFERRED 0.70]
+- **Draggable/pinch-resizable overlay pattern (Text + Sticker)** — textOverlay_TextOverlay, stickerOverlay_StickerOverlay, makeDraggable_attachDrag, pinchZoom_attachPinchZoom, touchSupport_isTouchDevice [EXTRACTED 0.90]
+- **Hover-enter detection -> cooldown gate -> per-mode tone playback** — creatureGrid_computeHoverEdge, creatureGrid_canPlayHoverTone, creatureGrid_triggerHoverTone, hoverTones_playHoverTone, audioManager_getAudioContext [EXTRACTED 0.90]
+- **Menu panel sharing pathways (native/WhatsApp/Facebook/Instagram)** — menuPanel_MenuPanel, shareLinks_buildWhatsAppShareUrl, shareLinks_isMobileUserAgent, menuPanel_handleInstagramShare [EXTRACTED 0.85]
+- **Protest/Menu Panel redesign lineage** — protest_panel_visual_design, protest_panel_content_redesign_design, protest_panel_menu_redesign_design, protest_panel_figma_polish_design, content_narrative_redesign_design [EXTRACTED 0.90]
+- **Idle-gated crowd activity tracking** — idle_visible_fraction_fn, drag_speed_fn, burst_window_mechanic, creature_grid_class [EXTRACTED 0.90]
+- **Mobile touch gesture handling stack** — pinch_zoom_module, touch_support_module, make_draggable_module, sticker_overlay_class, text_overlay_class [EXTRACTED 0.85]
+- **News Anchor Caricature Set (Republic, Aajtak, DNA)** — republic, sticker_39, sticker_40, sticker_38 [INFERRED 0.60]
+- **PM/Minister Caricature Set (Vishwaguru, Reel Minister, Naya Leak Joshi)** — vishwaguru, reel_minister, naya_leak, sticker_47 [INFERRED 0.65]
+- **Minister Portfolio Nickname Stickers (Petroleum, Ethanol, Adalat, Chronology)** — petroleum, sticker_43, adalat_sharma, sticker_42 [INFERRED 0.55]
+- **Political caricature avatar stickers (bureaucrat/minister mockery)** — avatar_chronology_chacha, avatar_mananiya_sadasya, avatar_ethanol_kaka, avatar_leak_pradhan [INFERRED 0.75]
+- **Anti-government protest placards carried by DOM creatures** — placard_18, placard_09, placard_07, placard_12, placard_13, placard_04 [INFERRED 0.70]
+- **Self-referential / meta protest placards (cockroach, mitron, savage tone)** — placard_06, placard_05, placard_10 [INFERRED 0.55]
+- **RAF Sticker Sheets (1-5 + base) Themed Set** — sticker_raf1, sticker_raf2, sticker_raf3, sticker_raf4, sticker_raf5, sticker_raf_base [EXTRACTED 0.85]
+- **RAF/Police Reference Photos** — ref_frame99, ref_raf, ref_police [EXTRACTED 0.80]
+- **Protest Placard Text Cards** — placard_11_kuchupuchu, placard_15_accountability, placard_01_sabyaad, placard_02_chaibna [INFERRED 0.55]
+
 
 ## Communities
 
-Full per-community membership detail has been split out to keep this file under 500 lines: see [GRAPH_REPORT_COMMUNITIES.md](GRAPH_REPORT_COMMUNITIES.md).
-
-## Ambiguous Edges - Review These
-- `SubjectDrawer.ts + subjectDrawer.css <- Figma subject element` → `drawSubject.ts (colorByName palette guard, flat-illustrated)`  [AMBIGUOUS]
-  DESIGN.md · relation: conceptually_related_to
-- `Figma-First Experience Overhaul Design Spec` → `Premium Visual & Collective Attack (PR1) Design Spec`  [AMBIGUOUS]
-  docs/superpowers/specs/2026-07-28-figma-first-experience-overhaul-design.md · relation: conceptually_related_to
-- `Figma-First Experience Overhaul Design Spec` → `Multi-Subject Targeting (PR2) Design Spec`  [AMBIGUOUS]
-  docs/superpowers/specs/2026-07-28-figma-first-experience-overhaul-design.md · relation: conceptually_related_to
-- `Drag Handle Icon (Six-Dot Grip)` → `Eye Crowd Grid Mockup with Draggable Pink Target`  [AMBIGUOUS]
-  docs/superpowers/assets/icons/eye pupil.png · relation: semantically_similar_to
-- `Filter Panel Design Reference (Numbers Stepper + Repel Slider)` → `Control Icons Design Reference (Toolbar Icon Set)`  [AMBIGUOUS]
-  public/assets/figma/references/reference-filter-panel.png · relation: conceptually_related_to
-- `Crowd Bug (Right-Facing)` → `Crowd Bug (Left-Facing)`  [AMBIGUOUS]
-  public/assets/figma/crowd/crowd-bug-right.svg · relation: has_identical_path_geometry_to
-- `Crowd Bug (Right-Facing)` → `Crowd Bug (Upright)`  [AMBIGUOUS]
-  public/assets/figma/crowd/crowd-bug-right.svg · relation: has_identical_path_geometry_to
-- `Crowd Bug (Left-Facing)` → `Crowd Bug (Upright)`  [AMBIGUOUS]
-  public/assets/figma/crowd/crowd-bug-left.svg · relation: has_identical_path_geometry_to
-- `Subject: Elder Figure` → `Subject: Lotus`  [AMBIGUOUS]
-  public/assets/figma/subjects/subject-elder-figure.png · relation: conceptually_related_to
-- `Control: Eye Pupil Dot Icon` → `Scene Control: Neutral Well (empty ellipse placeholder)`  [AMBIGUOUS]
-  public/assets/figma/icons/control-eye-pupil.svg · relation: semantically_similar_to
-- `Effect: Attack Target Glow` → `Lotus Surrounded by Cockroach Swarm (Gemini Reference)`  [AMBIGUOUS]
-  public/Reference/Gemini_Generated_Image_poul1opoul1opoul 1.png · relation: conceptually_related_to
-- `Effect: Attack Target Glow` → `Lotus Attacked by Pointing Fingers with Lightning (Gemini Reference)`  [AMBIGUOUS]
-  public/Reference/Gemini_Generated_Image_3e3c523e3c523e3c (1) 1.png · relation: conceptually_related_to
-- `Giant Eye Variant 04` → `Compact Eye Variant 06`  [AMBIGUOUS]
-  public/assets/figma/eyes/eye-giant-04.svg · relation: conceptually_related_to
-- `Hud (consolidated DOM HUD)` → `CreatureMode union type`  [AMBIGUOUS]
-  tests/unit/creatureTypes.test.ts · relation: conceptually_related_to
-- `CreatureMode union type` → `BugSwarm (anime.js swarm)`  [AMBIGUOUS]
-  tests/unit/bugSwarm.test.ts · relation: conceptually_related_to
-- `Placard HUD Icon Runtime SVG Fetch` → `Rationale: Static Client-Only App Keeps Attack Surface Small`  [AMBIGUOUS]
-  docs/superpowers/plans/2026-08-08-crowd-fixes-plan.md · relation: conceptually_related_to
-- `Beat 4 Attack-Gradient Dot and Begin Button` → `Hud.getAttackButton() Getter`  [AMBIGUOUS]
-  docs/superpowers/plans/2026-08-08-protest-impact-panel.md · relation: conceptually_related_to
-
-## Knowledge Gaps
-- **253 isolated node(s):** `helpers/mainDomSetup.ts (stub canvas + DOM bootstrap)`, `build-grain.py script`, `queryNearestEye`, `shouldSpawnSubject`, `main.ts (app entry/orchestrator)` (+248 more)
-  These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `readText()`** (2 nodes): `readText()`, `hud.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Hud.ts (Hud class)`** (2 nodes): `Hud.ts (Hud class)`, `main.ts (app entry/orchestrator)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `ADR 004: DOM HUD vs Canvas HUD`** (2 nodes): `ADR 004: DOM HUD vs Canvas HUD`, `Hud.ts (DOM HUD implementation)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `AGENTS.md`** (2 nodes): `AGENTS.md`, `CLAUDE.md`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `createMockElement()`** (2 nodes): `createMockElement()`, `creatureTypes.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `makeInstance()`** (2 nodes): `makeInstance()`, `bugSwarm.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `createCreature()`** (2 nodes): `createCreature()`, `creaturePhysics.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Add/Plus Icon (Cross of Two Lines)`** (2 nodes): `Add/Plus Icon (Cross of Two Lines)`, `Reduce/Minus Icon (Horizontal Line)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Gallery/Grid View Icon (2x2 Rounded Squares)`** (2 nodes): `Gallery/Grid View Icon (2x2 Rounded Squares)`, `Text Tool Icon (T Glyph with Frame Corner Brackets)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Control: Eye Pupil Dot Icon`** (2 nodes): `Control: Eye Pupil Dot Icon`, `Scene Control: Neutral Well (empty ellipse placeholder)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Filter Panel: Repel/Track Divider Line`** (2 nodes): `Filter Panel: Repel/Track Divider Line`, `Scene Control: Subtle Divider Line`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Control: Gallery Tile Tertiary Corner Bracket`** (2 nodes): `Control: Gallery Tile Tertiary Corner Bracket`, `Scene Control: Gallery Tile Secondary Corner Bracket`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Control Icon - Gallery Tile (Primary, Rounded Square)`** (2 nodes): `Control Icon - Gallery Tile (Primary, Rounded Square)`, `Control Icon - Quantity Plus (Single Bar Segment)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye Compact 02 (Dark Iris, Default State)`** (2 nodes): `Eye Compact 02 (Dark Iris, Default State)`, `Eye Compact 02 Attack Variant`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `draggableAvatar.test.ts suite`** (2 nodes): `draggableAvatar.test.ts suite`, `makeDraggable.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `filterPanel.test.ts suite`** (2 nodes): `filterPanel.test.ts suite`, `galleryPanel.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `createFakeAudioContext()`** (2 nodes): `createFakeAudioContext()`, `hoverTones.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `FakeAudioContext`** (2 nodes): `FakeAudioContext`, `audioManager.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `createFakeControl()`** (2 nodes): `createFakeControl()`, `audioWidget.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Post-Deploy curl Header Verification`** (2 nodes): `Post-Deploy curl Header Verification`, `Rationale: Config-Only, So curl Not vitest`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `vite.config.ts`** (1 nodes): `vite.config.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `integrator.test.ts`** (1 nodes): `integrator.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `core.test.ts`** (1 nodes): `core.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `helpers/mainDomSetup.ts (stub canvas + DOM bootstrap)`** (1 nodes): `helpers/mainDomSetup.ts (stub canvas + DOM bootstrap)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `queryNearestEye`** (1 nodes): `queryNearestEye`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `shouldSpawnSubject`** (1 nodes): `shouldSpawnSubject`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Hud (hud-placard grain/CSS tokens)`** (1 nodes): `Hud (hud-placard grain/CSS tokens)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Merged Eyes Design Dummy Implementation Plan`** (1 nodes): `Merged Eyes Design Dummy Implementation Plan`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Open design questions for v2 §6`** (1 nodes): `Open design questions for v2 §6`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Auto-extracted dependency graph (madge)`** (1 nodes): `Auto-extracted dependency graph (madge)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Site Favicon (Solid Pink Circle)`** (1 nodes): `Site Favicon (Solid Pink Circle)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `FORCEFIELD configuration constant`** (1 nodes): `FORCEFIELD configuration constant`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `ADR 005: Mode-locked power pairing (v2)`** (1 nodes): `ADR 005: Mode-locked power pairing (v2)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `filterPanel.test.ts`** (1 nodes): `filterPanel.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `cockroachCreature.test.ts`** (1 nodes): `cockroachCreature.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `galleryPanel.test.ts`** (1 nodes): `galleryPanel.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `fingerCreature.test.ts`** (1 nodes): `fingerCreature.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `draggableAvatar.test.ts`** (1 nodes): `draggableAvatar.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `stickerOverlay.test.ts`** (1 nodes): `stickerOverlay.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `eyeCreature.test.ts`** (1 nodes): `eyeCreature.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `creatureGrid.test.ts`** (1 nodes): `creatureGrid.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `creatureFactorySpawnFields.test.ts`** (1 nodes): `creatureFactorySpawnFields.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `placardCreature.test.ts`** (1 nodes): `placardCreature.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `creatureGridPopIn.test.ts`** (1 nodes): `creatureGridPopIn.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `creatureCssHygiene.test.ts`** (1 nodes): `creatureCssHygiene.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `computeSpawnProgress.test.ts`** (1 nodes): `computeSpawnProgress.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `makeDraggable.test.ts`** (1 nodes): `makeDraggable.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `textOverlay.test.ts`** (1 nodes): `textOverlay.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `vite-env.d.ts`** (1 nodes): `vite-env.d.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `figma-asset-audit.mjs (validation/geometry/safety module)`** (1 nodes): `figma-asset-audit.mjs (validation/geometry/safety module)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `resampleRgbaSrgb() - linear-light bilinear resample w/ premu`** (1 nodes): `resampleRgbaSrgb() - linear-light bilinear resample w/ premultiplied alpha`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Fun Satire v2 Expansion Design Spec (external, cited by ADR `** (1 nodes): `Fun Satire v2 Expansion Design Spec (external, cited by ADR 005/006)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Viewport 768×1024 (Tablet Portrait) — full HUD toolbar row a`** (1 nodes): `Viewport 768×1024 (Tablet Portrait) — full HUD toolbar row at bottom; eye entity appears to peek from behind top-right volume panel (possible z-order/clipping issue)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Viewport 1440×900 (Desktop Landscape) — HUD toolbar shows 'L`** (1 nodes): `Viewport 1440×900 (Desktop Landscape) — HUD toolbar shows 'LASER BURN' label with a hand-cursor icon overlapping the text; volume slider docked bottom-right`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Viewport 1024×768 (Tablet Landscape) — HUD toolbar shows onl`** (1 nodes): `Viewport 1024×768 (Tablet Landscape) — HUD toolbar shows only ATTACK (no 'LASER BURN' label rendered); volume slider docked top-right`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Viewport 1280×832 (Laptop Landscape) — HUD toolbar shows 'LA`** (1 nodes): `Viewport 1280×832 (Laptop Landscape) — HUD toolbar shows 'LASER BURN' label with the same hand-cursor icon overlapping the text as seen at 1440×900; volume slider docked bottom-right`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Viewport 390×844 (Mobile Portrait) — toolbar overflow bug: a`** (1 nodes): `Viewport 390×844 (Mobile Portrait) — toolbar overflow bug: a stray hand icon wraps onto a second row below the main toolbar, and the -/20/+ counter is clipped at the right edge; volume panel also clipped at top-right edge`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Viewport 844×390 (Mobile Landscape) — HUD toolbar fits clean`** (1 nodes): `Viewport 844×390 (Mobile Landscape) — HUD toolbar fits cleanly on a single row, volume panel fully visible top-right, no layout issues observed`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Controls Icon (Equalizer/Sliders Glyph)`** (1 nodes): `Controls Icon (Equalizer/Sliders Glyph)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Finger Creature Sprite`** (1 nodes): `Finger Creature Sprite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye Creature Sprite`** (1 nodes): `Eye Creature Sprite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Selected Well Indicator (Green Glow Circle)`** (1 nodes): `Selected Well Indicator (Green Glow Circle)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Horizontal Stroke / Divider Line`** (1 nodes): `Horizontal Stroke / Divider Line`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Filter Repel Slider Thumb`** (1 nodes): `Filter Repel Slider Thumb`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Hand Cursor - Wrist/Arm Curve`** (1 nodes): `Hand Cursor - Wrist/Arm Curve`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Subject/Viewfinder Frame Icon with Crosshair`** (1 nodes): `Subject/Viewfinder Frame Icon with Crosshair`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Filter Knob (Small)`** (1 nodes): `Filter Knob (Small)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Gallery Tile Icon - Primary (Rounded Corner Card)`** (1 nodes): `Gallery Tile Icon - Primary (Rounded Corner Card)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Hand Cursor - Finger/Palm Stroke`** (1 nodes): `Hand Cursor - Finger/Palm Stroke`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Filter Knob (Scene Control, Larger)`** (1 nodes): `Filter Knob (Scene Control, Larger)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Gallery Tile Icon - Secondary (Rounded Corner Card)`** (1 nodes): `Gallery Tile Icon - Secondary (Rounded Corner Card)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Large 06 (slate blue-gray iris, gaze right)`** (1 nodes): `Eye - Large 06 (slate blue-gray iris, gaze right)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Large 04 (near-black iris, gaze right-down)`** (1 nodes): `Eye - Large 04 (near-black iris, gaze right-down)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Small 01 (near-black iris, gaze right-up, smallest of `** (1 nodes): `Eye - Small 01 (near-black iris, gaze right-up, smallest of set)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Large 05 (near-black iris, gaze right, near-centered v`** (1 nodes): `Eye - Large 05 (near-black iris, gaze right, near-centered vertically)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Medium 03 (warm brown iris, gaze right-down)`** (1 nodes): `Eye - Medium 03 (warm brown iris, gaze right-down)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Large 08 (near-black iris, gaze right-down; geometrica`** (1 nodes): `Eye - Large 08 (near-black iris, gaze right-down; geometrically identical to Large 04)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Medium 02 (warm brown iris, gaze right-up, oversized d`** (1 nodes): `Eye - Medium 02 (warm brown iris, gaze right-up, oversized dimensions vs other mediums)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Medium 01 (olive green iris, gaze right-up)`** (1 nodes): `Eye - Medium 01 (olive green iris, gaze right-up)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Medium 05 (near-black iris, gaze right, near-centered `** (1 nodes): `Eye - Medium 05 (near-black iris, gaze right, near-centered vertically)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Eye - Medium 04 (near-black iris, gaze right-down; shares ir`** (1 nodes): `Eye - Medium 04 (near-black iris, gaze right-down; shares iris geometry with Medium 03)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `ADR 005: Mode-Locked Power Pairing`** (1 nodes): `ADR 005: Mode-Locked Power Pairing`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `ADR 008: Content Guardrail (flat-illustrated)`** (1 nodes): `ADR 008: Content Guardrail (flat-illustrated)`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `ADR 009: Curated Avatar Guardrail`** (1 nodes): `ADR 009: Curated Avatar Guardrail`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `spawnPoof`** (1 nodes): `spawnPoof`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `updateEyePupil()`** (1 nodes): `updateEyePupil()`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `updateEyeBlink()`** (1 nodes): `updateEyeBlink()`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `PLACARD_POOL sign pool`** (1 nodes): `PLACARD_POOL sign pool`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `bugSwarm.test.ts suite`** (1 nodes): `bugSwarm.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `cockroachCreature.test.ts suite`** (1 nodes): `cockroachCreature.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `computeSpawnProgress.test.ts suite`** (1 nodes): `computeSpawnProgress.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `core.test.ts suite`** (1 nodes): `core.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `creatureTypes.test.ts suite`** (1 nodes): `creatureTypes.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `fingerCreature.test.ts suite`** (1 nodes): `fingerCreature.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `hud.test.ts suite`** (1 nodes): `hud.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `placardCreature.test.ts suite`** (1 nodes): `placardCreature.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `stickerOverlay.test.ts suite`** (1 nodes): `stickerOverlay.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `textOverlay.test.ts suite`** (1 nodes): `textOverlay.test.ts suite`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `shareLinks.test.ts`** (1 nodes): `shareLinks.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `protestPanel.test.ts`** (1 nodes): `protestPanel.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `creatureGridHoverTones.test.ts`** (1 nodes): `creatureGridHoverTones.test.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `beats.ts`** (1 nodes): `beats.ts`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-
-## Suggested Questions
-_Questions this graph is uniquely positioned to answer:_
-
-- **What is the exact relationship between `SubjectDrawer.ts + subjectDrawer.css <- Figma subject element` and `drawSubject.ts (colorByName palette guard, flat-illustrated)`?**
-  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `Figma-First Experience Overhaul Design Spec` and `Premium Visual & Collective Attack (PR1) Design Spec`?**
-  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `Figma-First Experience Overhaul Design Spec` and `Multi-Subject Targeting (PR2) Design Spec`?**
-  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `Drag Handle Icon (Six-Dot Grip)` and `Eye Crowd Grid Mockup with Draggable Pink Target`?**
-  _Edge tagged AMBIGUOUS (relation: semantically_similar_to) - confidence is low._
-- **What is the exact relationship between `Filter Panel Design Reference (Numbers Stepper + Repel Slider)` and `Control Icons Design Reference (Toolbar Icon Set)`?**
-  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `Crowd Bug (Right-Facing)` and `Crowd Bug (Left-Facing)`?**
-  _Edge tagged AMBIGUOUS (relation: has_identical_path_geometry_to) - confidence is low._
-- **What is the exact relationship between `Crowd Bug (Right-Facing)` and `Crowd Bug (Upright)`?**
-  _Edge tagged AMBIGUOUS (relation: has_identical_path_geometry_to) - confidence is low._
+Full community membership moved to [GRAPH_REPORT_COMMUNITIES.md](GRAPH_REPORT_COMMUNITIES.md), [GRAPH_REPORT_COMMUNITIES_2.md](GRAPH_REPORT_COMMUNITIES_2.md), and [GRAPH_REPORT_COMMUNITIES_3.md](GRAPH_REPORT_COMMUNITIES_3.md) (split to stay under 500 lines each).
