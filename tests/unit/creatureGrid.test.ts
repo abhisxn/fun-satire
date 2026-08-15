@@ -468,6 +468,66 @@ describe('CreatureGrid', () => {
     });
   });
 
+  describe('setAvatarRepelRadius', () => {
+    it('defaults to the normal repelRadius (creature 100px away is repelled)', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      // hx/hy moved to match x/y so the spring-to-home force can't also move vx —
+      // only the avatar repulsion term is being observed.
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.update(200, 100); // avatar 100px away, well inside the default 180px radius
+
+      expect(target.vx).not.toBe(0);
+    });
+
+    it('overriding to a smaller radius stops repulsion just outside it', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.setAvatarRepelRadius(60);
+      grid.update(200, 100); // avatar 100px away — inside the default radius, outside the 60px override
+
+      expect(target.vx).toBe(0);
+    });
+
+    it('passing null restores the default radius', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.setAvatarRepelRadius(60);
+      grid.setAvatarRepelRadius(null);
+      grid.update(200, 100);
+
+      expect(target.vx).not.toBe(0);
+    });
+
+    it('getAvatarRepelRadius reflects the last value set', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      expect(grid.getAvatarRepelRadius()).toBeNull();
+
+      grid.setAvatarRepelRadius(60);
+      expect(grid.getAvatarRepelRadius()).toBe(60);
+
+      grid.setAvatarRepelRadius(null);
+      expect(grid.getAvatarRepelRadius()).toBeNull();
+    });
+  });
+
   describe('setRepelMultiplier', () => {
     it('updates physics params', () => {
       const grid = new CreatureGrid(config);

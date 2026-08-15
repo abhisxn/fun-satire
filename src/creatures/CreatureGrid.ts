@@ -253,6 +253,7 @@ export class CreatureGrid {
   private lastActivityMs: number = Date.now();
   private burstUntilMs: number = 0;
   private repulsor: Repulsor | null = null;
+  private avatarRepelRadius: number | null = null;
   private onCreatureTerminated: ((x: number, y: number, w: number, h: number) => void) | null = null;
   private audioContext: AudioContext | null = null;
   private hoverState = new WeakMap<Creature, boolean>();
@@ -408,7 +409,7 @@ export class CreatureGrid {
       repulsors.push({ x: unit.x, y: unit.y, radius: unit.repelRadius });
     }
     for (const c of this.creatures) {
-      updateCreature(c, avatar, this.physicsParams, repulsors);
+      updateCreature(c, avatar, this.physicsParams, repulsors, this.avatarRepelRadius ?? undefined);
     }
 
     // Hover-enter edge detection: fires at most one tone per cooldown
@@ -599,6 +600,16 @@ export class CreatureGrid {
 
   clearRepulsor(): void {
     this.repulsor = null;
+  }
+
+  /** Overrides the avatar-vs-creature repel radius (independent of security units' own
+   * radii). Pass null to restore the default (`physicsParams.repelRadius`). */
+  setAvatarRepelRadius(radius: number | null): void {
+    this.avatarRepelRadius = radius;
+  }
+
+  getAvatarRepelRadius(): number | null {
+    return this.avatarRepelRadius;
   }
 
   getCreatureCount(): number {
