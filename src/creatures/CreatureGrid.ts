@@ -283,6 +283,22 @@ export class CreatureGrid {
     return { cols, rows };
   }
 
+  private createCreatureForMode(mode: CreatureMode, hx: number, hy: number, scale: number, uid: string): Creature {
+    switch (mode) {
+      case 'eyes': {
+        const eye = createEyeCreature(hx, hy, scale, this.svgMarkup, uid);
+        this.eyeCreatures.push(eye);
+        return eye;
+      }
+      case 'pointedFinger':
+        return createFingerCreature(hx, hy, scale);
+      case 'cockroach':
+        return createCockroachCreature(hx, hy, scale);
+      case 'placard':
+        return createPlacardCreature(hx, hy, scale);
+    }
+  }
+
   spawn(mode: CreatureMode): void {
     this.clear();
     this.mode = mode;
@@ -305,24 +321,7 @@ export class CreatureGrid {
       const scale = modeConfig.scaleFn(hx, hy, vw, vh);
       const uid = `${c}_${r}`;
 
-      let creature: Creature;
-      switch (mode) {
-        case 'eyes': {
-          const eye = createEyeCreature(hx, hy, scale, this.svgMarkup, uid);
-          this.eyeCreatures.push(eye);
-          creature = eye;
-          break;
-        }
-        case 'pointedFinger':
-          creature = createFingerCreature(hx, hy, scale);
-          break;
-        case 'cockroach':
-          creature = createCockroachCreature(hx, hy, scale);
-          break;
-        case 'placard':
-          creature = createPlacardCreature(hx, hy, scale);
-          break;
-      }
+      const creature = this.createCreatureForMode(mode, hx, hy, scale, uid);
       creature.spawnPopAtMs = batchStartMs + Math.random() * Math.max(0, SPAWN_WAVE_MS - SPAWN_POP_MS);
       creature.spawnDone = false;
       this.creatures.push(creature);
@@ -376,24 +375,7 @@ export class CreatureGrid {
       const scale = modeConfig.scaleFn(hx, hy, vw, vh);
       const uid = `extra_${i}`;
 
-      let creature: Creature;
-      switch (this.mode) {
-        case 'eyes': {
-          const eye = createEyeCreature(hx, hy, scale, this.svgMarkup, uid);
-          this.eyeCreatures.push(eye);
-          creature = eye;
-          break;
-        }
-        case 'pointedFinger':
-          creature = createFingerCreature(hx, hy, scale);
-          break;
-        case 'cockroach':
-          creature = createCockroachCreature(hx, hy, scale);
-          break;
-        case 'placard':
-          creature = createPlacardCreature(hx, hy, scale);
-          break;
-      }
+      const creature = this.createCreatureForMode(this.mode, hx, hy, scale, uid);
       creature.spawnPopAtMs = batchStartMs + Math.random() * Math.max(0, SPAWN_WAVE_MS - SPAWN_POP_MS);
       creature.spawnDone = false;
       this.creatures.push(creature);
