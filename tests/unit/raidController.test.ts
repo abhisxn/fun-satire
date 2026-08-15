@@ -1,6 +1,12 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { detectShake, RaidController, pickPulseKinds } from '../../src/creatures/RaidController';
+import {
+  detectShake,
+  RaidController,
+  pickPulseKinds,
+  AVATAR_REPEL_RADIUS_AFTER_WIN,
+  SHAKE_PULSE_COOLDOWN_MS,
+} from '../../src/creatures/RaidController';
 import type { MoveSample } from '../../src/creatures/RaidController';
 import { CreatureGrid } from '../../src/creatures/CreatureGrid';
 import { SECURITY_SHRINK_MS } from '../../src/creatures/SecurityCreature';
@@ -311,6 +317,84 @@ describe('RaidController', () => {
 
     // raidStartCount was 40 (initialQuantity), floor = round(40 * 0.25) = 10
     expect(raid.getRaidFloor()).toBe(10);
+  });
+
+  it('shrinks the avatar repel radius once a full-power charge clears the raid', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    expect(grid.getAvatarRepelRadius()).toBeNull();
+
+    raid.startCharging();
+    t += 1800; // CHARGE_DURATION_MS
+    raid.tick(t);
+    t += SECURITY_SHRINK_MS;
+    raid.tick(t);
+
+    expect(raid.getState()).toBe('idle');
+    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
+
+    now.mockRestore();
+  });
+
+  it('restores the default avatar repel radius once a new raid starts', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    raid.startCharging();
+    t += 1800;
+    raid.tick(t);
+    t += SECURITY_SHRINK_MS;
+    raid.tick(t);
+    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
+
+    // A fresh shake starts a new raid.
+    t += SHAKE_PULSE_COOLDOWN_MS;
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    expect(raid.getState()).toBe('raiding');
+    expect(grid.getAvatarRepelRadius()).toBeNull();
+
+    now.mockRestore();
+  });
+
+  it('does not shrink the avatar repel radius via the legacy instant startRecovery() path', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    raid.startRecovery();
+    const spawned = raid.getSecurityUnits().length;
+    for (let i = 0; i < spawned; i++) {
+      t += SECURITY_SHRINK_MS;
+      raid.tick(t);
+    }
+
+    expect(raid.getState()).toBe('idle');
+    expect(grid.getAvatarRepelRadius()).toBeNull();
+
+    now.mockRestore();
   });
 
   describe('charge/release protest mechanic', () => {

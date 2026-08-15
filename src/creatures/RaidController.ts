@@ -78,6 +78,11 @@ export const SECURITY_MAX_UNITS = 24;
 export const SECURITY_REPEL_RADIUS = 160;
 /** Tight radius within which a security unit catches (permanently removes) a creature. */
 export const SECURITY_CATCH_RADIUS = 50;
+/** How far the avatar's own repel radius shrinks once a raid fully clears via a full-power
+ * hold — the crowd can gather right up close in the moment of winning, instead of still
+ * being held at arm's length by the normal repel field. Reset the moment the next raid
+ * starts (see spawnPulse). */
+export const AVATAR_REPEL_RADIUS_AFTER_WIN = 60;
 export const SPAWN_MIN_PER_PULSE = 2;
 export const SPAWN_MAX_PER_PULSE = 3;
 /** Crowd never drops below this fraction of its size when the raid started. */
@@ -155,6 +160,7 @@ export class RaidController {
     if (this.state === "idle") {
       this.state = "raiding";
       this.raidStartCount = this.grid.getCreatureCount();
+      this.grid.setAvatarRepelRadius(null);
     }
 
     const available = SECURITY_MAX_UNITS - this.units.length;
@@ -303,6 +309,7 @@ export class RaidController {
 
     if (fraction >= 1 && this.units.length === 0) {
       this.state = "idle";
+      this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
     }
   }
 
