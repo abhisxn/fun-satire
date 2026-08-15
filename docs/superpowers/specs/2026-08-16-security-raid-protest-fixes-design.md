@@ -111,6 +111,60 @@ expensive-filter element counts, verifying `posAnim` cleanup in `removeSecurityU
 doesn't appear to be nulled/GC'd early), and confirming `RaidController.destroy()` is actually invoked on
 every teardown path.
 
+## E. Complexity & dependency recommendations
+
+Reviewed while scoping A–D, since the charge/release mechanic and spawn-entrance work both add new mutable
+state to the same files. Findings, most concrete first:
+
+1. **Real perf bug: creature transform is written twice per frame.** `creaturePhysics.ts`'s `updateCreature()`
+   already sets `creature.el.style.transform` (line 69) for every creature — then `CreatureGrid.update()`
+   immediately overwrites it again for every creature, every frame, in its per-mode loop (eyes: line 479;
+   finger/cockroach/placard: line 501), to add rotation/scale/hover-boost the physics layer doesn't know
+   about. Every creature gets two style writes (and two forced layout-relevant recalcs) per animation frame
+   when only one is used. Fix: have `updateCreature()` stop writing `transform`/return the computed
+   `angle` instead of touching the DOM, and let `CreatureGrid` do the single authoritative write. This is the
+   single highest-leverage fix for D's "GPU/CPU panics in long sessions" — it scales with creature count
+   (hundreds) × 60fps, dwarfing the security-unit count (≤24).
+
+2. **Three near-identical throttle blocks in `CreatureGrid.update()`.** Fade-pick, repop-pick, and
+   catch-check each repeat the same `if (now - lastXMs >= intervalMs) { lastXMs = now; ... }` shape inline,
+   contributing to `update()` being ~170 lines with several unrelated concerns interleaved. Recommend
+   extracting a small private `runThrottled(lastMs, intervalMs, now, fn)` helper before adding any 4th
+   throttled behavior (e.g. if the perf investigation in D wants another periodic pass) — mechanical, low
+   risk, makes `update()` read as a list of named passes instead of a wall of timer bookkeeping.
+
+3. **Duplicated per-mode creature-factory switch.** `spawn()` and `setQuantity()` both contain the identical
+   `switch (mode) { case 'eyes': ... }` block for creating one creature. Since A.7's spawn-entrance work and
+   any future mode both touch this path, extract `createCreatureForMode(mode, hx, hy, scale, uid)` once and
+   call it from both — removes ~15 duplicated lines and one more place the two spawn paths could drift.
+
+4. **`SecurityUnitState` is about to accumulate ad-hoc animation flags.** A.6 (shrink-before-poof) and A.7
+   (spawn-entrance ease) each want to add their own transient fields read by different callers
+   (`RaidController` for despawn timing, `SecurityCreature`/`applyTransform` for rendering,
+   `getSecurityUnits()` for the repulsion radius fed to `CreatureGrid`). Recommend modeling this the same way
+   `CreatureGrid` already models creature spawn/fade (`computeSpawnProgress`, a pure function of elapsed time
+   → `{scale, opacity, done}`): one small `phase: 'entering' | 'wandering' | 'poofing'` plus a
+   `phaseStartMs` on `SecurityUnitState`, with scale/opacity/effective-repel-radius all derived by pure
+   functions of `(phase, now - phaseStartMs)`. One source of truth instead of three independently-mutated
+   fields staying in sync by convention.
+
+5. **Prefer pure math over new `anime.js` instances for the one-shot effects.** The bee-swarm entrance and
+   shrink-before-poof are both short, one-shot, easily expressed as `t/duration` easing (like
+   `computeSpawnProgress` already does) — recommend computing them inline in the same per-frame update rather
+   than spinning up additional `anime()` calls per unit. `anime.js` should stay reserved for the continuous
+   wander loop it's already driving. Keeps `removeSecurityUnit()`'s cleanup surface at "pause one `posAnim`"
+   instead of growing to track/pause 2-3 animation handles per unit, which matters directly for D: fewer live
+   animation instances during a long raid with up to 24 simultaneous security units.
+
+6. **Preserve the current one-way dependency.** `CreatureGrid` never imports `RaidController` — raid state
+   flows in only through `update(avatarX, avatarY, securityUnits, raidFloor)`'s parameters, and
+   `RaidController` reads crowd state back only through `CreatureGrid`'s public `getCreatureCount()` /
+   `setQuantity()`. None of A–D need to break this. Explicitly flagging it so the charge/release work doesn't
+   take a shortcut (e.g. `CreatureGrid` reaching into `RaidController` for charge fraction) — all new security
+   state should keep flowing through the existing `getSecurityUnits()` / `getRaidFloor()` read-only
+   accessors, with a new `getChargeFraction()`-style accessor added the same way if `CreatureGrid` ever needs
+   it for rendering.
+
 ## Testing
 
 Per project convention, every change here touches `creatures/` or `hud/` — run `npm run dev` and verify each
