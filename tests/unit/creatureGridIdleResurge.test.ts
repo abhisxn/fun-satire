@@ -13,6 +13,7 @@ import {
   REPOP_COUNT,
 } from '../../src/creatures/CreatureGrid';
 import type { CreatureGridConfig } from '../../src/creatures/CreatureGrid';
+import { QTY_MIN } from '../../src/config/tokens';
 
 describe('idleVisibleFraction', () => {
   it('stays at 1 with no idle time', () => {
@@ -183,7 +184,7 @@ describe('CreatureGrid update — demand-driven re-pop (idle decay + resurge)', 
     const creatures = (grid as unknown as {
       creatures: Array<{ waitingRespawn: boolean; spawnDone: boolean }>;
     }).creatures;
-    for (let i = 0; i < creatures.length - 2; i++) {
+    for (let i = 0; i < creatures.length - 27; i++) {
       creatures[i].waitingRespawn = true;
       creatures[i].spawnDone = false;
     }
@@ -198,9 +199,46 @@ describe('CreatureGrid update — demand-driven re-pop (idle decay + resurge)', 
 
     grid.update(400, 300);
 
-    // Floor for 240 creatures at IDLE_FLOOR_FRACTION (2%) is round(240*0.02) = 5,
-    // above IDLE_FLOOR_MIN_COUNT (3). Deficit is 5 - 2 = 3, all closeable in one tick.
-    expect(creatures.filter((c) => !c.waitingRespawn).length).toBe(5);
+    // Floor for 240 creatures is max(IDLE_FLOOR_MIN_COUNT=30, round(240*0.02)=5) = 30 —
+    // the absolute floor now dominates the percentage for typical crowd sizes. 27 start
+    // visible, deficit is 30 - 27 = 3, closeable in one tick (REPOP_COUNT=5).
+    expect(creatures.filter((c) => !c.waitingRespawn).length).toBe(30);
+  });
+
+  it('never desires more visible creatures than exist for a crowd smaller than the idle floor', () => {
+    // QTY_MIN (10) is below IDLE_FLOOR_MIN_COUNT (30) — the raw floor formula
+    // (max(IDLE_FLOOR_MIN_COUNT, round(target * fraction))) would ask for 30
+    // "visible" creatures out of a pool that only has 10. desiredVisibleCount
+    // must be clamped to targetCount so it never asks the repop logic to
+    // revive more creatures than were ever spawned.
+    const smallConfig: CreatureGridConfig = { container, mode: 'cockroach', initialQuantity: QTY_MIN };
+    const grid = new CreatureGrid(smallConfig);
+    grid.spawn('cockroach'); // exactly QTY_MIN (10) creatures — the whole pool
+    const creatures = (grid as unknown as {
+      creatures: Array<{ waitingRespawn: boolean; spawnDone: boolean }>;
+    }).creatures;
+    expect(creatures.length).toBe(QTY_MIN);
+
+    for (let i = 0; i < creatures.length - 3; i++) {
+      creatures[i].waitingRespawn = true;
+      creatures[i].spawnDone = false;
+    }
+    const state = grid as unknown as {
+      lastActivityMs: number;
+      lastFadePickMs: number;
+      lastRepopPickMs: number;
+    };
+    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_DECAY_MS + 60_000);
+    state.lastFadePickMs = Date.now();
+    state.lastRepopPickMs = 0;
+
+    grid.update(400, 300);
+
+    // The pool never grows beyond targetCount, and the visible subset can
+    // never exceed the pool it's drawn from — both would break if
+    // desiredVisibleCount weren't clamped to targetCount.
+    expect(grid.getCreatureCount()).toBe(QTY_MIN);
+    expect(creatures.filter((c) => !c.waitingRespawn).length).toBeLessThanOrEqual(QTY_MIN);
   });
 
   it('uses the larger burst cap while a fast-drag burst window is open', () => {

@@ -33,7 +33,7 @@ export const IDLE_DECAY_MS = 300_000;
 /** Idle floor as a fraction of the current target quantity. */
 export const IDLE_FLOOR_FRACTION = 0.02;
 /** Absolute minimum visible count at the idle floor, regardless of target quantity. */
-export const IDLE_FLOOR_MIN_COUNT = 3;
+export const IDLE_FLOOR_MIN_COUNT = 30;
 /** Sub-pixel jitter below this doesn't count as sticker movement. */
 export const MOVEMENT_NOISE_PX = 1.5;
 /** Drag speed (px/ms) above which a movement counts as a "fast" resurge trigger. */
@@ -539,9 +539,9 @@ export class CreatureGrid {
     if (this.shouldRunThrottled(this.lastRepopPickMs, REPOP_INTERVAL_MS, now)) {
       this.lastRepopPickMs = now;
       const idleMs = now - this.lastActivityMs;
-      const desiredVisibleCount = Math.max(
-        IDLE_FLOOR_MIN_COUNT,
-        Math.round(this.targetCount * idleVisibleFraction(idleMs)),
+      const desiredVisibleCount = Math.min(
+        this.targetCount,
+        Math.max(IDLE_FLOOR_MIN_COUNT, Math.round(this.targetCount * idleVisibleFraction(idleMs))),
       );
       const visibleCount = this.creatures.filter((c) => !c.waitingRespawn).length;
       const deficit = desiredVisibleCount - visibleCount;
