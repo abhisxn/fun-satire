@@ -485,7 +485,7 @@ export class CreatureGrid {
     }
 
     // Random disappear: settled creatures fade out independently.
-    if (now - this.lastFadePickMs >= FADE_PICK_INTERVAL_MS) {
+    if (this.shouldRunThrottled(this.lastFadePickMs, FADE_PICK_INTERVAL_MS, now)) {
       const candidates = this.creatures.filter((c) => c.spawnDone && c.fadeStartMs === 0);
       if (candidates.length > 0) {
         this.lastFadePickMs = now;
@@ -502,7 +502,7 @@ export class CreatureGrid {
     // idle floor the longer the sticker sits still), capped per tick so the
     // recovery still animates rather than jumping instantly. A fast drag
     // opens a burst window that raises the cap so the crowd floods back.
-    if (now - this.lastRepopPickMs >= REPOP_INTERVAL_MS) {
+    if (this.shouldRunThrottled(this.lastRepopPickMs, REPOP_INTERVAL_MS, now)) {
       this.lastRepopPickMs = now;
       const idleMs = now - this.lastActivityMs;
       const desiredVisibleCount = Math.max(
@@ -531,7 +531,7 @@ export class CreatureGrid {
     // caught within a security unit's tight catchRadius, down to raidFloor.
     // Kept separate from the fade/respawn cycle above — a catch is a
     // permanent removal, not a temporary despawn that repop can undo.
-    if (securityUnits.length > 0 && now - this.lastCatchPickMs >= CATCH_CHECK_INTERVAL_MS) {
+    if (securityUnits.length > 0 && this.shouldRunThrottled(this.lastCatchPickMs, CATCH_CHECK_INTERVAL_MS, now)) {
       this.lastCatchPickMs = now;
       for (const unit of securityUnits) {
         if (this.targetCount <= raidFloor) break;
@@ -563,6 +563,11 @@ export class CreatureGrid {
   /** Shared AudioContext used to fire hover tones; pass null to silence them. */
   setAudioContext(context: AudioContext | null): void {
     this.audioContext = context;
+  }
+
+  /** True once `intervalMs` has elapsed since `lastMs`. Callers own updating their own `lastMs` field on a true result — this only answers "should I run now?". */
+  private shouldRunThrottled(lastMs: number, intervalMs: number, now: number): boolean {
+    return now - lastMs >= intervalMs;
   }
 
   private triggerHoverTone(): void {
