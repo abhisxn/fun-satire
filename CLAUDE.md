@@ -27,10 +27,11 @@ src/
   creatures/  CreatureGrid, creaturePhysics, creatureTypes, per-type modules
               (EyeCreature, CockroachCreature, FingerCreature, PlacardCreature, BugSwarm),
               poofEffect (spawn/despawn), DraggableAvatar, makeDraggable, snapGrid/snapGuides,
-              StickerOverlay, TextOverlay
+              StickerOverlay, TextOverlay, pinchZoom, touchSupport
   input/      PointerTracker
   audio/      AudioManager, AudioWidget, clickSound, dragScratchSound, hoverTones, hudTones, poofTone
-  hud/        Hud, FilterPanel, GalleryPanel, ProtestPanel, shareLinks, onboarding/ (OnboardingCarousel, beats)
+  hud/        Hud, FilterPanel, GalleryPanel, MenuButton, MenuPanel, menuContent (protest content
+              lives here, no separate ProtestPanel file), shareLinks, onboarding/ (OnboardingCarousel, beats)
   analytics/  ga.ts (Google Analytics)
   config/     tokens.ts, visualTokens.ts
 tests/unit/   vitest — one file per module/feature, run via `npm test`
@@ -40,9 +41,11 @@ docs/superpowers/
   plans/                   active (in-progress) per-feature implementation/sprint plans
   archive/specs/,plans/    shipped features' specs/plans, moved here once their ADRs are captured
 graphify-out/
-  GRAPH_REPORT.md              knowledge graph summary (god nodes, surprising connections, community index)
-  GRAPH_REPORT_COMMUNITIES.md  full community membership detail (split out to stay under 500 lines)
-  graph.html                   interactive graph visualization
+  GRAPH_REPORT.md                knowledge graph summary (god nodes, surprising connections, community index)
+  GRAPH_REPORT_COMMUNITIES.md,
+  GRAPH_REPORT_COMMUNITIES_2.md,
+  GRAPH_REPORT_COMMUNITIES_3.md  full community membership detail (split across files to stay under 500 lines each)
+  graph.html                     interactive graph visualization
 ```
 
 ## Commands
@@ -50,6 +53,7 @@ graphify-out/
 - `npm run dev` — Vite dev server
 - `npm test` — vitest run (unit suite)
 - `npm run build` — typecheck + production build
+- `npm run tokens:generate` / `npm run tokens:check` — regenerate/verify `visualTokens.ts` from source tokens
 
 ## Markdown files
 
@@ -60,7 +64,7 @@ No `.md` file in this project should exceed 500 lines. If a doc grows past that,
 - [system-architecture.md](docs/superpowers/system-architecture.md) — ADRs 001-006, core definitions, data-flow diagram
 - [docs/superpowers/specs/](docs/superpowers/specs/) — active design specs (v2 in progress)
 - [docs/superpowers/plans/](docs/superpowers/plans/) — active implementation/sprint plans matching each spec
-- [docs/superpowers/archive/](docs/superpowers/archive/) — shipped features' specs/plans (v1, merged-eyes, subject mechanic, browser matrix)
+- [docs/superpowers/archive/](docs/superpowers/archive/) — shipped features' specs/plans, moved here once merged to main
 - [README.md](README.md) — project brief, status, quick start
 - [ABOUT.md](ABOUT.md) — why this exists, what it's an ode to, key takeaways, what you can do as a responsible citizen
 - [SECURITY.md](SECURITY.md) — reporting a vulnerability
