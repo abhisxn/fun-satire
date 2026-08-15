@@ -293,6 +293,18 @@
   animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
   opacity: 0;
   animation-delay: 0.45s;
+  overflow: hidden;
+  --charge: 0;
+}
+
+.hud-attack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: calc(100% * var(--charge));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.15));
+  z-index: 0;
+  pointer-events: none;
 }
 
 .hud-attack:hover {

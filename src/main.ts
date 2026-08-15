@@ -14,7 +14,7 @@ import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getFaceStickerDefs } from "./hud/GalleryPanel";
 import { MenuPanel } from "./hud/MenuPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
-import { DEFAULT_CREATURE_QUANTITY, QTY_MAX } from "./config/tokens";
+import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
 import { AudioManager } from "./audio/AudioManager";
 import { AudioWidget } from "./audio/AudioWidget";
 import { playPoofTone } from "./audio/poofTone";
@@ -96,6 +96,7 @@ async function main(): Promise<void> {
   const engine = new Engine();
   engine.onTick(() => {
     const center = currentAttractor.getCenter();
+    raidController.tick(Date.now());
     grid.update(center.x, center.y, raidController.getSecurityUnits(), raidController.getRaidFloor());
   });
   engine.start();
@@ -212,9 +213,25 @@ async function main(): Promise<void> {
       menuPanel.toggle();
     });
 
-    hud.getProtestButton().addEventListener("click", () => {
-      raidController.startRecovery();
-      filterPanel.setQuantity(QTY_MAX);
+    const protestBtn = hud.getProtestButton();
+    protestBtn.addEventListener("pointerdown", () => {
+      raidController.startCharging();
+    });
+    const releaseProtestCharge = (): void => {
+      raidController.releaseCharge();
+    };
+    protestBtn.addEventListener("pointerup", releaseProtestCharge);
+    protestBtn.addEventListener("pointerleave", releaseProtestCharge);
+    protestBtn.addEventListener("pointercancel", releaseProtestCharge);
+
+    let prevRaidState = raidController.getState();
+    engine.onTick(() => {
+      protestBtn.style.setProperty("--charge", String(raidController.getChargeFraction()));
+      const raidState = raidController.getState();
+      if (raidState === "idle" && prevRaidState !== "idle") {
+        filterPanel.setQuantity(grid.getCreatureCount());
+      }
+      prevRaidState = raidState;
     });
 
     galleryPanel.onStickerSelect((src) => {

@@ -312,4 +312,108 @@ describe('RaidController', () => {
     // raidStartCount was 40 (initialQuantity), floor = round(40 * 0.25) = 10
     expect(raid.getRaidFloor()).toBe(10);
   });
+
+  describe('charge/release protest mechanic', () => {
+    function triggerRaid(now: { mockImplementation: (fn: () => number) => void }, tRef: { t: number }): void {
+      now.mockImplementation(() => tRef.t);
+      const xs = [0, 60, 0, 60, 0, 60, 0];
+      for (const x of xs) {
+        raid.onAvatarMove(x, 0);
+        tRef.t += 20;
+      }
+    }
+
+    it('startCharging is a no-op while idle (nothing to recover)', () => {
+      raid.startCharging();
+      expect(raid.getState()).toBe('idle');
+      expect(raid.getChargeFraction()).toBe(0);
+    });
+
+    it('charges progressively while held, rebuilding the crowd, and completes at full charge', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const raidStartCrowd = grid.getCreatureCount();
+
+      raid.startCharging();
+      expect(raid.getState()).toBe('charging');
+      expect(raid.getChargeFraction()).toBe(0);
+
+      tRef.t += 900; // half of CHARGE_DURATION_MS (1800)
+      raid.tick(tRef.t);
+      expect(raid.getChargeFraction()).toBeCloseTo(0.5, 1);
+      expect(grid.getCreatureCount()).toBeGreaterThan(raidStartCrowd);
+      expect(grid.getCreatureCount()).toBeLessThan(900);
+
+      tRef.t += 900; // reach full charge
+      raid.tick(tRef.t);
+      tRef.t += SECURITY_SHRINK_MS; // let any just-marked units finish shrinking
+      raid.tick(tRef.t);
+
+      expect(raid.getChargeFraction()).toBe(1);
+      expect(raid.getState()).toBe('idle');
+      expect(raid.getSecurityUnits().length).toBe(0);
+      expect(grid.getCreatureCount()).toBe(900);
+
+      now.mockRestore();
+    });
+
+    it('releaseCharge before full charge reverts crowd/security to the pre-charge baseline', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const spawned = raid.getSecurityUnits().length;
+      const raidStartCrowd = grid.getCreatureCount();
+
+      raid.startCharging();
+      tRef.t += 900;
+      raid.tick(tRef.t);
+      expect(grid.getCreatureCount()).toBeGreaterThan(raidStartCrowd);
+
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('raiding');
+      expect(raid.getChargeFraction()).toBe(0);
+      expect(raid.getSecurityUnits().length).toBe(spawned);
+      expect(grid.getCreatureCount()).toBe(raidStartCrowd);
+
+      now.mockRestore();
+    });
+
+    it('releaseCharge respawns units that had already fully shrunk away before release', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const spawned = raid.getSecurityUnits().length;
+
+      raid.startCharging();
+      tRef.t += 900;
+      raid.tick(tRef.t); // marks some units shrinking
+      tRef.t += SECURITY_SHRINK_MS;
+      raid.tick(tRef.t); // sweeps them away for real
+
+      expect(raid.getSecurityUnits().length).toBeLessThan(spawned);
+
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('raiding');
+      expect(raid.getSecurityUnits().length).toBe(spawned);
+
+      now.mockRestore();
+    });
+
+    it('releaseCharge is a no-op when not charging', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const spawned = raid.getSecurityUnits().length;
+
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('raiding');
+      expect(raid.getSecurityUnits().length).toBe(spawned);
+
+      now.mockRestore();
+    });
+  });
 });

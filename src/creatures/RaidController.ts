@@ -82,6 +82,8 @@ export const SPAWN_MIN_PER_PULSE = 2;
 export const SPAWN_MAX_PER_PULSE = 3;
 /** Crowd never drops below this fraction of its size when the raid started. */
 export const RAID_FLOOR_FRACTION = 0.25;
+/** How long a full press-and-hold must be sustained to fully clear a raid (ms). */
+export const CHARGE_DURATION_MS = 1800;
 export type RaidState = "idle" | "raiding" | "recovering" | "charging";
 
 export interface RaidControllerConfig {
@@ -118,6 +120,12 @@ export class RaidController {
   private moveBuffer: MoveSample[] = [];
   private lastPulseAtMs = -Infinity;
   private raidStartCount = 0;
+  private lastAvatarX = 0;
+  private lastAvatarY = 0;
+  private chargeStartAtMs = 0;
+  private chargeBaselineUnitCount = 0;
+  private chargeBaselineTargetCount = 0;
+  private chargeFraction = 0;
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -127,7 +135,9 @@ export class RaidController {
 
   /** Feed every avatar drag-move point through here; internally detects shake and spawns raids. */
   onAvatarMove(x: number, y: number): void {
-    if (this.state === "recovering") return;
+    this.lastAvatarX = x;
+    this.lastAvatarY = y;
+    if (this.state === "recovering" || this.state === "charging") return;
 
     const now = Date.now();
     this.moveBuffer.push({ x, y, t: now });
@@ -187,6 +197,48 @@ export class RaidController {
     return this.state;
   }
 
+  getChargeFraction(): number {
+    return this.chargeFraction;
+  }
+
+  /** Wired to the Protest button's pointerdown. No-op unless a raid is in progress. */
+  startCharging(): void {
+    if (this.state !== "raiding") return;
+    this.state = "charging";
+    this.chargeStartAtMs = Date.now();
+    this.chargeBaselineUnitCount = this.units.length;
+    this.chargeBaselineTargetCount = this.grid.getCreatureCount();
+    this.chargeFraction = 0;
+  }
+
+  /** Wired to the Protest button's pointerup/pointerleave/pointercancel: released
+   * before full charge — the raid surges back to its exact pre-charge strength.
+   * Partial progress is lost, not kept, matching the "commit and hold, or lose
+   * ground" framing. */
+  releaseCharge(): void {
+    if (this.state !== "charging") return;
+
+    for (const unit of this.units) {
+      if (unit.phase === "shrinking") unit.phase = "wandering";
+    }
+
+    const missing = this.chargeBaselineUnitCount - this.units.length;
+    if (missing > 0) {
+      const vw = this.container.clientWidth || window.innerWidth;
+      const vh = this.container.clientHeight || window.innerHeight;
+      const kinds = pickPulseKinds(missing);
+      for (let i = 0; i < missing; i++) {
+        const unit = createSecurityUnit(this.container, this.lastAvatarX, this.lastAvatarY, kinds[i]);
+        startSecurityWander(unit, vw, vh, true);
+        this.units.push(unit);
+      }
+    }
+
+    this.grid.setQuantity(this.chargeBaselineTargetCount);
+    this.chargeFraction = 0;
+    this.state = "raiding";
+  }
+
   /** Instantly triggers full recovery without a hold — a direct entry point kept for
    * callers that don't go through the charge mechanic (a later task). Marks every unit
    * shrinking on a staggered schedule (SECURITY_SHRINK_MS apart) so they pop out one
@@ -209,9 +261,11 @@ export class RaidController {
     });
   }
 
-  /** Call every engine frame (wired in a later task). Sweeps out any unit whose shrink window has
+  /** Call every engine frame (see main.ts). Sweeps out any unit whose shrink window has
    * elapsed, firing the despawn poof and removing it from the DOM. Transitions
-   * 'recovering' -> 'idle' once every unit has been swept. */
+   * 'recovering' -> 'idle' once every unit has been swept, and while 'charging',
+   * advances charge progress: proportionally shrinks security and rebuilds the crowd
+   * toward QTY_MAX, completing (-> 'idle') once the full CHARGE_DURATION_MS has held. */
   tick(nowMs: number): void {
     for (let i = this.units.length - 1; i >= 0; i--) {
       const unit = this.units[i]!;
@@ -225,6 +279,30 @@ export class RaidController {
     if (this.state === "recovering") {
       if (this.units.length === 0) this.state = "idle";
       return;
+    }
+
+    if (this.state !== "charging") return;
+
+    const fraction = Math.min(1, (nowMs - this.chargeStartAtMs) / CHARGE_DURATION_MS);
+    this.chargeFraction = fraction;
+
+    const keepCount = Math.round(this.chargeBaselineUnitCount * (1 - fraction));
+    let excess = this.units.filter((u) => u.phase !== "shrinking").length - keepCount;
+    for (const unit of this.units) {
+      if (excess <= 0) break;
+      if (unit.phase === "shrinking") continue;
+      unit.phase = "shrinking";
+      unit.phaseStartMs = nowMs;
+      excess--;
+    }
+
+    const rebuilt = Math.round(
+      this.chargeBaselineTargetCount + (QTY_MAX - this.chargeBaselineTargetCount) * fraction,
+    );
+    this.grid.setQuantity(rebuilt);
+
+    if (fraction >= 1 && this.units.length === 0) {
+      this.state = "idle";
     }
   }
 
