@@ -3,6 +3,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Hud } from "../../src/hud/Hud";
 import type { CreatureMode } from "../../src/creatures/creatureTypes";
 
+// The protest button's click handler calls playHudSelectTone(), which drives
+// real Web Audio APIs (createBufferSource/createBiquadFilter/createGain).
+// happy-dom, unlike real browsers, propagates exceptions thrown inside event
+// listeners back out through dispatchEvent(), so a bare `{} as AudioContext`
+// stub would make the "no-throw on click" test below fail on APIs it isn't
+// actually testing. Mock the tone module instead, same as
+// creatureGridHoverTones.test.ts mocks its creature audio triggers.
+vi.mock("../../src/audio/hudTones", () => ({
+  playHudSelectTone: vi.fn(),
+}));
+
 describe("Hud", () => {
   let host: HTMLElement;
   let hud: Hud;
@@ -69,6 +80,13 @@ describe("Hud", () => {
 
       expect(settingsBtn).toBeTruthy();
       expect(galleryBtn).toBeTruthy();
+    });
+
+    it("creates a protest button", () => {
+      const protestBtn = host.querySelector(".hud-attack");
+      expect(protestBtn).toBeTruthy();
+      expect(protestBtn?.getAttribute("aria-label")).toBe("Protest");
+      expect(protestBtn?.querySelector("span")?.textContent).toBe("Protest");
     });
   });
 
@@ -263,6 +281,21 @@ describe("Hud", () => {
 
       hud.show();
       expect(root.classList.contains("hidden")).toBe(false);
+    });
+  });
+
+  describe("getProtestButton", () => {
+    it("returns the protest button element", () => {
+      expect(hud.getProtestButton()).toBe(host.querySelector(".hud-attack"));
+    });
+  });
+
+  describe("protest button", () => {
+    it("plays the HUD select tone on click", () => {
+      const audioContext = {} as AudioContext;
+      hud.setAudioContext(audioContext);
+      const btn = host.querySelector<HTMLButtonElement>(".hud-attack");
+      expect(() => btn?.dispatchEvent(new MouseEvent("click", { bubbles: true }))).not.toThrow();
     });
   });
 });

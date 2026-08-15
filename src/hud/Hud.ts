@@ -83,6 +83,7 @@ export class Hud {
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
+  private protestBtn: HTMLButtonElement | null = null;
   private activeMode: CreatureMode = "cockroach";
 
   private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
@@ -114,6 +115,9 @@ export class Hud {
     root.appendChild(this.settingsBtn);
     this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
     root.appendChild(this.galleryBtn);
+
+    this.protestBtn = this.buildProtestBtn();
+    root.appendChild(this.protestBtn);
 
     this.setActiveMode("cockroach");
 
@@ -180,6 +184,11 @@ export class Hud {
     return this.galleryBtn;
   }
 
+  getProtestButton(): HTMLElement {
+    if (!this.protestBtn) throw new Error("Protest button not initialized");
+    return this.protestBtn;
+  }
+
   /** Shared AudioContext used for the HUD's button-press blips; pass null to silence them. */
   setAudioContext(context: AudioContext | null): void {
     this.audioContext = context;
@@ -233,6 +242,22 @@ export class Hud {
     btn.addEventListener("click", () => {
       if (this.audioContext) playHudSelectTone(this.audioContext);
     });
+    return btn;
+  }
+
+  private buildProtestBtn(): HTMLButtonElement {
+    const btn = el("button", "hud-attack");
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Protest");
+
+    const span = el("span");
+    span.textContent = "Protest";
+    btn.appendChild(span);
+
+    btn.addEventListener("click", () => {
+      if (this.audioContext) playHudSelectTone(this.audioContext);
+    });
+
     return btn;
   }
 

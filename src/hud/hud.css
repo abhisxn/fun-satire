@@ -265,6 +265,55 @@
 }
 
 /* ============================================
+   Protest Button — Gradient CTA
+   (same gradient/shadow language as .menu-share-btn in menuPanel.css)
+   ============================================ */
+.hud-attack {
+  position: relative;
+  height: var(--hud-btn-size);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #de7666 0%, #e9975d 100%);
+  border: 1px solid #a74333;
+  border-radius: 12px;
+  box-shadow: 0px 4px 0px #b75040;
+  color: white;
+  font-family: "Bungee", cursive;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.15s var(--hud-ease-smooth), box-shadow 0.15s var(--hud-ease-smooth);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  opacity: 0;
+  animation-delay: 0.45s;
+}
+
+.hud-attack:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 0px #b75040, 0px 8px 20px rgba(183, 80, 64, 0.4);
+}
+
+.hud-attack:active {
+  transform: translateY(2px);
+  box-shadow: 0px 2px 0px #b75040;
+}
+
+.hud-attack:focus-visible {
+  box-shadow: 0px 4px 0px #b75040, 0 0 0 3px rgba(222, 118, 102, 0.4);
+}
+
+.hud-attack span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
    Tooltips — Pseudo-element with Fade-in
    ============================================ */
 .hud-btn[data-tooltip]::after {
@@ -355,13 +404,16 @@
 }
 
 .premium-hud.hud--dragging .hud-btn,
+.premium-hud.hud--dragging .hud-attack,
 .premium-hud.hud--dragging .hud-divider {
   animation: none;
   opacity: 1;
 }
 
 .premium-hud.hud--dragging .hud-btn:hover,
-.premium-hud.hud--dragging .hud-btn:active {
+.premium-hud.hud--dragging .hud-btn:active,
+.premium-hud.hud--dragging .hud-attack:hover,
+.premium-hud.hud--dragging .hud-attack:active {
   transform: none;
   transition: none;
 }
@@ -389,14 +441,17 @@
 @media (prefers-reduced-motion: reduce) {
   .premium-hud,
   .hud-drag-handle,
-  .hud-btn {
+  .hud-btn,
+  .hud-attack {
     animation: none;
     opacity: 1;
   }
 
   .premium-hud:hover,
   .hud-btn:hover,
-  .hud-btn:active {
+  .hud-btn:active,
+  .hud-attack:hover,
+  .hud-attack:active {
     transition: none;
   }
 
