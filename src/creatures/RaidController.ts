@@ -1,7 +1,7 @@
 import { CreatureGrid } from "./CreatureGrid";
 import type { SecurityUnit } from "./CreatureGrid";
-import { createSecurityUnit, removeSecurityUnit, startSecurityWander } from "./SecurityCreature";
-import type { SecurityUnitState } from "./SecurityCreature";
+import { createSecurityUnit, removeSecurityUnit, startSecurityWander, pickSecurityKind } from "./SecurityCreature";
+import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
 import { QTY_MAX, QTY_MIN } from "../config/tokens";
 
 export interface MoveSample {
@@ -90,6 +90,20 @@ function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
+/** Kinds for one spawn pulse: guarantees at least one of each kind once 2+ units
+ * spawn (so a pulse never reads as all-one-kind by chance), randomizing the rest
+ * and the order. */
+export function pickPulseKinds(n: number, rand: () => number = Math.random): SecurityKind[] {
+  if (n < 2) return [pickSecurityKind(rand)];
+  const kinds: SecurityKind[] = ["police", "raf"];
+  for (let i = 2; i < n; i++) kinds.push(pickSecurityKind(rand));
+  for (let i = kinds.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [kinds[i], kinds[j]] = [kinds[j]!, kinds[i]!];
+  }
+  return kinds;
+}
+
 export class RaidController {
   private readonly container: HTMLElement;
   private readonly grid: CreatureGrid;
@@ -137,10 +151,11 @@ export class RaidController {
     const vh = this.container.clientHeight || window.innerHeight;
     const desired = Math.round(rand(SPAWN_MIN_PER_PULSE, SPAWN_MAX_PER_PULSE));
     const n = Math.min(desired, available);
+    const kinds = pickPulseKinds(n);
 
     for (let i = 0; i < n; i++) {
-      const unit = createSecurityUnit(this.container, x, y);
-      startSecurityWander(unit, vw, vh);
+      const unit = createSecurityUnit(this.container, x, y, kinds[i]);
+      startSecurityWander(unit, vw, vh, true);
       this.units.push(unit);
     }
   }

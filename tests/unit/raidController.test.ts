@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { detectShake, RaidController } from '../../src/creatures/RaidController';
+import { detectShake, RaidController, pickPulseKinds } from '../../src/creatures/RaidController';
 import type { MoveSample } from '../../src/creatures/RaidController';
 import { CreatureGrid } from '../../src/creatures/CreatureGrid';
 
@@ -96,6 +96,27 @@ describe('detectShake', () => {
       sample(100, 40, 100),
     ];
     expect(detectShake(samples)).toBe(true);
+  });
+});
+
+describe('pickPulseKinds', () => {
+  it('returns a single kind picked by rand() for n < 2', () => {
+    expect(pickPulseKinds(1, () => 0.1)).toEqual(['police']);
+    expect(pickPulseKinds(1, () => 0.9)).toEqual(['raf']);
+  });
+
+  it('guarantees at least one of each kind once n >= 2', () => {
+    const kinds = pickPulseKinds(2, () => 0.5);
+    expect(kinds).toHaveLength(2);
+    expect(kinds).toContain('police');
+    expect(kinds).toContain('raf');
+  });
+
+  it('fills slots beyond the guaranteed pair using the provided rand, keeping both kinds present', () => {
+    const kinds = pickPulseKinds(3, () => 0.1);
+    expect(kinds).toHaveLength(3);
+    expect(kinds.filter((k) => k === 'police').length).toBeGreaterThanOrEqual(1);
+    expect(kinds.filter((k) => k === 'raf').length).toBeGreaterThanOrEqual(1);
   });
 });
 
