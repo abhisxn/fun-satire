@@ -85,18 +85,12 @@ describe("creaturePhysics", () => {
       expect(Math.abs(creature.vy)).toBeLessThan(10);
     });
 
-    it("rotation faces away from avatar", () => {
+    it("does not touch the DOM transform (that is CreatureGrid's job)", () => {
       const avatar: AvatarPos = { x: 50, y: 100 };
 
       updateCreature(creature, avatar, DEFAULT_PARAMS);
 
-      const transform = creature.el.style.transform;
-      const rotateMatch = transform.match(/rotate\(([-\d.]+)deg\)/);
-      expect(rotateMatch).not.toBeNull();
-
-      const angle = parseFloat(rotateMatch![1]!);
-      const expectedAngle = Math.atan2(avatar.y - creature.y, avatar.x - creature.x) * (180 / Math.PI) + 180;
-      expect(angle).toBeCloseTo(expectedAngle, 3);
+      expect(creature.el.style.transform).toBe("");
     });
 
     it("handles creature at exact avatar position without error", () => {
@@ -137,24 +131,10 @@ describe("creaturePhysics", () => {
       expect(creature.y).toBeLessThan(100);
     });
 
-    it("updates DOM transform with position, scale, and rotation", () => {
-      creature.x = 150;
-      creature.y = 200;
-      creature.scale = 1.5;
-
-      const avatar: AvatarPos = { x: 100, y: 100 };
-
-      updateCreature(creature, avatar, DEFAULT_PARAMS);
-
-      const transform = creature.el.style.transform;
-      expect(transform).toMatch(/translate\(/);
-      expect(transform).toMatch(/scale\(1\.5\)/);
-      expect(transform).toMatch(/rotate\(/);
-    });
   });
 
   describe("updateAllCreatures", () => {
-    it("updates multiple creatures", () => {
+    it("updates multiple creatures' physics without touching their transforms", () => {
       const c1 = createCreature({ x: 100, y: 100 });
       const c2 = createCreature({ x: 200, y: 200, hx: 200, hy: 200 });
       const creatures = [c1, c2];
@@ -164,8 +144,8 @@ describe("creaturePhysics", () => {
 
       expect(c1.x).not.toBe(100);
       expect(c2.x).not.toBe(200);
-      expect(c1.el.style.transform).toBeDefined();
-      expect(c2.el.style.transform).toBeDefined();
+      expect(c1.el.style.transform).toBe("");
+      expect(c2.el.style.transform).toBe("");
     });
   });
 });

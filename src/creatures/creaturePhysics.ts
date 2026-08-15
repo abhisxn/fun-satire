@@ -61,12 +61,6 @@ export function updateCreature(
   // Position update (semi-implicit Euler)
   creature.x += creature.vx;
   creature.y += creature.vy;
-
-  // Rotation: face AWAY from avatar
-  const angle = Math.atan2(avatar.y - creature.y, avatar.x - creature.x) * (180 / Math.PI) + 180;
-
-  // Update DOM transform
-  creature.el.style.transform = `translate(${creature.x - creature.w * creature.scale * 0.5}px, ${creature.y - creature.h * creature.scale * 0.5}px) scale(${creature.scale}) rotate(${angle}deg)`;
 }
 
 export function updateAllCreatures(
