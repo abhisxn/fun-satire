@@ -123,16 +123,6 @@ describe('RaidController', () => {
     vi.useRealTimers();
   });
 
-  function shakeInto(controller: RaidController, startT: number): number {
-    let t = startT;
-    const xs = [0, 60, 0, 60, 0, 60, 0];
-    for (const x of xs) {
-      controller.onAvatarMove(x, 0);
-      t += 20;
-    }
-    return t;
-  }
-
   it('starts idle with no security units', () => {
     expect(raid.getState()).toBe('idle');
     expect(raid.getSecurityUnits()).toEqual([]);
@@ -203,6 +193,70 @@ describe('RaidController', () => {
     expect(raid.getSecurityUnits().length).toBe(0);
     expect(raid.getState()).toBe('idle');
     expect(grid.getCreatureCount()).toBe(900); // QTY_MAX
+
+    now.mockRestore();
+  });
+
+  it('startRecovery is a no-op when already recovering (re-entry safe)', () => {
+    vi.useFakeTimers();
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    const spawned = raid.getSecurityUnits().length;
+    expect(spawned).toBeGreaterThan(0);
+
+    raid.startRecovery();
+    expect(raid.getState()).toBe('recovering');
+    const afterFirstCall = raid.getSecurityUnits().length;
+    expect(afterFirstCall).toBe(spawned - 1);
+
+    // Second call while already recovering must not pop another unit or
+    // touch the pending timer chain.
+    raid.startRecovery();
+    expect(raid.getState()).toBe('recovering');
+    expect(raid.getSecurityUnits().length).toBe(afterFirstCall);
+
+    vi.advanceTimersByTime(350 * afterFirstCall);
+
+    expect(raid.getSecurityUnits().length).toBe(0);
+    expect(raid.getState()).toBe('idle');
+
+    now.mockRestore();
+  });
+
+  it('destroy() mid-recovery cancels the pending poof and does not fire further state changes', () => {
+    vi.useFakeTimers();
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    const spawned = raid.getSecurityUnits().length;
+    expect(spawned).toBeGreaterThan(0);
+
+    raid.startRecovery();
+    expect(raid.getState()).toBe('recovering');
+    expect(raid.getSecurityUnits().length).toBe(spawned - 1);
+
+    raid.destroy();
+    expect(raid.getState()).toBe('idle');
+    expect(raid.getSecurityUnits()).toEqual([]);
+
+    // Advancing timers past when the pending pop would have fired must not
+    // change anything further — the timer was cancelled by destroy().
+    vi.advanceTimersByTime(350 * spawned);
+    expect(raid.getState()).toBe('idle');
+    expect(raid.getSecurityUnits()).toEqual([]);
 
     now.mockRestore();
   });

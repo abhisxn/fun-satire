@@ -167,6 +167,8 @@ export class RaidController {
 
   /** Wired to the Protest button: ends the raid, poofing security away and rebuilding the crowd. */
   startRecovery(): void {
+    if (this.state === "recovering") return;
+
     this.grid.setQuantity(QTY_MAX);
 
     if (this.units.length === 0) {
@@ -194,11 +196,16 @@ export class RaidController {
     this.recoveryTimer = setTimeout(() => this.popNextUnit(), RECOVERY_POOF_INTERVAL_MS);
   }
 
-  /** Cancels any pending recovery poof timer — call when tearing this controller down mid-recovery. */
+  /** Full teardown — call when tearing this controller down (mid-recovery or otherwise): cancels any pending recovery poof timer, removes all remaining security units from the DOM, and resets to idle. */
   destroy(): void {
     if (this.recoveryTimer !== null) {
       clearTimeout(this.recoveryTimer);
       this.recoveryTimer = null;
     }
+    for (const unit of this.units) {
+      removeSecurityUnit(unit);
+    }
+    this.units = [];
+    this.state = "idle";
   }
 }
