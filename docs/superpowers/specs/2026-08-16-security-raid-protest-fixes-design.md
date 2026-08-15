@@ -47,6 +47,24 @@ carry that same tension — commit and hold, or the raid regains ground.
    per-unit "shrinking" state in `RaidControllerConfig`'s unit list, read by `getSecurityUnits()` while a unit
    is in its pre-poof shrink window.
 
+7. **Security spawn entrance — mixed kinds, bee-swarm burst** — currently `spawnPulse` places every unit at
+   the exact avatar coordinates at full size/opacity with no entrance animation, and kind is an independent
+   50/50 coin-flip per unit (`pickSecurityKind`), so a pulse can end up all-police or all-raf by chance. Fix:
+   - **Mix**: when a pulse spawns 2+ units, force at least one of each kind (`police`/`raf`) present rather
+     than leaving it to independent coin-flips — still randomize which slots get which kind beyond that
+     guarantee, and order of appearance.
+   - **Entrance**: every unit spawns at `scale:0, opacity:0` positioned exactly on the avatar's current
+     center (`x, y` already passed into `createSecurityUnit`, so this holds "irrespective of its position" —
+     wherever the avatar/sticker currently is, that's where the unit is born), then eases to `scale:1,
+     opacity:1` over a short pop (~250-300ms, easing akin to the crowd's `easeOutBack` pop-in) — this is new
+     state on `SecurityUnitState` (e.g. `spawnScale`/`spawnOpacity` read by `createSecurityUnit`'s
+     caller/`applyTransform`), not reusing `CreatureGrid`'s pop machinery directly since security units aren't
+     `Creature`s.
+   - **Disperse**: instead of `startSecurityWander`'s generic `nextWaypoint` (small random step from current
+     position), a freshly-spawned unit's *first* waypoint should be pushed outward from the avatar center in a
+     random direction at a larger initial distance (e.g. 150-300px) — so a pulse visibly scatters outward like
+     a disturbed swarm before settling into its normal wander behavior for all subsequent legs.
+
 ## B. Protest button — power/hold mechanic
 
 Currently `hud.getProtestButton()`'s click handler calls `raidController.startRecovery()` instantly — one
@@ -96,6 +114,6 @@ every teardown path.
 ## Testing
 
 Per project convention, every change here touches `creatures/` or `hud/` — run `npm run dev` and verify each
-fix visually (shake feel, catch behavior, z-index, shadow, tooltip text, poof timing, hold-to-charge/release
-behavior, button padding against the Figma screenshot) before considering the task done, not deferred to the
-end of the whole pass.
+fix visually (shake feel, catch behavior, z-index, shadow, tooltip text, spawn-entrance/mix/disperse, poof
+timing, hold-to-charge/release behavior, button padding against the Figma screenshot) before considering the
+task done, not deferred to the end of the whole pass.
