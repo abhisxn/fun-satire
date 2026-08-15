@@ -1,6 +1,15 @@
-import { describe, it, expect } from 'vitest';
-import { detectShake } from '../../src/creatures/RaidController';
+// @vitest-environment happy-dom
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { detectShake, RaidController } from '../../src/creatures/RaidController';
 import type { MoveSample } from '../../src/creatures/RaidController';
+import { CreatureGrid } from '../../src/creatures/CreatureGrid';
+
+vi.mock('animejs', () => {
+  const makeInstance = () => ({ pause: vi.fn() });
+  return {
+    default: (_opts: Record<string, unknown>) => makeInstance(),
+  };
+});
 
 function sample(x: number, y: number, t: number): MoveSample {
   return { x, y, t };
@@ -89,5 +98,129 @@ describe('detectShake', () => {
       sample(100, 40, 100),
     ];
     expect(detectShake(samples)).toBe(true);
+  });
+});
+
+describe('RaidController', () => {
+  let container: HTMLElement;
+  let grid: CreatureGrid;
+  let raid: RaidController;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(container, 'clientHeight', { value: 600, configurable: true });
+    document.body.appendChild(container);
+
+    grid = new CreatureGrid({ container, mode: 'cockroach', initialQuantity: 40 });
+    grid.spawn('cockroach');
+
+    raid = new RaidController({ container, grid });
+  });
+
+  afterEach(() => {
+    container.remove();
+    vi.useRealTimers();
+  });
+
+  function shakeInto(controller: RaidController, startT: number): number {
+    let t = startT;
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      controller.onAvatarMove(x, 0);
+      t += 20;
+    }
+    return t;
+  }
+
+  it('starts idle with no security units', () => {
+    expect(raid.getState()).toBe('idle');
+    expect(raid.getSecurityUnits()).toEqual([]);
+  });
+
+  it('transitions to raiding and spawns 2-3 units on a detected shake', () => {
+    // Baseline includes the 40 crowd creatures already in the container
+    // (CockroachCreature nests an <img>), so the security spawn is measured
+    // as a delta rather than an absolute count.
+    const imagesBefore = container.querySelectorAll('img').length;
+
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    expect(raid.getState()).toBe('raiding');
+    expect(raid.getSecurityUnits().length).toBeGreaterThanOrEqual(2);
+    expect(raid.getSecurityUnits().length).toBeLessThanOrEqual(3);
+    expect(container.querySelectorAll('img').length - imagesBefore).toBe(raid.getSecurityUnits().length);
+
+    now.mockRestore();
+  });
+
+  it('never exceeds SECURITY_MAX_UNITS even with repeated shakes', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    for (let pulse = 0; pulse < 15; pulse++) {
+      const xs = [0, 60, 0, 60, 0, 60, 0];
+      for (const x of xs) {
+        raid.onAvatarMove(x, 0);
+        t += 20;
+      }
+      t += 600; // clear the pulse cooldown
+    }
+
+    expect(raid.getSecurityUnits().length).toBeLessThanOrEqual(24);
+    now.mockRestore();
+  });
+
+  it('startRecovery poofs units out one by one and ramps the crowd to QTY_MAX', () => {
+    vi.useFakeTimers();
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    const spawned = raid.getSecurityUnits().length;
+    expect(spawned).toBeGreaterThan(0);
+
+    raid.startRecovery();
+    expect(raid.getState()).toBe('recovering');
+    expect(raid.getSecurityUnits().length).toBe(spawned - 1);
+
+    vi.advanceTimersByTime(350 * spawned);
+
+    expect(raid.getSecurityUnits().length).toBe(0);
+    expect(raid.getState()).toBe('idle');
+    expect(grid.getCreatureCount()).toBe(900); // QTY_MAX
+
+    now.mockRestore();
+  });
+
+  it('getRaidFloor is QTY_MIN while idle and rises with the crowd size once raiding', () => {
+    expect(raid.getRaidFloor()).toBe(10); // QTY_MIN
+
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    now.mockRestore();
+
+    // raidStartCount was 40 (initialQuantity), floor = round(40 * 0.25) = 10
+    expect(raid.getRaidFloor()).toBe(10);
   });
 });
