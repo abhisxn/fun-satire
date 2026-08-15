@@ -270,8 +270,9 @@
    ============================================ */
 .hud-attack {
   position: relative;
-  height: var(--hud-btn-size);
-  padding: 0 16px;
+  box-sizing: border-box;
+  height: 39px;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
