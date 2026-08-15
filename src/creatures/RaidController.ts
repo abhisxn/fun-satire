@@ -35,7 +35,7 @@ export function detectShake(samples: MoveSample[]): boolean {
   for (let i = 1; i < windowed.length; i++) {
     const a = windowed[i - 1]!;
     const b = windowed[i]!;
-    const dt = Math.max(1, b.t - a.t);
+    const dt = Math.max(8, b.t - a.t);
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const speed = Math.hypot(dx, dy) / dt;

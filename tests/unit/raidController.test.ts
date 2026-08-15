@@ -55,4 +55,39 @@ describe('detectShake', () => {
     const recent: MoveSample[] = [sample(500, 500, 0), sample(520, 500, 50)];
     expect(detectShake([...old, ...recent])).toBe(false);
   });
+
+  it('returns false at 3 reversals, just below the threshold', () => {
+    const samples: MoveSample[] = [
+      sample(0, 0, 0),
+      sample(60, 0, 20),
+      sample(0, 0, 40),
+      sample(60, 0, 60),
+      sample(0, 0, 80),
+    ];
+    expect(detectShake(samples)).toBe(false);
+  });
+
+  it('returns true at exactly 4 reversals, the threshold', () => {
+    const samples: MoveSample[] = [
+      sample(0, 0, 0),
+      sample(60, 0, 20),
+      sample(0, 0, 40),
+      sample(60, 0, 60),
+      sample(0, 0, 80),
+      sample(60, 0, 100),
+    ];
+    expect(detectShake(samples)).toBe(true);
+  });
+
+  it('returns true for reversals on one axis while the other axis advances steadily', () => {
+    const samples: MoveSample[] = [
+      sample(0, 0, 0),
+      sample(20, 40, 20),
+      sample(40, 0, 40),
+      sample(60, 40, 60),
+      sample(80, 0, 80),
+      sample(100, 40, 100),
+    ];
+    expect(detectShake(samples)).toBe(true);
+  });
 });
