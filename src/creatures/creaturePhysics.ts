@@ -42,10 +42,11 @@ export function updateCreature(
   avatar: AvatarPos,
   params: PhysicsParams,
   repulsors: Repulsor[] = [],
+  avatarRepelRadius?: number,
 ): void {
   const { springStrength, damping } = params;
 
-  applyRepulsion(creature, avatar, params);
+  applyRepulsion(creature, avatar, params, avatarRepelRadius);
   for (const repulsor of repulsors) {
     applyRepulsion(creature, repulsor, params, repulsor.radius);
   }

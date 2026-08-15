@@ -131,6 +131,37 @@ describe("creaturePhysics", () => {
       expect(creature.y).toBeLessThan(100);
     });
 
+    it('uses avatarRepelRadius to override the avatar-vs-creature repel radius when given', () => {
+      // Creature sits 100px from the avatar — inside the default 180px repelRadius,
+      // but outside a reduced 60px override. hx/hy are moved to match x/y and
+      // springStrength is zeroed so only the repulsion term is being observed
+      // (otherwise the spring-to-home force alone would make vx nonzero).
+      creature.x = 200;
+      creature.y = 100;
+      creature.hx = 200;
+      creature.hy = 100;
+      const avatar: AvatarPos = { x: 100, y: 100 };
+      const noSpringParams: PhysicsParams = { ...DEFAULT_PARAMS, springStrength: 0 };
+
+      updateCreature(creature, avatar, noSpringParams, [], 60);
+
+      expect(creature.vx).toBe(0);
+      expect(creature.vy).toBe(0);
+    });
+
+    it('falls back to params.repelRadius when no avatarRepelRadius override is given', () => {
+      creature.x = 200;
+      creature.y = 100;
+      creature.hx = 200;
+      creature.hy = 100;
+      const avatar: AvatarPos = { x: 100, y: 100 };
+      const noSpringParams: PhysicsParams = { ...DEFAULT_PARAMS, springStrength: 0 };
+
+      updateCreature(creature, avatar, noSpringParams);
+
+      expect(creature.vx).not.toBe(0);
+    });
+
   });
 
   describe("updateAllCreatures", () => {
