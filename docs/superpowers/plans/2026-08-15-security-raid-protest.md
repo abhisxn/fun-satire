@@ -1397,7 +1397,9 @@ Then, in the (now-relocated) Sound bed block, set the ref right after `audioMana
   const audioWidget = new AudioWidget(audioManager);
 ```
 
-- [ ] **Step 4: Feed avatar drag-move events into the raid controller**
+- [ ] **Step 4: Feed avatar drag-move events into the raid controller — stickers only, not text**
+
+This feature is sticker-only: shaking the "type your own" `TextOverlay` must NOT trigger a raid. `onOverlayDragMove` is the one shared callback passed to both `StickerOverlay` (in `galleryPanel.onStickerSelect`) and `TextOverlay` (in `galleryPanel.onTextSelect`), so gate on `activeOverlay`'s runtime type.
 
 Find the existing `onOverlayDragMove` definition:
 
@@ -1412,9 +1414,13 @@ Replace it with:
 ```typescript
   const onOverlayDragMove = (x: number, y: number): void => {
     dragScratchSound.onMove();
-    raidController.onAvatarMove(x, y);
+    if (activeOverlay instanceof StickerOverlay) {
+      raidController.onAvatarMove(x, y);
+    }
   };
 ```
+
+`StickerOverlay` is already imported at the top of `main.ts`. `activeOverlay` is already declared above this point in `main()` (`let activeOverlay: StickerOverlay | TextOverlay | null = null;`), and is kept in sync with whichever overlay is currently being dragged, so this check is always accurate at drag-move time.
 
 - [ ] **Step 5: Pass security units into the grid's per-frame update**
 
@@ -1483,14 +1489,18 @@ Open the app, get through onboarding to the main scene. Grab the avatar sticker 
 - Creatures that get cornered by a security sprite disappear (caught) and the total on-screen crowd visibly thins over continued shaking.
 - Continuing to shake past a dozen or so security sprites doesn't keep piling more on indefinitely (cap holds), and the crowd never fully empties (floor holds).
 
-- [ ] **Step 3: Verify Protest recovery**
+- [ ] **Step 3: Verify text overlay is exempt**
+
+Switch to "type your own" text mode (gallery panel's text tab) and shake the text overlay the same way. Confirm no security sprites spawn — this feature is sticker-only.
+
+- [ ] **Step 4: Verify Protest recovery**
 
 Click the restored "Protest" gradient pill button in the HUD (after the gallery button). Confirm:
 - Security sprites poof away one at a time, at a visible stagger, not all at once.
 - The crowd count visibly climbs back up over the following seconds toward its maximum.
 - Shaking the avatar again afterward starts a fresh raid cleanly (state returned to idle correctly).
 
-- [ ] **Step 4: Report results**
+- [ ] **Step 5: Report results**
 
 If anything doesn't match, note what's off (e.g. "reversals threshold feels too twitchy — false-triggers on a normal fast drag" or "catch radius feels too generous — creatures vanish too easily") so the relevant constant in `RaidController.ts` can be tuned.
 
