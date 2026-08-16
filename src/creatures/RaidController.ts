@@ -96,6 +96,11 @@ export const RAID_ATTRITION_INTERVAL_MS = 400;
 export const RAID_ATTRITION_STEP = 1;
 /** How long a full press-and-hold must be sustained to fully clear a raid (ms). */
 export const CHARGE_DURATION_MS = 1800;
+/** How often the charge-driven crowd rebuild calls grid.setQuantity() (ms) — throttled
+ * so CreatureGrid's own layout-reflow spring force has time to converge between calls,
+ * instead of being replaced every single frame (see the clustering-bug writeup in the
+ * v2 design spec). */
+export const CHARGE_QUANTITY_THROTTLE_MS = 200;
 export type RaidState = "idle" | "raiding" | "recovering" | "charging";
 
 export interface RaidControllerConfig {
@@ -139,6 +144,7 @@ export class RaidController {
   private chargeBaselineTargetCount = 0;
   private chargeFraction = 0;
   private lastAttritionAtMs = 0;
+  private lastChargeQuantityAtMs = 0;
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -225,6 +231,9 @@ export class RaidController {
     this.chargeBaselineUnitCount = this.units.length;
     this.chargeBaselineTargetCount = this.grid.getCreatureCount();
     this.chargeFraction = 0;
+    // Backdated (not just zeroed) so the first charge tick's rebuild always fires
+    // immediately regardless of the absolute clock value at charge-start.
+    this.lastChargeQuantityAtMs = this.chargeStartAtMs - CHARGE_QUANTITY_THROTTLE_MS;
   }
 
   /** Wired to the Protest button's pointerup/pointerleave/pointercancel: released
@@ -321,10 +330,13 @@ export class RaidController {
       excess--;
     }
 
-    const rebuilt = Math.round(
-      this.chargeBaselineTargetCount + (QTY_MAX - this.chargeBaselineTargetCount) * fraction,
-    );
-    this.grid.setQuantity(rebuilt);
+    if (nowMs - this.lastChargeQuantityAtMs >= CHARGE_QUANTITY_THROTTLE_MS) {
+      this.lastChargeQuantityAtMs = nowMs;
+      const rebuilt = Math.round(
+        this.chargeBaselineTargetCount + (QTY_MAX - this.chargeBaselineTargetCount) * fraction,
+      );
+      this.grid.setQuantity(rebuilt);
+    }
 
     if (fraction >= 1 && this.units.length === 0) {
       this.state = "idle";

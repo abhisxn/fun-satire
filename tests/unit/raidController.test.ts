@@ -531,6 +531,28 @@ describe('RaidController', () => {
       now.mockRestore();
     });
 
+    it('throttles the crowd-rebuild setQuantity calls during charge instead of calling every frame', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+
+      const setQuantitySpy = vi.spyOn(grid, 'setQuantity');
+      raid.startCharging();
+      setQuantitySpy.mockClear();
+
+      // Simulate 10 frames within a single throttle window (well under
+      // CHARGE_QUANTITY_THROTTLE_MS apart) — only the first should call
+      // through to setQuantity.
+      for (let i = 0; i < 10; i++) {
+        tRef.t += 5;
+        raid.tick(tRef.t);
+      }
+
+      expect(setQuantitySpy).toHaveBeenCalledTimes(1);
+
+      now.mockRestore();
+    });
+
     it('releaseCharge before full charge reverts crowd/security to the pre-charge baseline', () => {
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
