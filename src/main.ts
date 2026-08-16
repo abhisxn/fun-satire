@@ -64,9 +64,9 @@ async function main(): Promise<void> {
       if (audioContext) playPoofTone(audioContext);
       void spawnPoof(x, y, w, h);
     },
-    // Both fire once a protest release's spawn/despawn visuals have actually
-    // finished on screen — never immediately on button release (see each
-    // callback's own doc comment in RaidController.ts for why).
+    // Fires once a protest win's despawn visuals have actually finished on screen —
+    // never immediately on button release (see the callback's doc comment in
+    // RaidController.ts for why).
     onProtestWin: () => {
       if (activeOverlay instanceof StickerOverlay) {
         activeOverlay.lockSqueeze();
@@ -77,7 +77,17 @@ async function main(): Promise<void> {
         grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN * ratio);
       }
     },
-    onProtestBackfireSettled: (securityUnitCount) => {
+    // Fires the moment a fresh raid actually starts — releases the win-lock so the
+    // sticker's scale can track the new raid's live size again.
+    onRaidStart: () => {
+      if (activeOverlay instanceof StickerOverlay) {
+        activeOverlay.unlock();
+      }
+    },
+    // Fires continuously as the raid's live security-unit count changes (spawns,
+    // backfire respawn trickle-in, despawn sweep) — a no-op on the sticker's side
+    // while a win's lock is still in effect.
+    onCrowdSizeChanged: (securityUnitCount) => {
       if (activeOverlay instanceof StickerOverlay) {
         activeOverlay.setScaleForRaidSize(securityUnitCount, SECURITY_MAX_UNITS);
       }
