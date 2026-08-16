@@ -13,6 +13,7 @@ const SVG_CLOSE = `<svg width="12" height="12" viewBox="0 0 14 14" fill="none" x
 const SVG_WHATSAPP = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="11" fill="#25D366"/><path d="M11 5a6.2 6.2 0 00-5.35 9.34L4.8 17.2l3.16-.83A6.2 6.2 0 1011 5zm3.6 8.5c-.16.46-.96.9-1.32.93-.36.03-.69.16-2.32-.48-1.95-.76-3.22-2.73-3.32-2.86-.1-.13-.8-1.04-.8-1.99 0-.94.5-1.4.68-1.6.18-.2.39-.25.52-.25l.38.01c.12.01.28-.04.44.34.16.4.55 1.38.6 1.48.05.1.09.22.02.35-.07.13-.1.22-.2.33-.1.12-.2.26-.3.35-.1.1-.2.2-.09.4.12.2.51.84 1.09 1.36.75.67 1.38.88 1.58.98.19.1.31.08.42-.05.12-.13.49-.57.62-.77.13-.2.26-.17.44-.1.18.07 1.14.54 1.34.64.2.1.33.15.38.23.05.08.05.47-.11.93z" fill="#fff"/></svg>`;
 const SVG_FACEBOOK = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="11" fill="#1877F2"/><path d="M13.2 11.3h-1.6v5.4h-2.2v-5.4H8.2V9.4h1.2V8.2c0-1.5.7-2.6 2.5-2.6h1.7v1.9h-1.1c-.5 0-.6.3-.6.7v1.2h1.7l-.2 1.9z" fill="#fff"/></svg>`;
 const SVG_INSTAGRAM = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="win-ig-grad" x1="0" y1="22" x2="22" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset="0.4" stop-color="#D62976"/><stop offset="0.7" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><circle cx="11" cy="11" r="11" fill="url(#win-ig-grad)"/><rect x="6" y="6" width="10" height="10" rx="3" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="11" cy="11" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="14.2" cy="7.8" r="0.7" fill="#fff"/></svg>`;
+const SVG_SHARE = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="13.5" cy="4.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="4.5" cy="9" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="13.5" cy="13.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 7.8L11.5 5.3M6.5 10.2L11.5 12.7" stroke="currentColor" stroke-width="1.4"/></svg>`;
 
 const SHARE_MESSAGE =
   "I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it.";
@@ -84,7 +85,7 @@ export class WinPanel {
       shareBtn.type = "button";
       shareBtn.className = "win-panel-share-icon-btn win-panel-share-icon-btn--native";
       shareBtn.setAttribute("aria-label", "Share");
-      shareBtn.innerHTML = SVG_WHATSAPP;
+      shareBtn.innerHTML = SVG_SHARE;
       shareBtn.addEventListener("click", () => {
         void this.handleNativeShare();
       });
