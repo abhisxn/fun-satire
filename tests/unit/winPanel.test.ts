@@ -67,4 +67,28 @@ describe("hud/WinPanel", () => {
     expect(() => panel.hide()).not.toThrow();
     expect(panel.isPanelOpen()).toBe(false);
   });
+
+  it("clicking next-sticker fires the registered callback and closes the panel", () => {
+    panel.attachTo(document.body);
+    panel.show(WIN_COPY_VARIANTS[0]!);
+
+    let called = 0;
+    panel.onNextSticker(() => {
+      called += 1;
+    });
+
+    const btn = panel.getRoot().querySelector<HTMLButtonElement>(".win-panel-next-btn");
+    expect(btn).not.toBeNull();
+    btn?.click();
+
+    expect(called).toBe(1);
+    expect(panel.isPanelOpen()).toBe(false);
+  });
+
+  it("clicking next-sticker before onNextSticker is registered does not throw", () => {
+    panel.attachTo(document.body);
+    panel.show(WIN_COPY_VARIANTS[0]!);
+    const btn = panel.getRoot().querySelector<HTMLButtonElement>(".win-panel-next-btn");
+    expect(() => btn?.click()).not.toThrow();
+  });
 });

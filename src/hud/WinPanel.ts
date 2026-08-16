@@ -10,6 +10,7 @@ export class WinPanel {
   private readonly titleEl: HTMLElement;
   private readonly copyEl: HTMLElement;
   private isOpen = false;
+  private nextStickerCb: (() => void) | null = null;
 
   constructor() {
     this.overlay = document.createElement("div");
@@ -34,6 +35,16 @@ export class WinPanel {
     this.copyEl = document.createElement("p");
     this.copyEl.className = "win-panel-copy";
     this.panel.appendChild(this.copyEl);
+
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "win-panel-next-btn";
+    nextBtn.textContent = "Next random sticker";
+    nextBtn.addEventListener("click", () => {
+      this.nextStickerCb?.();
+      this.hide();
+    });
+    this.panel.appendChild(nextBtn);
   }
 
   attachTo(container: HTMLElement): void {
@@ -55,6 +66,10 @@ export class WinPanel {
 
   isPanelOpen(): boolean {
     return this.isOpen;
+  }
+
+  onNextSticker(cb: () => void): void {
+    this.nextStickerCb = cb;
   }
 
   getRoot(): HTMLElement {
