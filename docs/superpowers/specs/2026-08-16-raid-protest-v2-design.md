@@ -67,9 +67,12 @@ breakpoint (which only drops tooltips, per the comment at `hud.css:440`) is unto
 tooltip.
 
 **Gated despawn**: a new `CHARGE_HIGH_THRESHOLD = 0.66` constant in `RaidController.ts`. `tick()`'s
-charge-shrink logic (the `excess`/`keepCount` block) only starts reducing security units once
+charge-shrink logic (the `excess`/`keepCount` block, which removes *security units*) only starts once
 `chargeFraction >= CHARGE_HIGH_THRESHOLD` — holding in the WEAK/MEDIUM zone (0–0.66) visibly fills the meter
-but doesn't yet shrink security. Releasing before full charge still calls `releaseCharge()` exactly as today
+but doesn't yet shrink security. The separate `rebuilt` crowd-count calculation in the same `tick()` (which
+grows the crowd back toward `QTY_MAX`) is **not** gated — it keeps progressing continuously across the whole
+0–1 hold, unchanged from today, since the ask was specifically about security only clearing in the high range,
+not about delaying crowd regrowth. Releasing before full charge still calls `releaseCharge()` exactly as today
 (all progress lost, security and crowd count snap back to their pre-charge baseline) regardless of which zone
 the release happened in.
 
@@ -165,9 +168,11 @@ directions.
 
 ## J. Placard/stick proportion rework
 
-`pickSignScale()` (renamed conceptually to a ratio, not an absolute multiplier) changes range from
-`0.3 + Math.pow(Math.random(), 1.5) * 0.5` (independent of creature scale) to a **0.5–1.4** random ratio applied
-on top of the creature's own depth-`scale`: `placardW = PLACARD_BASE_W * scale * signRatio`. Effects:
+`pickSignScale()` keeps its existing name (no rename — call site in `createPlacardCreature` is unchanged), but
+its return value's meaning changes from an absolute multiplier on a fixed 150px base to a **ratio** applied on
+top of the creature's own depth-`scale`. Its range changes from `0.3 + Math.pow(Math.random(), 1.5) * 0.5`
+(independent of creature scale) to a flat **0.5–1.4** random range, and the call site changes from
+`placardW = PLACARD_BASE_W * signScale` to `placardW = PLACARD_BASE_W * scale * signScale`. Effects:
 
 - A small/distant creature (low `scale`) now always carries a proportionally small placard instead of
   potentially a full-size one — placard and stick sizing stay visually coupled to the same depth cue.
