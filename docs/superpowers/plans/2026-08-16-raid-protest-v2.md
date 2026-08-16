@@ -8,11 +8,11 @@
 
 **Tech Stack:** TypeScript, Vite, vitest + happy-dom, anime.js (mocked in tests).
 
-**This plan is split across 6 files to stay under the project's 500-line-per-doc limit — work through them in order:**
+**This plan is split across 7 files to stay under the project's 500-line-per-doc limit — work through them in order:**
 1. This file — Tasks 1-4 (placard dims, placard/stick ratio, eye pupil fix, shake detection fix)
 2. [tasks-5-6.md](2026-08-16-raid-protest-v2-tasks-5-6.md) — Task 5 (despawn rework), Task 6 (charge-throttle)
 3. [task-7.md](2026-08-16-raid-protest-v2-task-7.md) — Task 7 (z-index parity)
-4. [task-8.md](2026-08-16-raid-protest-v2-task-8.md) — Task 8 (security escort)
+4. [task-8.md](2026-08-16-raid-protest-v2-task-8.md) + [task-8b.md](2026-08-16-raid-protest-v2-task-8b.md) — Task 8 (security escort: natural wobble + collision avoidance)
 5. [task-9.md](2026-08-16-raid-protest-v2-task-9.md) — Task 9 (power meter)
 6. [tasks-10-11.md](2026-08-16-raid-protest-v2-tasks-10-11.md) — Task 10 (perf), Task 11 (final verification)
 

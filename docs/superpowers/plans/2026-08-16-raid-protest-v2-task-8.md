@@ -2,7 +2,7 @@
 
 > Part of [2026-08-16-raid-protest-v2.md](2026-08-16-raid-protest-v2.md) — see that file for the plan header, execution instructions, and the full task index. Continues from [Task 7](2026-08-16-raid-protest-v2-task-7.md).
 
-## Task 8: Security escorts the avatar
+## Task 8: Security escorts the avatar (natural motion + collision avoidance)
 
 **Files:**
 - Modify: `src/creatures/SecurityCreature.ts:41-53,79-148`
@@ -12,7 +12,7 @@
 
 - [ ] **Step 1: Write the failing tests in securityCreature.test.ts**
 
-Add `SECURITY_ESCORT_RADIUS`, `SECURITY_ESCORT_EASE`, `assignEscortAngles`, and `applyEscortStep` to the import from `'../../src/creatures/SecurityCreature'`:
+Add the new exports to the import from `'../../src/creatures/SecurityCreature'`:
 
 ```ts
 import {
@@ -21,7 +21,11 @@ import {
   SECURITY_ENTER_MS,
   SECURITY_SHRINK_MS,
   SECURITY_ESCORT_RADIUS,
+  SECURITY_ESCORT_RADIUS_JITTER,
   SECURITY_ESCORT_EASE,
+  SECURITY_ESCORT_WOBBLE_RAD,
+  SECURITY_ESCORT_WOBBLE_PERIOD_MS,
+  SECURITY_COLLISION_RADIUS,
   securityHeightFor,
   pickSecurityKind,
   createSecurityUnit,
@@ -29,15 +33,16 @@ import {
   computeSecurityEnterProgress,
   computeSecurityShrinkFraction,
   burstWaypoint,
-  assignEscortAngles,
+  assignEscortFormation,
   applyEscortStep,
+  applySecurityCollisions,
 } from '../../src/creatures/SecurityCreature';
 ```
 
-Add a new `describe` block at the end of the file, before the final closing `});`:
+Add new `describe` blocks at the end of the file, before the final closing `});`:
 
 ```ts
-  describe('assignEscortAngles', () => {
+  describe('assignEscortFormation', () => {
     it('spreads N units evenly across a full circle', () => {
       const units = [
         createSecurityUnit(container, 0, 0, 'police'),
@@ -46,12 +51,33 @@ Add a new `describe` block at the end of the file, before the final closing `});
         createSecurityUnit(container, 0, 0, 'police'),
       ];
 
-      assignEscortAngles(units);
+      assignEscortFormation(units, () => 0.5);
 
       expect(units[0]!.escortAngle).toBeCloseTo(0, 5);
       expect(units[1]!.escortAngle).toBeCloseTo(Math.PI / 2, 5);
       expect(units[2]!.escortAngle).toBeCloseTo(Math.PI, 5);
       expect(units[3]!.escortAngle).toBeCloseTo((3 * Math.PI) / 2, 5);
+    });
+
+    it('assigns each unit its own escort radius within the jitter range, not one shared constant', () => {
+      const units = [
+        createSecurityUnit(container, 0, 0, 'police'),
+        createSecurityUnit(container, 0, 0, 'police'),
+      ];
+
+      assignEscortFormation(units, () => 1); // maxes out the jitter: +SECURITY_ESCORT_RADIUS_JITTER
+
+      for (const unit of units) {
+        expect(unit.escortRadius).toBeCloseTo(SECURITY_ESCORT_RADIUS + SECURITY_ESCORT_RADIUS_JITTER, 5);
+      }
+    });
+
+    it('assigns each unit a phase offset so their wobble is desynced', () => {
+      const units = [createSecurityUnit(container, 0, 0, 'police')];
+
+      assignEscortFormation(units, () => 0.5);
+
+      expect(units[0]!.escortPhaseOffsetMs).toBeCloseTo(5000, 5);
     });
   });
 
@@ -60,8 +86,10 @@ Add a new `describe` block at the end of the file, before the final closing `});
       const unit = createSecurityUnit(container, 0, 0, 'police');
       unit.phase = 'wandering';
       unit.escortAngle = 0; // offset purely on +x
+      unit.escortRadius = SECURITY_ESCORT_RADIUS;
+      unit.escortPhaseOffsetMs = 0; // wobble = sin(0) = 0 at nowMs = 0, no wobble this instant
 
-      applyEscortStep(unit, 200, 200, SECURITY_ESCORT_EASE);
+      applyEscortStep(unit, 200, 200, 0, SECURITY_ESCORT_EASE);
 
       const targetX = 200 + SECURITY_ESCORT_RADIUS;
       const targetY = 200;
@@ -73,10 +101,64 @@ Add a new `describe` block at the end of the file, before the final closing `});
       const unit = createSecurityUnit(container, 10, 10, 'police');
       expect(unit.phase).toBe('entering');
 
-      applyEscortStep(unit, 999, 999, SECURITY_ESCORT_EASE);
+      applyEscortStep(unit, 999, 999, 0, SECURITY_ESCORT_EASE);
 
       expect(unit.x).toBe(10);
       expect(unit.y).toBe(10);
+    });
+
+    it('wobbles the effective angle around escortAngle as nowMs advances', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      unit.phase = 'wandering';
+      unit.escortAngle = 0;
+      unit.escortRadius = SECURITY_ESCORT_RADIUS;
+      unit.escortPhaseOffsetMs = 0;
+
+      // A quarter period in, sin() peaks at 1 — maximum wobble offset.
+      const quarterPeriod = SECURITY_ESCORT_WOBBLE_PERIOD_MS / 4;
+      applyEscortStep(unit, 0, 0, quarterPeriod, 1); // ease=1 snaps straight to target
+
+      const expectedAngle = SECURITY_ESCORT_WOBBLE_RAD;
+      expect(unit.x).toBeCloseTo(Math.cos(expectedAngle) * SECURITY_ESCORT_RADIUS, 3);
+      expect(unit.y).toBeCloseTo(Math.sin(expectedAngle) * SECURITY_ESCORT_RADIUS, 3);
+    });
+  });
+
+  describe('applySecurityCollisions', () => {
+    it('pushes two overlapping units apart', () => {
+      const a = createSecurityUnit(container, 100, 100, 'police');
+      const b = createSecurityUnit(container, 110, 100, 'police'); // 10px apart, well inside SECURITY_COLLISION_RADIUS
+      a.phase = 'wandering';
+      b.phase = 'wandering';
+
+      applySecurityCollisions([a, b]);
+
+      const distAfter = Math.hypot(b.x - a.x, b.y - a.y);
+      expect(distAfter).toBeGreaterThan(10);
+    });
+
+    it('does not move units that are already farther apart than SECURITY_COLLISION_RADIUS', () => {
+      const a = createSecurityUnit(container, 0, 0, 'police');
+      const b = createSecurityUnit(container, 500, 500, 'police');
+      a.phase = 'wandering';
+      b.phase = 'wandering';
+
+      applySecurityCollisions([a, b]);
+
+      expect(a.x).toBe(0);
+      expect(a.y).toBe(0);
+      expect(b.x).toBe(500);
+      expect(b.y).toBe(500);
+    });
+
+    it('ignores units still in their entrance burst', () => {
+      const a = createSecurityUnit(container, 100, 100, 'police'); // still 'entering'
+      const b = createSecurityUnit(container, 105, 100, 'police'); // still 'entering'
+
+      applySecurityCollisions([a, b]);
+
+      expect(a.x).toBe(100);
+      expect(b.x).toBe(105);
     });
   });
 ```
@@ -84,11 +166,11 @@ Add a new `describe` block at the end of the file, before the final closing `});
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- securityCreature`
-Expected: FAIL — `SECURITY_ESCORT_RADIUS`, `SECURITY_ESCORT_EASE`, `assignEscortAngles`, `applyEscortStep` not exported, and `SecurityUnitState` has no `escortAngle` field.
+Expected: FAIL — none of the new exports exist yet, and `SecurityUnitState` has no `escortAngle`/`escortRadius`/`escortPhaseOffsetMs` fields.
 
-- [ ] **Step 3: Implement escort support in SecurityCreature.ts**
+- [ ] **Step 3: Implement escort + collision support in SecurityCreature.ts**
 
-Add `escortAngle` to the `SecurityUnitState` interface:
+Add the three new fields to the `SecurityUnitState` interface:
 
 ```ts
 export interface SecurityUnitState {
@@ -117,20 +199,38 @@ export interface SecurityUnitState {
   posAnim: AnimeInstance | null;
   phase: SecurityPhase;
   phaseStartMs: number;
-  /** Fixed angle (radians) this unit holds around the avatar while escorting — assigned/
-   * re-spread across the active roster by RaidController via assignEscortAngles(). */
+  /** Base angle (radians) this unit holds around the avatar while escorting — assigned/
+   * re-spread across the active roster by RaidController via assignEscortFormation(). The
+   * unit's actual angle at any instant also wobbles around this via applyEscortStep(). */
   escortAngle: number;
+  /** This unit's own orbit radius (px) — randomized per unit around SECURITY_ESCORT_RADIUS
+   * so the formation isn't a perfectly circular ring. */
+  escortRadius: number;
+  /** Per-unit phase offset (ms) for the wobble sine wave, so units don't wobble in sync. */
+  escortPhaseOffsetMs: number;
 }
 ```
 
-Add two new exported constants near `SECURITY_SHRINK_MS`:
+Add the new exported constants near `SECURITY_SHRINK_MS`:
 
 ```ts
-/** Radius (px) a security unit orbits the avatar at while escorting. */
+/** Base radius (px) a security unit orbits the avatar at while escorting. */
 export const SECURITY_ESCORT_RADIUS = 90;
+/** How far each unit's own escortRadius is randomized from the base, in either direction. */
+export const SECURITY_ESCORT_RADIUS_JITTER = 20;
 /** Per-tick lerp factor easing a unit toward its escort target — small, so the formation
  * trails the avatar smoothly rather than snapping to it. */
 export const SECURITY_ESCORT_EASE = 0.08;
+/** How far (radians) a unit's effective angle wobbles from its assigned escortAngle. */
+export const SECURITY_ESCORT_WOBBLE_RAD = 0.35;
+/** Full period (ms) of one wobble cycle — a slow back-and-forth pace, not a fast jitter. */
+export const SECURITY_ESCORT_WOBBLE_PERIOD_MS = 2200;
+/** Minimum center-to-center distance (px) two security units keep from each other and the
+ * avatar — closer than this, applySecurityCollisions() pushes them apart. Set just under
+ * SECURITY_WIDTH so units read as touching-but-not-overlapping at the boundary. */
+export const SECURITY_COLLISION_RADIUS = 50;
+/** How strongly overlapping units push apart per tick (fraction of the overlap distance). */
+export const SECURITY_COLLISION_STRENGTH = 0.15;
 ```
 
 Export `applyTransform` (it stays otherwise unchanged) by adding the `export` keyword:
@@ -160,7 +260,7 @@ function nextWaypoint(state: SecurityUnitState, vw: number, vh: number): { x: nu
 
 Delete this whole function.
 
-Replace `startSecurityWander` (it's now a one-shot entrance burst, not an endless wander — the ongoing "wander" is replaced entirely by escort-following, driven by `RaidController.tick()` calling `applyEscortStep` every frame instead of this module recursing into more waypoints):
+Replace `startSecurityWander` (it's now a one-shot entrance burst, not an endless wander — the ongoing "wander" is replaced entirely by escort-following + collision avoidance, driven by `RaidController.tick()` every frame instead of this module recursing into more waypoints):
 
 ```ts
 /** Starts (or continues, once the current leg completes) an endless
@@ -198,7 +298,8 @@ becomes:
 ```ts
 /** One-shot entrance: bursts a freshly-spawned unit outward from the avatar like a
  * disturbed swarm. Once this leg completes, RaidController.tick() takes over positioning
- * every frame via applyEscortStep() — this function doesn't recurse into further legs. */
+ * every frame via applyEscortStep()/applySecurityCollisions() — this function doesn't
+ * recurse into further legs. */
 export function startSecurityEntranceBurst(
   state: SecurityUnitState,
   vw: number,
@@ -222,34 +323,77 @@ export function startSecurityEntranceBurst(
   });
 }
 
-/** Re-spreads escort angles evenly across the full active roster (not just new units), so
- * the formation stays evenly spaced around the avatar as units join/leave. */
-export function assignEscortAngles(units: SecurityUnitState[]): void {
+/** Re-spreads escort angles, per-unit radius jitter, and per-unit wobble phase across the
+ * full active roster (not just new units), so the formation stays evenly spaced and varied
+ * as units join/leave. `randFn` is injectable for deterministic tests. */
+export function assignEscortFormation(
+  units: SecurityUnitState[],
+  randFn: () => number = Math.random,
+): void {
   const n = units.length;
   for (let i = 0; i < n; i++) {
-    units[i]!.escortAngle = (i / n) * Math.PI * 2;
+    const unit = units[i]!;
+    unit.escortAngle = (i / n) * Math.PI * 2;
+    unit.escortRadius = SECURITY_ESCORT_RADIUS + (randFn() * 2 - 1) * SECURITY_ESCORT_RADIUS_JITTER;
+    unit.escortPhaseOffsetMs = randFn() * 10000;
   }
 }
 
-/** Eases a unit toward avatar position + its fixed escort offset. Called every frame by
+/** Eases a unit toward avatar position + its escort offset, wobbling the effective angle
+ * around escortAngle as a pure function of nowMs (no velocity integration, no per-frame
+ * drift accumulation — the wobble at any instant is computed fresh). Called every frame by
  * RaidController.tick() for as long as the unit exists. No-op during the entrance burst
  * (that leg is still animating via startSecurityEntranceBurst's own anime tween). */
 export function applyEscortStep(
   state: SecurityUnitState,
   avatarX: number,
   avatarY: number,
+  nowMs: number,
   ease: number = SECURITY_ESCORT_EASE,
 ): void {
   if (state.phase === 'entering') return;
-  const targetX = avatarX + Math.cos(state.escortAngle) * SECURITY_ESCORT_RADIUS;
-  const targetY = avatarY + Math.sin(state.escortAngle) * SECURITY_ESCORT_RADIUS;
+  const wobble =
+    Math.sin((nowMs + state.escortPhaseOffsetMs) / SECURITY_ESCORT_WOBBLE_PERIOD_MS) *
+    SECURITY_ESCORT_WOBBLE_RAD;
+  const angle = state.escortAngle + wobble;
+  const targetX = avatarX + Math.cos(angle) * state.escortRadius;
+  const targetY = avatarY + Math.sin(angle) * state.escortRadius;
   state.x += (targetX - state.x) * ease;
   state.y += (targetY - state.y) * ease;
   applyTransform(state);
 }
+
+/** Pairwise positional repulsion across the active roster so units don't overlap or pass
+ * through each other — same shape as applyRepulsion in creaturePhysics.ts, but positional
+ * rather than velocity-based, since security units are stepped directly toward their
+ * escort target each frame rather than integrated via vx/vy. Ignores units still in their
+ * entrance burst (their position is owned by that leg's anime tween). */
+export function applySecurityCollisions(units: SecurityUnitState[]): void {
+  for (let i = 0; i < units.length; i++) {
+    const a = units[i]!;
+    if (a.phase === 'entering') continue;
+    for (let j = i + 1; j < units.length; j++) {
+      const b = units[j]!;
+      if (b.phase === 'entering') continue;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist >= SECURITY_COLLISION_RADIUS || dist < 1e-6) continue;
+      const overlap = SECURITY_COLLISION_RADIUS - dist;
+      const pushX = (dx / dist) * overlap * SECURITY_COLLISION_STRENGTH;
+      const pushY = (dy / dist) * overlap * SECURITY_COLLISION_STRENGTH;
+      a.x -= pushX;
+      a.y -= pushY;
+      b.x += pushX;
+      b.y += pushY;
+      applyTransform(a);
+      applyTransform(b);
+    }
+  }
+}
 ```
 
-Finally, add `escortAngle: 0,` to the state object built in `createSecurityUnit` (it gets overwritten by `assignEscortAngles` right after RaidController pushes the unit, but needs a valid initial value to satisfy the interface):
+Finally, add the three new fields to the state object built in `createSecurityUnit` (they get overwritten by `assignEscortFormation` right after RaidController pushes the unit, but need valid initial values to satisfy the interface):
 
 ```ts
   const state: SecurityUnitState = {
@@ -279,6 +423,8 @@ becomes:
     phase: "entering",
     phaseStartMs: Date.now(),
     escortAngle: 0,
+    escortRadius: SECURITY_ESCORT_RADIUS,
+    escortPhaseOffsetMs: 0,
   };
 ```
 
@@ -287,187 +433,6 @@ becomes:
 Run: `npm test -- securityCreature`
 Expected: PASS
 
-- [ ] **Step 5: Wire escort into RaidController**
-
-In `src/creatures/RaidController.ts`, update the import:
-
-```ts
-import {
-  createSecurityUnit,
-  removeSecurityUnit,
-  startSecurityWander,
-  pickSecurityKind,
-  computeSecurityShrinkFraction,
-  SECURITY_SHRINK_MS,
-} from "./SecurityCreature";
-```
-
-becomes:
-
-```ts
-import {
-  createSecurityUnit,
-  removeSecurityUnit,
-  startSecurityEntranceBurst,
-  pickSecurityKind,
-  computeSecurityShrinkFraction,
-  assignEscortAngles,
-  applyEscortStep,
-  SECURITY_SHRINK_MS,
-} from "./SecurityCreature";
-```
-
-In `spawnPulse()`, replace the wander call and add angle re-assignment:
-
-```ts
-    for (let i = 0; i < n; i++) {
-      const unit = createSecurityUnit(this.avatarLayer, x, y, kinds[i]);
-      startSecurityWander(unit, vw, vh, true);
-      this.units.push(unit);
-    }
-  }
-```
-
-becomes:
-
-```ts
-    for (let i = 0; i < n; i++) {
-      const unit = createSecurityUnit(this.avatarLayer, x, y, kinds[i]);
-      startSecurityEntranceBurst(unit, vw, vh);
-      this.units.push(unit);
-    }
-    assignEscortAngles(this.units);
-  }
-```
-
-In `releaseCharge()`, same rename plus angle re-assignment:
-
-```ts
-    const missing = this.chargeBaselineUnitCount - this.units.length;
-    if (missing > 0) {
-      const vw = this.container.clientWidth || window.innerWidth;
-      const vh = this.container.clientHeight || window.innerHeight;
-      const kinds = pickPulseKinds(missing);
-      for (let i = 0; i < missing; i++) {
-        const unit = createSecurityUnit(this.avatarLayer, this.lastAvatarX, this.lastAvatarY, kinds[i]);
-        startSecurityWander(unit, vw, vh, true);
-        this.units.push(unit);
-      }
-    }
-```
-
-becomes:
-
-```ts
-    const missing = this.chargeBaselineUnitCount - this.units.length;
-    if (missing > 0) {
-      const vw = this.container.clientWidth || window.innerWidth;
-      const vh = this.container.clientHeight || window.innerHeight;
-      const kinds = pickPulseKinds(missing);
-      for (let i = 0; i < missing; i++) {
-        const unit = createSecurityUnit(this.avatarLayer, this.lastAvatarX, this.lastAvatarY, kinds[i]);
-        startSecurityEntranceBurst(unit, vw, vh);
-        this.units.push(unit);
-      }
-      assignEscortAngles(this.units);
-    }
-```
-
-In `tick(nowMs)`, add the per-frame escort step right after the shrink-sweep loop (before the attrition block added in Task 5):
-
-```ts
-  tick(nowMs: number): void {
-    for (let i = this.units.length - 1; i >= 0; i--) {
-      const unit = this.units[i]!;
-      if (unit.phase === "shrinking" && nowMs - unit.phaseStartMs >= SECURITY_SHRINK_MS) {
-        this.units.splice(i, 1);
-        this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
-        removeSecurityUnit(unit);
-      }
-    }
-
-    if (this.state === "raiding" && nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS) {
-```
-
-becomes:
-
-```ts
-  tick(nowMs: number): void {
-    for (let i = this.units.length - 1; i >= 0; i--) {
-      const unit = this.units[i]!;
-      if (unit.phase === "shrinking" && nowMs - unit.phaseStartMs >= SECURITY_SHRINK_MS) {
-        this.units.splice(i, 1);
-        this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
-        removeSecurityUnit(unit);
-      }
-    }
-
-    for (const unit of this.units) {
-      applyEscortStep(unit, this.lastAvatarX, this.lastAvatarY);
-    }
-
-    if (this.state === "raiding" && nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS) {
-```
-
-- [ ] **Step 6: Write a failing test proving units move toward the avatar over ticks**
-
-Add this test inside `describe('RaidController', ...)`, after the `'appends security units into avatarLayer...'` test added in Task 7:
-
-```ts
-  it('escorts security units toward the avatar\'s current position over successive ticks', () => {
-    const now = vi.spyOn(Date, 'now');
-    let t = 0;
-    now.mockImplementation(() => t);
-
-    const xs = [0, 60, 0, 60, 0, 60, 0];
-    for (const x of xs) {
-      raid.onAvatarMove(x, 0);
-      t += 20;
-    }
-
-    // Force every unit past its entrance burst so applyEscortStep takes effect
-    // (anime.js is mocked in this suite, so the real tween never fires).
-    const units = (raid as unknown as { units: { phase: string; x: number; y: number }[] }).units;
-    for (const unit of units) unit.phase = 'wandering';
-    const startX = units[0]!.x;
-
-    raid.onAvatarMove(1000, 0);
-    for (let i = 0; i < 20; i++) {
-      t += 16;
-      raid.tick(t);
-    }
-
-    expect(Math.abs(units[0]!.x - startX)).toBeGreaterThan(0);
-    expect(units[0]!.x).toBeGreaterThan(startX);
-
-    now.mockRestore();
-  });
-```
-
-- [ ] **Step 7: Run the tests to verify they pass**
-
-Run: `npm test -- raidController`
-Expected: PASS
-
-- [ ] **Step 8: Run the full suite and build**
-
-Run: `npm test && npm run build`
-Expected: Both succeed; no new failures beyond the known baseline.
-
-- [ ] **Step 9: Commit**
-
-```bash
-git add src/creatures/SecurityCreature.ts src/creatures/RaidController.ts tests/unit/securityCreature.test.ts tests/unit/raidController.test.ts
-git commit -m "feat: security escorts the avatar in formation instead of free-wandering"
-```
-
-- [ ] **Step 10: Manual verification (human testing)**
-
-Run `npm run dev`, trigger a raid, and drag the avatar around. Confirm security units ring the avatar and follow it smoothly as it moves, rather than wandering independently around the screen.
-
 ---
 
-
----
-
-Continued in [2026-08-16-raid-protest-v2-task-9.md](2026-08-16-raid-protest-v2-task-9.md).
+Continued in [2026-08-16-raid-protest-v2-task-8b.md](2026-08-16-raid-protest-v2-task-8b.md) (RaidController wiring, tests, and manual verification).
