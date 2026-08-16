@@ -17,7 +17,7 @@ export interface SecuritySprite {
 // stays the gameplay-relevant category (see pickPulseKinds in RaidController.ts,
 // which guarantees one of each per pulse); which specific sprite variant renders
 // is a separate, purely cosmetic random pick.
-const SPRITE_VARIANTS: Record<SecurityKind, SecuritySprite[]> = {
+export const SPRITE_VARIANTS: Record<SecurityKind, SecuritySprite[]> = {
   police: [
     { src: "/creatures/security/police.png", aspect: 245 / 298 },
     { src: "/creatures/security/police-2.png", aspect: 250 / 254 },
@@ -32,7 +32,7 @@ const SPRITE_VARIANTS: Record<SecurityKind, SecuritySprite[]> = {
  * deterministic tests, matching the pattern used by pickSecurityKind. */
 export function pickSecuritySprite(kind: SecurityKind, rand: () => number = Math.random): SecuritySprite {
   const variants = SPRITE_VARIANTS[kind];
-  return variants[Math.floor(rand() * variants.length)]!;
+  return variants[Math.min(variants.length - 1, Math.floor(rand() * variants.length))]!;
 }
 
 /** Equal to the avatar/sticker's z-index (100, see StickerOverlay.STICKER_Z_INDEX). Security

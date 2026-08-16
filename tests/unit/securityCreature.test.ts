@@ -16,6 +16,7 @@ import {
   securityHeightFor,
   pickSecurityKind,
   pickSecuritySprite,
+  SPRITE_VARIANTS,
   createSecurityUnit,
   removeSecurityUnit,
   computeSecurityEnterProgress,
@@ -65,7 +66,8 @@ describe('SecurityCreature', () => {
     it('picks different variants for different rand() outputs', () => {
       const first = pickSecuritySprite('police', () => 0);
       const second = pickSecuritySprite('police', () => 0.99);
-      expect(first.src).not.toBe(second.src);
+      expect(first).toBe(SPRITE_VARIANTS.police[0]);
+      expect(second).toBe(SPRITE_VARIANTS.police[1]);
     });
   });
 
@@ -106,6 +108,11 @@ describe('SecurityCreature', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       expect(unit.el.style.zIndex).toBe(String(SECURITY_Z_INDEX));
       expect(SECURITY_Z_INDEX).toBe(100);
+    });
+
+    it('has no drop-shadow filter', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      expect(unit.el.style.filter).toBe('');
     });
 
     it('spawns at scale 0 / opacity 0, mid-entrance', () => {
