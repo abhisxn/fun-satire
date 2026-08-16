@@ -42,10 +42,14 @@ export class StickerOverlay {
   private dragHint: HTMLDivElement | null = null;
   private dragHintTimeout: number | undefined;
   /** Resting scale — 1 by default, forced to SQUEEZE_MIN_SCALE by lockSqueeze() on a
-   * full-power win, or set by setScaleForRaidSize() on a MEDIUM/LOW backfire. Neither
-   * is a permanent lock: the next backfire's settle event overwrites it again based on
-   * whatever the raid's size is at that point. */
+   * full-power win, or continuously driven by setScaleForRaidSize() as the live raid
+   * size changes. Not a permanent lock: unlock() (called once a new raid actually
+   * starts) restores setScaleForRaidSize()'s ability to update it again. */
   private baseScale = 1;
+  /** True from lockSqueeze() until unlock() — while locked, setScaleForRaidSize() is
+   * a no-op, so a live crowd-size update arriving right after a win can't silently
+   * overwrite the win's fixed floor scale before the next raid has actually begun. */
+  private locked = false;
 
   private readonly dragSrc: string | null;
 
@@ -231,15 +235,17 @@ export class StickerOverlay {
     return this.width * this.baseScale;
   }
 
-  /** Called once a MEDIUM/LOW backfire's raid spawn/respawn has actually settled on
-   * screen (RaidController's onProtestBackfireSettled — never on button release
-   * itself). Sets the sticker's resting scale from where the raid's size currently
-   * sits within [0, maxUnits], linearly mapped to [1, MAX_SCALE] — not an incremental
-   * bump, so it reflects the raid's actual current size rather than a click count
-   * that could drift out of sync with what's on screen. Also swaps the face back to
-   * `src` (the calm/default expression) if lockSqueeze() had switched it to `dragSrc` —
-   * a new raid means the win's weird face is over. */
+  /** Called continuously as the live raid's security-unit count changes (RaidController's
+   * onCrowdSizeChanged — never on button release itself, and not just at settle events).
+   * Sets the sticker's resting scale from where the raid's size currently sits within
+   * [0, maxUnits], linearly mapped to [1, MAX_SCALE] — not an incremental bump, so it
+   * reflects the raid's actual current size rather than a click count that could drift
+   * out of sync with what's on screen. Also swaps the face back to `src` (the calm/default
+   * expression) if lockSqueeze() had switched it to `dragSrc` — a new raid means the win's
+   * weird face is over. A no-op while locked (see lockSqueeze()/unlock()) — a win's fixed
+   * floor scale must not be overwritten by a live update before the next raid starts. */
   setScaleForRaidSize(unitCount: number, maxUnits: number): void {
+    if (this.locked) return;
     const t = maxUnits > 0 ? Math.max(0, Math.min(1, unitCount / maxUnits)) : 0;
     this.baseScale = 1 + t * (MAX_SCALE - 1);
     this.el.style.transform = `scale(${this.baseScale})`;
@@ -251,14 +257,26 @@ export class StickerOverlay {
    * the sticker down to SQUEEZE_MIN_SCALE and, for face stickers, swaps to `dragSrc`
    * (the "weird" expression already used mid-drag/shake — see the constructor) so the
    * face-pull reads as part of the same "under strain" moment as the shrink. Not a
-   * permanent lock — the next backfire's settle event (setScaleForRaidSize) reverts
-   * both the scale and the face. Starting a fresh drag right after a win will also
-   * revert the face early (onDragEnd always restores `currentSrc`) — an acceptable
-   * overlap between the two mechanics rather than something worth extra state to avoid. */
+   * permanent lock — unlock() (called once the next raid actually starts) reverts both
+   * the scale and the face via the next setScaleForRaidSize() call. Starting a fresh
+   * drag right after a win will also revert the face early (onDragEnd always restores
+   * `currentSrc`) — an acceptable overlap between the two mechanics rather than
+   * something worth extra state to avoid. */
   lockSqueeze(): void {
+    this.locked = true;
     this.baseScale = SQUEEZE_MIN_SCALE;
     this.el.style.transform = `scale(${SQUEEZE_MIN_SCALE})`;
     if (this.dragSrc) this.img.src = this.dragSrc;
+  }
+
+  /** Releases the lock set by lockSqueeze(), letting setScaleForRaidSize() drive the
+   * scale again. Called once a new raid actually starts (RaidController's onRaidStart)
+   * — not merely once a backfire settles, since a backfire on an already-running raid
+   * must not un-clock a still-standing win. Does not itself change the scale; the next
+   * setScaleForRaidSize() call (which follows immediately once a raid starts) supplies
+   * the new value. */
+  unlock(): void {
+    this.locked = false;
   }
 
   destroy(): void {
