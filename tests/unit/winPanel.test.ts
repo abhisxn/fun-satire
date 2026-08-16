@@ -23,6 +23,15 @@ describe("hud/WinPanel", () => {
     expect(root.classList.contains("win-panel-overlay")).toBe(true);
     expect(root.classList.contains("open")).toBe(false);
     expect(panel.isPanelOpen()).toBe(false);
+    expect(document.body.contains(root)).toBe(true);
+  });
+
+  it("destroy() removes the overlay from the DOM", () => {
+    panel.attachTo(document.body);
+    const root = panel.getRoot();
+    expect(document.body.contains(root)).toBe(true);
+    panel.destroy();
+    expect(document.body.contains(root)).toBe(false);
   });
 
   it("show() with an explicit variant renders that title and copy, and opens", () => {

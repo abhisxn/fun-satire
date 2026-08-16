@@ -1,5 +1,6 @@
 /* src/hud/winPanel.css */
 .win-panel-overlay {
+  --win-text-primary: #000000;
   position: fixed;
   inset: 0;
   z-index: 950;
@@ -11,7 +12,7 @@
 }
 
 .win-panel-overlay.open {
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .win-panel {
@@ -29,13 +30,12 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  color: #000;
+  color: var(--win-text-primary);
   opacity: 0;
   transform: translateY(-16px) scale(0.96);
   transition:
     opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
     transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: auto;
   box-sizing: border-box;
 }
 
@@ -51,7 +51,7 @@
   border-radius: 50%;
   border: none;
   background: rgba(0, 0, 0, 0.08);
-  color: #000;
+  color: var(--win-text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,7 +70,7 @@
   font-weight: 400;
   font-size: 22px;
   line-height: 1.25;
-  color: #000;
+  color: var(--win-text-primary);
 }
 
 .win-panel-copy {
@@ -79,5 +79,5 @@
   font-weight: 500;
   font-size: 15px;
   line-height: 1.4;
-  color: #000;
+  color: var(--win-text-primary);
 }
