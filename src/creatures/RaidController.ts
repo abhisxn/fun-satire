@@ -189,6 +189,16 @@ export class RaidController {
     this.avatarWidth = width;
   }
 
+  /** Keeps lastAvatarX/Y current every frame, independent of drag events — onAvatarMove
+   * only fires while the avatar is actively being dragged, so without this, resizing the
+   * avatar (corner handle or pinch) without also dragging it would leave the escort ring
+   * centered on a stale pre-resize position. No shake-detection side effects here, unlike
+   * onAvatarMove — this is purely a position sync. */
+  syncAvatarCenter(x: number, y: number): void {
+    this.lastAvatarX = x;
+    this.lastAvatarY = y;
+  }
+
   private spawnPulse(x: number, y: number): void {
     if (this.state === "idle") {
       this.state = "raiding";
@@ -264,7 +274,7 @@ export class RaidController {
     if (this.state !== "charging") return;
 
     for (const unit of this.units) {
-      if (unit.phase === "shrinking") unit.phase = "wandering";
+      if (unit.phase === "shrinking") unit.phase = "escorting";
     }
 
     const missing = this.chargeBaselineUnitCount - this.units.length;

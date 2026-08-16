@@ -272,7 +272,7 @@ describe('SecurityCreature', () => {
   describe('applyEscortStep', () => {
     it('eases the unit toward avatar position + its escort offset', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
-      unit.phase = 'wandering';
+      unit.phase = 'escorting';
       unit.escortAngle = 0; // offset purely on +x
       unit.escortRadiusRatio = 0; // radius == SECURITY_ESCORT_MIN_RADIUS at reference avatar width
       unit.escortPhaseOffsetMs = 0; // wobble = sin(0) = 0 at nowMs = 0, no wobble this instant
@@ -297,7 +297,7 @@ describe('SecurityCreature', () => {
 
     it('wobbles the effective angle around escortAngle as nowMs advances', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
-      unit.phase = 'wandering';
+      unit.phase = 'escorting';
       unit.escortAngle = 0;
       unit.escortRadiusRatio = 0; // radius == SECURITY_ESCORT_MIN_RADIUS at reference avatar width
       unit.escortPhaseOffsetMs = 0;
@@ -310,14 +310,27 @@ describe('SecurityCreature', () => {
       expect(unit.x).toBeCloseTo(Math.cos(expectedAngle) * SECURITY_ESCORT_MIN_RADIUS, 3);
       expect(unit.y).toBeCloseTo(Math.sin(expectedAngle) * SECURITY_ESCORT_MIN_RADIUS, 3);
     });
+
+    it('respects a non-reference avatarWidth end-to-end', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      unit.phase = 'escorting';
+      unit.escortAngle = 0;
+      unit.escortRadiusRatio = 0;
+      unit.escortPhaseOffsetMs = 0;
+
+      const doubledWidth = SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH * 2;
+      applyEscortStep(unit, 0, 0, 0, doubledWidth, 1); // ease=1 snaps straight to target
+
+      expect(unit.x).toBeCloseTo(SECURITY_ESCORT_MIN_RADIUS * 2, 3);
+    });
   });
 
   describe('applySecurityCollisions', () => {
     it('pushes two overlapping units apart', () => {
       const a = createSecurityUnit(container, 100, 100, 'police');
       const b = createSecurityUnit(container, 110, 100, 'police'); // 10px apart, well inside SECURITY_COLLISION_RADIUS
-      a.phase = 'wandering';
-      b.phase = 'wandering';
+      a.phase = 'escorting';
+      b.phase = 'escorting';
 
       applySecurityCollisions([a, b]);
 
@@ -328,8 +341,8 @@ describe('SecurityCreature', () => {
     it('does not move units that are already farther apart than SECURITY_COLLISION_RADIUS', () => {
       const a = createSecurityUnit(container, 0, 0, 'police');
       const b = createSecurityUnit(container, 500, 500, 'police');
-      a.phase = 'wandering';
-      b.phase = 'wandering';
+      a.phase = 'escorting';
+      b.phase = 'escorting';
 
       applySecurityCollisions([a, b]);
 
@@ -353,7 +366,7 @@ describe('SecurityCreature', () => {
   describe('applyEscortRangeConstraint', () => {
     it('pushes a unit outward if closer than SECURITY_ESCORT_MIN_RADIUS', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
-      unit.phase = 'wandering';
+      unit.phase = 'escorting';
       unit.x = 50; // inside the 100px min radius
       unit.y = 0;
 
@@ -364,7 +377,7 @@ describe('SecurityCreature', () => {
 
     it('pulls a unit inward if farther than SECURITY_ESCORT_MAX_RADIUS', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
-      unit.phase = 'wandering';
+      unit.phase = 'escorting';
       unit.x = 300; // outside the 160px max radius
       unit.y = 0;
 
@@ -375,7 +388,7 @@ describe('SecurityCreature', () => {
 
     it('does not move a unit already within [MIN_RADIUS, MAX_RADIUS]', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
-      unit.phase = 'wandering';
+      unit.phase = 'escorting';
       unit.x = 130; // squarely inside [100, 160]
       unit.y = 0;
 

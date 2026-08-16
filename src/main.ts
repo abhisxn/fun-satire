@@ -90,6 +90,8 @@ async function main(): Promise<void> {
   engine.onTick(() => {
     const center = currentAttractor.getCenter();
     if (activeOverlay instanceof StickerOverlay) {
+      const avatarCenter = activeOverlay.getCenter();
+      raidController.syncAvatarCenter(avatarCenter.x, avatarCenter.y);
       raidController.setAvatarWidth(activeOverlay.getWidth());
     }
     raidController.tick(Date.now());

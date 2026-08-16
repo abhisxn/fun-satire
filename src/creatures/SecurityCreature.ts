@@ -92,7 +92,7 @@ export function pickSecurityFlip(rand: () => number = Math.random): boolean {
   return rand() >= 0.5;
 }
 
-export type SecurityPhase = "entering" | "wandering" | "shrinking";
+export type SecurityPhase = "entering" | "escorting" | "shrinking";
 
 export interface SecurityUnitState {
   el: HTMLImageElement;
@@ -155,7 +155,7 @@ export function applyTransform(state: SecurityUnitState): void {
     const progress = computeSecurityEnterProgress(state.phaseStartMs, Date.now());
     scale = progress.scale;
     opacity = progress.opacity;
-    if (progress.done) state.phase = "wandering";
+    if (progress.done) state.phase = "escorting";
   }
 
   state.el.style.transform = `translate3d(${tx.toFixed(1)}px,${ty.toFixed(1)}px,0) scale(${scale.toFixed(3)})${state.flipped ? ' scaleX(-1)' : ''}`;
@@ -164,7 +164,8 @@ export function applyTransform(state: SecurityUnitState): void {
 
 /** First-leg waypoint for a freshly-spawned unit: a large step (150-300px) in a random
  * direction, so a pulse visibly bursts outward like a disturbed swarm before settling
- * into normal wander. `randFn` is injectable for deterministic tests. */
+ * into escort formation around the avatar (see assignEscortFormation/applyEscortStep).
+ * `randFn` is injectable for deterministic tests. */
 export function burstWaypoint(
   state: { x: number; y: number },
   vw: number,

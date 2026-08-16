@@ -645,7 +645,7 @@ describe('RaidController', () => {
     // Force every unit past its entrance burst so applyEscortStep takes effect
     // (anime.js is mocked in this suite, so the real tween never fires).
     const units = (raid as unknown as { units: { phase: string; x: number; y: number }[] }).units;
-    for (const unit of units) unit.phase = 'wandering';
+    for (const unit of units) unit.phase = 'escorting';
     const startX = units[0]!.x;
 
     raid.onAvatarMove(1000, 0);
@@ -674,7 +674,7 @@ describe('RaidController', () => {
     // Force them all onto the exact same point, past their entrance burst —
     // an adversarial worst case for the collision pass.
     for (const unit of units) {
-      unit.phase = 'wandering';
+      unit.phase = 'escorting';
       unit.x = 500;
       unit.y = 500;
     }
