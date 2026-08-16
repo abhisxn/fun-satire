@@ -24,8 +24,8 @@ import {
   burstWaypoint,
   pickSecurityFlip,
   applyTransform,
-  SECURITY_ESCORT_RADIUS,
-  SECURITY_ESCORT_RADIUS_JITTER,
+  SECURITY_ESCORT_MIN_RADIUS,
+  SECURITY_ESCORT_MAX_RADIUS,
   SECURITY_ESCORT_EASE,
   SECURITY_ESCORT_WOBBLE_RAD,
   SECURITY_ESCORT_WOBBLE_PERIOD_MS,
@@ -33,7 +33,7 @@ import {
   assignEscortFormation,
   applyEscortStep,
   applySecurityCollisions,
-  applyAvatarRepel,
+  applyEscortRangeConstraint,
 } from '../../src/creatures/SecurityCreature';
 
 describe('SecurityCreature', () => {
@@ -237,17 +237,25 @@ describe('SecurityCreature', () => {
       expect(units[3]!.escortAngle).toBeCloseTo((3 * Math.PI) / 2, 5);
     });
 
-    it('assigns each unit its own escort radius within the jitter range, not one shared constant', () => {
+    it('assigns each unit an escort radius within [MIN_RADIUS, MAX_RADIUS], not one shared constant', () => {
       const units = [
         createSecurityUnit(container, 0, 0, 'police'),
         createSecurityUnit(container, 0, 0, 'police'),
       ];
 
-      assignEscortFormation(units, () => 1); // maxes out the jitter: +SECURITY_ESCORT_RADIUS_JITTER
+      assignEscortFormation(units, () => 1); // maxes out: should land exactly at MAX_RADIUS
 
       for (const unit of units) {
-        expect(unit.escortRadius).toBeCloseTo(SECURITY_ESCORT_RADIUS + SECURITY_ESCORT_RADIUS_JITTER, 5);
+        expect(unit.escortRadius).toBeCloseTo(SECURITY_ESCORT_MAX_RADIUS, 5);
       }
+    });
+
+    it('assigns the minimum radius when rand() returns 0', () => {
+      const units = [createSecurityUnit(container, 0, 0, 'police')];
+
+      assignEscortFormation(units, () => 0);
+
+      expect(units[0]!.escortRadius).toBeCloseTo(SECURITY_ESCORT_MIN_RADIUS, 5);
     });
 
     it('assigns each unit a phase offset so their wobble is desynced', () => {
@@ -264,12 +272,12 @@ describe('SecurityCreature', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       unit.phase = 'wandering';
       unit.escortAngle = 0; // offset purely on +x
-      unit.escortRadius = SECURITY_ESCORT_RADIUS;
+      unit.escortRadius = SECURITY_ESCORT_MIN_RADIUS;
       unit.escortPhaseOffsetMs = 0; // wobble = sin(0) = 0 at nowMs = 0, no wobble this instant
 
       applyEscortStep(unit, 200, 200, 0, SECURITY_ESCORT_EASE);
 
-      const targetX = 200 + SECURITY_ESCORT_RADIUS;
+      const targetX = 200 + SECURITY_ESCORT_MIN_RADIUS;
       const targetY = 200;
       expect(unit.x).toBeCloseTo((targetX - 0) * SECURITY_ESCORT_EASE, 5);
       expect(unit.y).toBeCloseTo((targetY - 0) * SECURITY_ESCORT_EASE, 5);
@@ -289,7 +297,7 @@ describe('SecurityCreature', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       unit.phase = 'wandering';
       unit.escortAngle = 0;
-      unit.escortRadius = SECURITY_ESCORT_RADIUS;
+      unit.escortRadius = SECURITY_ESCORT_MIN_RADIUS;
       unit.escortPhaseOffsetMs = 0;
 
       // A quarter period in, sin() peaks at 1 — maximum wobble offset.
@@ -297,8 +305,8 @@ describe('SecurityCreature', () => {
       applyEscortStep(unit, 0, 0, quarterPeriod, 1); // ease=1 snaps straight to target
 
       const expectedAngle = SECURITY_ESCORT_WOBBLE_RAD;
-      expect(unit.x).toBeCloseTo(Math.cos(expectedAngle) * SECURITY_ESCORT_RADIUS, 3);
-      expect(unit.y).toBeCloseTo(Math.sin(expectedAngle) * SECURITY_ESCORT_RADIUS, 3);
+      expect(unit.x).toBeCloseTo(Math.cos(expectedAngle) * SECURITY_ESCORT_MIN_RADIUS, 3);
+      expect(unit.y).toBeCloseTo(Math.sin(expectedAngle) * SECURITY_ESCORT_MIN_RADIUS, 3);
     });
   });
 
@@ -340,34 +348,44 @@ describe('SecurityCreature', () => {
     });
   });
 
-  describe('applyAvatarRepel', () => {
-    it('pushes a unit away from the avatar if closer than SECURITY_AVATAR_REPEL_RADIUS', () => {
+  describe('applyEscortRangeConstraint', () => {
+    it('pushes a unit outward if closer than SECURITY_ESCORT_MIN_RADIUS', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       unit.phase = 'wandering';
-      unit.x = 50; // 50px from avatar at (0,0), well inside the 100px repel radius
+      unit.x = 50; // inside the 100px min radius
       unit.y = 0;
 
-      applyAvatarRepel(unit, 0, 0);
+      applyEscortRangeConstraint(unit, 0, 0);
 
       expect(unit.x).toBeGreaterThan(50);
     });
 
-    it('does not move a unit already farther than SECURITY_AVATAR_REPEL_RADIUS from the avatar', () => {
+    it('pulls a unit inward if farther than SECURITY_ESCORT_MAX_RADIUS', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       unit.phase = 'wandering';
-      unit.x = 500;
-      unit.y = 500;
+      unit.x = 300; // outside the 160px max radius
+      unit.y = 0;
 
-      applyAvatarRepel(unit, 0, 0);
+      applyEscortRangeConstraint(unit, 0, 0);
 
-      expect(unit.x).toBe(500);
-      expect(unit.y).toBe(500);
+      expect(unit.x).toBeLessThan(300);
+    });
+
+    it('does not move a unit already within [MIN_RADIUS, MAX_RADIUS]', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      unit.phase = 'wandering';
+      unit.x = 130; // squarely inside [100, 160]
+      unit.y = 0;
+
+      applyEscortRangeConstraint(unit, 0, 0);
+
+      expect(unit.x).toBe(130);
     });
 
     it('ignores a unit still in its entrance burst', () => {
       const unit = createSecurityUnit(container, 50, 0, 'police'); // still 'entering'
 
-      applyAvatarRepel(unit, 0, 0);
+      applyEscortRangeConstraint(unit, 0, 0);
 
       expect(unit.x).toBe(50);
     });

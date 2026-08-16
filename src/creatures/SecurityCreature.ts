@@ -51,10 +51,16 @@ export const SECURITY_ENTER_MS = 280;
 /** Duration a unit spends shrinking (repel radius easing to 0) before RaidController.tick() removes it (ms). */
 export const SECURITY_SHRINK_MS = 250;
 
-/** Base radius (px) a security unit orbits the avatar at while escorting. */
-export const SECURITY_ESCORT_RADIUS = 130;
-/** How far each unit's own escortRadius is randomized from the base, in either direction. */
-export const SECURITY_ESCORT_RADIUS_JITTER = 25;
+/** Minimum distance (px) a security unit keeps from the avatar while escorting — if
+ * wobble/collision jostling pushes it closer, it gets nudged back out. */
+export const SECURITY_ESCORT_MIN_RADIUS = 100;
+/** Maximum distance (px) a security unit strays from the avatar while escorting — if
+ * jostling pushes it farther, it gets pulled back in. Together with the min, this defines
+ * the band a unit's own escortRadius is randomized within at assignment. */
+export const SECURITY_ESCORT_MAX_RADIUS = 160;
+/** How strongly a unit is nudged back into [MIN_RADIUS, MAX_RADIUS] per tick when it strays
+ * outside the band. */
+export const SECURITY_ESCORT_RANGE_PUSH_STRENGTH = 0.15;
 /** Per-tick lerp factor easing a unit toward its escort target — small, so the formation
  * trails the avatar smoothly rather than snapping to it. */
 export const SECURITY_ESCORT_EASE = 0.08;
@@ -68,13 +74,6 @@ export const SECURITY_ESCORT_WOBBLE_PERIOD_MS = 2200;
 export const SECURITY_COLLISION_RADIUS = 50;
 /** How strongly overlapping units push apart per tick (fraction of the overlap distance). */
 export const SECURITY_COLLISION_STRENGTH = 0.15;
-/** Minimum distance (px) a security unit keeps from the avatar itself — if escort wobble
- * or mutual-collision jostling ever pushes a unit closer than this, it gets pushed back
- * out, so units never visually overlap the avatar sticker. */
-export const SECURITY_AVATAR_REPEL_RADIUS = 100;
-/** How strongly a unit is pushed back out of the avatar-repel zone per tick. */
-export const SECURITY_AVATAR_REPEL_STRENGTH = 0.15;
-
 export function securityHeightFor(sprite: SecuritySprite): number {
   return Math.round(SECURITY_WIDTH * sprite.aspect);
 }
@@ -105,8 +104,9 @@ export interface SecurityUnitState {
    * re-spread across the active roster by RaidController via assignEscortFormation(). The
    * unit's actual angle at any instant also wobbles around this via applyEscortStep(). */
   escortAngle: number;
-  /** This unit's own orbit radius (px) — randomized per unit around SECURITY_ESCORT_RADIUS
-   * so the formation isn't a perfectly circular ring. */
+  /** This unit's own orbit radius (px) — randomized per unit within
+   * [SECURITY_ESCORT_MIN_RADIUS, SECURITY_ESCORT_MAX_RADIUS] so the formation isn't a
+   * perfectly circular ring. */
   escortRadius: number;
   /** Per-unit phase offset (ms) for the wobble sine wave, so units don't wobble in sync. */
   escortPhaseOffsetMs: number;
@@ -211,7 +211,7 @@ export function assignEscortFormation(
   for (let i = 0; i < n; i++) {
     const unit = units[i]!;
     unit.escortAngle = (i / n) * Math.PI * 2;
-    unit.escortRadius = SECURITY_ESCORT_RADIUS + (randFn() * 2 - 1) * SECURITY_ESCORT_RADIUS_JITTER;
+    unit.escortRadius = SECURITY_ESCORT_MIN_RADIUS + randFn() * (SECURITY_ESCORT_MAX_RADIUS - SECURITY_ESCORT_MIN_RADIUS);
     unit.escortPhaseOffsetMs = randFn() * 10000;
   }
 }
@@ -269,20 +269,28 @@ export function applySecurityCollisions(units: SecurityUnitState[]): void {
   }
 }
 
-/** Pushes a security unit away from the avatar's own position if escort wobble or
- * mutual-collision jostling has brought it closer than SECURITY_AVATAR_REPEL_RADIUS —
- * positional, not velocity-based, same reasoning as applySecurityCollisions. No-op during
- * the entrance burst. */
-export function applyAvatarRepel(state: SecurityUnitState, avatarX: number, avatarY: number): void {
+/** Nudges a security unit back into [SECURITY_ESCORT_MIN_RADIUS, SECURITY_ESCORT_MAX_RADIUS]
+ * from the avatar if wobble or mutual-collision jostling has pushed it outside that band on
+ * either side — positional, not velocity-based, same reasoning as applySecurityCollisions.
+ * No-op during the entrance burst. */
+export function applyEscortRangeConstraint(state: SecurityUnitState, avatarX: number, avatarY: number): void {
   if (state.phase === 'entering') return;
   const dx = state.x - avatarX;
   const dy = state.y - avatarY;
   const dist = Math.hypot(dx, dy);
-  if (dist >= SECURITY_AVATAR_REPEL_RADIUS || dist < 1e-6) return;
-  const overlap = SECURITY_AVATAR_REPEL_RADIUS - dist;
-  state.x += (dx / dist) * overlap * SECURITY_AVATAR_REPEL_STRENGTH;
-  state.y += (dy / dist) * overlap * SECURITY_AVATAR_REPEL_STRENGTH;
-  applyTransform(state);
+  if (dist < 1e-6) return;
+
+  if (dist < SECURITY_ESCORT_MIN_RADIUS) {
+    const overlap = SECURITY_ESCORT_MIN_RADIUS - dist;
+    state.x += (dx / dist) * overlap * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
+    state.y += (dy / dist) * overlap * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
+    applyTransform(state);
+  } else if (dist > SECURITY_ESCORT_MAX_RADIUS) {
+    const overshoot = dist - SECURITY_ESCORT_MAX_RADIUS;
+    state.x -= (dx / dist) * overshoot * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
+    state.y -= (dy / dist) * overshoot * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
+    applyTransform(state);
+  }
 }
 
 export function createSecurityUnit(
@@ -320,7 +328,7 @@ export function createSecurityUnit(
     phase: "entering",
     phaseStartMs: Date.now(),
     escortAngle: 0,
-    escortRadius: SECURITY_ESCORT_RADIUS,
+    escortRadius: SECURITY_ESCORT_MIN_RADIUS,
     escortPhaseOffsetMs: 0,
     flipped: pickSecurityFlip(),
   };
