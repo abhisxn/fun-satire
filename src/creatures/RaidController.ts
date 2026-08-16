@@ -183,14 +183,21 @@ export interface RaidControllerConfig {
    * win landed" (e.g. locking a sticker's shrink) should use this rather than
    * releaseCharge()'s return, which happens before any despawn animation plays. */
   onProtestWin?: () => void;
-  /** Fired once a MEDIUM/LOW backfire's raid spawn/respawn has actually finished
-   * appearing on screen — right after the fresh-raid spawn burst if no raid was
-   * running yet, or once every queued regroup respawn (poofAndEscalate) has fired if
-   * one was. Passes the current live security unit count (out of SECURITY_MAX_UNITS)
-   * rather than which power band triggered it — a caller mapping this to a visual
-   * (e.g. sticker scale) should read it as "how big is the raid right now", not count
-   * how many times this has fired. */
-  onProtestBackfireSettled?: (securityUnitCount: number) => void;
+  /** Fired at the idle->raiding transition inside spawnPulse() — i.e. the moment a
+   * fresh raid actually starts (a shake, or a MEDIUM/LOW standalone-charge backfire).
+   * The correct trigger for un-clocking a sticker's win-lock: a subsequent
+   * MEDIUM/LOW backfire on an already-running raid must NOT unlock it, only a brand
+   * new raid should. */
+  onRaidStart?: () => void;
+  /** Fired whenever the live security unit count actually changes — staggered
+   * backfire respawns trickling in, or the staggered despawn sweep (win or
+   * startRecovery()) removing units one at a time. Checked once per tick() call
+   * (and once after spawnPulse()'s synchronous burst) against the last-notified
+   * count, so it fires exactly once per real change, never once per frame
+   * regardless of whether anything changed. A caller mapping this to a continuous
+   * visual (e.g. sticker scale) should treat every call as "the raid's size right
+   * now," not accumulate or count calls. */
+  onCrowdSizeChanged?: (securityUnitCount: number) => void;
 }
 
 function rand(min: number, max: number): number {
@@ -247,11 +254,16 @@ export class RaidController {
    * avatar's post-win repel radius, and fires onProtestWin, once the sweep finishes
    * (see tick()). */
   private clearingViaProtestWin = false;
-  /** True while a poofAndEscalate() regroup has outstanding respawns queued — tick()
-   * fires onProtestBackfireSettled the moment this transitions back to false. */
+  /** True while a poofAndEscalate() regroup has outstanding respawns queued —
+   * tick() notifies onCrowdSizeChanged as each respawn spawns in and the count changes. */
   private regroupInFlight = false;
+  /** Last security-unit count passed to onCrowdSizeChanged — compared against
+   * this.units.length once per tick() (and once after spawnPulse()'s synchronous
+   * burst) so the callback fires exactly once per actual change. */
+  private lastNotifiedCrowdCount = 0;
   private readonly onProtestWin: (() => void) | null;
-  private readonly onProtestBackfireSettled: ((securityUnitCount: number) => void) | null;
+  private readonly onRaidStart: (() => void) | null;
+  private readonly onCrowdSizeChanged: ((securityUnitCount: number) => void) | null;
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -259,7 +271,8 @@ export class RaidController {
     this.avatarLayer = config.avatarLayer;
     this.onSecurityRemoved = config.onSecurityRemoved ?? null;
     this.onProtestWin = config.onProtestWin ?? null;
-    this.onProtestBackfireSettled = config.onProtestBackfireSettled ?? null;
+    this.onRaidStart = config.onRaidStart ?? null;
+    this.onCrowdSizeChanged = config.onCrowdSizeChanged ?? null;
   }
 
   /** Feed every avatar drag-move point through here; internally detects shake and spawns raids. */
@@ -310,6 +323,7 @@ export class RaidController {
       this.raidStartCount = this.grid.getCreatureCount();
       this.lastAttritionAtMs = Date.now();
       this.grid.setAvatarRepelRadius(null);
+      this.onRaidStart?.();
     }
 
     const available = SECURITY_MAX_UNITS - this.units.length;
@@ -327,6 +341,7 @@ export class RaidController {
       this.units.push(unit);
     }
     assignEscortFormation(this.units);
+    this.notifyCrowdSizeChanged();
   }
 
   /** Current security units, in the shape CreatureGrid.update() expects for repulsion/catching. */
@@ -417,10 +432,10 @@ export class RaidController {
       // No raid running when this charge began — starts one immediately, exactly
       // like a shake. spawnPulse() only runs its idle->raiding initialization when
       // the prior state is 'idle', so set that explicitly first. The spawn burst is
-      // near-instant (no queued delay), so it's settled the moment it's created.
+      // near-instant (no queued delay), so spawnPulse()'s own notifyCrowdSizeChanged()
+      // call covers it — no separate notification needed here.
       this.state = "idle";
       this.spawnPulse(this.lastAvatarX, this.lastAvatarY);
-      this.onProtestBackfireSettled?.(this.units.length);
       return;
     }
 
@@ -450,8 +465,8 @@ export class RaidController {
     for (let i = 0; i < respawnCount; i++) {
       this.pendingRespawns.push(now + BACKFIRE_RESPAWN_DELAY_MS + i * BACKFIRE_RESPAWN_STAGGER_MS);
     }
-    // onProtestBackfireSettled fires later, in tick(), once every one of these has
-    // actually spawned in — not here, before any of them exist yet.
+    // The crowd-size-changed notification for these respawns fires later, from
+    // tick(), as each one actually spawns in — not here, before any of them exist.
     this.regroupInFlight = true;
   }
 
@@ -518,7 +533,6 @@ export class RaidController {
       if (spawnedAny) assignEscortFormation(this.units);
       if (this.regroupInFlight && this.pendingRespawns.length === 0) {
         this.regroupInFlight = false;
-        this.onProtestBackfireSettled?.(this.units.length);
       }
     }
 
@@ -527,6 +541,7 @@ export class RaidController {
       applyEscortRangeConstraint(unit, this.lastAvatarX, this.lastAvatarY, this.avatarWidth);
     }
     applySecurityCollisions(this.units);
+    this.notifyCrowdSizeChanged();
 
     if (this.state === "raiding" && nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS) {
       this.lastAttritionAtMs = nowMs;
@@ -555,6 +570,18 @@ export class RaidController {
     const period = CHARGE_SWEEP_HALF_PERIOD_MS * 2;
     const cyclePos = (elapsed % period) / CHARGE_SWEEP_HALF_PERIOD_MS;
     this.chargeFraction = cyclePos <= 1 ? cyclePos : 2 - cyclePos;
+  }
+
+  /** Compares the live unit count against the last value passed to
+   * onCrowdSizeChanged, firing the callback (and updating the stored value) only
+   * when it actually changed — called once per tick() and once after
+   * spawnPulse()'s synchronous burst, so a caller sees exactly one notification
+   * per real change, never one per frame regardless of whether anything moved. */
+  private notifyCrowdSizeChanged(): void {
+    if (this.units.length !== this.lastNotifiedCrowdCount) {
+      this.lastNotifiedCrowdCount = this.units.length;
+      this.onCrowdSizeChanged?.(this.units.length);
+    }
   }
 
   /** Full teardown — call when tearing this controller down: removes all remaining
