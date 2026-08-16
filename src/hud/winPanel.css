@@ -1,0 +1,83 @@
+/* src/hud/winPanel.css */
+.win-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s var(--menu-ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.win-panel-overlay.open {
+  pointer-events: none;
+}
+
+.win-panel {
+  position: absolute;
+  top: calc(16px + var(--hud-density, 0px) * 0.05);
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  padding: 20px;
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(97, 86, 80, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #000;
+  opacity: 0;
+  transform: translateY(-16px) scale(0.96);
+  transition:
+    opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.win-panel-overlay.open .win-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.win-panel-close {
+  align-self: flex-end;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.08);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin: -6px -6px 0 0;
+}
+
+.win-panel-close:hover {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.win-panel-title {
+  margin: 0;
+  font-family: "Fraunces", serif;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.25;
+  color: #000;
+}
+
+.win-panel-copy {
+  margin: 0;
+  font-family: "Krub", sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #000;
+}
