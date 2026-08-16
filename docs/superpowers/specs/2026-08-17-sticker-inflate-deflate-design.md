@@ -10,10 +10,13 @@ updates at two discrete moments:
 - `onProtestWin` — fired once a full-power win's despawn sweep has fully finished, calling
   `lockSqueeze()` (fixed 0.55 floor).
 
-Between those events — most notably during a raid's ongoing attrition drain (crowd shrinks
-every `RAID_ATTRITION_INTERVAL_MS`) and during a win's despawn sweep itself (units clear out
-one by one over several seconds) — the sticker's scale is frozen. It doesn't visually track
-what's actually happening to the crowd in the moment.
+Between those events — most notably during a win's despawn sweep itself (security units clear
+out one by one over several seconds) and during a backfire's respawn trickle-in (reinforcements
+arrive one at a time, staggered) — the sticker's scale is frozen. It doesn't visually track
+what's actually happening to the raid in the moment. (Note: the raid's *security* unit count —
+what the sticker's scale actually maps from — is distinct from the *creature crowd* count,
+which is what `RAID_ATTRITION_INTERVAL_MS` drains; attrition never touches security units and
+so was never actually a source of this staleness, despite looking like an obvious culprit.)
 
 This also means the same piece of logic (mapping crowd size → sticker scale) has two call
 sites in `main.ts`, each wired to a different narrow event, rather than one source of truth.
@@ -55,9 +58,9 @@ if different, fire a new callback and update the stored value:
 onCrowdSizeChanged?: (securityUnitCount: number) => void;
 ```
 
-This single check at the end of `tick()` covers every way the crowd's unit count can change
-after the fact: attrition draining it down, staggered backfire respawns trickling in, and the
-staggered despawn sweep (win or `startRecovery()`) removing units one at a time.
+This single check at the end of `tick()` covers every way the security-unit count can change
+after the fact: staggered backfire respawns trickling in, and the staggered despawn sweep (win
+or `startRecovery()`) removing units one at a time.
 
 It does **not** cover the initial burst from `spawnPulse()`, since that happens synchronously
 outside `tick()` and can leave `units.length` already different from
@@ -106,9 +109,9 @@ the `lastNotifiedCrowdCount` comparison, not per-frame) is sufficient to produce
 
 ## Data flow (updated)
 
-```
+```text
 RaidController.tick()
-  → units.length changes (attrition / respawn trickle / despawn sweep)
+  → units.length changes (respawn trickle / despawn sweep)
   → onCrowdSizeChanged(count)
   → main.ts → StickerOverlay.setScaleForRaidSize(count, max)   [no-op if locked]
 
@@ -124,15 +127,15 @@ RaidController.releaseCharge()  (FULL power, sweep finishes)
 ## Testing
 
 - `RaidController` unit tests: `onCrowdSizeChanged` fires exactly once per actual count
-  change (not once per `tick()` call when the count is unchanged), covering attrition,
+  change (not once per `tick()` call when the count is unchanged), covering repeated spawns,
   staggered respawn trickle-in, and staggered despawn sweep. `onRaidStart` fires exactly at
   the idle→raiding transition, not on subsequent pulses within the same raid.
 - `StickerOverlay` unit tests: `setScaleForRaidSize()` is a no-op while `locked`;
   `unlock()` restores normal behavior; `lockSqueeze()` sets `locked`.
 - Manual verification in-browser (required — this touches `creatures/`, per project human-
-  testing rule): trigger a raid, let attrition drain it and confirm the sticker visibly
-  shrinks along the way; trigger a MEDIUM/LOW backfire during an active raid and confirm the
-  sticker visibly swells as respawns trickle in; land a FULL-power win and confirm the
-  sticker deflates in step with the despawn sweep, then pops to the locked floor scale once
-  the sweep finishes; confirm holding a charge never visibly changes the sticker regardless
-  of which power band it's about to land in.
+  testing rule): trigger a raid, shake again to spawn more units and confirm the sticker
+  visibly grows; trigger a MEDIUM/LOW backfire during an active raid and confirm the sticker
+  visibly swells as respawns trickle in; land a FULL-power win and confirm the sticker
+  deflates in step with the despawn sweep, then pops to the locked floor scale once the
+  sweep finishes; confirm holding a charge never visibly changes the sticker regardless of
+  which power band it's about to land in.
