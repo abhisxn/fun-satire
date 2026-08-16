@@ -26,6 +26,7 @@ import {
   applyTransform,
   SECURITY_ESCORT_MIN_RADIUS,
   SECURITY_ESCORT_MAX_RADIUS,
+  SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH,
   SECURITY_ESCORT_EASE,
   SECURITY_ESCORT_WOBBLE_RAD,
   SECURITY_ESCORT_WOBBLE_PERIOD_MS,
@@ -34,6 +35,7 @@ import {
   applyEscortStep,
   applySecurityCollisions,
   applyEscortRangeConstraint,
+  currentEscortRadius,
 } from '../../src/creatures/SecurityCreature';
 
 describe('SecurityCreature', () => {
@@ -246,16 +248,16 @@ describe('SecurityCreature', () => {
       assignEscortFormation(units, () => 1); // maxes out: should land exactly at MAX_RADIUS
 
       for (const unit of units) {
-        expect(unit.escortRadius).toBeCloseTo(SECURITY_ESCORT_MAX_RADIUS, 5);
+        expect(unit.escortRadiusRatio).toBe(1);
       }
     });
 
-    it('assigns the minimum radius when rand() returns 0', () => {
+    it('assigns ratio 0 when rand() returns 0', () => {
       const units = [createSecurityUnit(container, 0, 0, 'police')];
 
       assignEscortFormation(units, () => 0);
 
-      expect(units[0]!.escortRadius).toBeCloseTo(SECURITY_ESCORT_MIN_RADIUS, 5);
+      expect(units[0]!.escortRadiusRatio).toBe(0);
     });
 
     it('assigns each unit a phase offset so their wobble is desynced', () => {
@@ -272,10 +274,10 @@ describe('SecurityCreature', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       unit.phase = 'wandering';
       unit.escortAngle = 0; // offset purely on +x
-      unit.escortRadius = SECURITY_ESCORT_MIN_RADIUS;
+      unit.escortRadiusRatio = 0; // radius == SECURITY_ESCORT_MIN_RADIUS at reference avatar width
       unit.escortPhaseOffsetMs = 0; // wobble = sin(0) = 0 at nowMs = 0, no wobble this instant
 
-      applyEscortStep(unit, 200, 200, 0, SECURITY_ESCORT_EASE);
+      applyEscortStep(unit, 200, 200, 0, SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH, SECURITY_ESCORT_EASE);
 
       const targetX = 200 + SECURITY_ESCORT_MIN_RADIUS;
       const targetY = 200;
@@ -287,7 +289,7 @@ describe('SecurityCreature', () => {
       const unit = createSecurityUnit(container, 10, 10, 'police');
       expect(unit.phase).toBe('entering');
 
-      applyEscortStep(unit, 999, 999, 0, SECURITY_ESCORT_EASE);
+      applyEscortStep(unit, 999, 999, 0, SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH, SECURITY_ESCORT_EASE);
 
       expect(unit.x).toBe(10);
       expect(unit.y).toBe(10);
@@ -297,12 +299,12 @@ describe('SecurityCreature', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       unit.phase = 'wandering';
       unit.escortAngle = 0;
-      unit.escortRadius = SECURITY_ESCORT_MIN_RADIUS;
+      unit.escortRadiusRatio = 0; // radius == SECURITY_ESCORT_MIN_RADIUS at reference avatar width
       unit.escortPhaseOffsetMs = 0;
 
       // A quarter period in, sin() peaks at 1 — maximum wobble offset.
       const quarterPeriod = SECURITY_ESCORT_WOBBLE_PERIOD_MS / 4;
-      applyEscortStep(unit, 0, 0, quarterPeriod, 1); // ease=1 snaps straight to target
+      applyEscortStep(unit, 0, 0, quarterPeriod, SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH, 1); // ease=1 snaps straight to target
 
       const expectedAngle = SECURITY_ESCORT_WOBBLE_RAD;
       expect(unit.x).toBeCloseTo(Math.cos(expectedAngle) * SECURITY_ESCORT_MIN_RADIUS, 3);
@@ -388,6 +390,28 @@ describe('SecurityCreature', () => {
       applyEscortRangeConstraint(unit, 0, 0);
 
       expect(unit.x).toBe(50);
+    });
+  });
+
+  describe('currentEscortRadius', () => {
+    it('returns MIN_RADIUS at ratio 0, reference avatar width', () => {
+      expect(currentEscortRadius(0, SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH)).toBeCloseTo(SECURITY_ESCORT_MIN_RADIUS, 5);
+    });
+
+    it('returns MAX_RADIUS at ratio 1, reference avatar width', () => {
+      expect(currentEscortRadius(1, SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH)).toBeCloseTo(SECURITY_ESCORT_MAX_RADIUS, 5);
+    });
+
+    it('scales proportionally for a larger avatar', () => {
+      const doubled = SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH * 2;
+      expect(currentEscortRadius(0, doubled)).toBeCloseTo(SECURITY_ESCORT_MIN_RADIUS * 2, 5);
+      expect(currentEscortRadius(1, doubled)).toBeCloseTo(SECURITY_ESCORT_MAX_RADIUS * 2, 5);
+    });
+
+    it('scales proportionally for a smaller avatar', () => {
+      const halved = SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH / 2;
+      expect(currentEscortRadius(0, halved)).toBeCloseTo(SECURITY_ESCORT_MIN_RADIUS / 2, 5);
+      expect(currentEscortRadius(1, halved)).toBeCloseTo(SECURITY_ESCORT_MAX_RADIUS / 2, 5);
     });
   });
 });

@@ -51,13 +51,17 @@ export const SECURITY_ENTER_MS = 280;
 /** Duration a unit spends shrinking (repel radius easing to 0) before RaidController.tick() removes it (ms). */
 export const SECURITY_SHRINK_MS = 250;
 
-/** Minimum distance (px) a security unit keeps from the avatar while escorting — if
- * wobble/collision jostling pushes it closer, it gets nudged back out. */
-export const SECURITY_ESCORT_MIN_RADIUS = 100;
-/** Maximum distance (px) a security unit strays from the avatar while escorting — if
- * jostling pushes it farther, it gets pulled back in. Together with the min, this defines
- * the band a unit's own escortRadius is randomized within at assignment. */
-export const SECURITY_ESCORT_MAX_RADIUS = 160;
+/** Minimum distance (px) a security unit keeps from the avatar while escorting, at the
+ * avatar's reference (default) size — scaled by the avatar's actual current size at
+ * runtime (see SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH). */
+export const SECURITY_ESCORT_MIN_RADIUS = 130;
+/** Maximum distance (px) a security unit strays from the avatar while escorting, at the
+ * avatar's reference size — same scaling. */
+export const SECURITY_ESCORT_MAX_RADIUS = 240;
+/** The avatar sticker width (px) the two constants above are calibrated against — matches
+ * StickerOverlay.DEFAULT_WIDTH. The escort radius band scales proportionally with however
+ * much bigger/smaller the avatar's actual current width is relative to this. */
+export const SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH = 160;
 /** How strongly a unit is nudged back into [MIN_RADIUS, MAX_RADIUS] per tick when it strays
  * outside the band. */
 export const SECURITY_ESCORT_RANGE_PUSH_STRENGTH = 0.15;
@@ -104,10 +108,12 @@ export interface SecurityUnitState {
    * re-spread across the active roster by RaidController via assignEscortFormation(). The
    * unit's actual angle at any instant also wobbles around this via applyEscortStep(). */
   escortAngle: number;
-  /** This unit's own orbit radius (px) — randomized per unit within
-   * [SECURITY_ESCORT_MIN_RADIUS, SECURITY_ESCORT_MAX_RADIUS] so the formation isn't a
-   * perfectly circular ring. */
-  escortRadius: number;
+  /** This unit's own position within [SECURITY_ESCORT_MIN_RADIUS, SECURITY_ESCORT_MAX_RADIUS]
+   * as a 0-1 fraction (0 = min, 1 = max), randomized per unit so the formation isn't a
+   * perfectly circular ring. The actual pixel radius is computed fresh each frame from this
+   * ratio plus the avatar's current size (see applyEscortStep/applyEscortRangeConstraint),
+   * so it stays correct if the avatar is resized live. */
+  escortRadiusRatio: number;
   /** Per-unit phase offset (ms) for the wobble sine wave, so units don't wobble in sync. */
   escortPhaseOffsetMs: number;
   /** Whether this unit's sprite renders horizontally mirrored — purely cosmetic, assigned
@@ -211,7 +217,7 @@ export function assignEscortFormation(
   for (let i = 0; i < n; i++) {
     const unit = units[i]!;
     unit.escortAngle = (i / n) * Math.PI * 2;
-    unit.escortRadius = SECURITY_ESCORT_MIN_RADIUS + randFn() * (SECURITY_ESCORT_MAX_RADIUS - SECURITY_ESCORT_MIN_RADIUS);
+    unit.escortRadiusRatio = randFn();
     unit.escortPhaseOffsetMs = randFn() * 10000;
   }
 }
@@ -226,6 +232,7 @@ export function applyEscortStep(
   avatarX: number,
   avatarY: number,
   nowMs: number,
+  avatarWidth: number = SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH,
   ease: number = SECURITY_ESCORT_EASE,
 ): void {
   if (state.phase === 'entering') return;
@@ -233,11 +240,21 @@ export function applyEscortStep(
     Math.sin((2 * Math.PI * (nowMs + state.escortPhaseOffsetMs)) / SECURITY_ESCORT_WOBBLE_PERIOD_MS) *
     SECURITY_ESCORT_WOBBLE_RAD;
   const angle = state.escortAngle + wobble;
-  const targetX = avatarX + Math.cos(angle) * state.escortRadius;
-  const targetY = avatarY + Math.sin(angle) * state.escortRadius;
+  const radius = currentEscortRadius(state.escortRadiusRatio, avatarWidth);
+  const targetX = avatarX + Math.cos(angle) * radius;
+  const targetY = avatarY + Math.sin(angle) * radius;
   state.x += (targetX - state.x) * ease;
   state.y += (targetY - state.y) * ease;
   applyTransform(state);
+}
+
+/** Pure: the current pixel radius for a unit's escortRadiusRatio, scaled by however much
+ * bigger/smaller the avatar's current width is than SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH. */
+export function currentEscortRadius(escortRadiusRatio: number, avatarWidth: number): number {
+  const scale = avatarWidth / SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH;
+  const minR = SECURITY_ESCORT_MIN_RADIUS * scale;
+  const maxR = SECURITY_ESCORT_MAX_RADIUS * scale;
+  return minR + escortRadiusRatio * (maxR - minR);
 }
 
 /** Pairwise positional repulsion across the active roster so units don't overlap or pass
@@ -273,20 +290,29 @@ export function applySecurityCollisions(units: SecurityUnitState[]): void {
  * from the avatar if wobble or mutual-collision jostling has pushed it outside that band on
  * either side — positional, not velocity-based, same reasoning as applySecurityCollisions.
  * No-op during the entrance burst. */
-export function applyEscortRangeConstraint(state: SecurityUnitState, avatarX: number, avatarY: number): void {
+export function applyEscortRangeConstraint(
+  state: SecurityUnitState,
+  avatarX: number,
+  avatarY: number,
+  avatarWidth: number = SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH,
+): void {
   if (state.phase === 'entering') return;
   const dx = state.x - avatarX;
   const dy = state.y - avatarY;
   const dist = Math.hypot(dx, dy);
   if (dist < 1e-6) return;
 
-  if (dist < SECURITY_ESCORT_MIN_RADIUS) {
-    const overlap = SECURITY_ESCORT_MIN_RADIUS - dist;
+  const scale = avatarWidth / SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH;
+  const minR = SECURITY_ESCORT_MIN_RADIUS * scale;
+  const maxR = SECURITY_ESCORT_MAX_RADIUS * scale;
+
+  if (dist < minR) {
+    const overlap = minR - dist;
     state.x += (dx / dist) * overlap * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
     state.y += (dy / dist) * overlap * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
     applyTransform(state);
-  } else if (dist > SECURITY_ESCORT_MAX_RADIUS) {
-    const overshoot = dist - SECURITY_ESCORT_MAX_RADIUS;
+  } else if (dist > maxR) {
+    const overshoot = dist - maxR;
     state.x -= (dx / dist) * overshoot * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
     state.y -= (dy / dist) * overshoot * SECURITY_ESCORT_RANGE_PUSH_STRENGTH;
     applyTransform(state);
@@ -328,7 +354,7 @@ export function createSecurityUnit(
     phase: "entering",
     phaseStartMs: Date.now(),
     escortAngle: 0,
-    escortRadius: SECURITY_ESCORT_MIN_RADIUS,
+    escortRadiusRatio: 0.5,
     escortPhaseOffsetMs: 0,
     flipped: pickSecurityFlip(),
   };

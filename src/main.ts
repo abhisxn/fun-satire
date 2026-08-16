@@ -89,6 +89,9 @@ async function main(): Promise<void> {
   const engine = new Engine();
   engine.onTick(() => {
     const center = currentAttractor.getCenter();
+    if (activeOverlay instanceof StickerOverlay) {
+      raidController.setAvatarWidth(activeOverlay.getWidth());
+    }
     raidController.tick(Date.now());
     if (activeOverlay && raidController.getState() !== "idle") {
       // Keep the avatar as the last body child while security units (also

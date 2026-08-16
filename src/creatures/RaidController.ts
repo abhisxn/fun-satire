@@ -11,6 +11,7 @@ import {
   applyEscortStep,
   applySecurityCollisions,
   applyEscortRangeConstraint,
+  SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH,
 } from "./SecurityCreature";
 import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
 import { QTY_MAX, QTY_MIN } from "../config/tokens";
@@ -149,6 +150,7 @@ export class RaidController {
   private raidStartCount = 0;
   private lastAvatarX = 0;
   private lastAvatarY = 0;
+  private avatarWidth = SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH;
   private chargeStartAtMs = 0;
   private chargeBaselineUnitCount = 0;
   private chargeBaselineTargetCount = 0;
@@ -179,6 +181,12 @@ export class RaidController {
 
     this.lastPulseAtMs = now;
     this.spawnPulse(x, y);
+  }
+
+  /** Called every frame with the avatar's current on-screen width, so the escort radius
+   * band scales correctly if the user resizes the avatar mid-raid. */
+  setAvatarWidth(width: number): void {
+    this.avatarWidth = width;
   }
 
   private spawnPulse(x: number, y: number): void {
@@ -315,8 +323,8 @@ export class RaidController {
     }
 
     for (const unit of this.units) {
-      applyEscortStep(unit, this.lastAvatarX, this.lastAvatarY, nowMs);
-      applyEscortRangeConstraint(unit, this.lastAvatarX, this.lastAvatarY);
+      applyEscortStep(unit, this.lastAvatarX, this.lastAvatarY, nowMs, this.avatarWidth);
+      applyEscortRangeConstraint(unit, this.lastAvatarX, this.lastAvatarY, this.avatarWidth);
     }
     applySecurityCollisions(this.units);
 

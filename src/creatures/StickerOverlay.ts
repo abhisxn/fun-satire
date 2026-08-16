@@ -6,7 +6,7 @@ import { isTouchDevice } from "./touchSupport";
 
 // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
 export const STICKER_Z_INDEX = 100;
-const DEFAULT_WIDTH = 160;
+export const DEFAULT_WIDTH = 160;
 const MIN_WIDTH = 48;
 const MAX_WIDTH = 480;
 const HANDLE_SIZE = 14;
@@ -186,6 +186,10 @@ export class StickerOverlay {
   getCenter(): { x: number; y: number } {
     const rect = this.el.getBoundingClientRect();
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  }
+
+  getWidth(): number {
+    return this.width;
   }
 
   destroy(): void {
