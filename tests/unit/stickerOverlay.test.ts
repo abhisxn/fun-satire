@@ -72,17 +72,40 @@ describe('StickerOverlay', () => {
     expect(s.el.style.transform).toBe('scale(2)');
   });
 
-  it('setScaleForRaidSize overwrites lockSqueeze — neither is a permanent lock', () => {
+  it('setScaleForRaidSize is a no-op while locked by lockSqueeze', () => {
     const s = new StickerOverlay('/avatars/a.png');
 
     s.lockSqueeze();
     expect(s.el.style.transform).toBe('scale(0.55)');
 
     s.setScaleForRaidSize(10, 40);
+    expect(s.el.style.transform).toBe('scale(0.55)'); // still locked, unchanged
+
+    s.setScaleForRaidSize(40, 40);
+    expect(s.el.style.transform).toBe('scale(0.55)'); // still locked, unchanged
+  });
+
+  it('unlock() restores setScaleForRaidSize after a lockSqueeze', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+
+    s.lockSqueeze();
+    s.unlock();
+    s.setScaleForRaidSize(10, 40);
     expect(s.el.style.transform).toBe('scale(1.25)');
+  });
+
+  it('lockSqueeze re-locks after an unlock', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+
+    s.lockSqueeze();
+    s.unlock();
+    s.setScaleForRaidSize(20, 40);
+    expect(s.el.style.transform).toBe('scale(1.5)');
 
     s.lockSqueeze();
     expect(s.el.style.transform).toBe('scale(0.55)');
+    s.setScaleForRaidSize(40, 40);
+    expect(s.el.style.transform).toBe('scale(0.55)'); // no-op again
   });
 
   it('getWidth() reflects the current squeeze/inflate scale, not just the underlying CSS width', () => {
@@ -295,7 +318,7 @@ describe('StickerOverlay', () => {
     expect(img.src).toContain('/avatars/gutter.png');
   });
 
-  it('setScaleForRaidSize reverts the face back to src once a new raid settles', () => {
+  it('setScaleForRaidSize reverts the face back to src once unlocked and a new raid settles', () => {
     const s = new StickerOverlay(
       '/avatars/grin/grin_gutter.png',
       100,
@@ -311,6 +334,7 @@ describe('StickerOverlay', () => {
     s.lockSqueeze();
     expect(img.src).toContain('/avatars/normal/gutter.png');
 
+    s.unlock();
     s.setScaleForRaidSize(10, 40);
     expect(img.src).toContain('/avatars/grin/grin_gutter.png');
   });
