@@ -245,6 +245,7 @@ export class CreatureGrid {
   private lastActivityMs: number = Date.now();
   private burstUntilMs: number = 0;
   private repulsor: Repulsor | null = null;
+  private quantityChangeCb: ((count: number) => void) | null = null;
   private avatarRepelRadius: number | null = null;
   private audioContext: AudioContext | null = null;
   private hoverState = new WeakMap<Creature, boolean>();
@@ -372,6 +373,8 @@ export class CreatureGrid {
       this.creatures.push(creature);
       this.container.appendChild(creature.el);
     }
+
+    this.quantityChangeCb?.(clampedTarget);
   }
 
   // raidFloor is accepted for backward-compatible call sites (RaidController
@@ -610,6 +613,13 @@ export class CreatureGrid {
 
   getCreatureCount(): number {
     return this.creatures.length;
+  }
+
+  /** Fires with the new count every time setQuantity() actually changes the creature count —
+   * whether the caller was a user dragging the Filters slider or RaidController's own
+   * attrition/boost/win logic. Never fires for a no-op setQuantity() call. */
+  onQuantityChange(cb: (count: number) => void): void {
+    this.quantityChangeCb = cb;
   }
 
   respawn(): void {
