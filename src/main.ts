@@ -216,6 +216,10 @@ async function main(): Promise<void> {
       grid.setQuantity(qty);
     });
 
+    grid.onQuantityChange((count) => {
+      filterPanel.syncQuantity(count);
+    });
+
     filterPanel.onRepelChange((value) => {
       grid.setRepelMultiplier(value);
     });
@@ -267,14 +271,8 @@ async function main(): Promise<void> {
     protestBtn.addEventListener("pointerleave", endProtestCharge);
     protestBtn.addEventListener("pointercancel", endProtestCharge);
 
-    let prevRaidState = raidController.getState();
     engine.onTick(() => {
       powerMeter.setFraction(raidController.getChargeFraction());
-      const raidState = raidController.getState();
-      if (raidState === "idle" && prevRaidState !== "idle") {
-        filterPanel.setQuantity(grid.getCreatureCount());
-      }
-      prevRaidState = raidState;
     });
 
     galleryPanel.onStickerSelect((src, dragSrc) => {

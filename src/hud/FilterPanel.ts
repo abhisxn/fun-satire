@@ -186,6 +186,17 @@ export class FilterPanel {
     return this.quantity;
   }
 
+  /** Updates the displayed quantity from an external change (e.g. a raid's live crowd count)
+   * without firing quantityChangeCb — that callback is reserved for user-driven slider input,
+   * so an external sync doesn't round-trip back into a redundant grid.setQuantity() call. */
+  syncQuantity(quantity: number): void {
+    const clamped = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(quantity / QTY_STEP) * QTY_STEP));
+    this.quantity = clamped;
+    this.qtyValue.textContent = String(clamped);
+    this.qtyInput.value = String(clamped);
+    this.updateQtyFill(clamped);
+  }
+
   setRepel(multiplier: number): void {
     const clamped = Math.max(REPEL_MIN, Math.min(REPEL_MAX, multiplier));
     this.repel = clamped;

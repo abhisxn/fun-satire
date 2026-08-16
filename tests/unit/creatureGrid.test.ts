@@ -270,6 +270,35 @@ describe('CreatureGrid', () => {
     });
   });
 
+  describe('onQuantityChange', () => {
+    it('fires with the new count when setQuantity actually changes the count', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setQuantity(250);
+      expect(cb).toHaveBeenCalledWith(250);
+    });
+
+    it('does not fire when setQuantity is called with the current count', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setQuantity(240);
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it('fires on a shrink as well as a growth', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setQuantity(200);
+      expect(cb).toHaveBeenCalledWith(200);
+    });
+  });
+
   describe('getCreatureCount', () => {
     it('returns 0 before spawn', () => {
       const grid = new CreatureGrid(config);
