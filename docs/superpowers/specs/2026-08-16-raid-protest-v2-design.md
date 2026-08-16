@@ -10,12 +10,28 @@ dark irises, and a placard/stick proportion rework.
 
 ## A. Z-index parity
 
+**Root cause is deeper than the 90-vs-100 constant.** `index.html` gives `#stage` (the container security units
+and creatures are appended into) `position:absolute; z-index:500`, which establishes its own stacking context.
+The avatar (a `StickerOverlay`, appended straight to `document.body` — `main.ts:320`) sits at `z-index:100` as
+a *sibling* of `#stage`, not inside it. Because `#stage` itself is `z-index:500` at the root level, its entire
+subtree — every creature and every security unit, regardless of their own internal `z-index` — already paints
+above the avatar, no matter what `SECURITY_Z_INDEX` is set to. The existing 90-vs-100 comment describes a
+comparison that only matters *within* `#stage`'s own stacking context; it was never actually keeping security
+below the avatar.
+
+Fix: security units need to live in the *same* stacking context as the avatar to make z-index comparisons
+between them meaningful at all. `RaidController` gains a second config field, `avatarLayer: HTMLElement`
+(`main.ts` passes `document.body`), used as the `appendChild` target for security unit elements in
+`createSecurityUnit` instead of the `#stage` container (`container` is still used, unchanged, for viewport-size
+reads in `spawnPulse`/`releaseCharge`). With both the avatar and security units now children of `document.body`,
 `SecurityCreature.SECURITY_Z_INDEX` changes from `90` to `100`, matching `StickerOverlay.STICKER_Z_INDEX`
-exactly. The avatar staying visually on top is no longer guaranteed by a numeric gap — instead the avatar
-sticker element is kept last in DOM paint order relative to security units (re-appended, or appended after,
-on every raid-relevant DOM mutation) so same-z-index ties resolve avatar-on-top. The doc comment above
-`SECURITY_Z_INDEX` in `SecurityCreature.ts` is rewritten to explain the DOM-order guarantee instead of the old
-"strictly below" rationale.
+exactly — now a real, effective comparison. Because CSS resolves equal-z-index ties by DOM order (later sibling
+paints on top), and the avatar is inserted once during onboarding and never re-appended while security units get
+appended continuously afterward, the avatar element is explicitly re-appended (moved to the end of
+`document.body`'s children via `document.body.appendChild(activeOverlay.el)`) every time a new security unit
+spawns, guaranteeing it's always the later — and therefore topmost — sibling at tie z-index. The doc comment
+above `SECURITY_Z_INDEX` in `SecurityCreature.ts` is rewritten to explain the shared-stacking-context +
+DOM-order guarantee instead of the old (ineffective) "strictly below" rationale.
 
 ## B. Security escorts the avatar
 
@@ -191,8 +207,8 @@ top of the creature's own depth-`scale`. Its range changes from `0.3 + Math.pow(
   `catchRadius` from `getSecurityUnits()`), G (throttle `setQuantity()` calls during charge/attrition).
 - `src/creatures/CreatureGrid.ts` — E (remove the security catch-check block), F (merge hover+render passes,
   reservoir-sample fade/repop picks instead of `.filter()`+`splice`).
-- `src/creatures/DraggableAvatar.ts` / `src/creatures/StickerOverlay.ts` — A (DOM-order guarantee for
-  avatar-on-top at equal z-index).
+- `src/main.ts` — A (pass `avatarLayer: document.body` into `RaidController`'s config; re-append
+  `activeOverlay.el` to `document.body` whenever a security unit spawns).
 - `src/hud/` — D: new `PowerMeter.ts` (+ CSS) component, wired in `main.ts` alongside the existing
   `--charge`/Protest-button sync in `engine.onTick`.
 - `src/creatures/EyeCreature.ts` — I (`lightenHexColor`, `derivePupilColor`, swap the fill call).
