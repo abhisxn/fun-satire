@@ -14,6 +14,7 @@ import { MenuButton } from "./hud/MenuButton";
 import { FilterPanel } from "./hud/FilterPanel";
 import { GalleryPanel, getFaceStickerDefs } from "./hud/GalleryPanel";
 import { MenuPanel } from "./hud/MenuPanel";
+import { WinPanel } from "./hud/WinPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
 import { AudioManager } from "./audio/AudioManager";
@@ -55,6 +56,10 @@ async function main(): Promise<void> {
   // AudioContext, so eyes/finger/cockroach/placard hovers share one voice.
   grid.setAudioContext(audioManager.getAudioContext());
 
+  let activeOverlay: StickerOverlay | TextOverlay | null = null;
+  let replaceToken = 0;
+  const winPanel = new WinPanel();
+
   const raidController = new RaidController({
     container,
     grid,
@@ -76,6 +81,15 @@ async function main(): Promise<void> {
         const ratio = activeOverlay.getWidth() / DEFAULT_WIDTH;
         grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN * ratio);
       }
+      // Short victory beat before the panel appears, so the player sees the crowd
+      // settle around the shrunk sticker first. If a new raid has already started
+      // by the time this fires (state left 'idle'), skip showing the panel — it
+      // would otherwise pop up over an already-restarted raid.
+      window.setTimeout(() => {
+        if (raidController.getState() === "idle") {
+          winPanel.show();
+        }
+      }, 1500);
     },
     // Fires the moment a fresh raid actually starts — releases the win-lock so the
     // sticker's scale can track the new raid's live size again.
@@ -100,9 +114,6 @@ async function main(): Promise<void> {
   const staticAttractor = (x: number, y: number): Attractor => ({
     getCenter: () => ({ x, y }),
   });
-
-  let activeOverlay: StickerOverlay | TextOverlay | null = null;
-  let replaceToken = 0;
 
   const pointerPos = { x: vw / 2, y: vh / 2 };
   const onPointerMove = (e: PointerEvent): void => {
@@ -196,6 +207,7 @@ async function main(): Promise<void> {
 
     const galleryPanel = new GalleryPanel();
     const menuPanel = new MenuPanel();
+    winPanel.attachTo(hudRoot);
 
     filterPanel.attachTo(hud.getSettingsButton());
     galleryPanel.attachTo(hud.getGalleryButton());
@@ -285,6 +297,22 @@ async function main(): Promise<void> {
         onOverlayDragMove,
         false,
         dragSrc,
+      );
+      void replaceOverlay(sticker);
+    });
+
+    winPanel.onNextSticker(() => {
+      const defs = getFaceStickerDefs();
+      const def = defs[Math.floor(Math.random() * defs.length)]!;
+      const sticker = new StickerOverlay(
+        def.src,
+        undefined,
+        undefined,
+        onOverlayDragStart,
+        onOverlayDragEnd,
+        onOverlayDragMove,
+        false,
+        def.dragSrc,
       );
       void replaceOverlay(sticker);
     });
