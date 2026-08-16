@@ -83,10 +83,10 @@ describe('SecurityCreature', () => {
   });
 
   describe('createSecurityUnit — z-index, shadow, entrance', () => {
-    it('renders below the avatar/sticker z-index (100)', () => {
+    it('renders at the avatar/sticker z-index (100) — meaningful once units share its stacking context', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       expect(unit.el.style.zIndex).toBe(String(SECURITY_Z_INDEX));
-      expect(SECURITY_Z_INDEX).toBeLessThan(100);
+      expect(SECURITY_Z_INDEX).toBe(100);
     });
 
     it('uses a flat, subtle drop-shadow', () => {

@@ -106,6 +106,11 @@ export type RaidState = "idle" | "raiding" | "recovering" | "charging";
 export interface RaidControllerConfig {
   container: HTMLElement;
   grid: CreatureGrid;
+  /** DOM parent security units are appended into — must be the avatar's own parent (not
+   * `#stage`, which establishes a higher-z-index stacking context) so SECURITY_Z_INDEX vs
+   * StickerOverlay.STICKER_Z_INDEX comparisons are meaningful. `container` is still used,
+   * unchanged, for viewport-size reads. */
+  avatarLayer: HTMLElement;
   onSecurityRemoved?: (x: number, y: number, w: number, h: number) => void;
 }
 
@@ -130,6 +135,7 @@ export function pickPulseKinds(n: number, rand: () => number = Math.random): Sec
 export class RaidController {
   private readonly container: HTMLElement;
   private readonly grid: CreatureGrid;
+  private readonly avatarLayer: HTMLElement;
   private readonly onSecurityRemoved: ((x: number, y: number, w: number, h: number) => void) | null;
 
   private state: RaidState = "idle";
@@ -149,6 +155,7 @@ export class RaidController {
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
     this.grid = config.grid;
+    this.avatarLayer = config.avatarLayer;
     this.onSecurityRemoved = config.onSecurityRemoved ?? null;
   }
 
@@ -188,7 +195,7 @@ export class RaidController {
     const kinds = pickPulseKinds(n);
 
     for (let i = 0; i < n; i++) {
-      const unit = createSecurityUnit(this.container, x, y, kinds[i]);
+      const unit = createSecurityUnit(this.avatarLayer, x, y, kinds[i]);
       startSecurityWander(unit, vw, vh, true);
       this.units.push(unit);
     }
@@ -253,7 +260,7 @@ export class RaidController {
       const vh = this.container.clientHeight || window.innerHeight;
       const kinds = pickPulseKinds(missing);
       for (let i = 0; i < missing; i++) {
-        const unit = createSecurityUnit(this.container, this.lastAvatarX, this.lastAvatarY, kinds[i]);
+        const unit = createSecurityUnit(this.avatarLayer, this.lastAvatarX, this.lastAvatarY, kinds[i]);
         startSecurityWander(unit, vw, vh, true);
         this.units.push(unit);
       }

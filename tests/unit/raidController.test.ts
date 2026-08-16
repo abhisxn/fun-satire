@@ -159,12 +159,31 @@ describe('RaidController', () => {
     grid = new CreatureGrid({ container, mode: 'cockroach', initialQuantity: 40 });
     grid.spawn('cockroach');
 
-    raid = new RaidController({ container, grid });
+    raid = new RaidController({ container, grid, avatarLayer: container });
   });
 
   afterEach(() => {
     container.remove();
     vi.useRealTimers();
+  });
+
+  it('appends security units into avatarLayer, not the #stage container', () => {
+    const avatarLayer = document.createElement('div');
+    document.body.appendChild(avatarLayer);
+    const raidWithLayer = new RaidController({ container, grid, avatarLayer });
+
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raidWithLayer.onAvatarMove(x, 0);
+      t += 20;
+    }
+    now.mockRestore();
+
+    expect(avatarLayer.querySelectorAll('img').length).toBe(raidWithLayer.getSecurityUnits().length);
+    avatarLayer.remove();
   });
 
   it('starts idle with no security units', () => {

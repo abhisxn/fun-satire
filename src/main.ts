@@ -57,6 +57,7 @@ async function main(): Promise<void> {
   const raidController = new RaidController({
     container,
     grid,
+    avatarLayer: document.body,
     onSecurityRemoved: (x, y, w, h) => {
       const audioContext = audioManager.getAudioContext();
       if (audioContext) playPoofTone(audioContext);
@@ -89,6 +90,12 @@ async function main(): Promise<void> {
   engine.onTick(() => {
     const center = currentAttractor.getCenter();
     raidController.tick(Date.now());
+    if (activeOverlay && raidController.getState() !== "idle") {
+      // Keep the avatar as the last body child while security units (also
+      // now z-index:100, see SecurityCreature.SECURITY_Z_INDEX) are being
+      // appended, so equal-z-index ties always resolve avatar-on-top.
+      document.body.appendChild(activeOverlay.el);
+    }
     grid.update(center.x, center.y, raidController.getSecurityUnits(), raidController.getRaidFloor());
   });
   engine.start();

@@ -21,9 +21,16 @@ const SPRITE_SRC: Record<SecurityKind, string> = {
   raf: "/creatures/security/raf.png",
 };
 
-/** Strictly below the avatar/sticker's z-index (100, see StickerOverlay.STICKER_Z_INDEX)
- * so security can never render above the avatar, regardless of DOM append order. */
-export const SECURITY_Z_INDEX = 90;
+/** Equal to the avatar/sticker's z-index (100, see StickerOverlay.STICKER_Z_INDEX). Security
+ * units are appended into the avatar's own DOM parent (see RaidController's `avatarLayer`
+ * config, not the `#stage` container used for viewport-size reads) so this comparison is
+ * actually meaningful — `#stage` itself sits at z-index 500 in index.html, so anything
+ * appended inside it would outrank the avatar regardless of its own z-index. With both in
+ * the same stacking context and the same z-index, the avatar staying on top is guaranteed
+ * by DOM order instead: main.ts re-appends the avatar element to the end of its parent
+ * every frame a raid is active, so it's always the later — and therefore topmost — sibling
+ * at this tie. */
+export const SECURITY_Z_INDEX = 100;
 
 /** Duration of a freshly-spawned unit's scale/opacity pop-in (ms). */
 export const SECURITY_ENTER_MS = 280;
