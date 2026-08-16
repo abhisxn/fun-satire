@@ -1,0 +1,53 @@
+/* ============================================
+   Power Meter — Protest strength (Figma node 431:10191)
+   Child of .premium-hud (see PowerMeter.ts) so it drags/scales with the HUD
+   for free — no independent position-tracking or width-measurement code.
+   ============================================ */
+.power-meter {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: calc(10px + var(--hud-density) * 0.02232143);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8px + var(--hud-density) * 0.01785714);
+  padding: calc(6px + var(--hud-density) * 0.00892857) calc(14px + var(--hud-density) * 0.01785714);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid #fff;
+  border-radius: calc(40px + var(--hud-density) * 0.09375);
+  box-shadow: 0px 1px 0px #fff, 0px 24px 40px rgba(97, 86, 80, 0.25);
+  pointer-events: none;
+}
+
+.power-meter__label {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: calc(9px + var(--hud-density) * 0.00223214);
+  font-weight: 400;
+  text-transform: uppercase;
+  color: #38332f;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.power-meter__track {
+  position: relative;
+  flex: 1;
+  height: calc(5px + var(--hud-density) * 0.00223214);
+  border-radius: 40px;
+  background: linear-gradient(90deg, #d0bb33 0%, #2ebc24 50%, #bc4724 100%);
+}
+
+.power-meter__marker {
+  position: absolute;
+  top: 50%;
+  width: calc(6px + var(--hud-density) * 0.00223214);
+  height: calc(22px + var(--hud-density) * 0.01116071);
+  transform: translate(-50%, -50%);
+  background: #38332f;
+  border-radius: 2px;
+  transition: left 0.05s linear;
+}

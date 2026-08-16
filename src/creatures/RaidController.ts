@@ -101,6 +101,11 @@ export const RAID_ATTRITION_INTERVAL_MS = 400;
 export const RAID_ATTRITION_STEP = 1;
 /** How long a full press-and-hold must be sustained to fully clear a raid (ms). */
 export const CHARGE_DURATION_MS = 1800;
+/** Security only starts clearing once charge crosses this fraction (the Figma power
+ * meter's HIGH zone) — holding in WEAK/MEDIUM visibly fills the meter but doesn't yet
+ * shrink security. The separate crowd-rebuild (`rebuilt`, below) is NOT gated by this —
+ * it keeps progressing continuously across the whole 0-1 hold. */
+export const CHARGE_HIGH_THRESHOLD = 0.66;
 /** How often the charge-driven crowd rebuild calls grid.setQuantity() (ms) — throttled
  * so CreatureGrid's own layout-reflow spring force has time to converge between calls,
  * instead of being replaced every single frame (see the clustering-bug writeup in the
@@ -357,14 +362,17 @@ export class RaidController {
     const fraction = Math.min(1, (nowMs - this.chargeStartAtMs) / CHARGE_DURATION_MS);
     this.chargeFraction = fraction;
 
-    const keepCount = Math.round(this.chargeBaselineUnitCount * (1 - fraction));
-    let excess = this.units.filter((u) => u.phase !== "shrinking").length - keepCount;
-    for (const unit of this.units) {
-      if (excess <= 0) break;
-      if (unit.phase === "shrinking") continue;
-      unit.phase = "shrinking";
-      unit.phaseStartMs = nowMs;
-      excess--;
+    if (fraction >= CHARGE_HIGH_THRESHOLD) {
+      const highProgress = (fraction - CHARGE_HIGH_THRESHOLD) / (1 - CHARGE_HIGH_THRESHOLD);
+      const keepCount = Math.round(this.chargeBaselineUnitCount * (1 - highProgress));
+      let excess = this.units.filter((u) => u.phase !== "shrinking").length - keepCount;
+      for (const unit of this.units) {
+        if (excess <= 0) break;
+        if (unit.phase === "shrinking") continue;
+        unit.phase = "shrinking";
+        unit.phaseStartMs = nowMs;
+        excess--;
+      }
     }
 
     if (nowMs - this.lastChargeQuantityAtMs >= CHARGE_QUANTITY_THROTTLE_MS) {

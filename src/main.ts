@@ -6,6 +6,7 @@ import { CreatureGrid } from "./creatures/CreatureGrid";
 import { spawnPoof } from "./creatures/poofEffect";
 import type { PoofHandle } from "./creatures/poofEffect";
 import { RaidController } from "./creatures/RaidController";
+import { PowerMeter } from "./hud/PowerMeter";
 import { StickerOverlay } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
@@ -217,6 +218,9 @@ async function main(): Promise<void> {
       menuPanel.toggle();
     });
 
+    const powerMeter = new PowerMeter();
+    powerMeter.attachTo(hud.getRoot());
+
     const protestBtn = hud.getProtestButton();
     protestBtn.addEventListener("pointerdown", () => {
       raidController.startCharging();
@@ -231,6 +235,7 @@ async function main(): Promise<void> {
     let prevRaidState = raidController.getState();
     engine.onTick(() => {
       protestBtn.style.setProperty("--charge", String(raidController.getChargeFraction()));
+      powerMeter.setFraction(raidController.getChargeFraction());
       const raidState = raidController.getState();
       if (raidState === "idle" && prevRaidState !== "idle") {
         filterPanel.setQuantity(grid.getCreatureCount());

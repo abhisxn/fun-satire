@@ -572,6 +572,35 @@ describe('RaidController', () => {
       now.mockRestore();
     });
 
+    it('holds security steady in the WEAK/MEDIUM zone and only starts clearing past CHARGE_HIGH_THRESHOLD', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const spawned = raid.getSecurityUnits().length;
+
+      raid.startCharging();
+
+      // 900ms of 1800 = fraction 0.5, below CHARGE_HIGH_THRESHOLD (0.66).
+      tRef.t += 900;
+      raid.tick(tRef.t);
+      expect(raid.getChargeFraction()).toBeCloseTo(0.5, 1);
+      expect(raid.getSecurityUnits().length).toBe(spawned);
+
+      // Cross into the high zone (fraction ~0.83) and let the shrink sweep
+      // run — units are marked 'shrinking' the instant the threshold is
+      // crossed, but getSecurityUnits() still reports them until a later
+      // tick's sweep actually removes them (same pattern as the existing
+      // full-charge-completion test above).
+      tRef.t += 600;
+      raid.tick(tRef.t);
+      expect(raid.getChargeFraction()).toBeGreaterThan(0.66);
+      tRef.t += SECURITY_SHRINK_MS;
+      raid.tick(tRef.t);
+      expect(raid.getSecurityUnits().length).toBeLessThan(spawned);
+
+      now.mockRestore();
+    });
+
     it('releaseCharge before full charge reverts crowd/security to the pre-charge baseline', () => {
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
@@ -601,7 +630,10 @@ describe('RaidController', () => {
       const spawned = raid.getSecurityUnits().length;
 
       raid.startCharging();
-      tRef.t += 900;
+      tRef.t += 1400; // deep into the HIGH zone (past CHARGE_HIGH_THRESHOLD) but short of full
+      // charge, so shrinking actually starts and clears regardless of how many units this
+      // run happened to spawn, without the charge itself completing (state must stay
+      // 'charging' so the release below is not a no-op)
       raid.tick(tRef.t); // marks some units shrinking
       tRef.t += SECURITY_SHRINK_MS;
       raid.tick(tRef.t); // sweeps them away for real
