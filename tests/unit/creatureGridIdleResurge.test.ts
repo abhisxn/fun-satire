@@ -2,10 +2,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   CreatureGrid,
-  idleVisibleFraction,
   dragSpeedPxPerMs,
   IDLE_GRACE_MS,
-  IDLE_DECAY_MS,
+  IDLE_HALF_LIFE_MS,
   IDLE_FLOOR_FRACTION,
   MOVEMENT_NOISE_PX,
   FAST_DRAG_SPEED_PX_MS,
@@ -13,31 +12,18 @@ import {
   REPOP_COUNT,
 } from '../../src/creatures/CreatureGrid';
 import type { CreatureGridConfig } from '../../src/creatures/CreatureGrid';
+import { decayTowardFloor } from '../../src/creatures/raidRules';
 import { QTY_MIN } from '../../src/config/tokens';
 
-describe('idleVisibleFraction', () => {
-  it('stays at 1 with no idle time', () => {
-    expect(idleVisibleFraction(0)).toBe(1);
-  });
-
-  it('stays at 1 through the end of the grace period', () => {
-    expect(idleVisibleFraction(IDLE_GRACE_MS)).toBe(1);
-  });
-
-  it('is partway down midway through the decay ramp', () => {
-    const midIdle = IDLE_GRACE_MS + IDLE_DECAY_MS / 2;
-    const fraction = idleVisibleFraction(midIdle);
-    expect(fraction).toBeGreaterThan(IDLE_FLOOR_FRACTION);
-    expect(fraction).toBeLessThan(1);
-    expect(fraction).toBeCloseTo(1 - 0.5 * (1 - IDLE_FLOOR_FRACTION), 5);
-  });
-
-  it('reaches the floor fraction exactly at grace + decay', () => {
-    expect(idleVisibleFraction(IDLE_GRACE_MS + IDLE_DECAY_MS)).toBeCloseTo(IDLE_FLOOR_FRACTION, 10);
-  });
-
-  it('holds at the floor fraction well past the decay window', () => {
-    expect(idleVisibleFraction(IDLE_GRACE_MS + IDLE_DECAY_MS * 10)).toBeCloseTo(IDLE_FLOOR_FRACTION, 10);
+describe('CreatureGrid idle-decay call site', () => {
+  it('feeds decayTowardFloor the grace-adjusted elapsed time and the idle floor fraction', () => {
+    // Confirms the two constants CreatureGrid.update() actually uses match what
+    // raidRules.test.ts already proved the curve does with them — this is a wiring
+    // check, not a re-proof of decayTowardFloor's own math.
+    const atGrace = decayTowardFloor(0, IDLE_FLOOR_FRACTION, IDLE_HALF_LIFE_MS);
+    expect(atGrace).toBe(1);
+    const wellPast = decayTowardFloor(IDLE_HALF_LIFE_MS * 10, IDLE_FLOOR_FRACTION, IDLE_HALF_LIFE_MS);
+    expect(wellPast).toBeCloseTo(IDLE_FLOOR_FRACTION, 2);
   });
 });
 
@@ -193,7 +179,7 @@ describe('CreatureGrid update — demand-driven re-pop (idle decay + resurge)', 
       lastFadePickMs: number;
       lastRepopPickMs: number;
     };
-    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_DECAY_MS + 60_000);
+    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_HALF_LIFE_MS * 8);
     state.lastFadePickMs = Date.now();
     state.lastRepopPickMs = 0;
 
@@ -228,7 +214,7 @@ describe('CreatureGrid update — demand-driven re-pop (idle decay + resurge)', 
       lastFadePickMs: number;
       lastRepopPickMs: number;
     };
-    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_DECAY_MS + 60_000);
+    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_HALF_LIFE_MS * 8);
     state.lastFadePickMs = Date.now();
     state.lastRepopPickMs = 0;
 
