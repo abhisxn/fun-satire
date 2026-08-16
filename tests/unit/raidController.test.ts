@@ -6,10 +6,16 @@ import {
   pickPulseKinds,
   AVATAR_REPEL_RADIUS_AFTER_WIN,
   SHAKE_PULSE_COOLDOWN_MS,
+  CHARGE_SWEEP_HALF_PERIOD_MS,
+  FULL_POWER_THRESHOLD,
+  MEDIUM_POWER_THRESHOLD,
+  SECURITY_MAX_UNITS,
+  BACKFIRE_RESPAWN_DELAY_MS,
+  BACKFIRE_RESPAWN_STAGGER_MS,
 } from '../../src/creatures/RaidController';
 import type { MoveSample } from '../../src/creatures/RaidController';
 import { CreatureGrid } from '../../src/creatures/CreatureGrid';
-import { SECURITY_SHRINK_MS } from '../../src/creatures/SecurityCreature';
+import { SECURITY_SHRINK_MS, SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH } from '../../src/creatures/SecurityCreature';
 
 vi.mock('animejs', () => {
   const makeInstance = () => ({ pause: vi.fn() });
@@ -229,7 +235,7 @@ describe('RaidController', () => {
       t += 600; // clear the pulse cooldown
     }
 
-    expect(raid.getSecurityUnits().length).toBeLessThanOrEqual(24);
+    expect(raid.getSecurityUnits().length).toBeLessThanOrEqual(SECURITY_MAX_UNITS);
     now.mockRestore();
   });
 
@@ -427,7 +433,7 @@ describe('RaidController', () => {
     now.mockRestore();
   });
 
-  it('shrinks the avatar repel radius once a full-power charge clears the raid', () => {
+  it('shrinks the avatar repel radius once a peak-power release fully clears the raid', () => {
     const now = vi.spyOn(Date, 'now');
     let t = 0;
     now.mockImplementation(() => t);
@@ -439,13 +445,35 @@ describe('RaidController', () => {
     }
     expect(grid.getAvatarRepelRadius()).toBeNull();
 
+    const spawned = raid.getSecurityUnits().length;
     raid.startCharging();
-    t += 1800; // CHARGE_DURATION_MS
+    t += CHARGE_SWEEP_HALF_PERIOD_MS; // land at the peak of the sweep (fraction ~1)
     raid.tick(t);
-    t += SECURITY_SHRINK_MS;
+    raid.releaseCharge();
+    t += SECURITY_SHRINK_MS * spawned;
     raid.tick(t);
 
     expect(raid.getState()).toBe('idle');
+    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
+
+    now.mockRestore();
+  });
+
+  // The post-win repel radius is deliberately NOT scaled here — RaidController sets
+  // a plain, unscaled AVATAR_REPEL_RADIUS_AFTER_WIN baseline; main.ts's onProtestWin
+  // wiring rescales it afterward from the sticker's live post-lockSqueeze width
+  // (untestable at this unit level, same as onSecurityRemoved's audio wiring).
+  it('sets the plain, unscaled AVATAR_REPEL_RADIUS_AFTER_WIN baseline regardless of avatarWidth', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    raid.setAvatarWidth(SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH * 2);
+    raid.startCharging();
+    t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak
+    raid.tick(t);
+    raid.releaseCharge();
+
     expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
 
     now.mockRestore();
@@ -461,10 +489,12 @@ describe('RaidController', () => {
       raid.onAvatarMove(x, 0);
       t += 20;
     }
+    const spawned = raid.getSecurityUnits().length;
     raid.startCharging();
-    t += 1800;
+    t += CHARGE_SWEEP_HALF_PERIOD_MS;
     raid.tick(t);
-    t += SECURITY_SHRINK_MS;
+    raid.releaseCharge();
+    t += SECURITY_SHRINK_MS * spawned;
     raid.tick(t);
     expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
 
@@ -515,93 +545,90 @@ describe('RaidController', () => {
       }
     }
 
-    it('startCharging is a no-op while idle (nothing to recover)', () => {
+    it('startCharging works while idle too — Protest is standalone, not gated behind a raid', () => {
       raid.startCharging();
-      expect(raid.getState()).toBe('idle');
-      expect(raid.getChargeFraction()).toBe(0);
+      expect(raid.getState()).toBe('charging');
     });
 
-    it('charges progressively while held, rebuilding the crowd, and completes at full charge', () => {
+    it('releasing a standalone (no-raid) charge below full power backfires: spawns a fresh raid instead of a no-op', () => {
+      const now = vi.spyOn(Date, 'now');
+      let t = 0;
+      now.mockImplementation(() => t);
+
+      expect(raid.getState()).toBe('idle');
+      expect(raid.getSecurityUnits()).toEqual([]);
+
+      raid.startCharging();
+      expect(raid.getState()).toBe('charging');
+
+      // Release almost immediately — barely any hold, low fraction — this backfires:
+      // it spawns a raid exactly as a shake would, even though nothing was shaken.
+      t += 10;
+      raid.tick(t);
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('raiding');
+      expect(raid.getSecurityUnits().length).toBeGreaterThan(0);
+      expect(grid.getAvatarRepelRadius()).toBeNull();
+
+      now.mockRestore();
+    });
+
+    it('releasing a standalone charge at the peak of the sweep maxes out the crowd', () => {
+      const now = vi.spyOn(Date, 'now');
+      let t = 0;
+      now.mockImplementation(() => t);
+
+      raid.startCharging();
+      t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak of the sweep, fraction ~1
+      raid.tick(t);
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('idle');
+      expect(grid.getCreatureCount()).toBe(900); // QTY_MAX
+      expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
+
+      now.mockRestore();
+    });
+
+    it('startCharging is a no-op while recovering', () => {
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
       triggerRaid(now, tRef);
-      const raidStartCrowd = grid.getCreatureCount();
+      raid.startRecovery();
+      expect(raid.getState()).toBe('recovering');
+
+      raid.startCharging();
+      expect(raid.getState()).toBe('recovering');
+
+      now.mockRestore();
+    });
+
+    it('sweeps chargeFraction back and forth across [0, 1] while held, rather than filling once', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
 
       raid.startCharging();
       expect(raid.getState()).toBe('charging');
       expect(raid.getChargeFraction()).toBe(0);
 
-      tRef.t += 900; // half of CHARGE_DURATION_MS (1800)
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS; // one full one-way sweep: 0 -> 1
+      raid.tick(tRef.t);
+      expect(raid.getChargeFraction()).toBeCloseTo(1, 5);
+
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS; // sweeps back: 1 -> 0
+      raid.tick(tRef.t);
+      expect(raid.getChargeFraction()).toBeCloseTo(0, 5);
+
+      tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS / 2); // halfway through the next sweep up
       raid.tick(tRef.t);
       expect(raid.getChargeFraction()).toBeCloseTo(0.5, 1);
-      expect(grid.getCreatureCount()).toBeGreaterThan(raidStartCrowd);
-      expect(grid.getCreatureCount()).toBeLessThan(900);
-
-      tRef.t += 900; // reach full charge
-      raid.tick(tRef.t);
-      tRef.t += SECURITY_SHRINK_MS; // let any just-marked units finish shrinking
-      raid.tick(tRef.t);
-
-      expect(raid.getChargeFraction()).toBe(1);
-      expect(raid.getState()).toBe('idle');
-      expect(raid.getSecurityUnits().length).toBe(0);
-      expect(grid.getCreatureCount()).toBe(900);
 
       now.mockRestore();
     });
 
-    it('throttles the crowd-rebuild setQuantity calls during charge instead of calling every frame', () => {
-      const now = vi.spyOn(Date, 'now');
-      const tRef = { t: 0 };
-      triggerRaid(now, tRef);
-
-      const setQuantitySpy = vi.spyOn(grid, 'setQuantity');
-      raid.startCharging();
-      setQuantitySpy.mockClear();
-
-      // Simulate 10 frames within a single throttle window (well under
-      // CHARGE_QUANTITY_THROTTLE_MS apart) — only the first should call
-      // through to setQuantity.
-      for (let i = 0; i < 10; i++) {
-        tRef.t += 5;
-        raid.tick(tRef.t);
-      }
-
-      expect(setQuantitySpy).toHaveBeenCalledTimes(1);
-
-      now.mockRestore();
-    });
-
-    it('holds security steady in the WEAK/MEDIUM zone and only starts clearing past CHARGE_HIGH_THRESHOLD', () => {
-      const now = vi.spyOn(Date, 'now');
-      const tRef = { t: 0 };
-      triggerRaid(now, tRef);
-      const spawned = raid.getSecurityUnits().length;
-
-      raid.startCharging();
-
-      // 900ms of 1800 = fraction 0.5, below CHARGE_HIGH_THRESHOLD (0.66).
-      tRef.t += 900;
-      raid.tick(tRef.t);
-      expect(raid.getChargeFraction()).toBeCloseTo(0.5, 1);
-      expect(raid.getSecurityUnits().length).toBe(spawned);
-
-      // Cross into the high zone (fraction ~0.83) and let the shrink sweep
-      // run — units are marked 'shrinking' the instant the threshold is
-      // crossed, but getSecurityUnits() still reports them until a later
-      // tick's sweep actually removes them (same pattern as the existing
-      // full-charge-completion test above).
-      tRef.t += 600;
-      raid.tick(tRef.t);
-      expect(raid.getChargeFraction()).toBeGreaterThan(0.66);
-      tRef.t += SECURITY_SHRINK_MS;
-      raid.tick(tRef.t);
-      expect(raid.getSecurityUnits().length).toBeLessThan(spawned);
-
-      now.mockRestore();
-    });
-
-    it('releaseCharge before full charge reverts crowd/security to the pre-charge baseline', () => {
+    it('does not touch security or the crowd just from sweeping near the peak while still held', () => {
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
       triggerRaid(now, tRef);
@@ -609,41 +636,167 @@ describe('RaidController', () => {
       const raidStartCrowd = grid.getCreatureCount();
 
       raid.startCharging();
-      tRef.t += 900;
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS; // near the peak
       raid.tick(tRef.t);
-      expect(grid.getCreatureCount()).toBeGreaterThan(raidStartCrowd);
-
-      raid.releaseCharge();
-
-      expect(raid.getState()).toBe('raiding');
-      expect(raid.getChargeFraction()).toBe(0);
+      expect(raid.getChargeFraction()).toBeGreaterThan(0.9);
+      expect(raid.getState()).toBe('charging');
       expect(raid.getSecurityUnits().length).toBe(spawned);
       expect(grid.getCreatureCount()).toBe(raidStartCrowd);
 
       now.mockRestore();
     });
 
-    it('releaseCharge respawns units that had already fully shrunk away before release', () => {
+    it('releaseCharge at peak power clears the whole raid (recovering, then idle once units sweep out)', () => {
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
       triggerRaid(now, tRef);
       const spawned = raid.getSecurityUnits().length;
 
       raid.startCharging();
-      tRef.t += 1400; // deep into the HIGH zone (past CHARGE_HIGH_THRESHOLD) but short of full
-      // charge, so shrinking actually starts and clears regardless of how many units this
-      // run happened to spawn, without the charge itself completing (state must stay
-      // 'charging' so the release below is not a no-op)
-      raid.tick(tRef.t); // marks some units shrinking
-      tRef.t += SECURITY_SHRINK_MS;
-      raid.tick(tRef.t); // sweeps them away for real
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS;
+      raid.tick(tRef.t);
 
-      expect(raid.getSecurityUnits().length).toBeLessThan(spawned);
+      raid.releaseCharge();
+      expect(raid.getState()).toBe('recovering');
+      expect(raid.getChargeFraction()).toBe(0);
+      expect(grid.getCreatureCount()).toBe(900); // QTY_MAX, applied immediately on the win
+
+      tRef.t += SECURITY_SHRINK_MS * spawned;
+      raid.tick(tRef.t);
+
+      expect(raid.getState()).toBe('idle');
+      expect(raid.getSecurityUnits().length).toBe(0);
+
+      now.mockRestore();
+    });
+
+    it('releaseCharge at a low fraction reinforces the existing raid instead of clearing it', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const spawned = raid.getSecurityUnits().length;
+
+      raid.startCharging();
+      tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.05); // barely off the floor
+      raid.tick(tRef.t);
+      const fraction = raid.getChargeFraction();
+      expect(fraction).toBeLessThan(FULL_POWER_THRESHOLD);
 
       raid.releaseCharge();
 
       expect(raid.getState()).toBe('raiding');
+      expect(raid.getChargeFraction()).toBe(0);
+      // Backfire adds another pulse (or is a no-op if already at the cap) — it
+      // never removes units the way a winning release does.
+      expect(raid.getSecurityUnits().length).toBeGreaterThanOrEqual(spawned);
+
+      now.mockRestore();
+    });
+
+    it('releaseCharge at a mid (MEDIUM) fraction on an active raid: crowd gets the capped boost, some units poof, reinforcements trickle back in', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const spawned = raid.getSecurityUnits().length;
+      const raidStartCrowd = grid.getCreatureCount();
+
+      raid.startCharging();
+      tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.5); // fraction ~0.5, MEDIUM band
+      raid.tick(tRef.t);
+      expect(raid.getChargeFraction()).toBeGreaterThanOrEqual(MEDIUM_POWER_THRESHOLD);
+      expect(raid.getChargeFraction()).toBeLessThan(FULL_POWER_THRESHOLD);
+
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('raiding');
+      const boosted = Math.min(Math.round((raidStartCrowd * 1.75) / 10) * 10, 400);
+      expect(grid.getCreatureCount()).toBe(boosted);
+      // Nothing's actually been removed yet — the poof hasn't finished its shrink window.
       expect(raid.getSecurityUnits().length).toBe(spawned);
+
+      // Once the poof clears and the respawn delay elapses, reinforcements trickle
+      // back in — never more than were poofed, never as an instant burst.
+      tRef.t += SECURITY_SHRINK_MS + BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * spawned;
+      raid.tick(tRef.t);
+      expect(raid.getSecurityUnits().length).toBeGreaterThan(0);
+
+      now.mockRestore();
+    });
+
+    it('repeated LOW releases on the same raid escalate it (never treated as a fresh restart), even when units.length transiently hits 0 mid-regroup', () => {
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaid(now, tRef);
+      const spawned = raid.getSecurityUnits().length;
+
+      // Fire three LOW-power releases back to back, each one landing after the
+      // previous poof has fully cleared (SECURITY_SHRINK_MS) — this is exactly the
+      // sequence that can drive units.length down to 0 while the raid is still
+      // conceptually in progress (respawns are still queued, just not arrived yet).
+      // chargeStartedDuringRaid (not units.length) must be what gates the branch, or
+      // this would wrongly re-trigger a fresh idle->raiding spawnPulse() each time.
+      for (let i = 0; i < 3; i++) {
+        raid.startCharging();
+        tRef.t += 10; // LOW power
+        raid.tick(tRef.t);
+        raid.releaseCharge();
+        expect(raid.getState()).toBe('raiding');
+        tRef.t += SECURITY_SHRINK_MS;
+        raid.tick(tRef.t);
+        tRef.t += SHAKE_PULSE_COOLDOWN_MS;
+      }
+
+      // Let every queued respawn from all three releases resolve.
+      tRef.t += BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * (spawned + 3) * 3;
+      raid.tick(tRef.t);
+
+      // Each backfire escalates the raid (poofCount + BACKFIRE_ESCALATE_LOW respawned,
+      // not a 1:1 replace) — three releases should leave strictly more units standing
+      // than the raid started with, bounded by SECURITY_MAX_UNITS.
+      expect(raid.getSecurityUnits().length).toBeGreaterThan(spawned);
+      expect(raid.getSecurityUnits().length).toBeLessThanOrEqual(SECURITY_MAX_UNITS);
+
+      now.mockRestore();
+    });
+
+    it('releasing at LOW power with no prior raid seeds raidStartCount/attrition from the boosted crowd', () => {
+      const now = vi.spyOn(Date, 'now');
+      let t = 0;
+      now.mockImplementation(() => t);
+
+      const baseline = grid.getCreatureCount();
+      raid.startCharging();
+      t += 10; // fraction ~0.009 — well under MEDIUM_POWER_THRESHOLD
+      raid.tick(t);
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('raiding');
+      const boosted = Math.min(Math.round((baseline * 1.3) / 10) * 10, 280);
+      expect(grid.getCreatureCount()).toBe(boosted);
+      expect(raid.getRaidFloor()).toBe(Math.max(10, Math.round(boosted * 0.25)));
+
+      now.mockRestore();
+    });
+
+    it('MEDIUM and LOW crowd boosts hit their absolute caps (400 / 280) regardless of a large baseline', () => {
+      const now = vi.spyOn(Date, 'now');
+      let t = 0;
+      now.mockImplementation(() => t);
+
+      grid.setQuantity(1000); // large baseline — the % boost alone would blow past both caps
+
+      raid.startCharging();
+      t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.5); // MEDIUM band
+      raid.tick(t);
+      raid.releaseCharge();
+      expect(grid.getCreatureCount()).toBe(400);
+
+      t += SHAKE_PULSE_COOLDOWN_MS;
+      raid.startCharging();
+      t += 10; // LOW band
+      raid.tick(t);
+      raid.releaseCharge();
+      expect(grid.getCreatureCount()).toBe(280);
 
       now.mockRestore();
     });
@@ -658,6 +811,137 @@ describe('RaidController', () => {
 
       expect(raid.getState()).toBe('raiding');
       expect(raid.getSecurityUnits().length).toBe(spawned);
+
+      now.mockRestore();
+    });
+  });
+
+  describe('onProtestWin / onProtestBackfireSettled timing', () => {
+    function triggerRaidOn(
+      r: RaidController,
+      now: { mockImplementation: (fn: () => number) => void },
+      tRef: { t: number },
+    ): void {
+      now.mockImplementation(() => tRef.t);
+      const xs = [0, 60, 0, 60, 0, 60, 0];
+      for (const x of xs) {
+        r.onAvatarMove(x, 0);
+        tRef.t += 20;
+      }
+    }
+
+    it('onProtestWin fires immediately for a standalone win (nothing to despawn)', () => {
+      const onProtestWin = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onProtestWin });
+
+      const now = vi.spyOn(Date, 'now');
+      let t = 0;
+      now.mockImplementation(() => t);
+
+      r.startCharging();
+      t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak
+      r.tick(t);
+      r.releaseCharge();
+
+      expect(onProtestWin).toHaveBeenCalledTimes(1);
+
+      now.mockRestore();
+    });
+
+    it('onProtestWin does NOT fire at releaseCharge() for a raid win — only once the despawn sweep finishes', () => {
+      const onProtestWin = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onProtestWin });
+
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaidOn(r, now, tRef);
+      const spawned = r.getSecurityUnits().length;
+
+      r.startCharging();
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak
+      r.tick(tRef.t);
+      r.releaseCharge();
+
+      expect(onProtestWin).not.toHaveBeenCalled();
+
+      tRef.t += SECURITY_SHRINK_MS * spawned;
+      r.tick(tRef.t);
+
+      expect(onProtestWin).toHaveBeenCalledTimes(1);
+
+      now.mockRestore();
+    });
+
+    it('onProtestBackfireSettled fires immediately for a fresh raid (no prior raid to poof)', () => {
+      const onProtestBackfireSettled = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onProtestBackfireSettled });
+
+      const now = vi.spyOn(Date, 'now');
+      let t = 0;
+      now.mockImplementation(() => t);
+
+      r.startCharging();
+      t += 10; // LOW power
+      r.tick(t);
+      r.releaseCharge();
+
+      expect(onProtestBackfireSettled).toHaveBeenCalledTimes(1);
+      expect(onProtestBackfireSettled).toHaveBeenCalledWith(r.getSecurityUnits().length);
+
+      now.mockRestore();
+    });
+
+    it('onProtestBackfireSettled does NOT fire at releaseCharge() for an active-raid backfire — only once every queued respawn has fired', () => {
+      const onProtestBackfireSettled = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onProtestBackfireSettled });
+
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaidOn(r, now, tRef);
+
+      r.startCharging();
+      tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.5); // MEDIUM power
+      r.tick(tRef.t);
+      r.releaseCharge();
+
+      expect(onProtestBackfireSettled).not.toHaveBeenCalled();
+
+      // Advance well past the poof + regroup delay + stagger for every plausible
+      // respawn count so every queued respawn has definitely fired.
+      tRef.t += SECURITY_SHRINK_MS + BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * 10;
+      r.tick(tRef.t);
+
+      expect(onProtestBackfireSettled).toHaveBeenCalledTimes(1);
+      expect(onProtestBackfireSettled).toHaveBeenCalledWith(r.getSecurityUnits().length);
+
+      now.mockRestore();
+    });
+
+    it('a full-power win cancels a still-pending backfire settle — onProtestBackfireSettled never fires for it', () => {
+      const onProtestBackfireSettled = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onProtestBackfireSettled });
+
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaidOn(r, now, tRef);
+
+      // A MEDIUM backfire queues a regroup...
+      r.startCharging();
+      tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.5);
+      r.tick(tRef.t);
+      r.releaseCharge();
+
+      // ...but before it resolves, a full-power win clears the raid outright.
+      tRef.t += SHAKE_PULSE_COOLDOWN_MS;
+      r.startCharging();
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS;
+      r.tick(tRef.t);
+      r.releaseCharge();
+
+      tRef.t += SECURITY_SHRINK_MS * SECURITY_MAX_UNITS + BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * 10;
+      r.tick(tRef.t);
+
+      expect(onProtestBackfireSettled).not.toHaveBeenCalled();
 
       now.mockRestore();
     });

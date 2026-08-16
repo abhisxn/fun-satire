@@ -10,6 +10,24 @@ export const DEFAULT_WIDTH = 160;
 const MIN_WIDTH = 48;
 const MAX_WIDTH = 480;
 const HANDLE_SIZE = 14;
+/** Scale the sticker pops down to on a full-power protest win (lockSqueeze()) —
+ * applied only once the raid's despawn sweep has actually finished on screen (see
+ * RaidController's onProtestWin), never as a live preview while still holding (a held
+ * charge crossing FULL_POWER_THRESHOLD must NOT visibly change the sticker — that was
+ * a bug: it telegraphed the win before the player let go). */
+const SQUEEZE_MIN_SCALE = 0.55;
+/** Ceiling for setScaleForRaidSize() — the sticker's resting scale maps linearly from
+ * the current raid's unit count, and never grows past this even at the security cap. */
+const MAX_SCALE = 2;
+/** Smooth ease-in-out — reads as a continuous "slide" between two scales rather than a
+ * snap or a spring, since it accelerates and decelerates symmetrically instead of
+ * front-loading all the motion. Long enough that growing/shrinking reads as its own
+ * visible beat once a raid's spawn/respawn/despawn has actually settled (see
+ * RaidController's onProtestWin / onProtestBackfireSettled — these never fire
+ * immediately on button release). Applied on `el` (the wrapper), not just the image, so
+ * the resize handle and the element's actual hit-tested/dragged box scale along with
+ * it — see getWidth() and handleResizeStart for the other half of that. */
+const SQUEEZE_TRANSITION = "transform 1s cubic-bezier(0.4, 0, 0.2, 1)";
 
 export class StickerOverlay {
   readonly el: HTMLDivElement;
@@ -23,6 +41,13 @@ export class StickerOverlay {
   private width: number;
   private dragHint: HTMLDivElement | null = null;
   private dragHintTimeout: number | undefined;
+  /** Resting scale — 1 by default, forced to SQUEEZE_MIN_SCALE by lockSqueeze() on a
+   * full-power win, or set by setScaleForRaidSize() on a MEDIUM/LOW backfire. Neither
+   * is a permanent lock: the next backfire's settle event overwrites it again based on
+   * whatever the raid's size is at that point. */
+  private baseScale = 1;
+
+  private readonly dragSrc: string | null;
 
   constructor(
     src: string,
@@ -32,6 +57,7 @@ export class StickerOverlay {
     onDragEnd?: () => void,
     onDragMove?: (x: number, y: number) => void,
     showDragHint?: boolean,
+    dragSrc?: string,
   ) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -40,6 +66,7 @@ export class StickerOverlay {
 
     this.currentSrc = src;
     this.width = DEFAULT_WIDTH;
+    this.dragSrc = dragSrc ?? null;
 
     this.el = document.createElement("div");
     this.el.className = "sticker-overlay";
@@ -54,6 +81,8 @@ export class StickerOverlay {
       `z-index:${STICKER_Z_INDEX}`,
       "touch-action:none",
       "pointer-events:auto",
+      `transition:${SQUEEZE_TRANSITION}`,
+      "transform-origin:center",
     ].join(";");
 
     this.img = document.createElement("img");
@@ -111,9 +140,13 @@ export class StickerOverlay {
       undefined,
       () => {
         this.hideDragHint();
+        if (this.dragSrc) this.img.src = this.dragSrc;
         onDragStart?.();
       },
-      onDragEnd,
+      () => {
+        if (this.dragSrc) this.img.src = this.currentSrc;
+        onDragEnd?.();
+      },
     );
     this.drag.attach();
     this.attachResize();
@@ -188,8 +221,44 @@ export class StickerOverlay {
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   }
 
+  /** True on-screen width, including the current squeeze/inflate scale — not just the
+   * underlying CSS width. Callers that care about the sticker's actual footprint (e.g.
+   * RaidController's escort-radius/repel-radius math, via main.ts's per-frame
+   * `setAvatarWidth(getWidth())`) need this, not the pre-scale value: a 2x-inflated
+   * sticker should push the crowd/escort ring back proportionally further, and a
+   * shrunk one should let them approach closer. */
   getWidth(): number {
-    return this.width;
+    return this.width * this.baseScale;
+  }
+
+  /** Called once a MEDIUM/LOW backfire's raid spawn/respawn has actually settled on
+   * screen (RaidController's onProtestBackfireSettled — never on button release
+   * itself). Sets the sticker's resting scale from where the raid's size currently
+   * sits within [0, maxUnits], linearly mapped to [1, MAX_SCALE] — not an incremental
+   * bump, so it reflects the raid's actual current size rather than a click count
+   * that could drift out of sync with what's on screen. Also swaps the face back to
+   * `src` (the calm/default expression) if lockSqueeze() had switched it to `dragSrc` —
+   * a new raid means the win's weird face is over. */
+  setScaleForRaidSize(unitCount: number, maxUnits: number): void {
+    const t = maxUnits > 0 ? Math.max(0, Math.min(1, unitCount / maxUnits)) : 0;
+    this.baseScale = 1 + t * (MAX_SCALE - 1);
+    this.el.style.transform = `scale(${this.baseScale})`;
+    if (this.dragSrc) this.img.src = this.currentSrc;
+  }
+
+  /** Called once a full-power protest release's despawn sweep has actually finished
+   * on screen (RaidController's onProtestWin — never on button release itself): pops
+   * the sticker down to SQUEEZE_MIN_SCALE and, for face stickers, swaps to `dragSrc`
+   * (the "weird" expression already used mid-drag/shake — see the constructor) so the
+   * face-pull reads as part of the same "under strain" moment as the shrink. Not a
+   * permanent lock — the next backfire's settle event (setScaleForRaidSize) reverts
+   * both the scale and the face. Starting a fresh drag right after a win will also
+   * revert the face early (onDragEnd always restores `currentSrc`) — an acceptable
+   * overlap between the two mechanics rather than something worth extra state to avoid. */
+  lockSqueeze(): void {
+    this.baseScale = SQUEEZE_MIN_SCALE;
+    this.el.style.transform = `scale(${SQUEEZE_MIN_SCALE})`;
+    if (this.dragSrc) this.img.src = this.dragSrc;
   }
 
   destroy(): void {
@@ -218,7 +287,11 @@ export class StickerOverlay {
       // resize mechanisms don't fight over width on the same event.
       if ("touches" in ev && ev.touches.length !== 1) return;
       const x = pointerX(ev);
-      const dx = x - startX;
+      // Divide by the current squeeze/inflate scale: dx is a physical screen-pixel
+      // delta, but `width` is a pre-transform CSS value — without this, dragging the
+      // handle the same physical distance would resize a 2x-inflated sticker twice
+      // as much on screen as a normal one, and a shrunk one barely at all.
+      const dx = (x - startX) / this.baseScale;
       const next = clamp(startWidth + dx, MIN_WIDTH, MAX_WIDTH);
       this.width = next;
       this.img.style.width = `${next}px`;

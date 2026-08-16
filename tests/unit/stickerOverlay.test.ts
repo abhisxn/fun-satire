@@ -44,6 +44,58 @@ describe('StickerOverlay', () => {
     expect(s.getImage()).toBe('/avatars/b.png');
   });
 
+  // Squeeze/inflate transform lives on the wrapper (s.el), not the image — moving it
+  // there keeps the resize handle and el's own hit-tested/dragged box scaling along
+  // with the sticker instead of staying pinned to its pre-scale corner.
+  it('lockSqueeze pops the sticker down to its minimum scale', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+    expect(s.el.style.transform).toBe('');
+
+    s.lockSqueeze();
+    expect(s.el.style.transform).toBe('scale(0.55)');
+  });
+
+  it('setScaleForRaidSize maps the raid unit count linearly onto [1, MAX_SCALE]', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+
+    s.setScaleForRaidSize(0, 40);
+    expect(s.el.style.transform).toBe('scale(1)');
+
+    s.setScaleForRaidSize(40, 40);
+    expect(s.el.style.transform).toBe('scale(2)'); // MAX_SCALE
+
+    s.setScaleForRaidSize(20, 40);
+    expect(s.el.style.transform).toBe('scale(1.5)'); // halfway
+
+    // Out-of-range counts clamp rather than overshoot.
+    s.setScaleForRaidSize(999, 40);
+    expect(s.el.style.transform).toBe('scale(2)');
+  });
+
+  it('setScaleForRaidSize overwrites lockSqueeze — neither is a permanent lock', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+
+    s.lockSqueeze();
+    expect(s.el.style.transform).toBe('scale(0.55)');
+
+    s.setScaleForRaidSize(10, 40);
+    expect(s.el.style.transform).toBe('scale(1.25)');
+
+    s.lockSqueeze();
+    expect(s.el.style.transform).toBe('scale(0.55)');
+  });
+
+  it('getWidth() reflects the current squeeze/inflate scale, not just the underlying CSS width', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+    expect(s.getWidth()).toBe(160); // DEFAULT_WIDTH
+
+    s.setScaleForRaidSize(40, 40); // MAX_SCALE = 2
+    expect(s.getWidth()).toBe(320);
+
+    s.lockSqueeze(); // 0.55
+    expect(s.getWidth()).toBe(88);
+  });
+
   it('resize handle updates image width without moving the element', () => {
     const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
     const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
@@ -59,6 +111,22 @@ describe('StickerOverlay', () => {
     expect(widthPx).toBeLessThanOrEqual(480);
     expect(s.el.style.left).toBe(beforeLeft);
     expect(s.el.style.top).toBe(beforeTop);
+  });
+
+  it('resize handle drag divides the physical pointer delta by the current squeeze scale', () => {
+    const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
+    const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
+
+    s.setScaleForRaidSize(40, 40); // MAX_SCALE = 2 — visually twice as big
+    handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, bubbles: true })); // +100 screen px
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+
+    // A 100px physical drag on a 2x-scaled sticker should only grow the underlying
+    // (pre-scale) width by 50px — otherwise the resize would visually happen twice
+    // as fast as the same drag on a normal-scale sticker.
+    const widthPx = parseFloat(s.el.querySelector('img')!.style.width);
+    expect(widthPx).toBeCloseTo(210); // 160 + 100/2
   });
 
   it('resize handle clamps width within bounds', () => {
@@ -167,6 +235,84 @@ describe('StickerOverlay', () => {
     // width should be untouched by both mechanisms — still the default
     // (160), not driven toward MAX_WIDTH by the pinch formula.
     expect(parseFloat(s.el.querySelector('img')!.style.width)).toBeCloseTo(160);
+  });
+
+  it('swaps to dragSrc while dragging and back to src when the drag ends', () => {
+    const s = new StickerOverlay(
+      '/avatars/grin/grin_gutter.png',
+      100,
+      100,
+      undefined,
+      undefined,
+      undefined,
+      false,
+      '/avatars/normal/gutter.png',
+    );
+    document.body.appendChild(s.el);
+    const img = s.el.querySelector('img')!;
+    expect(img.src).toContain('/avatars/grin/grin_gutter.png');
+
+    s.el.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, clientY: 100, bubbles: true }));
+    expect(img.src).toContain('/avatars/normal/gutter.png');
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    expect(img.src).toContain('/avatars/grin/grin_gutter.png');
+  });
+
+  it('does not swap the image on drag when no dragSrc was provided', () => {
+    const s = new StickerOverlay('/avatars/gutter.png', 100, 100);
+    document.body.appendChild(s.el);
+    const img = s.el.querySelector('img')!;
+
+    s.el.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, clientY: 100, bubbles: true }));
+    expect(img.src).toContain('/avatars/gutter.png');
+  });
+
+  it('lockSqueeze swaps to the "weird" dragSrc face alongside the shrink', () => {
+    const s = new StickerOverlay(
+      '/avatars/grin/grin_gutter.png',
+      100,
+      100,
+      undefined,
+      undefined,
+      undefined,
+      false,
+      '/avatars/normal/gutter.png',
+    );
+    const img = s.el.querySelector('img')!;
+    expect(img.src).toContain('/avatars/grin/grin_gutter.png');
+
+    s.lockSqueeze();
+    expect(img.src).toContain('/avatars/normal/gutter.png');
+    expect(s.el.style.transform).toBe('scale(0.55)');
+  });
+
+  it('lockSqueeze does not touch the image when no dragSrc was provided', () => {
+    const s = new StickerOverlay('/avatars/gutter.png', 100, 100);
+    const img = s.el.querySelector('img')!;
+
+    s.lockSqueeze();
+    expect(img.src).toContain('/avatars/gutter.png');
+  });
+
+  it('setScaleForRaidSize reverts the face back to src once a new raid settles', () => {
+    const s = new StickerOverlay(
+      '/avatars/grin/grin_gutter.png',
+      100,
+      100,
+      undefined,
+      undefined,
+      undefined,
+      false,
+      '/avatars/normal/gutter.png',
+    );
+    const img = s.el.querySelector('img')!;
+
+    s.lockSqueeze();
+    expect(img.src).toContain('/avatars/normal/gutter.png');
+
+    s.setScaleForRaidSize(10, 40);
+    expect(img.src).toContain('/avatars/grin/grin_gutter.png');
   });
 
   it('shows a drag-hint tooltip that mentions both drag and shake', () => {

@@ -5,9 +5,9 @@ import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { spawnPoof } from "./creatures/poofEffect";
 import type { PoofHandle } from "./creatures/poofEffect";
-import { RaidController } from "./creatures/RaidController";
+import { RaidController, SECURITY_MAX_UNITS, AVATAR_REPEL_RADIUS_AFTER_WIN } from "./creatures/RaidController";
 import { PowerMeter } from "./hud/PowerMeter";
-import { StickerOverlay } from "./creatures/StickerOverlay";
+import { StickerOverlay, DEFAULT_WIDTH } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
 import { Hud } from "./hud/Hud";
 import { MenuButton } from "./hud/MenuButton";
@@ -63,6 +63,24 @@ async function main(): Promise<void> {
       const audioContext = audioManager.getAudioContext();
       if (audioContext) playPoofTone(audioContext);
       void spawnPoof(x, y, w, h);
+    },
+    // Both fire once a protest release's spawn/despawn visuals have actually
+    // finished on screen — never immediately on button release (see each
+    // callback's own doc comment in RaidController.ts for why).
+    onProtestWin: () => {
+      if (activeOverlay instanceof StickerOverlay) {
+        activeOverlay.lockSqueeze();
+        // Recomputed from the sticker's live width *after* lockSqueeze has actually
+        // shrunk it — RaidController already set a plain, unscaled baseline, but only
+        // the sticker itself knows its true post-shrink footprint at this instant.
+        const ratio = activeOverlay.getWidth() / DEFAULT_WIDTH;
+        grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN * ratio);
+      }
+    },
+    onProtestBackfireSettled: (securityUnitCount) => {
+      if (activeOverlay instanceof StickerOverlay) {
+        activeOverlay.setScaleForRaidSize(securityUnitCount, SECURITY_MAX_UNITS);
+      }
     },
   });
 
@@ -219,17 +237,25 @@ async function main(): Promise<void> {
     });
 
     const powerMeter = new PowerMeter();
-    powerMeter.attachTo(hud.getRoot());
+    powerMeter.attachTo(hud.getProtestAnchor());
 
     const protestBtn = hud.getProtestButton();
-    protestBtn.addEventListener("click", () => {
-      const raidState = raidController.getState();
-      if (raidState === "raiding") {
+    protestBtn.addEventListener("pointerdown", () => {
+      const state = raidController.getState();
+      if (state === "raiding" || state === "idle") {
         raidController.startCharging();
-      } else if (raidState === "charging") {
-        raidController.releaseCharge();
+        powerMeter.show();
       }
     });
+    const endProtestCharge = (): void => {
+      if (raidController.getState() === "charging") {
+        raidController.releaseCharge();
+      }
+      powerMeter.hide();
+    };
+    protestBtn.addEventListener("pointerup", endProtestCharge);
+    protestBtn.addEventListener("pointerleave", endProtestCharge);
+    protestBtn.addEventListener("pointercancel", endProtestCharge);
 
     let prevRaidState = raidController.getState();
     engine.onTick(() => {
@@ -241,7 +267,7 @@ async function main(): Promise<void> {
       prevRaidState = raidState;
     });
 
-    galleryPanel.onStickerSelect((src) => {
+    galleryPanel.onStickerSelect((src, dragSrc) => {
       const sticker = new StickerOverlay(
         src,
         undefined,
@@ -249,6 +275,8 @@ async function main(): Promise<void> {
         onOverlayDragStart,
         onOverlayDragEnd,
         onOverlayDragMove,
+        false,
+        dragSrc,
       );
       void replaceOverlay(sticker);
     });
@@ -324,6 +352,7 @@ async function main(): Promise<void> {
       onOverlayDragEnd,
       onOverlayDragMove,
       true,
+      def.dragSrc,
     );
     document.body.appendChild(sticker.el);
     activeOverlay = sticker;

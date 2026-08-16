@@ -1,53 +1,53 @@
 /* ============================================
-   Power Meter — Protest strength (Figma node 431:10191)
-   Child of .premium-hud (see PowerMeter.ts) so it drags/scales with the HUD
-   for free — no independent position-tracking or width-measurement code.
+   Power Meter — Protest strength (Figma node 447:10282)
+   Vertical bar of segments. Appended to document.body (see PowerMeter.ts
+   attachTo()) rather than nested inside .premium-hud — .premium-hud has its
+   own backdrop-filter+transform, and a nested backdrop-filter descendant
+   that paints outside that ancestor's box fails to render any blur in
+   Chromium (the ancestor's backdrop root can't supply it a real backdrop to
+   sample). Same reason FilterPanel/GalleryPanel/MenuPanel all attach to
+   document.body and position themselves via JS instead of CSS anchoring.
+   position:fixed here + top/left set in PowerMeter.ts's updatePosition(),
+   computed from the protest button anchor's getBoundingClientRect().
    ============================================ */
 .power-meter {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  margin-bottom: calc(10px + var(--hud-density) * 0.02232143);
+  position: fixed;
+  /* Sibling of #stage (z-index:500, see index.html) now that it's attached to
+     document.body instead of nested in .premium-hud (z-index:1000) — needs
+     its own explicit z-index above both so creatures and the HUD itself
+     don't paint over it. */
+  z-index: 1001;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: calc(8px + var(--hud-density) * 0.01785714);
-  padding: calc(6px + var(--hud-density) * 0.00892857) calc(14px + var(--hud-density) * 0.01785714);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid #fff;
-  border-radius: calc(40px + var(--hud-density) * 0.09375);
-  box-shadow: 0px 1px 0px #fff, 0px 24px 40px rgba(97, 86, 80, 0.25);
+  padding: calc(4px + var(--hud-density) * 0.00446429);
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px #fff, 0px 14px 20px rgba(97, 86, 80, 0.25);
   pointer-events: none;
 }
 
-.power-meter__label {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: calc(9px + var(--hud-density) * 0.00223214);
-  font-weight: 400;
-  text-transform: uppercase;
-  color: #38332f;
-  white-space: nowrap;
-  flex-shrink: 0;
+.power-meter--hidden {
+  display: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .power-meter {
+    background: var(--hud-glass-bg-fallback);
+  }
 }
 
 .power-meter__track {
-  position: relative;
-  flex: 1;
-  height: calc(5px + var(--hud-density) * 0.00223214);
-  border-radius: 40px;
-  background: linear-gradient(90deg, #d0bb33 0%, #2ebc24 50%, #bc4724 100%);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: calc(2px + var(--hud-density) * 0.00089286);
 }
 
-.power-meter__marker {
-  position: absolute;
-  top: 50%;
-  width: calc(6px + var(--hud-density) * 0.00223214);
-  height: calc(22px + var(--hud-density) * 0.01116071);
-  transform: translate(-50%, -50%);
-  background: #38332f;
+.power-meter__segment {
+  flex-shrink: 0;
+  width: calc(17px + var(--hud-density) * 0.00758929);
+  height: calc(4px + var(--hud-density) * 0.00178571);
   border-radius: 2px;
-  transition: left 0.05s linear;
+  transition: background 0.1s linear;
 }

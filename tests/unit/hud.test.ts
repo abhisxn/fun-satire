@@ -290,12 +290,50 @@ describe("Hud", () => {
     });
   });
 
+  describe("getProtestAnchor", () => {
+    it("returns the non-clipping wrapper containing the protest button", () => {
+      const anchor = hud.getProtestAnchor();
+      expect(anchor.className).toBe("hud-attack-anchor");
+      expect(anchor.contains(hud.getProtestButton())).toBe(true);
+    });
+  });
+
   describe("protest button", () => {
-    it("plays the HUD select tone on click", () => {
+    it("plays the HUD select tone on pointerdown", () => {
       const audioContext = {} as AudioContext;
       hud.setAudioContext(audioContext);
       const btn = host.querySelector<HTMLButtonElement>(".hud-attack");
-      expect(() => btn?.dispatchEvent(new MouseEvent("click", { bubbles: true }))).not.toThrow();
+      expect(() => btn?.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }))).not.toThrow();
+    });
+
+    // The tooltip's data-tooltip/--show-tooltip live on the anchor, not the button
+    // itself: .hud-attack clips its own content with overflow:hidden, which was
+    // silently clipping a tooltip pinned to the button to nothing.
+    it("has a 'Press and hold' tooltip on the anchor", () => {
+      const anchor = host.querySelector<HTMLElement>(".hud-attack-anchor");
+      expect(anchor?.dataset.tooltip).toBe("Press and hold");
+    });
+
+    it("shows the tooltip on pointerdown and hides it on pointerup", () => {
+      const anchor = host.querySelector<HTMLElement>(".hud-attack-anchor")!;
+      const btn = host.querySelector<HTMLButtonElement>(".hud-attack")!;
+      btn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      expect(anchor.classList.contains("hud-attack--show-tooltip")).toBe(true);
+
+      btn.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+      expect(anchor.classList.contains("hud-attack--show-tooltip")).toBe(false);
+    });
+
+    it("hides the tooltip on pointerleave and pointercancel", () => {
+      const anchor = host.querySelector<HTMLElement>(".hud-attack-anchor")!;
+      const btn = host.querySelector<HTMLButtonElement>(".hud-attack")!;
+      btn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      btn.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+      expect(anchor.classList.contains("hud-attack--show-tooltip")).toBe(false);
+
+      btn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      btn.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }));
+      expect(anchor.classList.contains("hud-attack--show-tooltip")).toBe(false);
     });
   });
 });

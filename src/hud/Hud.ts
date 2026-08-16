@@ -84,6 +84,7 @@ export class Hud {
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
   private protestBtn: HTMLButtonElement | null = null;
+  private protestAnchor: HTMLElement | null = null;
   private activeMode: CreatureMode = "cockroach";
 
   private modeChangeCb: ((mode: CreatureMode) => void) | null = null;
@@ -116,8 +117,8 @@ export class Hud {
     this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
     root.appendChild(this.galleryBtn);
 
-    this.protestBtn = this.buildProtestBtn();
-    root.appendChild(this.protestBtn);
+    this.protestAnchor = this.buildProtestBtn();
+    root.appendChild(this.protestAnchor);
 
     this.setActiveMode("cockroach");
 
@@ -189,6 +190,15 @@ export class Hud {
     return this.protestBtn;
   }
 
+  /** Non-overflow-hidden wrapper sized to exactly match the protest button — the button
+   * itself (.hud-attack) clips its own content with `overflow: hidden` for its gradient
+   * CTA look, which would silently clip anything absolutely positioned above it (e.g. the
+   * power meter) if attached directly to the button instead of this anchor. */
+  getProtestAnchor(): HTMLElement {
+    if (!this.protestAnchor) throw new Error("Protest anchor not initialized");
+    return this.protestAnchor;
+  }
+
   /** Shared AudioContext used for the HUD's button-press blips; pass null to silence them. */
   setAudioContext(context: AudioContext | null): void {
     this.audioContext = context;
@@ -245,7 +255,15 @@ export class Hud {
     return btn;
   }
 
-  private buildProtestBtn(): HTMLButtonElement {
+  private buildProtestBtn(): HTMLElement {
+    const anchor = el("div", "hud-attack-anchor");
+    // Tooltip attribute/class live on the anchor, not the button: .hud-attack
+    // clips its own content with overflow:hidden (see the anchor's own CSS
+    // comment), which silently clips a ::after tooltip pinned to the button
+    // itself. The anchor has no such clipping, same reason the power meter
+    // attaches there instead of to .hud-attack.
+    anchor.dataset.tooltip = "Press and hold";
+
     const btn = el("button", "hud-attack");
     btn.type = "button";
     btn.setAttribute("aria-label", "Protest");
@@ -254,11 +272,19 @@ export class Hud {
     span.textContent = "Protest";
     btn.appendChild(span);
 
-    btn.addEventListener("click", () => {
-      if (this.audioContext) playHudSelectTone(this.audioContext);
-    });
+    const hideTooltip = (): void => anchor.classList.remove("hud-attack--show-tooltip");
 
-    return btn;
+    btn.addEventListener("pointerdown", () => {
+      if (this.audioContext) playHudSelectTone(this.audioContext);
+      anchor.classList.add("hud-attack--show-tooltip");
+    });
+    btn.addEventListener("pointerup", hideTooltip);
+    btn.addEventListener("pointerleave", hideTooltip);
+    btn.addEventListener("pointercancel", hideTooltip);
+
+    this.protestBtn = btn;
+    anchor.appendChild(btn);
+    return anchor;
   }
 
   private startDrag(e: PointerEvent): void {

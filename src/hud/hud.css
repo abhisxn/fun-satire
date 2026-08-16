@@ -265,6 +265,19 @@
 }
 
 /* ============================================
+   Protest Button Anchor
+   Position-only wrapper, sized to exactly match .hud-attack via shrink-to-fit
+   flex-item sizing — the power meter (PowerMeter.ts/powerMeter.css) attaches
+   here instead of to .hud-attack itself, since the button clips its own
+   content with overflow:hidden and would otherwise clip the meter.
+   ============================================ */
+.hud-attack-anchor {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* ============================================
    Protest Button — Gradient CTA
    (same gradient/shadow language as .menu-share-btn in menuPanel.css)
    ============================================ */
@@ -294,6 +307,7 @@
   opacity: 0;
   animation-delay: 0.45s;
   overflow: hidden;
+  margin-right: calc(var(--hud-btn-gap) * 1.2);
 }
 
 .hud-attack:hover {
@@ -343,6 +357,47 @@
 }
 
 .hud-btn[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Protest button's tooltip shows on hover (so it educates before the first
+   press) AND stays pinned while actively held (.hud-attack--show-tooltip,
+   toggled in Hud.ts) so touch users who never hover still see it. It's a
+   pseudo-element of .hud-attack-anchor, NOT .hud-attack — the button clips
+   its own content with overflow:hidden (see the anchor's CSS comment above),
+   which was silently clipping this tooltip to nothing regardless of which
+   side it was anchored to. It's also positioned BELOW the button rather than
+   above: .power-meter (powerMeter.css, z-index 1001) renders directly above
+   the button the instant a press starts, and would otherwise sit right on
+   top of an above-anchored tooltip here. */
+.hud-attack-anchor[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0px 8px 16px rgba(97, 86, 80, 0.2);
+  color: #2a1f1a;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s var(--hud-ease-spring);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  z-index: 10;
+}
+
+.hud-attack-anchor[data-tooltip]:hover::after,
+.hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::after {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
@@ -432,7 +487,8 @@
    they're dropped outright rather than shrunk.
    ============================================ */
 @media (max-width: 768px) {
-  .hud-btn[data-tooltip]::after {
+  .hud-btn[data-tooltip]::after,
+  .hud-attack-anchor[data-tooltip]::after {
     display: none;
   }
 }
