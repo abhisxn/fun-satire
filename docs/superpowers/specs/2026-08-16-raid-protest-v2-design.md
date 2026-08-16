@@ -43,6 +43,28 @@ existing `burstWaypoint` entrance (spawn bursts outward before settling) is unch
 fall into formation instead of free-wandering. This replaces `startSecurityWander`'s waypoint-picking behavior
 only while raiding; `nextWaypoint`/`burstWaypoint` remain as-is for the entrance leg.
 
+**Natural motion, not a frozen ring**: a purely fixed angle/radius per unit reads as robotic — the whole
+formation just translates with the avatar and never moves relative to it. Two changes make it read as alive
+instead, both as pure functions of elapsed time (matching this codebase's existing style —
+`computeSpawnProgress`, `idleVisibleFraction`, `computeSecurityShrinkFraction` are all pure functions of ms, not
+integrated velocities):
+
+- Each unit gets its own `escortRadius` (not one shared constant) — `SECURITY_ESCORT_RADIUS ± 20px`, randomized
+  per unit at assignment — so the ring isn't perfectly circular, it's slightly irregular like a real loose huddle.
+- Each unit's effective angle wobbles around its assigned `escortAngle` via a sine function of
+  `nowMs + escortPhaseOffsetMs` (a random per-unit phase, 0-10000ms, assigned at spawn, so units don't wobble in
+  sync) — a slow back-and-forth pace rather than either a frozen position or a full orbit. No velocity
+  integration, no per-frame drift accumulation, no `dt` bookkeeping — the wobble angle at any instant is
+  computed fresh from `nowMs` alone.
+
+**Collision avoidance**: units must not overlap or pass through each other or the avatar. A new pairwise
+repulsion pass, `applySecurityCollisions`, runs across the active roster every tick (same shape as
+`applyRepulsion` in `creaturePhysics.ts`, but positional — security units aren't driven by velocity/damping,
+they're stepped directly toward their escort target each frame): any two units closer than
+`SECURITY_COLLISION_RADIUS` push apart proportionally to their overlap. This is what "can collide with each
+other, not fly over or under" means concretely — it's a 2D positional overlap constraint (units occupying the
+same screen space), not a z-index concern (that's section A).
+
 ## C. Shake detection fix
 
 Root cause: in `detectShake` (`RaidController.ts`), any sample below `SHAKE_MIN_SPEED_PX_MS` resets
@@ -207,8 +229,9 @@ top of the creature's own depth-`scale`. Its range changes from `0.3 + Math.pow(
 
 ## Files affected
 
-- `src/creatures/SecurityCreature.ts` — A (z-index constant + comment), B (formation offset fields/logic on
-  `SecurityUnitState`, avatar-relative wander target), E (drop `catchRadius`/`SECURITY_CATCH_RADIUS`).
+- `src/creatures/SecurityCreature.ts` — A (z-index constant + comment), B (formation offset/radius/phase fields
+  on `SecurityUnitState`, avatar-relative escort target with wobble, `applySecurityCollisions`), E (drop
+  `catchRadius`/`SECURITY_CATCH_RADIUS`).
 - `src/creatures/RaidController.ts` — C (`detectShake` fix, `SHAKE_WINDOW_MS`), D (`CHARGE_HIGH_THRESHOLD` gate
   on the charge-shrink logic, `getChargeFraction()` already exists and is reused), E (attrition tick, drop
   `catchRadius` from `getSecurityUnits()`), G (throttle `setQuantity()` calls during charge/attrition).
