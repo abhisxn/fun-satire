@@ -214,7 +214,8 @@ async function main(): Promise<void> {
     menuPanel.attachTo(menuButton.getButton());
 
     const syncMenuButtonVisibility = (): void => {
-      const anyPanelOpen = galleryPanel.isPanelOpen() || menuPanel.isPanelOpen();
+      const anyPanelOpen =
+        galleryPanel.isPanelOpen() || menuPanel.isPanelOpen() || winPanel.isPanelOpen();
       if (anyPanelOpen) {
         menuButton.hide();
       } else {
@@ -223,6 +224,7 @@ async function main(): Promise<void> {
     };
     galleryPanel.onOpenChange(syncMenuButtonVisibility);
     menuPanel.onOpenChange(syncMenuButtonVisibility);
+    winPanel.onOpenChange(syncMenuButtonVisibility);
 
     filterPanel.onQuantityChange((qty) => {
       grid.setQuantity(qty);

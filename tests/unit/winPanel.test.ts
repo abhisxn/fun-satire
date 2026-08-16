@@ -92,6 +92,33 @@ describe("hud/WinPanel", () => {
     expect(() => btn?.click()).not.toThrow();
   });
 
+  describe("onOpenChange", () => {
+    it("show() fires onOpenChange(true)", () => {
+      panel.attachTo(document.body);
+      const cb = vi.fn();
+      panel.onOpenChange(cb);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      expect(cb).toHaveBeenCalledWith(true);
+    });
+
+    it("hide() fires onOpenChange(false) when actually open", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      const cb = vi.fn();
+      panel.onOpenChange(cb);
+      panel.hide();
+      expect(cb).toHaveBeenCalledWith(false);
+    });
+
+    it("hide() when already closed does not fire the callback", () => {
+      panel.attachTo(document.body);
+      const cb = vi.fn();
+      panel.onOpenChange(cb);
+      panel.hide();
+      expect(cb).not.toHaveBeenCalled();
+    });
+  });
+
   describe("share row", () => {
     it("renders WhatsApp, Facebook, and Instagram icon buttons when navigator.share is unavailable", () => {
       panel.attachTo(document.body);

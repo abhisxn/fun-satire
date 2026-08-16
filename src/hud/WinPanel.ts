@@ -27,6 +27,7 @@ export class WinPanel {
   private readonly copyEl: HTMLElement;
   private isOpen = false;
   private nextStickerCb: (() => void) | null = null;
+  private openChangeCb: ((open: boolean) => void) | null = null;
 
   private toastEl!: HTMLElement;
   private toastTimeout: number | null = null;
@@ -197,6 +198,7 @@ export class WinPanel {
     this.overlay.classList.add("open");
     this.clearAutoDismiss();
     this.autoDismissTimeout = window.setTimeout(() => this.hide(), AUTO_DISMISS_MS);
+    this.openChangeCb?.(true);
   }
 
   hide(): void {
@@ -204,6 +206,7 @@ export class WinPanel {
     this.isOpen = false;
     this.overlay.classList.remove("open");
     this.clearAutoDismiss();
+    this.openChangeCb?.(false);
   }
 
   private clearAutoDismiss(): void {
@@ -215,6 +218,10 @@ export class WinPanel {
 
   isPanelOpen(): boolean {
     return this.isOpen;
+  }
+
+  onOpenChange(cb: (open: boolean) => void): void {
+    this.openChangeCb = cb;
   }
 
   onNextSticker(cb: () => void): void {
