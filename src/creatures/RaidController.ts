@@ -168,7 +168,7 @@ export class RaidController {
     if (this.state === "idle") {
       this.state = "raiding";
       this.raidStartCount = this.grid.getCreatureCount();
-      this.lastAttritionAtMs = 0;
+      this.lastAttritionAtMs = Date.now();
       this.grid.setAvatarRepelRadius(null);
     }
 
@@ -201,7 +201,9 @@ export class RaidController {
     }));
   }
 
-  /** Floor CreatureGrid.update() should respect when catching creatures right now. */
+  /** Floor the crowd should never drop below — respected by both CreatureGrid's raidFloor
+   * param (currently unused post-catch-removal, kept for signature compatibility) and
+   * RaidController.tick()'s own attrition drain. */
   getRaidFloor(): number {
     if (this.state === "idle") return QTY_MIN;
     return Math.max(QTY_MIN, Math.round(this.raidStartCount * RAID_FLOOR_FRACTION));

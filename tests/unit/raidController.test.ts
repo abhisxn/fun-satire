@@ -337,6 +337,31 @@ describe('RaidController', () => {
     expect(raid.getRaidFloor()).toBe(10);
   });
 
+  it('does not drain the crowd on the very first tick right after a raid starts (regression: lastAttritionAtMs must be seeded to now, not 0)', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 5000; // non-trivial start so a stale lastAttritionAtMs=0 would be caught
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    expect(raid.getState()).toBe('raiding');
+    const raidStartCrowd = grid.getCreatureCount();
+
+    // Tick almost immediately after the raid started (well under the 400ms
+    // attrition interval). If lastAttritionAtMs were wrongly seeded to 0,
+    // `t - 0 >= 400` would be trivially true here and drain a creature
+    // instantly instead of waiting out the interval.
+    t += 10;
+    raid.tick(t);
+
+    expect(grid.getCreatureCount()).toBe(raidStartCrowd);
+
+    now.mockRestore();
+  });
+
   it('drains the crowd toward the raid floor over time while raiding, without a charge held', () => {
     const now = vi.spyOn(Date, 'now');
     let t = 0;
