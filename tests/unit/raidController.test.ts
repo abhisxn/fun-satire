@@ -104,6 +104,24 @@ describe('detectShake', () => {
     ];
     expect(detectShake(samples)).toBe(true);
   });
+
+  it('counts a reversal that lands on a natural deceleration dip (real hand-shake physics)', () => {
+    // A real shake decelerates toward zero speed right at each turnaround —
+    // the old implementation reset the pending direction on any slow
+    // sample, discarding exactly the direction needed to detect the
+    // reversal that follows it.
+    const samples: MoveSample[] = [
+      sample(0, 0, 0),
+      sample(60, 0, 20),
+      sample(61, 0, 220),
+      sample(0, 0, 240),
+      sample(1, 0, 440),
+      sample(60, 0, 460),
+      sample(59, 0, 660),
+      sample(0, 0, 680),
+    ];
+    expect(detectShake(samples)).toBe(true);
+  });
 });
 
 describe('pickPulseKinds', () => {

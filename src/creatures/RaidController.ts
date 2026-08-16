@@ -18,7 +18,7 @@ export interface MoveSample {
 }
 
 /** Sliding window over which reversals are counted (ms). */
-export const SHAKE_WINDOW_MS = 600;
+export const SHAKE_WINDOW_MS = 1100;
 /** Direction reversals required within the window to count as a shake. */
 export const SHAKE_REVERSAL_THRESHOLD = 3;
 /** Below this speed (px/ms) a movement doesn't count toward a reversal. */
@@ -54,7 +54,12 @@ export function detectShake(samples: MoveSample[]): boolean {
     const speed = Math.hypot(dx, dy) / dt;
 
     if (speed < SHAKE_MIN_SPEED_PX_MS) {
-      havePrev = false;
+      // Skip this sample without discarding the pending direction: a real
+      // shake naturally decelerates toward zero speed at the exact moment
+      // it reverses, so the sample right at a reversal is the one most
+      // likely to dip below the speed floor. Resetting havePrev here would
+      // throw away the direction from just before the deceleration,
+      // undercounting exactly the reversals we're trying to detect.
       continue;
     }
 
