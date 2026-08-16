@@ -7,6 +7,7 @@ import { createFingerCreature, getFingerRotation, triggerFingerHoverTone } from 
 import { createCockroachCreature, getCockroachRotation, triggerCockroachHoverTone } from "./CockroachCreature";
 import { createPlacardCreature, getPlacardRotation, triggerPlacardHoverTone } from "./PlacardCreature";
 import { QTY_MIN, QTY_MAX } from "../config/tokens";
+import { decayTowardFloor } from "./raidRules";
 
 /** Whole batch of creatures finishes appearing within this window (ms). */
 export const SPAWN_WAVE_MS = 20000;
@@ -28,8 +29,10 @@ export const REPOP_COUNT_BURST_FRACTION = 0.15;
 export const REPOP_COUNT_BURST_MIN = 40;
 /** Grace period before an idle sticker starts draining the crowd (ms). */
 export const IDLE_GRACE_MS = 20_000;
-/** How long the decay ramp takes, from grace-end to the floor (ms). */
-export const IDLE_DECAY_MS = 300_000;
+/** Half-life (ms) of the idle-decay curve — see raidRules.decayTowardFloor. At this many ms
+ * past IDLE_GRACE_MS, the visible crowd has decayed exactly halfway from full to the idle
+ * floor. */
+export const IDLE_HALF_LIFE_MS = 150_000;
 /** Idle floor as a fraction of the current target quantity. */
 export const IDLE_FLOOR_FRACTION = 0.02;
 /** Absolute minimum visible count at the idle floor, regardless of target quantity. */
@@ -91,18 +94,6 @@ export function computeSpawnProgress(spawnPopAtMs: number, nowMs: number): Spawn
     opacity: Math.min(1, progress / 0.6),
     done: false,
   };
-}
-
-/**
- * Pure function: how much of the target crowd should be visible right now,
- * given how long the sticker has sat still. 1 while within the grace
- * period, ramping linearly down to IDLE_FLOOR_FRACTION over IDLE_DECAY_MS,
- * then holding there.
- */
-export function idleVisibleFraction(idleMs: number): number {
-  if (idleMs <= IDLE_GRACE_MS) return 1;
-  const t = Math.min(1, (idleMs - IDLE_GRACE_MS) / IDLE_DECAY_MS);
-  return 1 - t * (1 - IDLE_FLOOR_FRACTION);
 }
 
 /** Pure function: drag speed in px/ms from a frame's movement distance and elapsed time. */
@@ -490,9 +481,10 @@ export class CreatureGrid {
     if (this.shouldRunThrottled(this.lastRepopPickMs, REPOP_INTERVAL_MS, now)) {
       this.lastRepopPickMs = now;
       const idleMs = now - this.lastActivityMs;
+      const decayFraction = decayTowardFloor(Math.max(0, idleMs - IDLE_GRACE_MS), IDLE_FLOOR_FRACTION, IDLE_HALF_LIFE_MS);
       const desiredVisibleCount = Math.min(
         this.targetCount,
-        Math.max(IDLE_FLOOR_MIN_COUNT, Math.round(this.targetCount * idleVisibleFraction(idleMs))),
+        Math.max(IDLE_FLOOR_MIN_COUNT, Math.round(this.targetCount * decayFraction)),
       );
       let visibleCount = 0;
       let waitingCount = 0;
