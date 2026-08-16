@@ -83,6 +83,12 @@ export function pickSecurityKind(rand: () => number = Math.random): SecurityKind
   return rand() < 0.5 ? "police" : "raf";
 }
 
+/** Coin-flip for whether a freshly-spawned unit's sprite renders mirrored. `rand` is
+ * injectable for deterministic tests. */
+export function pickSecurityFlip(rand: () => number = Math.random): boolean {
+  return rand() >= 0.5;
+}
+
 export type SecurityPhase = "entering" | "wandering" | "shrinking";
 
 export interface SecurityUnitState {
@@ -104,6 +110,9 @@ export interface SecurityUnitState {
   escortRadius: number;
   /** Per-unit phase offset (ms) for the wobble sine wave, so units don't wobble in sync. */
   escortPhaseOffsetMs: number;
+  /** Whether this unit's sprite renders horizontally mirrored — purely cosmetic, assigned
+   * randomly at spawn for visual variety. */
+  flipped: boolean;
 }
 
 function rand(min: number, max: number): number {
@@ -143,7 +152,7 @@ export function applyTransform(state: SecurityUnitState): void {
     if (progress.done) state.phase = "wandering";
   }
 
-  state.el.style.transform = `translate3d(${tx.toFixed(1)}px,${ty.toFixed(1)}px,0) scale(${scale.toFixed(3)})`;
+  state.el.style.transform = `translate3d(${tx.toFixed(1)}px,${ty.toFixed(1)}px,0) scale(${scale.toFixed(3)})${state.flipped ? ' scaleX(-1)' : ''}`;
   state.el.style.opacity = String(opacity);
 }
 
@@ -313,6 +322,7 @@ export function createSecurityUnit(
     escortAngle: 0,
     escortRadius: SECURITY_ESCORT_RADIUS,
     escortPhaseOffsetMs: 0,
+    flipped: pickSecurityFlip(),
   };
   applyTransform(state);
   return state;

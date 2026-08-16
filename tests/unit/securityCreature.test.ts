@@ -22,6 +22,8 @@ import {
   computeSecurityEnterProgress,
   computeSecurityShrinkFraction,
   burstWaypoint,
+  pickSecurityFlip,
+  applyTransform,
   SECURITY_ESCORT_RADIUS,
   SECURITY_ESCORT_RADIUS_JITTER,
   SECURITY_ESCORT_EASE,
@@ -97,6 +99,30 @@ describe('SecurityCreature', () => {
     it('picks a random kind when none is given', () => {
       const unit = createSecurityUnit(container, 0, 0);
       expect(['police', 'raf']).toContain(unit.kind);
+    });
+
+    it('includes scaleX(-1) in the transform when the unit is flipped', () => {
+      const unit = createSecurityUnit(container, 100, 200, 'police');
+      unit.flipped = true;
+      applyTransform(unit);
+      expect(unit.el.style.transform).toContain('scaleX(-1)');
+    });
+
+    it('omits scaleX(-1) from the transform when the unit is not flipped', () => {
+      const unit = createSecurityUnit(container, 100, 200, 'police');
+      unit.flipped = false;
+      applyTransform(unit);
+      expect(unit.el.style.transform).not.toContain('scaleX(-1)');
+    });
+  });
+
+  describe('pickSecurityFlip', () => {
+    it('returns false when rand() is below 0.5', () => {
+      expect(pickSecurityFlip(() => 0.1)).toBe(false);
+    });
+
+    it('returns true when rand() is at or above 0.5', () => {
+      expect(pickSecurityFlip(() => 0.9)).toBe(true);
     });
   });
 
