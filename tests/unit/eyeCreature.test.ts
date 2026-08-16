@@ -5,6 +5,8 @@ import {
   updateEyePupil,
   updateEyeBlink,
   darkenHexColor,
+  lightenHexColor,
+  derivePupilColor,
   EYE_NAT_W,
   EYE_NAT_H,
 } from '../../src/creatures/EyeCreature';
@@ -101,13 +103,13 @@ describe('EyeCreature', () => {
       expect(pupilR).toBeCloseTo(irisR * 0.35, 5);
     });
 
-    it('is a darkened shade of the iris\'s own color', () => {
+    it('is a derived shade of the iris\'s own color, distinct from the iris', () => {
       const eye = createEyeCreature(0, 0, 1, TEST_SVG, 'pupilcreate2');
 
       const irisFill = eye.iris.getAttribute('fill')!;
       const pupilFill = eye.pupil.getAttribute('fill')!;
 
-      expect(pupilFill).toBe(darkenHexColor(irisFill, 0.2));
+      expect(pupilFill).toBe(derivePupilColor(irisFill, 0.2));
       expect(pupilFill).not.toBe(irisFill);
     });
   });
@@ -123,6 +125,32 @@ describe('EyeCreature', () => {
 
     it('rounds and clamps correctly for an arbitrary color', () => {
       expect(darkenHexColor('#5b7b8a', 0.2)).toBe('#49626e');
+    });
+  });
+
+  describe('lightenHexColor', () => {
+    it('scales each channel up toward white by the given amount', () => {
+      expect(lightenHexColor('#000000', 0.2)).toBe('#333333');
+    });
+
+    it('leaves white unchanged', () => {
+      expect(lightenHexColor('#ffffff', 0.5)).toBe('#ffffff');
+    });
+
+    it('rounds and clamps correctly for an arbitrary dark color', () => {
+      expect(lightenHexColor('#3d3229', 0.2)).toBe('#645b54');
+    });
+  });
+
+  describe('derivePupilColor', () => {
+    it('lightens a dark iris color (most of IRIS_COLORS is dark browns/greens)', () => {
+      expect(derivePupilColor('#3d3229', 0.2)).toBe(lightenHexColor('#3d3229', 0.2));
+      expect(derivePupilColor('#3d3229', 0.2)).not.toBe(darkenHexColor('#3d3229', 0.2));
+    });
+
+    it('darkens a light iris color', () => {
+      expect(derivePupilColor('#cccccc', 0.2)).toBe(darkenHexColor('#cccccc', 0.2));
+      expect(derivePupilColor('#cccccc', 0.2)).not.toBe(lightenHexColor('#cccccc', 0.2));
     });
   });
 

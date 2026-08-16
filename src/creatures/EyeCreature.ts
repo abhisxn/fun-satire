@@ -38,6 +38,31 @@ export function darkenHexColor(hex: string, amount: number): string {
   return `#${toHex(r * (1 - amount))}${toHex(g * (1 - amount))}${toHex(b * (1 - amount))}`;
 }
 
+/** Pure: lightens a "#rrggbb" hex color by `amount` (0-1), channel-wise, mixing toward white. */
+export function lightenHexColor(hex: string, amount: number): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  const toHex = (n: number): string =>
+    Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+  return `#${toHex(r + (255 - r) * amount)}${toHex(g + (255 - g) * amount)}${toHex(b + (255 - b) * amount)}`;
+}
+
+/** Pure: derives a subtle pupil shade from the iris's own color. Most of IRIS_COLORS is
+ * dark browns/greens, and darkening those further toward black leaves a pupil that's
+ * nearly invisible against its own iris — so a dark iris (luminance below mid-gray)
+ * lightens instead, while a lighter iris still darkens as before. Either way the pupil
+ * stays visibly distinct from its iris. */
+export function derivePupilColor(hex: string, amount: number): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance < 128 ? lightenHexColor(hex, amount) : darkenHexColor(hex, amount);
+}
+
 export function createEyeCreature(
   hx: number,
   hy: number,
@@ -77,7 +102,7 @@ export function createEyeCreature(
   pupil.setAttribute('cx', iris.getAttribute('cx') || String(IRIS_BASE_CX));
   pupil.setAttribute('cy', iris.getAttribute('cy') || String(IRIS_BASE_CY));
   pupil.setAttribute('r', String(irisRadius * PUPIL_RADIUS_RATIO));
-  pupil.setAttribute('fill', darkenHexColor(irisColor, PUPIL_DARKEN_AMOUNT));
+  pupil.setAttribute('fill', derivePupilColor(irisColor, PUPIL_DARKEN_AMOUNT));
   iris.parentNode?.appendChild(pupil);
 
   return {
