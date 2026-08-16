@@ -58,26 +58,33 @@ deliberate shake more time to accumulate `SHAKE_REVERSAL_THRESHOLD` (3) reversal
 
 ## D. Power-selector meter (Figma node 431:10191, file `oPAdd7oWLQVMTP1v6pJOW0`)
 
-New `PowerMeter` component: a pill (`WEAK`↔`HIGH` labels either side of a horizontal gradient track, small
-triangle marker riding along it) matching the Figma reference — `backdrop-blur` white pill, rounded-full track
-with a yellow→green→red gradient, marker as a small absolutely-positioned image. Sized to match the HUD
-button cluster's width (responsive to the same `--hud-btn-size`/`--hud-btn-gap` tokens the rest of the HUD
-uses), positioned directly above the HUD row.
+New `PowerMeter` component (own file `src/hud/PowerMeter.ts` + `powerMeter.css`, following the same
+class-with-`attachTo()` pattern as `FilterPanel`/`GalleryPanel`/`MenuPanel`): a pill (`WEAK`↔`HIGH` labels
+either side of a horizontal gradient track, small triangle marker riding along it) matching the Figma
+reference — `backdrop-blur` white pill, rounded-full track with a yellow→green→red gradient, marker as a small
+absolutely-positioned image.
+
+**Why it's a child of the HUD, not a sibling**: `.premium-hud` (`hud.css:32`) is `position:fixed` and is
+user-draggable (`Hud.ts`'s `startDrag`/`onPointerMove` — the whole toolbar can be dragged anywhere and snaps to
+a grid). A meter positioned independently would need its own drag-tracking to stay attached. Instead,
+`PowerMeter.attachTo(hud.getRoot())` appends it as a child of `.premium-hud` itself, CSS-positioned
+`position: absolute; bottom: 100%; left: 0; right: 0;` (sitting directly above the row it's a child of). This
+gets three things for free: it moves/drags with the HUD automatically (no position-tracking code needed), its
+width matches the HUD's own rendered width exactly via plain CSS (`left:0; right:0` against the parent's actual
+box, not a measured/copied number), and it participates in the HUD's existing fluid `--hud-density` sizing
+system for its own internal proportions (pill height, label font-size, track height, marker size) — all derived
+from `--hud-density` like the rest of the HUD, so it scales in lockstep at every viewport width with zero new
+breakpoints. `Hud` gains a new `getRoot(): HTMLElement` call site for this purpose — it already exists
+(`Hud.ts:173`), so no new API is needed there.
 
 Driven by the same pointerdown/pointerup hold gesture already wired to the Protest button — no new input.
 `PowerMeter`'s marker position is a pure function of `raidController.getChargeFraction()` (0 → left edge, 1 →
 right edge), synced in the existing `engine.onTick` in `main.ts` alongside the `--charge` CSS var update.
 
-**Responsive/mobile**: the HUD already has a fluid sizing system — `--hud-density` (`hud.css:22`) is a single
-`clamp(0px, calc(100vw - 320px), 448px)` token that every button/gap/padding dimension derives from, ramping
-continuously from a 320px viewport up to a 768px+ ceiling, with no breakpoint cliffs. `PowerMeter`'s CSS derives
-its own sizing (pill height, label font-size, track height/width, marker size) from that same `--hud-density`
-token rather than inventing a parallel scale, so it stays visually in lockstep with the HUD row it sits above
-at every viewport width. Its width is set to match the HUD row's own rendered width (read via
-`getBoundingClientRect()` on the HUD container and applied as an inline style, updated on resize alongside the
-existing `resize` listener in `main.ts`) rather than a hardcoded percentage, so "match width with HUD" holds
-exactly regardless of how many HUD buttons are present. Touch target height follows `--hud-btn-size` (min 44px,
-already touch-friendly) rather than the Figma reference's smaller 39px desktop figure, consistent with how
+**Responsive/mobile**: covered by the child-of-HUD placement above — `left:0; right:0` against a
+`position:fixed` parent means the width match holds exactly at every viewport size and however many HUD buttons
+are present, with no measurement code. Touch target height follows `--hud-btn-size` (min 44px, already
+touch-friendly) rather than the Figma reference's smaller 39px desktop figure, consistent with how
 `.hud-attack` already sizes itself today. No new media query is needed — the existing `768px` structural
 breakpoint (which only drops tooltips, per the comment at `hud.css:440`) is untouched since `PowerMeter` has no
 tooltip.
@@ -209,8 +216,9 @@ top of the creature's own depth-`scale`. Its range changes from `0.3 + Math.pow(
   reservoir-sample fade/repop picks instead of `.filter()`+`splice`).
 - `src/main.ts` — A (pass `avatarLayer: document.body` into `RaidController`'s config; re-append
   `activeOverlay.el` to `document.body` whenever a security unit spawns).
-- `src/hud/` — D: new `PowerMeter.ts` (+ CSS) component, wired in `main.ts` alongside the existing
-  `--charge`/Protest-button sync in `engine.onTick`.
+- `src/hud/PowerMeter.ts` (new) + `src/hud/powerMeter.css` (new) — D: the meter component, attached via
+  `powerMeter.attachTo(hud.getRoot())` in `main.ts`'s `mountPostOnboarding`, with its marker synced from
+  `raidController.getChargeFraction()` in the existing `engine.onTick` alongside the `--charge` CSS var update.
 - `src/creatures/EyeCreature.ts` — I (`lightenHexColor`, `derivePupilColor`, swap the fill call).
 - `src/creatures/PlacardCreature.ts` — H (`PLACARD_POOL` dimensions + 19th entry), J (`pickSignScale` → ratio
   applied on top of `scale`).
