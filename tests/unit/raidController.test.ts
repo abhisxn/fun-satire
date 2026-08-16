@@ -816,7 +816,7 @@ describe('RaidController', () => {
     });
   });
 
-  describe('onProtestWin / onProtestBackfireSettled timing', () => {
+  describe('onProtestWin / onCrowdSizeChanged / onRaidStart timing', () => {
     function triggerRaidOn(
       r: RaidController,
       now: { mockImplementation: (fn: () => number) => void },
@@ -872,76 +872,101 @@ describe('RaidController', () => {
       now.mockRestore();
     });
 
-    it('onProtestBackfireSettled fires immediately for a fresh raid (no prior raid to poof)', () => {
-      const onProtestBackfireSettled = vi.fn();
-      const r = new RaidController({ container, grid, avatarLayer: container, onProtestBackfireSettled });
-
-      const now = vi.spyOn(Date, 'now');
-      let t = 0;
-      now.mockImplementation(() => t);
-
-      r.startCharging();
-      t += 10; // LOW power
-      r.tick(t);
-      r.releaseCharge();
-
-      expect(onProtestBackfireSettled).toHaveBeenCalledTimes(1);
-      expect(onProtestBackfireSettled).toHaveBeenCalledWith(r.getSecurityUnits().length);
-
-      now.mockRestore();
-    });
-
-    it('onProtestBackfireSettled does NOT fire at releaseCharge() for an active-raid backfire — only once every queued respawn has fired', () => {
-      const onProtestBackfireSettled = vi.fn();
-      const r = new RaidController({ container, grid, avatarLayer: container, onProtestBackfireSettled });
+    it('onRaidStart fires exactly once at the idle->raiding transition, not on later pulses within the same raid', () => {
+      const onRaidStart = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onRaidStart });
 
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
       triggerRaidOn(r, now, tRef);
+      expect(onRaidStart).toHaveBeenCalledTimes(1);
+
+      // A second shake mid-raid spawns more units but must not re-fire onRaidStart.
+      tRef.t += SHAKE_PULSE_COOLDOWN_MS;
+      triggerRaidOn(r, now, tRef);
+      expect(onRaidStart).toHaveBeenCalledTimes(1);
+
+      now.mockRestore();
+    });
+
+    it('onCrowdSizeChanged fires exactly once when a raid spawns, and not again on ticks where nothing changed', () => {
+      const onCrowdSizeChanged = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onCrowdSizeChanged });
+
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaidOn(r, now, tRef);
+
+      expect(onCrowdSizeChanged).toHaveBeenCalledTimes(1);
+      expect(onCrowdSizeChanged).toHaveBeenCalledWith(r.getSecurityUnits().length);
+
+      // Ticking forward with nothing pending (no respawns, no shrink sweep) must
+      // not re-fire — the count genuinely hasn't changed.
+      tRef.t += 50;
+      r.tick(tRef.t);
+      expect(onCrowdSizeChanged).toHaveBeenCalledTimes(1);
+
+      now.mockRestore();
+    });
+
+    it('onCrowdSizeChanged fires again as a backfire\'s staggered respawns trickle in, once per arrival', () => {
+      const onCrowdSizeChanged = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onCrowdSizeChanged });
+
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaidOn(r, now, tRef);
+      const afterSpawnCalls = onCrowdSizeChanged.mock.calls.length;
 
       r.startCharging();
       tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.5); // MEDIUM power
       r.tick(tRef.t);
       r.releaseCharge();
 
-      expect(onProtestBackfireSettled).not.toHaveBeenCalled();
+      // The poof itself doesn't remove anything from `units` synchronously (units
+      // only leave once their staggered shrink window elapses in tick()), so no
+      // new call yet from the release itself.
+      expect(onCrowdSizeChanged.mock.calls.length).toBe(afterSpawnCalls);
 
-      // Advance well past the poof + regroup delay + stagger for every plausible
-      // respawn count so every queued respawn has definitely fired.
+      // Advance past the poof's shrink window, the respawn delay, and every
+      // staggered respawn slot — each arrival should have produced its own call.
       tRef.t += SECURITY_SHRINK_MS + BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * 10;
       r.tick(tRef.t);
 
-      expect(onProtestBackfireSettled).toHaveBeenCalledTimes(1);
-      expect(onProtestBackfireSettled).toHaveBeenCalledWith(r.getSecurityUnits().length);
+      expect(onCrowdSizeChanged.mock.calls.length).toBeGreaterThan(afterSpawnCalls);
+      expect(onCrowdSizeChanged).toHaveBeenLastCalledWith(r.getSecurityUnits().length);
 
       now.mockRestore();
     });
 
-    it('a full-power win cancels a still-pending backfire settle — onProtestBackfireSettled never fires for it', () => {
-      const onProtestBackfireSettled = vi.fn();
-      const r = new RaidController({ container, grid, avatarLayer: container, onProtestBackfireSettled });
+    it('onCrowdSizeChanged fires as a win\'s despawn sweep removes units one at a time, down to 0', () => {
+      const onCrowdSizeChanged = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onCrowdSizeChanged });
 
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
       triggerRaidOn(r, now, tRef);
+      const spawned = r.getSecurityUnits().length;
 
-      // A MEDIUM backfire queues a regroup...
       r.startCharging();
-      tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.5);
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak
       r.tick(tRef.t);
       r.releaseCharge();
 
-      // ...but before it resolves, a full-power win clears the raid outright.
-      tRef.t += SHAKE_PULSE_COOLDOWN_MS;
-      r.startCharging();
-      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS;
-      r.tick(tRef.t);
-      r.releaseCharge();
+      const seenCounts: number[] = [];
+      onCrowdSizeChanged.mockImplementation((count: number) => seenCounts.push(count));
 
-      tRef.t += SECURITY_SHRINK_MS * SECURITY_MAX_UNITS + BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * 10;
-      r.tick(tRef.t);
+      for (let i = 0; i < spawned; i++) {
+        tRef.t += SECURITY_SHRINK_MS;
+        r.tick(tRef.t);
+      }
 
-      expect(onProtestBackfireSettled).not.toHaveBeenCalled();
+      expect(seenCounts.length).toBe(spawned);
+      expect(seenCounts[seenCounts.length - 1]).toBe(0);
+      // Strictly decreasing, one unit at a time.
+      for (let i = 1; i < seenCounts.length; i++) {
+        expect(seenCounts[i]).toBe(seenCounts[i - 1] - 1);
+      }
 
       now.mockRestore();
     });
