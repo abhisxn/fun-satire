@@ -1,6 +1,6 @@
 // tests/unit/winPanel.test.ts
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { WinPanel } from "../../src/hud/WinPanel";
 import { WIN_COPY_VARIANTS } from "../../src/hud/winCopy";
 
@@ -90,5 +90,41 @@ describe("hud/WinPanel", () => {
     panel.show(WIN_COPY_VARIANTS[0]!);
     const btn = panel.getRoot().querySelector<HTMLButtonElement>(".win-panel-next-btn");
     expect(() => btn?.click()).not.toThrow();
+  });
+
+  describe("share row", () => {
+    it("renders WhatsApp, Facebook, and Instagram icon buttons when navigator.share is unavailable", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      const root = panel.getRoot();
+      expect(root.querySelector(".win-panel-share-icon-btn--whatsapp")).not.toBeNull();
+      expect(root.querySelector(".win-panel-share-icon-btn--facebook")).not.toBeNull();
+      expect(root.querySelector(".win-panel-share-icon-btn--instagram")).not.toBeNull();
+    });
+
+    it("renders a Copy link button", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      const btn = panel.getRoot().querySelector<HTMLButtonElement>(".win-panel-copy-link-btn");
+      expect(btn).not.toBeNull();
+      expect(btn?.textContent).toBe("Copy link");
+    });
+
+    it("Copy link writes the current URL to the clipboard and shows a toast", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      const btn = panel.getRoot().querySelector<HTMLButtonElement>(".win-panel-copy-link-btn");
+      btn?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(writeText).toHaveBeenCalledWith(window.location.href);
+      const toast = panel.getRoot().querySelector(".win-panel-toast");
+      expect(toast?.classList.contains("visible")).toBe(true);
+      expect(toast?.textContent).toBe("Link copied!");
+    });
   });
 });
