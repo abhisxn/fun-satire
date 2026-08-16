@@ -43,9 +43,12 @@ export function pickRandomPlacard(): PlacardAsset {
   return PLACARD_POOL[index];
 }
 
-/** Sign size randomized independently from the stick's scale, kept legible. */
+/** Sign-to-stick size ratio, applied on top of the creature's own depth-scale (not an
+ * absolute multiplier) — so a small/distant creature always carries a proportionally
+ * small sign, and a close/big creature a proportionally big one. The 0.5 floor is below
+ * 1.0 so a sign can end up visibly smaller than its own stick, not just larger. */
 function pickSignScale(): number {
-  return 0.3 + Math.pow(Math.random(), 1.5) * 0.5;
+  return 0.5 + Math.random() * 0.9;
 }
 
 export function createPlacardCreature(
@@ -72,7 +75,7 @@ export function createPlacardCreature(
 
   const asset = pickRandomPlacard();
   const signScale = pickSignScale();
-  const placardW = PLACARD_BASE_W * signScale;
+  const placardW = PLACARD_BASE_W * scale * signScale;
   const placardH = placardW * (asset.h / asset.w);
   const anchorPx = {
     x: STICK_ANCHOR_PCT.x * w,
