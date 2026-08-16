@@ -15,6 +15,8 @@ const SVG_FACEBOOK = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="htt
 const SVG_INSTAGRAM = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="win-ig-grad" x1="0" y1="22" x2="22" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset="0.4" stop-color="#D62976"/><stop offset="0.7" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><circle cx="11" cy="11" r="11" fill="url(#win-ig-grad)"/><rect x="6" y="6" width="10" height="10" rx="3" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="11" cy="11" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="14.2" cy="7.8" r="0.7" fill="#fff"/></svg>`;
 const SVG_SHARE = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="13.5" cy="4.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="4.5" cy="9" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="13.5" cy="13.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 7.8L11.5 5.3M6.5 10.2L11.5 12.7" stroke="currentColor" stroke-width="1.4"/></svg>`;
 
+const AUTO_DISMISS_MS = 7000;
+
 const SHARE_MESSAGE =
   "I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it.";
 
@@ -29,6 +31,7 @@ export class WinPanel {
   private toastEl!: HTMLElement;
   private toastTimeout: number | null = null;
   private instagramFallbackTimeout: number | null = null;
+  private autoDismissTimeout: number | null = null;
   private readonly nativeShare: ((data: ShareData) => Promise<void>) | undefined = (
     navigator as Navigator & { share?: (data: ShareData) => Promise<void> }
   ).share?.bind(navigator);
@@ -192,12 +195,22 @@ export class WinPanel {
     this.copyEl.textContent = variant.copy;
     this.isOpen = true;
     this.overlay.classList.add("open");
+    this.clearAutoDismiss();
+    this.autoDismissTimeout = window.setTimeout(() => this.hide(), AUTO_DISMISS_MS);
   }
 
   hide(): void {
     if (!this.isOpen) return;
     this.isOpen = false;
     this.overlay.classList.remove("open");
+    this.clearAutoDismiss();
+  }
+
+  private clearAutoDismiss(): void {
+    if (this.autoDismissTimeout !== null) {
+      window.clearTimeout(this.autoDismissTimeout);
+      this.autoDismissTimeout = null;
+    }
   }
 
   isPanelOpen(): boolean {
@@ -213,6 +226,7 @@ export class WinPanel {
   }
 
   destroy(): void {
+    this.clearAutoDismiss();
     if (this.toastTimeout !== null) {
       window.clearTimeout(this.toastTimeout);
     }

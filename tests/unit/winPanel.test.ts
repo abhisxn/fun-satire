@@ -127,4 +127,46 @@ describe("hud/WinPanel", () => {
       expect(toast?.textContent).toBe("Link copied!");
     });
   });
+
+  describe("auto-dismiss", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("hides itself automatically after 7 seconds", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      expect(panel.isPanelOpen()).toBe(true);
+
+      vi.advanceTimersByTime(6999);
+      expect(panel.isPanelOpen()).toBe(true);
+
+      vi.advanceTimersByTime(1);
+      expect(panel.isPanelOpen()).toBe(false);
+    });
+
+    it("does not fire the auto-dismiss timer again after a manual close", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      panel.hide();
+
+      expect(() => vi.advanceTimersByTime(7000)).not.toThrow();
+      expect(panel.isPanelOpen()).toBe(false);
+    });
+
+    it("restarts the timer on each show() call", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+      vi.advanceTimersByTime(5000);
+      panel.show(WIN_COPY_VARIANTS[1]!);
+      vi.advanceTimersByTime(5000);
+      expect(panel.isPanelOpen()).toBe(true);
+      vi.advanceTimersByTime(2000);
+      expect(panel.isPanelOpen()).toBe(false);
+    });
+  });
 });
