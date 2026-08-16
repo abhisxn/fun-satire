@@ -3,10 +3,13 @@ import type { SecurityUnit } from "./CreatureGrid";
 import {
   createSecurityUnit,
   removeSecurityUnit,
-  startSecurityWander,
+  startSecurityEntranceBurst,
   pickSecurityKind,
   computeSecurityShrinkFraction,
   SECURITY_SHRINK_MS,
+  assignEscortFormation,
+  applyEscortStep,
+  applySecurityCollisions,
 } from "./SecurityCreature";
 import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
 import { QTY_MAX, QTY_MIN } from "../config/tokens";
@@ -196,9 +199,10 @@ export class RaidController {
 
     for (let i = 0; i < n; i++) {
       const unit = createSecurityUnit(this.avatarLayer, x, y, kinds[i]);
-      startSecurityWander(unit, vw, vh, true);
+      startSecurityEntranceBurst(unit, vw, vh);
       this.units.push(unit);
     }
+    assignEscortFormation(this.units);
   }
 
   /** Current security units, in the shape CreatureGrid.update() expects for repulsion/catching. */
@@ -261,9 +265,10 @@ export class RaidController {
       const kinds = pickPulseKinds(missing);
       for (let i = 0; i < missing; i++) {
         const unit = createSecurityUnit(this.avatarLayer, this.lastAvatarX, this.lastAvatarY, kinds[i]);
-        startSecurityWander(unit, vw, vh, true);
+        startSecurityEntranceBurst(unit, vw, vh);
         this.units.push(unit);
       }
+      assignEscortFormation(this.units);
     }
 
     this.grid.setQuantity(this.chargeBaselineTargetCount);
@@ -307,6 +312,11 @@ export class RaidController {
         removeSecurityUnit(unit);
       }
     }
+
+    for (const unit of this.units) {
+      applyEscortStep(unit, this.lastAvatarX, this.lastAvatarY, nowMs);
+    }
+    applySecurityCollisions(this.units);
 
     if (this.state === "raiding" && nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS) {
       this.lastAttritionAtMs = nowMs;

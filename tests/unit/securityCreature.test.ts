@@ -22,6 +22,15 @@ import {
   computeSecurityEnterProgress,
   computeSecurityShrinkFraction,
   burstWaypoint,
+  SECURITY_ESCORT_RADIUS,
+  SECURITY_ESCORT_RADIUS_JITTER,
+  SECURITY_ESCORT_EASE,
+  SECURITY_ESCORT_WOBBLE_RAD,
+  SECURITY_ESCORT_WOBBLE_PERIOD_MS,
+  SECURITY_COLLISION_RADIUS,
+  assignEscortFormation,
+  applyEscortStep,
+  applySecurityCollisions,
 } from '../../src/creatures/SecurityCreature';
 
 describe('SecurityCreature', () => {
@@ -181,6 +190,126 @@ describe('SecurityCreature', () => {
 
       expect(p.x).toBeGreaterThanOrEqual(40);
       expect(p.y).toBeGreaterThanOrEqual(40);
+    });
+  });
+
+  describe('assignEscortFormation', () => {
+    it('spreads N units evenly across a full circle', () => {
+      const units = [
+        createSecurityUnit(container, 0, 0, 'police'),
+        createSecurityUnit(container, 0, 0, 'police'),
+        createSecurityUnit(container, 0, 0, 'police'),
+        createSecurityUnit(container, 0, 0, 'police'),
+      ];
+
+      assignEscortFormation(units, () => 0.5);
+
+      expect(units[0]!.escortAngle).toBeCloseTo(0, 5);
+      expect(units[1]!.escortAngle).toBeCloseTo(Math.PI / 2, 5);
+      expect(units[2]!.escortAngle).toBeCloseTo(Math.PI, 5);
+      expect(units[3]!.escortAngle).toBeCloseTo((3 * Math.PI) / 2, 5);
+    });
+
+    it('assigns each unit its own escort radius within the jitter range, not one shared constant', () => {
+      const units = [
+        createSecurityUnit(container, 0, 0, 'police'),
+        createSecurityUnit(container, 0, 0, 'police'),
+      ];
+
+      assignEscortFormation(units, () => 1); // maxes out the jitter: +SECURITY_ESCORT_RADIUS_JITTER
+
+      for (const unit of units) {
+        expect(unit.escortRadius).toBeCloseTo(SECURITY_ESCORT_RADIUS + SECURITY_ESCORT_RADIUS_JITTER, 5);
+      }
+    });
+
+    it('assigns each unit a phase offset so their wobble is desynced', () => {
+      const units = [createSecurityUnit(container, 0, 0, 'police')];
+
+      assignEscortFormation(units, () => 0.5);
+
+      expect(units[0]!.escortPhaseOffsetMs).toBeCloseTo(5000, 5);
+    });
+  });
+
+  describe('applyEscortStep', () => {
+    it('eases the unit toward avatar position + its escort offset', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      unit.phase = 'wandering';
+      unit.escortAngle = 0; // offset purely on +x
+      unit.escortRadius = SECURITY_ESCORT_RADIUS;
+      unit.escortPhaseOffsetMs = 0; // wobble = sin(0) = 0 at nowMs = 0, no wobble this instant
+
+      applyEscortStep(unit, 200, 200, 0, SECURITY_ESCORT_EASE);
+
+      const targetX = 200 + SECURITY_ESCORT_RADIUS;
+      const targetY = 200;
+      expect(unit.x).toBeCloseTo((targetX - 0) * SECURITY_ESCORT_EASE, 5);
+      expect(unit.y).toBeCloseTo((targetY - 0) * SECURITY_ESCORT_EASE, 5);
+    });
+
+    it('does nothing while the unit is still in its entrance burst', () => {
+      const unit = createSecurityUnit(container, 10, 10, 'police');
+      expect(unit.phase).toBe('entering');
+
+      applyEscortStep(unit, 999, 999, 0, SECURITY_ESCORT_EASE);
+
+      expect(unit.x).toBe(10);
+      expect(unit.y).toBe(10);
+    });
+
+    it('wobbles the effective angle around escortAngle as nowMs advances', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      unit.phase = 'wandering';
+      unit.escortAngle = 0;
+      unit.escortRadius = SECURITY_ESCORT_RADIUS;
+      unit.escortPhaseOffsetMs = 0;
+
+      // A quarter period in, sin() peaks at 1 — maximum wobble offset.
+      const quarterPeriod = SECURITY_ESCORT_WOBBLE_PERIOD_MS / 4;
+      applyEscortStep(unit, 0, 0, quarterPeriod, 1); // ease=1 snaps straight to target
+
+      const expectedAngle = SECURITY_ESCORT_WOBBLE_RAD;
+      expect(unit.x).toBeCloseTo(Math.cos(expectedAngle) * SECURITY_ESCORT_RADIUS, 3);
+      expect(unit.y).toBeCloseTo(Math.sin(expectedAngle) * SECURITY_ESCORT_RADIUS, 3);
+    });
+  });
+
+  describe('applySecurityCollisions', () => {
+    it('pushes two overlapping units apart', () => {
+      const a = createSecurityUnit(container, 100, 100, 'police');
+      const b = createSecurityUnit(container, 110, 100, 'police'); // 10px apart, well inside SECURITY_COLLISION_RADIUS
+      a.phase = 'wandering';
+      b.phase = 'wandering';
+
+      applySecurityCollisions([a, b]);
+
+      const distAfter = Math.hypot(b.x - a.x, b.y - a.y);
+      expect(distAfter).toBeGreaterThan(10);
+    });
+
+    it('does not move units that are already farther apart than SECURITY_COLLISION_RADIUS', () => {
+      const a = createSecurityUnit(container, 0, 0, 'police');
+      const b = createSecurityUnit(container, 500, 500, 'police');
+      a.phase = 'wandering';
+      b.phase = 'wandering';
+
+      applySecurityCollisions([a, b]);
+
+      expect(a.x).toBe(0);
+      expect(a.y).toBe(0);
+      expect(b.x).toBe(500);
+      expect(b.y).toBe(500);
+    });
+
+    it('ignores units still in their entrance burst', () => {
+      const a = createSecurityUnit(container, 100, 100, 'police'); // still 'entering'
+      const b = createSecurityUnit(container, 105, 100, 'police'); // still 'entering'
+
+      applySecurityCollisions([a, b]);
+
+      expect(a.x).toBe(100);
+      expect(b.x).toBe(105);
     });
   });
 });

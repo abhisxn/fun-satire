@@ -51,6 +51,24 @@ export const SECURITY_ENTER_MS = 280;
 /** Duration a unit spends shrinking (repel radius easing to 0) before RaidController.tick() removes it (ms). */
 export const SECURITY_SHRINK_MS = 250;
 
+/** Base radius (px) a security unit orbits the avatar at while escorting. */
+export const SECURITY_ESCORT_RADIUS = 90;
+/** How far each unit's own escortRadius is randomized from the base, in either direction. */
+export const SECURITY_ESCORT_RADIUS_JITTER = 20;
+/** Per-tick lerp factor easing a unit toward its escort target — small, so the formation
+ * trails the avatar smoothly rather than snapping to it. */
+export const SECURITY_ESCORT_EASE = 0.08;
+/** How far (radians) a unit's effective angle wobbles from its assigned escortAngle. */
+export const SECURITY_ESCORT_WOBBLE_RAD = 0.35;
+/** Full period (ms) of one wobble cycle — a slow back-and-forth pace, not a fast jitter. */
+export const SECURITY_ESCORT_WOBBLE_PERIOD_MS = 2200;
+/** Minimum center-to-center distance (px) two security units keep from each other and the
+ * avatar — closer than this, applySecurityCollisions() pushes them apart. Set just under
+ * SECURITY_WIDTH so units read as touching-but-not-overlapping at the boundary. */
+export const SECURITY_COLLISION_RADIUS = 50;
+/** How strongly overlapping units push apart per tick (fraction of the overlap distance). */
+export const SECURITY_COLLISION_STRENGTH = 0.15;
+
 export function securityHeightFor(sprite: SecuritySprite): number {
   return Math.round(SECURITY_WIDTH * sprite.aspect);
 }
@@ -71,6 +89,15 @@ export interface SecurityUnitState {
   posAnim: AnimeInstance | null;
   phase: SecurityPhase;
   phaseStartMs: number;
+  /** Base angle (radians) this unit holds around the avatar while escorting — assigned/
+   * re-spread across the active roster by RaidController via assignEscortFormation(). The
+   * unit's actual angle at any instant also wobbles around this via applyEscortStep(). */
+  escortAngle: number;
+  /** This unit's own orbit radius (px) — randomized per unit around SECURITY_ESCORT_RADIUS
+   * so the formation isn't a perfectly circular ring. */
+  escortRadius: number;
+  /** Per-unit phase offset (ms) for the wobble sine wave, so units don't wobble in sync. */
+  escortPhaseOffsetMs: number;
 }
 
 function rand(min: number, max: number): number {
@@ -97,7 +124,7 @@ export function computeSecurityShrinkFraction(phaseStartMs: number, nowMs: numbe
   return 1 - Math.max(0, Math.min(1, t));
 }
 
-function applyTransform(state: SecurityUnitState): void {
+export function applyTransform(state: SecurityUnitState): void {
   const tx = state.x - state.w / 2;
   const ty = state.y - state.h / 2;
 
@@ -112,14 +139,6 @@ function applyTransform(state: SecurityUnitState): void {
 
   state.el.style.transform = `translate3d(${tx.toFixed(1)}px,${ty.toFixed(1)}px,0) scale(${scale.toFixed(3)})`;
   state.el.style.opacity = String(opacity);
-}
-
-function nextWaypoint(state: SecurityUnitState, vw: number, vh: number): { x: number; y: number } {
-  const margin = 40;
-  const maxStep = 220;
-  const nx = Math.max(margin, Math.min(vw - margin, state.x + rand(-maxStep, maxStep)));
-  const ny = Math.max(margin, Math.min(vh - margin, state.y + rand(-maxStep, maxStep)));
-  return { x: nx, y: ny };
 }
 
 /** First-leg waypoint for a freshly-spawned unit: a large step (150-300px) in a random
@@ -139,17 +158,16 @@ export function burstWaypoint(
   return { x: nx, y: ny };
 }
 
-/** Starts (or continues, once the current leg completes) an endless
- * waypoint wander — same shape as BugSwarm.ts's startWander, without the
- * leg-gait animation this simpler sprite doesn't have. Pass `initialBurst`
- * true for a freshly-spawned unit's first leg only. */
-export function startSecurityWander(
+/** One-shot entrance: bursts a freshly-spawned unit outward from the avatar like a
+ * disturbed swarm. Once this leg completes, RaidController.tick() takes over positioning
+ * every frame via applyEscortStep()/applySecurityCollisions() — this function doesn't
+ * recurse into further legs. */
+export function startSecurityEntranceBurst(
   state: SecurityUnitState,
   vw: number,
   vh: number,
-  initialBurst = false,
 ): void {
-  const target = initialBurst ? burstWaypoint(state, vw, vh) : nextWaypoint(state, vw, vh);
+  const target = burstWaypoint(state, vw, vh);
   const dist = Math.hypot(target.x - state.x, target.y - state.y) || 1;
   const speed = rand(30, 70);
   const duration = Math.max(400, (dist / speed) * 1000);
@@ -163,9 +181,77 @@ export function startSecurityWander(
     update: () => applyTransform(state),
     complete: () => {
       state.posAnim = null;
-      startSecurityWander(state, vw, vh);
     },
   });
+}
+
+/** Re-spreads escort angles, per-unit radius jitter, and per-unit wobble phase across the
+ * full active roster (not just new units), so the formation stays evenly spaced and varied
+ * as units join/leave. `randFn` is injectable for deterministic tests. */
+export function assignEscortFormation(
+  units: SecurityUnitState[],
+  randFn: () => number = Math.random,
+): void {
+  const n = units.length;
+  for (let i = 0; i < n; i++) {
+    const unit = units[i]!;
+    unit.escortAngle = (i / n) * Math.PI * 2;
+    unit.escortRadius = SECURITY_ESCORT_RADIUS + (randFn() * 2 - 1) * SECURITY_ESCORT_RADIUS_JITTER;
+    unit.escortPhaseOffsetMs = randFn() * 10000;
+  }
+}
+
+/** Eases a unit toward avatar position + its escort offset, wobbling the effective angle
+ * around escortAngle as a pure function of nowMs (no velocity integration, no per-frame
+ * drift accumulation — the wobble at any instant is computed fresh). Called every frame by
+ * RaidController.tick() for as long as the unit exists. No-op during the entrance burst
+ * (that leg is still animating via startSecurityEntranceBurst's own anime tween). */
+export function applyEscortStep(
+  state: SecurityUnitState,
+  avatarX: number,
+  avatarY: number,
+  nowMs: number,
+  ease: number = SECURITY_ESCORT_EASE,
+): void {
+  if (state.phase === 'entering') return;
+  const wobble =
+    Math.sin((2 * Math.PI * (nowMs + state.escortPhaseOffsetMs)) / SECURITY_ESCORT_WOBBLE_PERIOD_MS) *
+    SECURITY_ESCORT_WOBBLE_RAD;
+  const angle = state.escortAngle + wobble;
+  const targetX = avatarX + Math.cos(angle) * state.escortRadius;
+  const targetY = avatarY + Math.sin(angle) * state.escortRadius;
+  state.x += (targetX - state.x) * ease;
+  state.y += (targetY - state.y) * ease;
+  applyTransform(state);
+}
+
+/** Pairwise positional repulsion across the active roster so units don't overlap or pass
+ * through each other — same shape as applyRepulsion in creaturePhysics.ts, but positional
+ * rather than velocity-based, since security units are stepped directly toward their
+ * escort target each frame rather than integrated via vx/vy. Ignores units still in their
+ * entrance burst (their position is owned by that leg's anime tween). */
+export function applySecurityCollisions(units: SecurityUnitState[]): void {
+  for (let i = 0; i < units.length; i++) {
+    const a = units[i]!;
+    if (a.phase === 'entering') continue;
+    for (let j = i + 1; j < units.length; j++) {
+      const b = units[j]!;
+      if (b.phase === 'entering') continue;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist >= SECURITY_COLLISION_RADIUS || dist < 1e-6) continue;
+      const overlap = SECURITY_COLLISION_RADIUS - dist;
+      const pushX = (dx / dist) * overlap * SECURITY_COLLISION_STRENGTH;
+      const pushY = (dy / dist) * overlap * SECURITY_COLLISION_STRENGTH;
+      a.x -= pushX;
+      a.y -= pushY;
+      b.x += pushX;
+      b.y += pushY;
+      applyTransform(a);
+      applyTransform(b);
+    }
+  }
 }
 
 export function createSecurityUnit(
@@ -202,6 +288,9 @@ export function createSecurityUnit(
     posAnim: null,
     phase: "entering",
     phaseStartMs: Date.now(),
+    escortAngle: 0,
+    escortRadius: SECURITY_ESCORT_RADIUS,
+    escortPhaseOffsetMs: 0,
   };
   applyTransform(state);
   return state;

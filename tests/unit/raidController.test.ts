@@ -630,4 +630,67 @@ describe('RaidController', () => {
       now.mockRestore();
     });
   });
+
+  it('escorts security units toward the avatar\'s current position over successive ticks', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    // Force every unit past its entrance burst so applyEscortStep takes effect
+    // (anime.js is mocked in this suite, so the real tween never fires).
+    const units = (raid as unknown as { units: { phase: string; x: number; y: number }[] }).units;
+    for (const unit of units) unit.phase = 'wandering';
+    const startX = units[0]!.x;
+
+    raid.onAvatarMove(1000, 0);
+    for (let i = 0; i < 20; i++) {
+      t += 16;
+      raid.tick(t);
+    }
+
+    expect(units[0]!.x).toBeGreaterThan(startX);
+
+    now.mockRestore();
+  });
+
+  it('keeps escorting security units apart from each other (no overlap)', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    const units = (raid as unknown as { units: { phase: string; x: number; y: number }[] }).units;
+    // Force them all onto the exact same point, past their entrance burst —
+    // an adversarial worst case for the collision pass.
+    for (const unit of units) {
+      unit.phase = 'wandering';
+      unit.x = 500;
+      unit.y = 500;
+    }
+
+    for (let i = 0; i < 30; i++) {
+      t += 16;
+      raid.tick(t);
+    }
+
+    for (let i = 0; i < units.length; i++) {
+      for (let j = i + 1; j < units.length; j++) {
+        const dist = Math.hypot(units[j]!.x - units[i]!.x, units[j]!.y - units[i]!.y);
+        expect(dist).toBeGreaterThan(0);
+      }
+    }
+
+    now.mockRestore();
+  });
 });
