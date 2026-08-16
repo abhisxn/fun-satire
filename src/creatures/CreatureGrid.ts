@@ -410,24 +410,10 @@ export class CreatureGrid {
     if (this.mode === 'eyes') {
       const vw = this.container.clientWidth || window.innerWidth;
       for (const eye of this.eyeCreatures) {
+        const boost = this.updateHover(eye, avatarX, avatarY, now);
+
         const dx = avatarX - eye.x;
         const dy = avatarY - eye.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const wasHovered = this.hoverState.get(eye) ?? false;
-        // See the comment on the non-eye branch below for why this uses
-        // whichever radius is larger.
-        const radius = Math.max(hoverRadiusFor(eye), this.physicsParams.repelRadius);
-        const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
-        this.hoverState.set(eye, hovered);
-        const prevBoost = this.hoverBoost.get(eye) ?? 0;
-        const targetBoost = hovered ? 1 : 0;
-        const boost = prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP;
-        this.hoverBoost.set(eye, boost);
-        if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
-          this.lastHoverToneAtMs = now;
-          this.triggerHoverTone();
-        }
-
         updateEyePupil(eye, avatarX, avatarY);
         const scaleY = updateEyeBlink(eye);
         // Base the angle on the right-half quadrant's large-magnitude form
@@ -446,28 +432,7 @@ export class CreatureGrid {
       }
     } else {
       for (const c of this.creatures) {
-        const dx = avatarX - c.x;
-        const dy = avatarY - c.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const wasHovered = this.hoverState.get(c) ?? false;
-        // The crowd actively flees the cursor (see applyRepulsion in
-        // creaturePhysics.ts), and repelRadius (180px) is well outside a
-        // creature's own tight hoverRadiusFor(c) (~half its size + 20px). If
-        // hover only used hoverRadiusFor, the cursor could almost never catch
-        // a creature close enough to register — it's already fleeing by the
-        // time it would. Using whichever radius is larger means hover fires
-        // as soon as a creature enters the repulsion field it's reacting to.
-        const radius = Math.max(hoverRadiusFor(c), this.physicsParams.repelRadius);
-        const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
-        this.hoverState.set(c, hovered);
-        const prevBoost = this.hoverBoost.get(c) ?? 0;
-        const targetBoost = hovered ? 1 : 0;
-        const boost = prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP;
-        this.hoverBoost.set(c, boost);
-        if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
-          this.lastHoverToneAtMs = now;
-          this.triggerHoverTone();
-        }
+        const boost = this.updateHover(c, avatarX, avatarY, now);
 
         let angle: number;
         switch (this.mode) {
@@ -492,8 +457,9 @@ export class CreatureGrid {
     }
 
     // Random disappear: settled creatures fade out independently. Reservoir-
-    // samples up to FADE_PICK_COUNT eligible creatures in one pass instead of
-    // filter()-ing the whole crowd into a throwaway array every tick.
+    // samples up to FADE_PICK_COUNT eligible creatures in one pass (Algorithm
+    // R) instead of filter()-ing the whole crowd into a throwaway array every
+    // tick.
     if (this.shouldRunThrottled(this.lastFadePickMs, FADE_PICK_INTERVAL_MS, now)) {
       const picked: Creature[] = [];
       let seen = 0;
@@ -540,6 +506,7 @@ export class CreatureGrid {
         const cap = now < this.burstUntilMs ? burstCap : REPOP_COUNT;
         const count = Math.min(cap, deficit, waitingCount);
         if (count > 0) {
+          // Reservoir sample (Algorithm R) over the waiting creatures.
           const picked: Creature[] = [];
           let seen = 0;
           for (const c of this.creatures) {
@@ -573,6 +540,36 @@ export class CreatureGrid {
   /** True once `intervalMs` has elapsed since `lastMs`. Callers own updating their own `lastMs` field on a true result — this only answers "should I run now?". */
   private shouldRunThrottled(lastMs: number, intervalMs: number, now: number): boolean {
     return now - lastMs >= intervalMs;
+  }
+
+  /** Hover-detection for one creature this frame: updates hoverState/hoverBoost, fires a
+   * hover-enter tone if applicable, and returns the current boost value for the caller to
+   * apply to render scale. Shared by both the eyes-mode and non-eyes-mode render branches —
+   * identical logic, just run over two different arrays (eyeCreatures vs creatures). */
+  private updateHover(c: Creature, avatarX: number, avatarY: number, now: number): number {
+    const dx = avatarX - c.x;
+    const dy = avatarY - c.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const wasHovered = this.hoverState.get(c) ?? false;
+    // The crowd actively flees the cursor (see applyRepulsion in
+    // creaturePhysics.ts), and repelRadius (180px) is well outside a
+    // creature's own tight hoverRadiusFor(c) (~half its size + 20px). If
+    // hover only used hoverRadiusFor, the cursor could almost never catch
+    // a creature close enough to register — it's already fleeing by the
+    // time it would. Using whichever radius is larger means hover fires
+    // as soon as a creature enters the repulsion field it's reacting to.
+    const radius = Math.max(hoverRadiusFor(c), this.physicsParams.repelRadius);
+    const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
+    this.hoverState.set(c, hovered);
+    const prevBoost = this.hoverBoost.get(c) ?? 0;
+    const targetBoost = hovered ? 1 : 0;
+    const boost = prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP;
+    this.hoverBoost.set(c, boost);
+    if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
+      this.lastHoverToneAtMs = now;
+      this.triggerHoverTone();
+    }
+    return boost;
   }
 
   private triggerHoverTone(): void {
