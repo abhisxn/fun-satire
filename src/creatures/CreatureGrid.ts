@@ -407,41 +407,29 @@ export class CreatureGrid {
       updateCreature(c, avatar, this.physicsParams, repulsors, this.avatarRepelRadius ?? undefined);
     }
 
-    // Hover-enter edge detection: fires at most one tone per cooldown
-    // window, however many creatures cross into hover this frame.
-    for (const c of this.creatures) {
-      const dx = avatarX - c.x;
-      const dy = avatarY - c.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const wasHovered = this.hoverState.get(c) ?? false;
-      // The crowd actively flees the cursor (see applyRepulsion in
-      // creaturePhysics.ts), and repelRadius (180px) is well outside a
-      // creature's own tight hoverRadiusFor(c) (~half its size + 20px). If
-      // hover only used hoverRadiusFor, the cursor could almost never catch
-      // a creature close enough to register — it's already fleeing by the
-      // time it would. Using whichever radius is larger means hover fires
-      // as soon as a creature enters the repulsion field it's reacting to.
-      const radius = Math.max(hoverRadiusFor(c), this.physicsParams.repelRadius);
-      const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
-      this.hoverState.set(c, hovered);
-
-      const prevBoost = this.hoverBoost.get(c) ?? 0;
-      const targetBoost = hovered ? 1 : 0;
-      this.hoverBoost.set(c, prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP);
-
-      if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
-        this.lastHoverToneAtMs = now;
-        this.triggerHoverTone();
-      }
-    }
-
     if (this.mode === 'eyes') {
       const vw = this.container.clientWidth || window.innerWidth;
       for (const eye of this.eyeCreatures) {
-        updateEyePupil(eye, avatarX, avatarY);
-        const scaleY = updateEyeBlink(eye);
         const dx = avatarX - eye.x;
         const dy = avatarY - eye.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const wasHovered = this.hoverState.get(eye) ?? false;
+        // See the comment on the non-eye branch below for why this uses
+        // whichever radius is larger.
+        const radius = Math.max(hoverRadiusFor(eye), this.physicsParams.repelRadius);
+        const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
+        this.hoverState.set(eye, hovered);
+        const prevBoost = this.hoverBoost.get(eye) ?? 0;
+        const targetBoost = hovered ? 1 : 0;
+        const boost = prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP;
+        this.hoverBoost.set(eye, boost);
+        if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
+          this.lastHoverToneAtMs = now;
+          this.triggerHoverTone();
+        }
+
+        updateEyePupil(eye, avatarX, avatarY);
+        const scaleY = updateEyeBlink(eye);
         // Base the angle on the right-half quadrant's large-magnitude form
         // (dx pinned negative) so both left and right get the same tilt
         // range, then mirror the sign for the left half so it fans out
@@ -452,12 +440,35 @@ export class CreatureGrid {
         const rotation = fullAngle * eye.rotFactor * halfSign;
 
         const spawn = resolveSpawnState(eye, now);
-        const hoverScale = 1 + (this.hoverBoost.get(eye) ?? 0) * HOVER_SCALE_BUMP;
+        const hoverScale = 1 + boost * HOVER_SCALE_BUMP;
         eye.el.style.opacity = String(spawn.opacity);
         eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scale(${spawn.popScale * hoverScale}) scaleY(${scaleY})`;
       }
     } else {
       for (const c of this.creatures) {
+        const dx = avatarX - c.x;
+        const dy = avatarY - c.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const wasHovered = this.hoverState.get(c) ?? false;
+        // The crowd actively flees the cursor (see applyRepulsion in
+        // creaturePhysics.ts), and repelRadius (180px) is well outside a
+        // creature's own tight hoverRadiusFor(c) (~half its size + 20px). If
+        // hover only used hoverRadiusFor, the cursor could almost never catch
+        // a creature close enough to register — it's already fleeing by the
+        // time it would. Using whichever radius is larger means hover fires
+        // as soon as a creature enters the repulsion field it's reacting to.
+        const radius = Math.max(hoverRadiusFor(c), this.physicsParams.repelRadius);
+        const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
+        this.hoverState.set(c, hovered);
+        const prevBoost = this.hoverBoost.get(c) ?? 0;
+        const targetBoost = hovered ? 1 : 0;
+        const boost = prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP;
+        this.hoverBoost.set(c, boost);
+        if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
+          this.lastHoverToneAtMs = now;
+          this.triggerHoverTone();
+        }
+
         let angle: number;
         switch (this.mode) {
           case 'pointedFinger':
@@ -474,22 +485,31 @@ export class CreatureGrid {
         }
 
         const spawn = resolveSpawnState(c, now);
-        const hoverScale = 1 + (this.hoverBoost.get(c) ?? 0) * HOVER_SCALE_BUMP;
+        const hoverScale = 1 + boost * HOVER_SCALE_BUMP;
         c.el.style.opacity = String(spawn.opacity);
         c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg) scale(${spawn.popScale * hoverScale})`;
       }
     }
 
-    // Random disappear: settled creatures fade out independently.
+    // Random disappear: settled creatures fade out independently. Reservoir-
+    // samples up to FADE_PICK_COUNT eligible creatures in one pass instead of
+    // filter()-ing the whole crowd into a throwaway array every tick.
     if (this.shouldRunThrottled(this.lastFadePickMs, FADE_PICK_INTERVAL_MS, now)) {
-      const candidates = this.creatures.filter((c) => c.spawnDone && c.fadeStartMs === 0);
-      if (candidates.length > 0) {
-        this.lastFadePickMs = now;
-        const count = Math.min(FADE_PICK_COUNT, candidates.length);
-        for (let i = 0; i < count; i++) {
-          const picked = candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0];
-          picked.fadeStartMs = now;
+      const picked: Creature[] = [];
+      let seen = 0;
+      for (const c of this.creatures) {
+        if (!c.spawnDone || c.fadeStartMs !== 0) continue;
+        seen++;
+        if (picked.length < FADE_PICK_COUNT) {
+          picked.push(c);
+        } else {
+          const j = Math.floor(Math.random() * seen);
+          if (j < FADE_PICK_COUNT) picked[j] = c;
         }
+      }
+      if (seen > 0) {
+        this.lastFadePickMs = now;
+        for (const c of picked) c.fadeStartMs = now;
       }
     }
 
@@ -505,20 +525,37 @@ export class CreatureGrid {
         this.targetCount,
         Math.max(IDLE_FLOOR_MIN_COUNT, Math.round(this.targetCount * idleVisibleFraction(idleMs))),
       );
-      const visibleCount = this.creatures.filter((c) => !c.waitingRespawn).length;
+      let visibleCount = 0;
+      let waitingCount = 0;
+      for (const c of this.creatures) {
+        if (c.waitingRespawn) waitingCount++;
+        else visibleCount++;
+      }
       const deficit = desiredVisibleCount - visibleCount;
       if (deficit > 0) {
-        const waiting = this.creatures.filter((c) => c.waitingRespawn);
         const burstCap = Math.max(
           REPOP_COUNT_BURST_MIN,
           Math.round(this.targetCount * REPOP_COUNT_BURST_FRACTION),
         );
         const cap = now < this.burstUntilMs ? burstCap : REPOP_COUNT;
-        const count = Math.min(cap, deficit, waiting.length);
-        for (let i = 0; i < count; i++) {
-          const picked = waiting.splice(Math.floor(Math.random() * waiting.length), 1)[0];
-          picked.waitingRespawn = false;
-          picked.spawnPopAtMs = now;
+        const count = Math.min(cap, deficit, waitingCount);
+        if (count > 0) {
+          const picked: Creature[] = [];
+          let seen = 0;
+          for (const c of this.creatures) {
+            if (!c.waitingRespawn) continue;
+            seen++;
+            if (picked.length < count) {
+              picked.push(c);
+            } else {
+              const j = Math.floor(Math.random() * seen);
+              if (j < count) picked[j] = c;
+            }
+          }
+          for (const c of picked) {
+            c.waitingRespawn = false;
+            c.spawnPopAtMs = now;
+          }
         }
       }
     }
