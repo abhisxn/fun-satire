@@ -32,7 +32,7 @@ export const IDLE_GRACE_MS = 20_000;
 /** Half-life (ms) of the idle-decay curve — see raidRules.decayTowardFloor. At this many ms
  * past IDLE_GRACE_MS, the visible crowd has decayed exactly halfway from full to the idle
  * floor. */
-export const IDLE_HALF_LIFE_MS = 70_000;
+export const IDLE_HALF_LIFE_MS = 150_000;
 /** Idle floor as a fraction of the current target quantity. */
 export const IDLE_FLOOR_FRACTION = 0.02;
 /** Absolute minimum visible count at the idle floor, regardless of target quantity. */
