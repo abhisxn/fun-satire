@@ -31,6 +31,7 @@ import {
   assignEscortFormation,
   applyEscortStep,
   applySecurityCollisions,
+  applyAvatarRepel,
 } from '../../src/creatures/SecurityCreature';
 
 describe('SecurityCreature', () => {
@@ -310,6 +311,39 @@ describe('SecurityCreature', () => {
 
       expect(a.x).toBe(100);
       expect(b.x).toBe(105);
+    });
+  });
+
+  describe('applyAvatarRepel', () => {
+    it('pushes a unit away from the avatar if closer than SECURITY_AVATAR_REPEL_RADIUS', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      unit.phase = 'wandering';
+      unit.x = 50; // 50px from avatar at (0,0), well inside the 100px repel radius
+      unit.y = 0;
+
+      applyAvatarRepel(unit, 0, 0);
+
+      expect(unit.x).toBeGreaterThan(50);
+    });
+
+    it('does not move a unit already farther than SECURITY_AVATAR_REPEL_RADIUS from the avatar', () => {
+      const unit = createSecurityUnit(container, 0, 0, 'police');
+      unit.phase = 'wandering';
+      unit.x = 500;
+      unit.y = 500;
+
+      applyAvatarRepel(unit, 0, 0);
+
+      expect(unit.x).toBe(500);
+      expect(unit.y).toBe(500);
+    });
+
+    it('ignores a unit still in its entrance burst', () => {
+      const unit = createSecurityUnit(container, 50, 0, 'police'); // still 'entering'
+
+      applyAvatarRepel(unit, 0, 0);
+
+      expect(unit.x).toBe(50);
     });
   });
 });

@@ -288,10 +288,11 @@ async function main(): Promise<void> {
   const onOverlayDragStart = (): void => {
     pickupClickSound.play();
   };
-  const onOverlayDragMove = (x: number, y: number): void => {
+  const onOverlayDragMove = (_x: number, _y: number): void => {
     dragScratchSound.onMove();
     if (activeOverlay instanceof StickerOverlay) {
-      raidController.onAvatarMove(x, y);
+      const center = activeOverlay.getCenter();
+      raidController.onAvatarMove(center.x, center.y);
     }
   };
   const onOverlayDragEnd = (): void => {

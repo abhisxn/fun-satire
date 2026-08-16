@@ -10,6 +10,7 @@ import {
   assignEscortFormation,
   applyEscortStep,
   applySecurityCollisions,
+  applyAvatarRepel,
 } from "./SecurityCreature";
 import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
 import { QTY_MAX, QTY_MIN } from "../config/tokens";
@@ -315,6 +316,7 @@ export class RaidController {
 
     for (const unit of this.units) {
       applyEscortStep(unit, this.lastAvatarX, this.lastAvatarY, nowMs);
+      applyAvatarRepel(unit, this.lastAvatarX, this.lastAvatarY);
     }
     applySecurityCollisions(this.units);
 

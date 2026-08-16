@@ -52,9 +52,9 @@ export const SECURITY_ENTER_MS = 280;
 export const SECURITY_SHRINK_MS = 250;
 
 /** Base radius (px) a security unit orbits the avatar at while escorting. */
-export const SECURITY_ESCORT_RADIUS = 90;
+export const SECURITY_ESCORT_RADIUS = 130;
 /** How far each unit's own escortRadius is randomized from the base, in either direction. */
-export const SECURITY_ESCORT_RADIUS_JITTER = 20;
+export const SECURITY_ESCORT_RADIUS_JITTER = 25;
 /** Per-tick lerp factor easing a unit toward its escort target — small, so the formation
  * trails the avatar smoothly rather than snapping to it. */
 export const SECURITY_ESCORT_EASE = 0.08;
@@ -68,6 +68,12 @@ export const SECURITY_ESCORT_WOBBLE_PERIOD_MS = 2200;
 export const SECURITY_COLLISION_RADIUS = 50;
 /** How strongly overlapping units push apart per tick (fraction of the overlap distance). */
 export const SECURITY_COLLISION_STRENGTH = 0.15;
+/** Minimum distance (px) a security unit keeps from the avatar itself — if escort wobble
+ * or mutual-collision jostling ever pushes a unit closer than this, it gets pushed back
+ * out, so units never visually overlap the avatar sticker. */
+export const SECURITY_AVATAR_REPEL_RADIUS = 100;
+/** How strongly a unit is pushed back out of the avatar-repel zone per tick. */
+export const SECURITY_AVATAR_REPEL_STRENGTH = 0.15;
 
 export function securityHeightFor(sprite: SecuritySprite): number {
   return Math.round(SECURITY_WIDTH * sprite.aspect);
@@ -252,6 +258,22 @@ export function applySecurityCollisions(units: SecurityUnitState[]): void {
       applyTransform(b);
     }
   }
+}
+
+/** Pushes a security unit away from the avatar's own position if escort wobble or
+ * mutual-collision jostling has brought it closer than SECURITY_AVATAR_REPEL_RADIUS —
+ * positional, not velocity-based, same reasoning as applySecurityCollisions. No-op during
+ * the entrance burst. */
+export function applyAvatarRepel(state: SecurityUnitState, avatarX: number, avatarY: number): void {
+  if (state.phase === 'entering') return;
+  const dx = state.x - avatarX;
+  const dy = state.y - avatarY;
+  const dist = Math.hypot(dx, dy);
+  if (dist >= SECURITY_AVATAR_REPEL_RADIUS || dist < 1e-6) return;
+  const overlap = SECURITY_AVATAR_REPEL_RADIUS - dist;
+  state.x += (dx / dist) * overlap * SECURITY_AVATAR_REPEL_STRENGTH;
+  state.y += (dy / dist) * overlap * SECURITY_AVATAR_REPEL_STRENGTH;
+  applyTransform(state);
 }
 
 export function createSecurityUnit(
