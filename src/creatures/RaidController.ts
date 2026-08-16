@@ -14,7 +14,21 @@ import {
   SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH,
 } from "./SecurityCreature";
 import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
+import {
+  classifyRelease,
+  SECURITY_MAX_UNITS,
+  RAID_FLOOR_FRACTION,
+  BACKFIRE_ESCALATE_MEDIUM,
+  BACKFIRE_ESCALATE_LOW,
+} from "./raidRules";
+import { EntityPool } from "./EntityPool";
 import { QTY_MAX, QTY_MIN } from "../config/tokens";
+
+export {
+  FULL_POWER_THRESHOLD,
+  MEDIUM_POWER_THRESHOLD,
+  SECURITY_MAX_UNITS,
+} from "./raidRules";
 
 export interface MoveSample {
   x: number;
@@ -82,8 +96,6 @@ export function detectShake(samples: MoveSample[]): boolean {
   return reversals >= SHAKE_REVERSAL_THRESHOLD;
 }
 
-/** Hard cap on simultaneous security units, regardless of how long shaking continues. */
-export const SECURITY_MAX_UNITS = 40;
 /** Repulsion radius each security unit exerts on the crowd, same model as the avatar's. */
 export const SECURITY_REPEL_RADIUS = 160;
 /** How far the avatar's own repel radius shrinks once a raid fully clears via a full-power
@@ -100,8 +112,6 @@ export const SECURITY_REPEL_RADIUS = 160;
 export const AVATAR_REPEL_RADIUS_AFTER_WIN = 190;
 export const SPAWN_MIN_PER_PULSE = 2;
 export const SPAWN_MAX_PER_PULSE = 3;
-/** Crowd never drops below this fraction of its size when the raid started. */
-export const RAID_FLOOR_FRACTION = 0.25;
 /** How often the raid drains the crowd toward the raid floor while unaddressed (ms). */
 export const RAID_ATTRITION_INTERVAL_MS = 400;
 /** How many creatures the crowd loses per attrition tick. */
@@ -134,17 +144,12 @@ export const CHARGE_SWEEP_HALF_PERIOD_MS = 1100;
  * FULL is deliberately tight (top of the sweep, not merely "strong") so landing
  * it is a real timing skill, not a coin flip. MEDIUM and LOW never clear a raid
  * and never lock the sticker's shrink — only a full-power release does either.
+ *
+ * The thresholds themselves, and the crowd count each band resolves to, live in
+ * raidRules.ts (classifyRelease) — releaseCharge() below just applies the outcome.
+ * FULL_POWER_THRESHOLD / MEDIUM_POWER_THRESHOLD / SECURITY_MAX_UNITS are re-exported
+ * from this module (see the top of the file) so existing import sites are unaffected.
  * ============================================================================ */
-export const FULL_POWER_THRESHOLD = 0.92;
-/** Below this fraction, a backfired release counts as LOW power rather than MEDIUM. */
-export const MEDIUM_POWER_THRESHOLD = 0.4;
-/** MEDIUM-power crowd boost: baseline * (1 + this), rounded to the nearest 10,
- * capped at QTY_BOOST_MEDIUM_CAP. */
-export const QTY_BOOST_MEDIUM_FRACTION = 0.75;
-export const QTY_BOOST_MEDIUM_CAP = 400;
-/** LOW-power crowd boost: same shape as MEDIUM, smaller fraction and cap. */
-export const QTY_BOOST_LOW_FRACTION = 0.3;
-export const QTY_BOOST_LOW_CAP = 280;
 
 /** MEDIUM/LOW backfire, when a raid is already running: some of the standing units
  * visibly poof out (same despawn animation/sound as a win), then MORE than that many
@@ -156,14 +161,6 @@ export const QTY_BOOST_LOW_CAP = 280;
 export const BACKFIRE_POOF_FRACTION = 0.4;
 export const BACKFIRE_RESPAWN_DELAY_MS = 4500;
 export const BACKFIRE_RESPAWN_STAGGER_MS = 500;
-/** Extra units added on top of the poofed count when the raid regroups — MEDIUM
- * escalates faster than LOW, mirroring the QTY_BOOST_* asymmetry above. */
-export const BACKFIRE_ESCALATE_MEDIUM = 2;
-export const BACKFIRE_ESCALATE_LOW = 1;
-
-function roundToTen(n: number): number {
-  return Math.round(n / 10) * 10;
-}
 
 export type RaidState = "idle" | "raiding" | "recovering" | "charging";
 
@@ -225,10 +222,25 @@ export class RaidController {
   private readonly onSecurityRemoved: ((x: number, y: number, w: number, h: number) => void) | null;
 
   private state: RaidState = "idle";
-  private units: SecurityUnitState[] = [];
-  /** Fire timestamps (ms) for one-by-one backfire respawns queued by poofSomeUnits() —
-   * tick() spawns exactly one unit each time nowMs passes an entry. */
-  private pendingRespawns: number[] = [];
+  /** Owns every security unit's spawn/despawn lifecycle bookkeeping: which units exist, which
+   * are mid-shrink, which staggered backfire respawns are still pending, and when a whole
+   * despawn/respawn batch has actually landed (its onSettled). This controller keeps only the
+   * game rules — the pool keeps the timers. */
+  private readonly securityPool = new EntityPool<SecurityUnitState>({
+    onDespawn: (unit) => {
+      this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
+      removeSecurityUnit(unit);
+      // Notified per removal, not once per tick, so a caller mapping unit count to a visual
+      // sees the count hit 0 *before* the despawn batch's onSettled fires the win payoff
+      // (main.ts's onProtestWin locks the sticker's scale, after which onCrowdSizeChanged is
+      // deliberately a no-op — so the final 0 has to land first). The once-per-tick call at
+      // the end of tick() still covers spawns and is a no-op when this already fired.
+      this.notifyCrowdSizeChanged();
+    },
+  });
+  /** Backfire respawns handed to the pool but not yet fired — counted here so the
+   * SECURITY_MAX_UNITS cap accounts for units that are queued but not yet on screen. */
+  private scheduledSpawnCount = 0;
   private moveBuffer: MoveSample[] = [];
   private lastPulseAtMs = -Infinity;
   private raidStartCount = 0;
@@ -249,14 +261,6 @@ export class RaidController {
   private chargeStartedDuringRaid = false;
   private chargeFraction = 0;
   private lastAttritionAtMs = 0;
-  /** True while a 'recovering' sweep was entered via a full-power release (releaseCharge),
-   * as opposed to the plain startRecovery() entry point — only the former restores the
-   * avatar's post-win repel radius, and fires onProtestWin, once the sweep finishes
-   * (see tick()). */
-  private clearingViaProtestWin = false;
-  /** True while a poofAndEscalate() regroup has outstanding respawns queued —
-   * tick() notifies onCrowdSizeChanged as each respawn spawns in and the count changes. */
-  private regroupInFlight = false;
   /** Last security-unit count passed to onCrowdSizeChanged — compared against
    * this.units.length once per tick() (and once after spawnPulse()'s synchronous
    * burst) so the callback fires exactly once per actual change. */
@@ -317,6 +321,13 @@ export class RaidController {
     this.lastAvatarY = y;
   }
 
+  /** Every security unit the pool is still tracking, in spawn order, whatever their phase
+   * (escorting or mid-shrink) — the single read path this controller's physics, formation and
+   * count checks all go through. */
+  private get units(): SecurityUnitState[] {
+    return this.securityPool.allRefs;
+  }
+
   private spawnPulse(x: number, y: number): void {
     if (this.state === "idle") {
       this.state = "raiding";
@@ -335,11 +346,15 @@ export class RaidController {
     const n = Math.min(desired, available);
     const kinds = pickPulseKinds(n);
 
-    for (let i = 0; i < n; i++) {
-      const unit = createSecurityUnit(this.avatarLayer, x, y, kinds[i]);
-      startSecurityEntranceBurst(unit, vw, vh);
-      this.units.push(unit);
-    }
+    // Spawned straight into the pool via add(), not spawnScheduled() — a shake pulse has no
+    // delay or stagger; only the backfire trickle-in (poofAndEscalate) is scheduled.
+    this.securityPool.add(
+      kinds.map((kind) => {
+        const unit = createSecurityUnit(this.avatarLayer, x, y, kind);
+        startSecurityEntranceBurst(unit, vw, vh);
+        return unit;
+      }),
+    );
     assignEscortFormation(this.units);
     this.notifyCrowdSizeChanged();
   }
@@ -398,13 +413,14 @@ export class RaidController {
 
     const fraction = this.chargeFraction;
     this.chargeFraction = 0;
+    const outcome = classifyRelease(fraction, this.chargeBaselineCount);
 
-    if (fraction >= FULL_POWER_THRESHOLD) {
-      this.grid.setQuantity(QTY_MAX);
+    if (outcome.isWin) {
+      this.grid.setQuantity(outcome.crowdCount);
       // A complete win cancels any regrouping a prior MEDIUM/LOW release already
       // queued — otherwise those respawns would still trickle in afterward.
-      this.pendingRespawns = [];
-      this.regroupInFlight = false;
+      this.securityPool.cancelScheduledSpawns();
+      this.scheduledSpawnCount = 0;
       if (this.units.length === 0) {
         this.state = "idle";
         this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
@@ -412,9 +428,12 @@ export class RaidController {
         return;
       }
       this.state = "recovering";
-      this.clearingViaProtestWin = true;
-      this.beginUnitsShrinkSweep();
-      // onProtestWin fires later, in tick(), once the despawn sweep actually finishes.
+      // The payoff is handed to the despawn batch's onSettled rather than polled in tick():
+      // it fires exactly once, the moment the last unit has actually left the screen.
+      this.beginUnitsShrinkSweep(() => {
+        this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
+        this.onProtestWin?.();
+      });
       return;
     }
 
@@ -422,11 +441,7 @@ export class RaidController {
     // *before* spawning, so the raid's attrition floor (raidStartCount, set by
     // spawnPulse below on a fresh raid) is computed from the boosted total —
     // the raid then despawns creatures back down from that peak over time.
-    const isMedium = fraction >= MEDIUM_POWER_THRESHOLD;
-    const boostFraction = isMedium ? QTY_BOOST_MEDIUM_FRACTION : QTY_BOOST_LOW_FRACTION;
-    const cap = isMedium ? QTY_BOOST_MEDIUM_CAP : QTY_BOOST_LOW_CAP;
-    const boosted = Math.min(roundToTen(this.chargeBaselineCount * (1 + boostFraction)), cap);
-    this.grid.setQuantity(boosted);
+    this.grid.setQuantity(outcome.crowdCount);
 
     if (!this.chargeStartedDuringRaid) {
       // No raid running when this charge began — starts one immediately, exactly
@@ -443,7 +458,7 @@ export class RaidController {
     // up — some units poof out now, and more than that many trickle back in one at a
     // time after a beat (see poofAndEscalate()). MEDIUM escalates harder than LOW.
     this.state = "raiding";
-    this.poofAndEscalate(isMedium ? BACKFIRE_ESCALATE_MEDIUM : BACKFIRE_ESCALATE_LOW);
+    this.poofAndEscalate(outcome.band === "medium" ? BACKFIRE_ESCALATE_MEDIUM : BACKFIRE_ESCALATE_LOW);
   }
 
   /** Marks a portion (BACKFIRE_POOF_FRACTION, min 1 if any units are standing) of the
@@ -451,23 +466,41 @@ export class RaidController {
    * win — then queues poofCount + bonusSpawn one-by-one respawns, staggered
    * BACKFIRE_RESPAWN_STAGGER_MS apart, starting BACKFIRE_RESPAWN_DELAY_MS from now (see
    * tick()). Queuing more respawns than were poofed is the escalation: each failed
-   * protest attempt grows the raid, capped by SECURITY_MAX_UNITS at spawn time. */
+   * protest attempt grows the raid, capped by SECURITY_MAX_UNITS at queue time (counting
+   * both standing units and respawns still queued from earlier backfires). */
   private poofAndEscalate(bonusSpawn: number): void {
     const now = Date.now();
     const standing = this.units.filter((u) => u.phase !== "shrinking");
     const poofCount =
       standing.length === 0 ? 0 : Math.min(standing.length, Math.max(1, Math.round(standing.length * BACKFIRE_POOF_FRACTION)));
-    standing.slice(0, poofCount).forEach((unit) => {
+    const targets = standing.slice(0, poofCount);
+    targets.forEach((unit) => {
       unit.phase = "shrinking";
       unit.phaseStartMs = now;
     });
-    const respawnCount = poofCount + bonusSpawn;
-    for (let i = 0; i < respawnCount; i++) {
-      this.pendingRespawns.push(now + BACKFIRE_RESPAWN_DELAY_MS + i * BACKFIRE_RESPAWN_STAGGER_MS);
-    }
+    this.securityPool.despawn(targets, SECURITY_SHRINK_MS);
+
+    // Capped against both the units on screen and the ones already queued, so a run of
+    // backfires can never queue its way past SECURITY_MAX_UNITS.
+    const respawnCount = Math.max(
+      0,
+      Math.min(poofCount + bonusSpawn, SECURITY_MAX_UNITS - this.units.length - this.scheduledSpawnCount),
+    );
+    this.scheduledSpawnCount += respawnCount;
+    this.securityPool.spawnScheduled({
+      count: respawnCount,
+      factory: () => {
+        const unit = createSecurityUnit(this.avatarLayer, this.lastAvatarX, this.lastAvatarY, pickSecurityKind());
+        const vw = this.container.clientWidth || window.innerWidth;
+        const vh = this.container.clientHeight || window.innerHeight;
+        startSecurityEntranceBurst(unit, vw, vh);
+        return unit;
+      },
+      staggerMs: BACKFIRE_RESPAWN_STAGGER_MS,
+      delayMs: BACKFIRE_RESPAWN_DELAY_MS,
+    });
     // The crowd-size-changed notification for these respawns fires later, from
     // tick(), as each one actually spawns in — not here, before any of them exist.
-    this.regroupInFlight = true;
   }
 
   /** Instantly triggers full recovery without a hold — a direct entry point kept for
@@ -478,8 +511,8 @@ export class RaidController {
     if (this.state === "recovering" || this.state === "charging") return;
 
     this.grid.setQuantity(QTY_MAX);
-    this.pendingRespawns = [];
-    this.regroupInFlight = false;
+    this.securityPool.cancelScheduledSpawns();
+    this.scheduledSpawnCount = 0;
 
     if (this.units.length === 0) {
       this.state = "idle";
@@ -490,50 +523,34 @@ export class RaidController {
     this.beginUnitsShrinkSweep();
   }
 
-  /** Marks every unit shrinking on a staggered schedule (SECURITY_SHRINK_MS apart) so
-   * they pop out one after another as tick() sweeps them, rather than all vanishing
-   * at once. */
-  private beginUnitsShrinkSweep(): void {
+  /** Marks every unit shrinking on a staggered schedule (SECURITY_SHRINK_MS apart) so they
+   * pop out one after another, and hands the whole despawn batch to the pool so `onSettled`
+   * fires exactly once every unit has actually been removed. */
+  private beginUnitsShrinkSweep(onSettled?: () => void): void {
     const now = Date.now();
-    this.units.forEach((unit, i) => {
+    const units = this.units;
+    units.forEach((unit, i) => {
       unit.phase = "shrinking";
       unit.phaseStartMs = now + i * SECURITY_SHRINK_MS;
     });
+    this.securityPool.despawn(units, SECURITY_SHRINK_MS, { staggerMs: SECURITY_SHRINK_MS, onSettled });
   }
 
-  /** Call every engine frame (see main.ts). Sweeps out any unit whose shrink window has
-   * elapsed, firing the despawn poof and removing it from the DOM. Transitions
-   * 'recovering' -> 'idle' once every unit has been swept (restoring the post-win avatar
-   * repel radius if that sweep was entered via a full-power release), and while
+  /** Call every engine frame (see main.ts). Drives the security pool, which sweeps out any
+   * unit whose shrink window has elapsed (firing the despawn poof and removing it from the
+   * DOM) and fires any due backfire respawn. Transitions 'recovering' -> 'idle' once every
+   * unit has been swept — the post-win avatar repel radius and onProtestWin ride on the
+   * despawn batch's own onSettled rather than being polled here — and while
    * 'charging', sweeps chargeFraction back and forth across [0, 1] for the power meter to
    * read — see releaseCharge() for where that fraction actually gets evaluated. */
   tick(nowMs: number): void {
-    for (let i = this.units.length - 1; i >= 0; i--) {
-      const unit = this.units[i]!;
-      if (unit.phase === "shrinking" && nowMs - unit.phaseStartMs >= SECURITY_SHRINK_MS) {
-        this.units.splice(i, 1);
-        this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
-        removeSecurityUnit(unit);
-      }
-    }
-
-    if (this.pendingRespawns.length > 0) {
-      let spawnedAny = false;
-      for (let i = this.pendingRespawns.length - 1; i >= 0; i--) {
-        if (nowMs < this.pendingRespawns[i]!) continue;
-        this.pendingRespawns.splice(i, 1);
-        if (this.units.length >= SECURITY_MAX_UNITS) continue;
-        const unit = createSecurityUnit(this.avatarLayer, this.lastAvatarX, this.lastAvatarY, pickSecurityKind());
-        const vw = this.container.clientWidth || window.innerWidth;
-        const vh = this.container.clientHeight || window.innerHeight;
-        startSecurityEntranceBurst(unit, vw, vh);
-        this.units.push(unit);
-        spawnedAny = true;
-      }
-      if (spawnedAny) assignEscortFormation(this.units);
-      if (this.regroupInFlight && this.pendingRespawns.length === 0) {
-        this.regroupInFlight = false;
-      }
+    // One call drives every unit's lifecycle: elapsed shrink windows get removed (firing
+    // onSecurityRemoved via the pool's onDespawn), due backfire respawns get created, and
+    // either batch's onSettled fires the instant it fully lands.
+    const { spawned } = this.securityPool.tick(nowMs);
+    if (spawned.length > 0) {
+      this.scheduledSpawnCount = Math.max(0, this.scheduledSpawnCount - spawned.length);
+      assignEscortFormation(this.units);
     }
 
     for (const unit of this.units) {
@@ -553,13 +570,11 @@ export class RaidController {
     }
 
     if (this.state === "recovering") {
+      // The win payoff itself already fired from the despawn batch's onSettled (see
+      // releaseCharge) — all that's left is the state transition, shared with the plain
+      // startRecovery() entry point that has no payoff.
       if (this.units.length === 0) {
         this.state = "idle";
-        if (this.clearingViaProtestWin) {
-          this.clearingViaProtestWin = false;
-          this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
-          this.onProtestWin?.();
-        }
       }
       return;
     }
@@ -590,9 +605,8 @@ export class RaidController {
     for (const unit of this.units) {
       removeSecurityUnit(unit);
     }
-    this.units = [];
-    this.pendingRespawns = [];
-    this.regroupInFlight = false;
+    this.securityPool.removeAll();
+    this.scheduledSpawnCount = 0;
     this.state = "idle";
   }
 }
