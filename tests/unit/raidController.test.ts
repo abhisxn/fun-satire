@@ -337,6 +337,52 @@ describe('RaidController', () => {
     expect(raid.getRaidFloor()).toBe(10);
   });
 
+  it('drains the crowd toward the raid floor over time while raiding, without a charge held', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    const raidStartCrowd = grid.getCreatureCount();
+    const floor = raid.getRaidFloor();
+
+    for (let i = 0; i < 50; i++) {
+      t += 400; // RAID_ATTRITION_INTERVAL_MS
+      raid.tick(t);
+    }
+
+    expect(grid.getCreatureCount()).toBeLessThan(raidStartCrowd);
+    expect(grid.getCreatureCount()).toBeGreaterThanOrEqual(floor);
+
+    now.mockRestore();
+  });
+
+  it('attrition stops exactly at the raid floor and never removes below it', () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+    const floor = raid.getRaidFloor();
+
+    for (let i = 0; i < 200; i++) {
+      t += 400;
+      raid.tick(t);
+    }
+
+    expect(grid.getCreatureCount()).toBe(floor);
+
+    now.mockRestore();
+  });
+
   it('shrinks the avatar repel radius once a full-power charge clears the raid', () => {
     const now = vi.spyOn(Date, 'now');
     let t = 0;

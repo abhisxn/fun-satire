@@ -81,8 +81,6 @@ export function detectShake(samples: MoveSample[]): boolean {
 export const SECURITY_MAX_UNITS = 24;
 /** Repulsion radius each security unit exerts on the crowd, same model as the avatar's. */
 export const SECURITY_REPEL_RADIUS = 160;
-/** Tight radius within which a security unit catches (permanently removes) a creature. */
-export const SECURITY_CATCH_RADIUS = 50;
 /** How far the avatar's own repel radius shrinks once a raid fully clears via a full-power
  * hold — the crowd can gather right up close in the moment of winning, instead of still
  * being held at arm's length by the normal repel field. Reset the moment the next raid
@@ -92,6 +90,10 @@ export const SPAWN_MIN_PER_PULSE = 2;
 export const SPAWN_MAX_PER_PULSE = 3;
 /** Crowd never drops below this fraction of its size when the raid started. */
 export const RAID_FLOOR_FRACTION = 0.25;
+/** How often the raid drains the crowd toward the raid floor while unaddressed (ms). */
+export const RAID_ATTRITION_INTERVAL_MS = 400;
+/** How many creatures the crowd loses per attrition tick. */
+export const RAID_ATTRITION_STEP = 1;
 /** How long a full press-and-hold must be sustained to fully clear a raid (ms). */
 export const CHARGE_DURATION_MS = 1800;
 export type RaidState = "idle" | "raiding" | "recovering" | "charging";
@@ -136,6 +138,7 @@ export class RaidController {
   private chargeBaselineUnitCount = 0;
   private chargeBaselineTargetCount = 0;
   private chargeFraction = 0;
+  private lastAttritionAtMs = 0;
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -165,6 +168,7 @@ export class RaidController {
     if (this.state === "idle") {
       this.state = "raiding";
       this.raidStartCount = this.grid.getCreatureCount();
+      this.lastAttritionAtMs = 0;
       this.grid.setAvatarRepelRadius(null);
     }
 
@@ -194,7 +198,6 @@ export class RaidController {
         u.phase === "shrinking"
           ? SECURITY_REPEL_RADIUS * computeSecurityShrinkFraction(u.phaseStartMs, now)
           : SECURITY_REPEL_RADIUS,
-      catchRadius: SECURITY_CATCH_RADIUS,
     }));
   }
 
@@ -284,6 +287,15 @@ export class RaidController {
         this.units.splice(i, 1);
         this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
         removeSecurityUnit(unit);
+      }
+    }
+
+    if (this.state === "raiding" && nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS) {
+      this.lastAttritionAtMs = nowMs;
+      const floor = this.getRaidFloor();
+      const current = this.grid.getCreatureCount();
+      if (current > floor) {
+        this.grid.setQuantity(current - RAID_ATTRITION_STEP);
       }
     }
 

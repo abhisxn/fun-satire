@@ -355,108 +355,19 @@ describe('CreatureGrid', () => {
   });
 
   describe('security units', () => {
-    it('removes a creature caught within a security unit catchRadius and calls onCreatureTerminated', () => {
-      const terminated: Array<{ x: number; y: number; w: number; h: number }> = [];
-      const grid = new CreatureGrid({
-        ...config,
-        initialQuantity: 20,
-        onCreatureTerminated: (x, y, w, h) => terminated.push({ x, y, w, h }),
-      });
+    it('never removes a creature, even when a security unit sits exactly on top of it', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 20 });
       grid.spawn('cockroach');
       const before = grid.getCreatureCount();
-
-      // Security unit sitting exactly on top of wherever creature 0 spawned.
-      const target = (
-        grid as unknown as {
-          creatures: { x: number; y: number; spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number; waitingRespawn: boolean }[];
-        }
-      ).creatures[0]!;
-      // Force this creature fully settled/visible (already popped in, not
-      // fading, not waiting to respawn) so it's a valid catch candidate.
-      target.spawnPopAtMs = Date.now() - 10000;
-      target.spawnDone = true;
-      target.fadeStartMs = 0;
-      target.waitingRespawn = false;
-      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160, catchRadius: 50 }];
-
-      // Isolate from the random fade-pick machinery: with only this one
-      // creature settled (spawnDone), it would otherwise be the sole
-      // fade-pick candidate and get faded out before the catch pass runs.
-      (grid as unknown as { lastFadePickMs: number }).lastFadePickMs = Date.now();
-
-      grid.update(-1000, -1000, securityUnits, 0);
-
-      expect(grid.getCreatureCount()).toBeLessThan(before);
-      expect(terminated.length).toBeGreaterThan(0);
-    });
-
-    it('does not remove a creature that is invisible (waitingRespawn) or mid-fade, even inside catchRadius', () => {
-      const terminated: Array<{ x: number; y: number; w: number; h: number }> = [];
-      const grid = new CreatureGrid({
-        ...config,
-        initialQuantity: 20,
-        onCreatureTerminated: (x, y, w, h) => terminated.push({ x, y, w, h }),
-      });
-      grid.spawn('cockroach');
-      const before = grid.getCreatureCount();
-
-      const target = (
-        grid as unknown as {
-          creatures: { x: number; y: number; spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number; waitingRespawn: boolean }[];
-        }
-      ).creatures[0]!;
-      // Settled but currently invisible: waiting to respawn.
-      target.spawnPopAtMs = Date.now() - 10000;
-      target.spawnDone = false;
-      target.fadeStartMs = 0;
-      target.waitingRespawn = true;
-
-      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160, catchRadius: 50 }];
-
-      grid.update(-1000, -1000, securityUnits, 0);
-
-      expect(grid.getCreatureCount()).toBe(before);
-      expect(terminated.length).toBe(0);
-    });
-
-    it('removes a creature that is still mid-spawn-pop (not spawnDone) as long as it is not fading or waiting to respawn', () => {
-      const terminated: Array<{ x: number; y: number; w: number; h: number }> = [];
-      const grid = new CreatureGrid({
-        ...config,
-        initialQuantity: 20,
-        onCreatureTerminated: (x, y, w, h) => terminated.push({ x, y, w, h }),
-      });
-      grid.spawn('cockroach');
-      const before = grid.getCreatureCount();
-
-      const target = (
-        grid as unknown as {
-          creatures: { x: number; y: number; spawnPopAtMs: number; spawnDone: boolean; fadeStartMs: number; waitingRespawn: boolean }[];
-        }
-      ).creatures[0]!;
-      // Still mid pop-in (not spawnDone), but present, not fading, not waiting to respawn.
-      target.spawnDone = false;
-      target.fadeStartMs = 0;
-      target.waitingRespawn = false;
-
-      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160, catchRadius: 50 }];
-
-      grid.update(-1000, -1000, securityUnits, 0);
-
-      expect(grid.getCreatureCount()).toBeLessThan(before);
-      expect(terminated.length).toBeGreaterThan(0);
-    });
-
-    it('does not remove creatures once targetCount is at or below raidFloor', () => {
-      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
-      grid.spawn('cockroach');
 
       const target = (grid as unknown as { creatures: { x: number; y: number }[] }).creatures[0]!;
-      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160, catchRadius: 50 }];
+      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160 }];
 
-      grid.update(-1000, -1000, securityUnits, 5);
+      for (let i = 0; i < 10; i++) {
+        grid.update(-1000, -1000, securityUnits, 0);
+      }
 
-      expect(grid.getCreatureCount()).toBe(5);
+      expect(grid.getCreatureCount()).toBe(before);
     });
 
     it('repels creatures away from a security unit like it does the avatar', () => {
@@ -465,7 +376,7 @@ describe('CreatureGrid', () => {
 
       const target = (grid as unknown as { creatures: { x: number; y: number; vx: number }[] }).creatures[0]!;
       const startVx = target.vx;
-      const securityUnits = [{ x: target.x - 50, y: target.y, repelRadius: 160, catchRadius: 1 }];
+      const securityUnits = [{ x: target.x - 50, y: target.y, repelRadius: 160 }];
 
       // Avatar far away so only the security unit's repulsion is in play.
       grid.update(-5000, -5000, securityUnits, 20);

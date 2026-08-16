@@ -36,17 +36,10 @@ async function main(): Promise<void> {
 
   const filterPanel = new FilterPanel();
 
-  let audioManagerRef: AudioManager | null = null;
-
   const grid = new CreatureGrid({
     container,
     mode: "cockroach",
     initialQuantity: ONBOARDING_CREATURE_QUANTITY,
-    onCreatureTerminated: (x, y, w, h) => {
-      const audioContext = audioManagerRef?.getAudioContext();
-      if (audioContext) playPoofTone(audioContext);
-      void spawnPoof(x, y, w, h);
-    },
   });
   await grid.init();
   grid.setRepulsor(vw / 2, vh / 2, ONBOARDING_CARD_REPULSOR_RADIUS);
@@ -54,7 +47,6 @@ async function main(): Promise<void> {
   // --- Sound bed (isolated init: owns its own AudioManager + widget. No
   // other init block touches this one.) ---
   const audioManager = new AudioManager({ volume: 0.16 });
-  audioManagerRef = audioManager;
   const audioWidget = new AudioWidget(audioManager);
   audioWidget.attachTo(document.body);
   void audioWidget.attemptAutoplay();
