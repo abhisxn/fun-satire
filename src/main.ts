@@ -222,19 +222,17 @@ async function main(): Promise<void> {
     powerMeter.attachTo(hud.getRoot());
 
     const protestBtn = hud.getProtestButton();
-    protestBtn.addEventListener("pointerdown", () => {
-      raidController.startCharging();
+    protestBtn.addEventListener("click", () => {
+      const raidState = raidController.getState();
+      if (raidState === "raiding") {
+        raidController.startCharging();
+      } else if (raidState === "charging") {
+        raidController.releaseCharge();
+      }
     });
-    const releaseProtestCharge = (): void => {
-      raidController.releaseCharge();
-    };
-    protestBtn.addEventListener("pointerup", releaseProtestCharge);
-    protestBtn.addEventListener("pointerleave", releaseProtestCharge);
-    protestBtn.addEventListener("pointercancel", releaseProtestCharge);
 
     let prevRaidState = raidController.getState();
     engine.onTick(() => {
-      protestBtn.style.setProperty("--charge", String(raidController.getChargeFraction()));
       powerMeter.setFraction(raidController.getChargeFraction());
       const raidState = raidController.getState();
       if (raidState === "idle" && prevRaidState !== "idle") {
