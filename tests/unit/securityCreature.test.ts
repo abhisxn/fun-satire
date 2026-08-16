@@ -15,6 +15,7 @@ import {
   SECURITY_SHRINK_MS,
   securityHeightFor,
   pickSecurityKind,
+  pickSecuritySprite,
   createSecurityUnit,
   removeSecurityUnit,
   computeSecurityEnterProgress,
@@ -41,12 +42,30 @@ describe('SecurityCreature', () => {
   });
 
   describe('securityHeightFor', () => {
-    it('scales police height proportionally from its native aspect ratio', () => {
-      expect(securityHeightFor('police')).toBe(45);
+    it('scales height proportionally from a sprite\'s own aspect ratio', () => {
+      expect(securityHeightFor({ src: '', aspect: 245 / 298 })).toBe(45);
     });
 
-    it('scales raf height proportionally from its native aspect ratio', () => {
-      expect(securityHeightFor('raf')).toBe(49);
+    it('scales height proportionally for a different aspect ratio', () => {
+      expect(securityHeightFor({ src: '', aspect: 232 / 260 })).toBe(49);
+    });
+  });
+
+  describe('pickSecuritySprite', () => {
+    it('returns a police-family sprite for kind "police"', () => {
+      const sprite = pickSecuritySprite('police', () => 0);
+      expect(sprite.src).toContain('police');
+    });
+
+    it('returns a raf-family sprite for kind "raf"', () => {
+      const sprite = pickSecuritySprite('raf', () => 0);
+      expect(sprite.src).toContain('raf');
+    });
+
+    it('picks different variants for different rand() outputs', () => {
+      const first = pickSecuritySprite('police', () => 0);
+      const second = pickSecuritySprite('police', () => 0.99);
+      expect(first.src).not.toBe(second.src);
     });
   });
 
@@ -56,7 +75,7 @@ describe('SecurityCreature', () => {
 
       expect(container.children.length).toBe(1);
       expect(unit.el.tagName).toBe('IMG');
-      expect(unit.el.src).toContain('/creatures/security/police.png');
+      expect(unit.el.src).toMatch(/\/creatures\/security\/police(-2)?\.png$/);
       expect(unit.w).toBe(SECURITY_WIDTH);
       expect(unit.x).toBe(100);
       expect(unit.y).toBe(200);
@@ -87,11 +106,6 @@ describe('SecurityCreature', () => {
       const unit = createSecurityUnit(container, 0, 0, 'police');
       expect(unit.el.style.zIndex).toBe(String(SECURITY_Z_INDEX));
       expect(SECURITY_Z_INDEX).toBe(100);
-    });
-
-    it('uses a flat, subtle drop-shadow', () => {
-      const unit = createSecurityUnit(container, 0, 0, 'police');
-      expect(unit.el.style.filter).toContain('rgba(0,0,0,0.12)');
     });
 
     it('spawns at scale 0 / opacity 0, mid-entrance', () => {

@@ -8,18 +8,32 @@ export type SecurityKind = "police" | "raf";
  * whatever size the user has resized the avatar to. */
 export const SECURITY_WIDTH = 55;
 
-// height/width computed from each source PNG's native pixel dimensions
-// (police.png 298x245, raf.png 260x232), so the sprite keeps its real
-// proportions at the fixed display width above.
-const SPRITE_ASPECT: Record<SecurityKind, number> = {
-  police: 245 / 298,
-  raf: 232 / 260,
+export interface SecuritySprite {
+  src: string;
+  aspect: number; // native height / width
+}
+
+// Each kind now has 2 visual variants — a unit's SecurityKind ("police"/"raf")
+// stays the gameplay-relevant category (see pickPulseKinds in RaidController.ts,
+// which guarantees one of each per pulse); which specific sprite variant renders
+// is a separate, purely cosmetic random pick.
+const SPRITE_VARIANTS: Record<SecurityKind, SecuritySprite[]> = {
+  police: [
+    { src: "/creatures/security/police.png", aspect: 245 / 298 },
+    { src: "/creatures/security/police-2.png", aspect: 250 / 254 },
+  ],
+  raf: [
+    { src: "/creatures/security/raf.png", aspect: 232 / 260 },
+    { src: "/creatures/security/raf2.png", aspect: 245 / 267 },
+  ],
 };
 
-const SPRITE_SRC: Record<SecurityKind, string> = {
-  police: "/creatures/security/police.png",
-  raf: "/creatures/security/raf.png",
-};
+/** Picks a random visual variant for the given kind. `rand` is injectable for
+ * deterministic tests, matching the pattern used by pickSecurityKind. */
+export function pickSecuritySprite(kind: SecurityKind, rand: () => number = Math.random): SecuritySprite {
+  const variants = SPRITE_VARIANTS[kind];
+  return variants[Math.floor(rand() * variants.length)]!;
+}
 
 /** Equal to the avatar/sticker's z-index (100, see StickerOverlay.STICKER_Z_INDEX). Security
  * units are appended into the avatar's own DOM parent (see RaidController's `avatarLayer`
@@ -37,8 +51,8 @@ export const SECURITY_ENTER_MS = 280;
 /** Duration a unit spends shrinking (repel radius easing to 0) before RaidController.tick() removes it (ms). */
 export const SECURITY_SHRINK_MS = 250;
 
-export function securityHeightFor(kind: SecurityKind): number {
-  return Math.round(SECURITY_WIDTH * SPRITE_ASPECT[kind]);
+export function securityHeightFor(sprite: SecuritySprite): number {
+  return Math.round(SECURITY_WIDTH * sprite.aspect);
 }
 
 export function pickSecurityKind(rand: () => number = Math.random): SecurityKind {
@@ -160,11 +174,12 @@ export function createSecurityUnit(
   y: number,
   kind: SecurityKind = pickSecurityKind(),
 ): SecurityUnitState {
+  const sprite = pickSecuritySprite(kind);
   const w = SECURITY_WIDTH;
-  const h = securityHeightFor(kind);
+  const h = securityHeightFor(sprite);
 
   const el = document.createElement("img");
-  el.src = SPRITE_SRC[kind];
+  el.src = sprite.src;
   el.alt = kind === "police" ? "Police" : "RAF";
   el.style.cssText = [
     "position:absolute",
@@ -174,7 +189,6 @@ export function createSecurityUnit(
     `height:${h}px`,
     "pointer-events:none",
     `z-index:${SECURITY_Z_INDEX}`,
-    "filter:drop-shadow(0 1px 1px rgba(0,0,0,0.12))",
   ].join(";");
   container.appendChild(el);
 
