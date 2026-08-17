@@ -22,7 +22,7 @@ describe("hud/FilterPanel", () => {
     };
     vi.spyOn(settingsButton, "getBoundingClientRect").mockReturnValue(rect as DOMRect);
 
-    panel = new FilterPanel(60, 1);
+    panel = new FilterPanel(60, 180);
   });
 
   afterEach(() => {
@@ -64,9 +64,9 @@ describe("hud/FilterPanel", () => {
       const repelInput = root.querySelector<HTMLInputElement>("[data-filter-repel]");
       expect(repelInput).not.toBeNull();
       expect(repelInput?.type).toBe("range");
-      expect(repelInput?.min).toBe("0");
-      expect(repelInput?.max).toBe("2");
-      expect(repelInput?.step).toBe("0.05");
+      expect(repelInput?.min).toBe("60");
+      expect(repelInput?.max).toBe("360");
+      expect(repelInput?.step).toBe("10");
     });
   });
 
@@ -85,7 +85,7 @@ describe("hud/FilterPanel", () => {
     });
 
     it("respects minimum bound (10)", () => {
-      panel = new FilterPanel(10, 1);
+      panel = new FilterPanel(10, 180);
       panel.attachTo(settingsButton);
       const cb = vi.fn();
       panel.onQuantityChange(cb);
@@ -98,7 +98,7 @@ describe("hud/FilterPanel", () => {
     });
 
     it("respects maximum bound (900)", () => {
-      panel = new FilterPanel(900, 1);
+      panel = new FilterPanel(900, 180);
       panel.attachTo(settingsButton);
       const cb = vi.fn();
       panel.onQuantityChange(cb);
@@ -128,26 +128,26 @@ describe("hud/FilterPanel", () => {
       panel.onRepelChange(cb);
 
       const repelInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-repel]");
-      repelInput!.value = "1.5";
+      repelInput!.value = "220";
       repelInput?.dispatchEvent(new Event("input", { bubbles: true }));
 
-      expect(cb).toHaveBeenCalledWith(1.5);
+      expect(cb).toHaveBeenCalledWith(220);
     });
 
-    it("clamps value to [0, 2] range", () => {
+    it("clamps value to [60, 360] range", () => {
       panel.attachTo(settingsButton);
       const cb = vi.fn();
       panel.onRepelChange(cb);
 
       const repelInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-repel]");
 
-      repelInput!.value = "3";
+      repelInput!.value = "500";
       repelInput?.dispatchEvent(new Event("input", { bubbles: true }));
-      expect(cb).toHaveBeenLastCalledWith(2);
+      expect(cb).toHaveBeenLastCalledWith(360);
 
-      repelInput!.value = "-1";
+      repelInput!.value = "0";
       repelInput?.dispatchEvent(new Event("input", { bubbles: true }));
-      expect(cb).toHaveBeenLastCalledWith(0);
+      expect(cb).toHaveBeenLastCalledWith(60);
     });
   });
 
@@ -404,21 +404,21 @@ describe("hud/FilterPanel", () => {
   describe("setRepel", () => {
     it("updates repel value and input", () => {
       panel.attachTo(settingsButton);
-      panel.setRepel(1.5);
+      panel.setRepel(240);
 
-      expect(panel.getRepel()).toBe(1.5);
+      expect(panel.getRepel()).toBe(240);
       const repelInput = panel.getRoot().querySelector<HTMLInputElement>("[data-filter-repel]");
-      expect(repelInput?.value).toBe("1.5");
+      expect(repelInput?.value).toBe("240");
     });
 
     it("clamps to range", () => {
       panel.attachTo(settingsButton);
-      panel.setRepel(3);
+      panel.setRepel(500);
 
-      expect(panel.getRepel()).toBe(2);
+      expect(panel.getRepel()).toBe(360);
 
-      panel.setRepel(-1);
-      expect(panel.getRepel()).toBe(0);
+      panel.setRepel(0);
+      expect(panel.getRepel()).toBe(60);
     });
   });
 

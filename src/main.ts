@@ -261,8 +261,8 @@ async function main(): Promise<void> {
       filterPanel.syncQuantity(count);
     });
 
-    filterPanel.onRepelChange((value) => {
-      grid.setRepelMultiplier(value);
+    filterPanel.onRepelChange((radius) => {
+      grid.setRepelRadius(radius);
     });
 
     filterPanel.onBugModeToggle((active) => {

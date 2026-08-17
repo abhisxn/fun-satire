@@ -1,10 +1,18 @@
 import "./filterPanel.css";
-import { QTY_MIN, QTY_MAX, DEFAULT_CREATURE_QUANTITY } from "../config/tokens";
+import {
+  QTY_MIN,
+  QTY_MAX,
+  DEFAULT_CREATURE_QUANTITY,
+  REPEL_RADIUS_MIN,
+  REPEL_RADIUS_MAX,
+  REPEL_RADIUS_STEP,
+  DEFAULT_REPEL_RADIUS,
+} from "../config/tokens";
 
 const QTY_STEP = 10;
-const REPEL_MIN = 0;
-const REPEL_MAX = 2;
-const REPEL_STEP = 0.05;
+const REPEL_MIN = REPEL_RADIUS_MIN;
+const REPEL_MAX = REPEL_RADIUS_MAX;
+const REPEL_STEP = REPEL_RADIUS_STEP;
 
 export class FilterPanel {
   private readonly root: HTMLElement;
@@ -18,14 +26,14 @@ export class FilterPanel {
   private isOpen = false;
 
   private quantityChangeCb: ((quantity: number) => void) | null = null;
-  private repelChangeCb: ((multiplier: number) => void) | null = null;
+  private repelChangeCb: ((radius: number) => void) | null = null;
   private bugModeChangeCb: ((active: boolean) => void) | null = null;
   private openChangeCb: ((open: boolean) => void) | null = null;
 
   private boundOnDocumentClick: ((e: MouseEvent) => void) | null = null;
   private boundOnKeyDown: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(initialQuantity = DEFAULT_CREATURE_QUANTITY, initialRepel = 1) {
+  constructor(initialQuantity = DEFAULT_CREATURE_QUANTITY, initialRepel = DEFAULT_REPEL_RADIUS) {
     this.quantity = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.round(initialQuantity / QTY_STEP) * QTY_STEP));
     this.repel = Math.max(REPEL_MIN, Math.min(REPEL_MAX, initialRepel));
 
@@ -197,8 +205,8 @@ export class FilterPanel {
     this.updateQtyFill(clamped);
   }
 
-  setRepel(multiplier: number): void {
-    const clamped = Math.max(REPEL_MIN, Math.min(REPEL_MAX, multiplier));
+  setRepel(radius: number): void {
+    const clamped = Math.max(REPEL_MIN, Math.min(REPEL_MAX, radius));
     this.repel = clamped;
     this.repelInput.value = String(clamped);
     this.updateRepelFill(clamped);
@@ -222,7 +230,7 @@ export class FilterPanel {
     this.quantityChangeCb = cb;
   }
 
-  onRepelChange(cb: (multiplier: number) => void): void {
+  onRepelChange(cb: (radius: number) => void): void {
     this.repelChangeCb = cb;
   }
 
