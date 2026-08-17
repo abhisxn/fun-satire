@@ -14,8 +14,10 @@ const SVG_WHATSAPP = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="htt
 const SVG_FACEBOOK = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="11" fill="#1877F2"/><path d="M13.2 11.3h-1.6v5.4h-2.2v-5.4H8.2V9.4h1.2V8.2c0-1.5.7-2.6 2.5-2.6h1.7v1.9h-1.1c-.5 0-.6.3-.6.7v1.2h1.7l-.2 1.9z" fill="#fff"/></svg>`;
 const SVG_INSTAGRAM = `<svg width="20" height="20" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="win-ig-grad" x1="0" y1="22" x2="22" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset="0.4" stop-color="#D62976"/><stop offset="0.7" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><circle cx="11" cy="11" r="11" fill="url(#win-ig-grad)"/><rect x="6" y="6" width="10" height="10" rx="3" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="11" cy="11" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="14.2" cy="7.8" r="0.7" fill="#fff"/></svg>`;
 const SVG_SHARE = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="13.5" cy="4.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="4.5" cy="9" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="13.5" cy="13.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 7.8L11.5 5.3M6.5 10.2L11.5 12.7" stroke="currentColor" stroke-width="1.4"/></svg>`;
+const SVG_CHECK = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.2 11.7L13 4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 const AUTO_DISMISS_MS = 7000;
+const COPY_LINK_FEEDBACK_MS = 1800;
 
 const SHARE_MESSAGE =
   "I dropped them into the crowd — eyes, fingers, cockroaches, and placards closed in. This is Gutter Generation. Come try it.";
@@ -30,9 +32,11 @@ export class WinPanel {
   private openChangeCb: ((open: boolean) => void) | null = null;
 
   private toastEl!: HTMLElement;
+  private copyLinkBtn!: HTMLButtonElement;
   private toastTimeout: number | null = null;
   private instagramFallbackTimeout: number | null = null;
   private autoDismissTimeout: number | null = null;
+  private copyLinkResetTimeout: number | null = null;
   private readonly nativeShare: ((data: ShareData) => Promise<void>) | undefined = (
     navigator as Navigator & { share?: (data: ShareData) => Promise<void> }
   ).share?.bind(navigator);
@@ -153,14 +157,14 @@ export class WinPanel {
       row.append(facebookBtn, instagramBtn, whatsappBtn);
     }
 
-    const copyLinkBtn = document.createElement("button");
-    copyLinkBtn.type = "button";
-    copyLinkBtn.className = "win-panel-copy-link-btn";
-    copyLinkBtn.textContent = "Copy link";
-    copyLinkBtn.addEventListener("click", () => {
+    this.copyLinkBtn = document.createElement("button");
+    this.copyLinkBtn.type = "button";
+    this.copyLinkBtn.className = "win-panel-copy-link-btn";
+    this.copyLinkBtn.textContent = "Copy link";
+    this.copyLinkBtn.addEventListener("click", () => {
       void this.handleCopyLink();
     });
-    row.appendChild(copyLinkBtn);
+    row.appendChild(this.copyLinkBtn);
 
     return row;
   }
@@ -201,9 +205,33 @@ export class WinPanel {
     try {
       await navigator.clipboard.writeText(window.location.href);
       this.showToast("Link copied!");
+      this.showCopyLinkFeedback();
     } catch {
       // clipboard unavailable — silently no-op, no crash
     }
+  }
+
+  /** Swaps the button's own label to a checkmark + "Copied!" for a beat, then reverts —
+   * the toast alone is easy to miss since it renders below the panel's edge, so the
+   * button itself needs to visibly confirm the click landed. */
+  private showCopyLinkFeedback(): void {
+    this.copyLinkBtn.textContent = "";
+    const icon = document.createElement("span");
+    icon.className = "win-panel-copy-link-icon";
+    icon.innerHTML = SVG_CHECK;
+    const label = document.createElement("span");
+    label.textContent = "Copied!";
+    this.copyLinkBtn.append(icon, label);
+    this.copyLinkBtn.classList.add("copied");
+
+    if (this.copyLinkResetTimeout !== null) {
+      window.clearTimeout(this.copyLinkResetTimeout);
+    }
+    this.copyLinkResetTimeout = window.setTimeout(() => {
+      this.copyLinkBtn.textContent = "Copy link";
+      this.copyLinkBtn.classList.remove("copied");
+      this.copyLinkResetTimeout = null;
+    }, COPY_LINK_FEEDBACK_MS);
   }
 
   private showToast(message: string): void {
@@ -275,6 +303,9 @@ export class WinPanel {
     }
     if (this.instagramFallbackTimeout !== null) {
       window.clearTimeout(this.instagramFallbackTimeout);
+    }
+    if (this.copyLinkResetTimeout !== null) {
+      window.clearTimeout(this.copyLinkResetTimeout);
     }
     this.overlay.remove();
   }
