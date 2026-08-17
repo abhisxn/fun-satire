@@ -8,44 +8,44 @@
    (--hud-glass-bg/-border/-blur come from hudGlass.css)
    ============================================ */
 :root {
+  --hud-density: clamp(0px, calc(100vw - 320px), 448px);
   --hud-shadow-outer: 0px 24px 40px rgba(97, 86, 80, 0.25);
   --hud-shadow-inner: 0px 4px 0px rgba(255, 255, 255, 1);
   --hud-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --hud-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Fluid density budget: 0px at/below 320px viewport width, rising 1:1
-     with width up to a 448px cap at 768px+ (768 was already the point the
-     toolbar reached full size, so that ceiling is unchanged — only the
-     stepped 380/768px cliffs in between are replaced with a continuous
-     ramp, same reasoning as --menu-density in menuPanel.css). Slope per
-     property = (max - min) / 448, precomputed since calc() can't divide
-     one length by another to get a unitless ratio. */
-  --hud-density: clamp(0px, calc(100vw - 320px), 448px);
-  --hud-icon-size: calc(24px + var(--hud-density) * 0.01785714);
-  --hud-btn-size: calc(44px + var(--hud-density) * 0.01785714);
-  --hud-btn-gap: calc(6px + var(--hud-density) * 0.01339286);
-  --hud-padding-v: calc(8px + var(--hud-density) * 0.00892857);
+  --hud-icon-size: 28px;
+  --hud-btn-size: 46px;
+  --hud-btn-gap: 8px;
+  --hud-padding-v-top: 8px;
+  --hud-padding-v-bottom: 10px;
+  --hud-padding-v: 8px;
+  --hud-padding-h: 20px;
 }
 
 /* ============================================
-   HUD Container — Glassmorphism
+   HUD Container — Glassmorphism Capsule
    ============================================ */
 .premium-hud {
   position: fixed;
-  bottom: calc(16px + var(--hud-density) * 0.07142857);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  max-width: min(calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 600px);
+  width: max-content;
   gap: var(--hud-btn-gap);
-  padding: var(--hud-padding-v);
+  padding: var(--hud-padding-v-top, var(--hud-padding-v)) var(--hud-padding-h) var(--hud-padding-v-bottom, var(--hud-padding-v)) var(--hud-padding-h);
   background: var(--hud-glass-bg);
   backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
-  border-radius: calc(60px + var(--hud-density) * 0.04910714);
+  border-radius: 999px;
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   z-index: 1000;
-  animation: hud-slide-up 0.8s var(--hud-ease-spring) forwards;
+  animation: hud-slide-up 800ms var(--hud-ease-spring) forwards;
   will-change: left, top;
 }
 
@@ -53,8 +53,10 @@
    Drag Handle — Grip Icon
    ============================================ */
 .hud-drag-handle {
-  width: calc(18px + var(--hud-density) * 0.02232143);
-  height: calc(18px + var(--hud-density) * 0.02232143);
+  width: 18px;
+  height: var(--hud-btn-size);
+  min-height: 44px;
+  min-width: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,10 +66,11 @@
   user-select: none;
   -webkit-user-select: none;
   border-radius: 6px;
-  transition: opacity 0.3s var(--hud-ease-smooth), background 0.2s var(--hud-ease-smooth);
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
-  animation-delay: 0.05s;
+  transition: opacity 300ms var(--hud-ease-smooth), background 200ms var(--hud-ease-smooth);
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
+  animation-delay: 50ms;
   opacity: 0;
+  flex-shrink: 0;
 }
 
 .hud-drag-handle:hover {
@@ -82,9 +85,252 @@
 }
 
 .hud-drag-handle svg {
-  width: calc(18px + var(--hud-density) * 0.01339286);
-  height: calc(18px + var(--hud-density) * 0.01339286);
+  width: 16px;
+  height: 20px;
   pointer-events: none;
+}
+
+/* ============================================
+   Mode Group (Desktop strip)
+   ============================================ */
+.hud-mode-group {
+  display: flex;
+  align-items: center;
+  gap: var(--hud-btn-gap);
+}
+
+/* ============================================
+   Mode Dropdown Button (Smaller viewports)
+   ============================================ */
+.hud-mode-dropdown-btn {
+  position: relative;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: all 350ms var(--hud-ease-spring);
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
+  opacity: 0;
+  animation-delay: 150ms;
+  flex-shrink: 0;
+}
+
+.hud-mode-dropdown-btn.active-eyes {
+  background: linear-gradient(180deg, #f78d8d 0%, #e26790 100%);
+  border: 1px solid #a02b4d;
+  box-shadow: 0px 3px 0px #a02b4d;
+}
+
+.hud-mode-dropdown-btn.active-pointedFinger {
+  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
+  border: 1px solid #226591;
+  box-shadow: 0px 3px 0px #226591;
+}
+
+.hud-mode-dropdown-btn.active-cockroach {
+  background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
+  border: 1px solid #228b20;
+  box-shadow: 0px 3px 0px #228b20;
+}
+
+.hud-mode-dropdown-btn.active-placard {
+  background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
+  border: 1px solid #871e93;
+  box-shadow: 0px 3px 0px #871e93;
+}
+
+.hud-mode-dropdown-btn:hover {
+  transform: translateY(-2px);
+}
+
+.hud-mode-dropdown-btn:active {
+  transform: translateY(2px);
+  transition-duration: 100ms;
+}
+
+.hud-mode-dropdown-btn.active-eyes:active { box-shadow: 0px 1px 0px #a02b4d; }
+.hud-mode-dropdown-btn.active-pointedFinger:active { box-shadow: 0px 1px 0px #226591; }
+.hud-mode-dropdown-btn.active-cockroach:active { box-shadow: 0px 1px 0px #228b20; }
+.hud-mode-dropdown-btn.active-placard:active { box-shadow: 0px 1px 0px #871e93; }
+
+.hud-mode-dropdown__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hud-mode-dropdown__icon svg {
+  width: 26px;
+  height: 26px;
+  pointer-events: none;
+}
+
+.hud-mode-dropdown__caret-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hud-mode-dropdown__caret {
+  width: 10px;
+  height: 8px;
+  pointer-events: none;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hud-mode-dropdown-btn[aria-expanded="true"] .hud-mode-dropdown__caret {
+  transform: rotate(180deg);
+}
+
+/* ============================================
+   Mode Options Popover Panel
+   ============================================ */
+.hud-mode-panel {
+  position: fixed;
+  width: 228px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 18px;
+  box-shadow: 0px 18px 44px rgba(65, 52, 45, 0.18), 0px 2px 8px rgba(65, 52, 45, 0.08);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+  z-index: 1001;
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+.hud-mode-panel.open {
+  display: flex;
+  animation: hud-mode-panel-entrance 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes hud-mode-panel-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+.hud-mode-panel__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hud-mode-panel__item:hover {
+  background: rgba(255, 255, 255, 0.65);
+  transform: translateX(2px);
+}
+
+.hud-mode-panel__item:active {
+  transform: scale(0.98);
+}
+
+.hud-mode-panel__item.active {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(42, 36, 32, 0.1);
+  box-shadow: 0px 2px 8px rgba(65, 52, 45, 0.06);
+}
+
+.hud-mode-panel__icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(42, 31, 26, 0.08);
+  flex-shrink: 0;
+  transition: all 250ms var(--hud-ease-spring);
+}
+
+.hud-mode-panel__icon-badge svg {
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+
+.hud-mode-panel__item.active[data-mode="eyes"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #f78d8d 0%, #e26790 100%);
+  border-color: #a02b4d;
+  box-shadow: 0px 2px 4px rgba(160, 43, 77, 0.3);
+}
+
+.hud-mode-panel__item.active[data-mode="pointedFinger"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
+  border-color: #226591;
+  box-shadow: 0px 2px 4px rgba(34, 101, 145, 0.3);
+}
+
+.hud-mode-panel__item.active[data-mode="cockroach"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
+  border-color: #228b20;
+  box-shadow: 0px 2px 4px rgba(34, 139, 32, 0.3);
+}
+
+.hud-mode-panel__item.active[data-mode="placard"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
+  border-color: #871e93;
+  box-shadow: 0px 2px 4px rgba(135, 30, 147, 0.3);
+}
+
+.hud-mode-panel__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2a2420;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.hud-mode-panel__check {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2a2420;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hud-mode-panel__item.active .hud-mode-panel__check {
+  opacity: 1;
+  transform: scale(1);
 }
 
 /* ============================================
@@ -94,32 +340,42 @@
   position: relative;
   width: var(--hud-btn-size);
   height: var(--hud-btn-size);
-  display: flex;
+  min-height: 44px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
   cursor: pointer;
   border-radius: 50%;
-  transition: all 0.5s var(--hud-ease-spring);
+  transition: all 400ms var(--hud-ease-spring);
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  /* Removes the double-tap-to-zoom gesture disambiguation delay on mobile,
-     so quick successive taps (e.g. switching modes) register immediately
-     instead of occasionally being swallowed. */
   touch-action: manipulation;
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
   opacity: 0;
+  flex-shrink: 0;
+  padding: 0;
 }
 
+/* Tap/click area expansion: guarantees minimum 44px x 44px touch target */
 .hud-btn::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   opacity: 0;
-  transition: opacity 0.3s var(--hud-ease-smooth);
+  transition: opacity 300ms var(--hud-ease-smooth);
 }
 
 .hud-btn:hover::before { opacity: 1; }
@@ -131,18 +387,19 @@
 
 .hud-btn:active {
   transform: scale(0.95);
-  transition-duration: 0.15s;
+  transition-duration: 150ms;
 }
 
 .hud-btn:focus-visible {
-  box-shadow: 0 0 0 3px rgba(97, 86, 80, 0.3);
+  box-shadow: 0px 0px 0px 3px rgba(97, 86, 80, 0.3);
 }
 
 .hud-btn svg {
   width: var(--hud-icon-size);
   height: var(--hud-icon-size);
-  transition: transform 0.5s var(--hud-ease-spring);
+  transition: transform 400ms var(--hud-ease-spring);
   pointer-events: none;
+  flex-shrink: 0;
 }
 
 .hud-btn:hover svg {
@@ -150,8 +407,8 @@
 }
 
 .hud-btn:active svg {
-  transform: translateY(0) scale(0.92);
-  transition-duration: 0.15s;
+  transform: translateY(0px);
+  transition-duration: 150ms;
 }
 
 /* ============================================
@@ -163,80 +420,80 @@
 .hud-btn--placard {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 30px;
+  border-radius: 50%;
   box-shadow: none;
-  transition: all 0.4s var(--hud-ease-spring);
+  transition: all 350ms var(--hud-ease-spring);
 }
 
 .hud-btn--eye.active {
   background: linear-gradient(180deg, #f78d8d 0%, #e26790 100%);
   border: 1px solid #a02b4d;
-  box-shadow: 0px 4px 0px #a02b4d;
+  box-shadow: 0px 3px 0px #a02b4d;
 }
 
 .hud-btn--bug.active {
   background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
   border: 1px solid #228b20;
-  box-shadow: 0px 4px 0px #228b20;
+  box-shadow: 0px 3px 0px #228b20;
 }
 
 .hud-btn--hand.active {
   background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
   border: 1px solid #226591;
-  box-shadow: 0px 4px 0px #226591;
+  box-shadow: 0px 3px 0px #226591;
 }
 
 .hud-btn--placard.active {
   background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
   border: 1px solid #871e93;
-  box-shadow: 0px 4px 0px #871e93;
+  box-shadow: 0px 3px 0px #871e93;
 }
 
 .hud-btn--eye:hover,
 .hud-btn--bug:hover,
 .hud-btn--hand:hover,
 .hud-btn--placard:hover {
-  transform: scale(1.08) translateY(-2px);
+  transform: translateY(-2px);
 }
 
 .hud-btn--eye.active:hover {
-  box-shadow: 0px 6px 0px #a02b4d, 0px 8px 16px rgba(160, 43, 77, 0.3);
+  box-shadow: 0px 5px 0px #a02b4d, 0px 6px 14px rgba(160, 43, 77, 0.3);
 }
 
 .hud-btn--bug.active:hover {
-  box-shadow: 0px 6px 0px #228b20, 0px 8px 16px rgba(34, 139, 32, 0.3);
+  box-shadow: 0px 5px 0px #228b20, 0px 6px 14px rgba(34, 139, 32, 0.3);
 }
 
 .hud-btn--hand.active:hover {
-  box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
+  box-shadow: 0px 5px 0px #226591, 0px 6px 14px rgba(34, 101, 145, 0.3);
 }
 
 .hud-btn--placard.active:hover {
-  box-shadow: 0px 6px 0px #871e93, 0px 8px 16px rgba(135, 30, 147, 0.3);
+  box-shadow: 0px 5px 0px #871e93, 0px 6px 14px rgba(135, 30, 147, 0.3);
 }
 
 .hud-btn--eye.active:active,
 .hud-btn--bug.active:active,
 .hud-btn--hand.active:active,
 .hud-btn--placard.active:active {
-  transform: scale(0.95) translateY(2px);
-  transition-duration: 0.1s;
+  transform: translateY(2px);
+  transition-duration: 100ms;
 }
 
 .hud-btn--eye.active:active {
-  box-shadow: 0px 2px 0px #a02b4d;
+  box-shadow: 0px 1px 0px #a02b4d;
 }
 
 .hud-btn--bug.active:active {
-  box-shadow: 0px 2px 0px #228b20;
+  box-shadow: 0px 1px 0px #228b20;
 }
 
 .hud-btn--hand.active:active {
-  box-shadow: 0px 2px 0px #226591;
+  box-shadow: 0px 1px 0px #226591;
 }
 
 .hud-btn--placard.active:active {
-  box-shadow: 0px 2px 0px #871e93;
+  box-shadow: 0px 1px 0px #871e93;
 }
 
 /* ============================================
@@ -250,9 +507,9 @@
   margin: 0 4px;
   flex-shrink: 0;
   align-self: center;
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
   opacity: 0;
-  animation-delay: 0.25s;
+  animation-delay: 280ms;
 }
 
 /* ============================================
@@ -266,71 +523,85 @@
 
 /* ============================================
    Protest Button Anchor
-   Position-only wrapper, sized to exactly match .hud-attack via shrink-to-fit
-   flex-item sizing — the power meter (PowerMeter.ts/powerMeter.css) attaches
-   here instead of to .hud-attack itself, since the button clips its own
-   content with overflow:hidden and would otherwise clip the meter.
    ============================================ */
 .hud-attack-anchor {
   position: relative;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   flex-shrink: 0;
 }
 
 /* ============================================
    Protest Button — Gradient CTA
-   (same gradient/shadow language as .menu-share-btn in menuPanel.css)
    ============================================ */
 .hud-attack {
   position: relative;
   box-sizing: border-box;
-  height: 39px;
-  padding: 12px;
-  display: flex;
+  height: var(--hud-btn-size);
+  min-height: 38px;
+  padding: 0 16px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, #de7666 0%, #e9975d 100%);
   border: 1px solid #a74333;
   border-radius: 12px;
-  box-shadow: 0px 4px 0px #b75040;
+  box-shadow: 0px 3px 0px #b75040;
   color: white;
   font-family: "Bungee", cursive;
   font-size: 16px;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: transform 0.15s var(--hud-ease-smooth), box-shadow 0.15s var(--hud-ease-smooth);
+  transition: transform 150ms var(--hud-ease-smooth), box-shadow 150ms var(--hud-ease-smooth);
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   flex-shrink: 0;
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
   opacity: 0;
-  animation-delay: 0.45s;
+  animation-delay: 450ms;
   overflow: hidden;
-  margin-right: calc(var(--hud-btn-gap) * 1.2);
+  margin-right: 0;
 }
 
 .hud-attack:hover {
   transform: translateY(-2px);
-  box-shadow: 0px 6px 0px #b75040, 0px 8px 20px rgba(183, 80, 64, 0.4);
+  box-shadow: 0px 5px 0px #b75040, 0px 6px 16px rgba(183, 80, 64, 0.4);
 }
 
 .hud-attack:active {
   transform: translateY(2px);
-  box-shadow: 0px 2px 0px #b75040;
+  box-shadow: 0px 1px 0px #b75040;
 }
 
 .hud-attack:focus-visible {
-  box-shadow: 0px 4px 0px #b75040, 0 0 0 3px rgba(222, 118, 102, 0.4);
+  box-shadow: 0px 3px 0px #b75040, 0px 0px 0px 3px rgba(222, 118, 102, 0.4);
+}
+
+.hud-attack svg,
+.hud-attack .hud-attack__label {
+  display: block;
+  height: 14px;
+  width: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  z-index: 1;
 }
 
 .hud-attack span {
   position: relative;
   z-index: 1;
+  white-space: nowrap;
 }
 
 /* ============================================
-   Tooltips — Pseudo-element with Fade-in
+   Tooltips — Pseudo-element with Spring Pop
    ============================================ */
 .hud-btn[data-tooltip]::after {
   content: attr(data-tooltip);
@@ -338,6 +609,7 @@
   bottom: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%) translateY(8px);
+  transform-origin: bottom center;
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px) !important;
@@ -348,58 +620,62 @@
   color: #2a1f1a;
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.02em;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.4s var(--hud-ease-spring);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.hud-btn[data-tooltip]:hover::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Protest button's tooltip shows on hover (so it educates before the first
-   press) AND stays pinned while actively held (.hud-attack--show-tooltip,
-   toggled in Hud.ts) so touch users who never hover still see it. It's a
-   pseudo-element of .hud-attack-anchor, NOT .hud-attack — the button clips
-   its own content with overflow:hidden (see the anchor's CSS comment above),
-   which was silently clipping this tooltip to nothing regardless of which
-   side it was anchored to. It's also positioned BELOW the button rather than
-   above: .power-meter (powerMeter.css, z-index 1001) renders directly above
-   the button the instant a press starts, and would otherwise sit right on
-   top of an above-anchored tooltip here. */
-.hud-attack-anchor[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
-  box-shadow: 0px 8px 16px rgba(97, 86, 80, 0.2);
-  color: #2a1f1a;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.4s var(--hud-ease-spring);
+  transition: opacity 250ms var(--hud-ease-smooth), transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   z-index: 10;
 }
 
-.hud-attack-anchor[data-tooltip]:hover::after,
-.hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::after {
+.hud-btn[data-tooltip]:hover::after {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0px);
+}
+
+.hud-attack-anchor[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  transform-origin: bottom center;
+  padding: 6px 12px;
+  background: rgba(20, 20, 20, 0.92);
+  border-radius: 6px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms var(--hud-ease-smooth), transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  z-index: 10;
+}
+
+.hud-attack-anchor[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  transform-origin: bottom center;
+  border: 5px solid transparent;
+  border-top-color: rgba(20, 20, 20, 0.92);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms var(--hud-ease-smooth), transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+}
+
+.hud-attack-anchor[data-tooltip]:hover::after,
+.hud-attack-anchor[data-tooltip]:hover::before,
+.hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::after,
+.hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0px);
 }
 
 /* ============================================
@@ -408,11 +684,11 @@
 @keyframes hud-slide-up {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(40px) scale(0.95);
+    transform: translateX(-50%) translateY(40px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0px);
   }
 }
 
@@ -430,27 +706,20 @@
 /* ============================================
    Staggered Entrance Delays
    ============================================ */
-.hud-btn:nth-child(2) { animation-delay: 0.1s; }
-.hud-btn:nth-child(3) { animation-delay: 0.15s; }
-.hud-btn:nth-child(4) { animation-delay: 0.2s; }
-.hud-btn:nth-child(5) { animation-delay: 0.25s; }
-.hud-divider { animation-delay: 0.28s; }
-.hud-btn:nth-child(7) { animation-delay: 0.35s; }
-.hud-btn:nth-child(8) { animation-delay: 0.4s; }
+.hud-btn:nth-child(2) { animation-delay: 100ms; }
+.hud-btn:nth-child(3) { animation-delay: 150ms; }
+.hud-btn:nth-child(4) { animation-delay: 200ms; }
+.hud-btn:nth-child(5) { animation-delay: 250ms; }
+.hud-divider { animation-delay: 280ms; }
+.hud-btn:nth-child(7) { animation-delay: 350ms; }
+.hud-btn:nth-child(8) { animation-delay: 400ms; }
 
-/* Hidden while the text editor (TextOverlay) has focus on mobile — the
-   fixed-position toolbar would otherwise sit on top of the on-screen
-   keyboard/typed text. Mirrors .hud-menu-btn.hidden in menuButton.css.
-   animation: none is required — .premium-hud's entrance animation
-   (hud-slide-up, below) uses `forwards` fill, which keeps forcibly pinning
-   opacity:1 from its final keyframe indefinitely after it completes,
-   silently overriding this rule's opacity:0 unless the animation itself is
-   cancelled. Same fix already applied to .hud--dragging below. */
+/* Hidden state */
 .premium-hud.hidden {
   opacity: 0;
   pointer-events: none;
   animation: none;
-  transition: opacity 0.3s var(--hud-ease-smooth);
+  transition: opacity 300ms var(--hud-ease-smooth);
 }
 
 .premium-hud.hud--dragging,
@@ -462,7 +731,8 @@
 
 .premium-hud.hud--dragging .hud-btn,
 .premium-hud.hud--dragging .hud-attack,
-.premium-hud.hud--dragging .hud-divider {
+.premium-hud.hud--dragging .hud-divider,
+.premium-hud.hud--dragging .hud-mode-dropdown-btn {
   animation: none;
   opacity: 1;
 }
@@ -470,7 +740,9 @@
 .premium-hud.hud--dragging .hud-btn:hover,
 .premium-hud.hud--dragging .hud-btn:active,
 .premium-hud.hud--dragging .hud-attack:hover,
-.premium-hud.hud--dragging .hud-attack:active {
+.premium-hud.hud--dragging .hud-attack:active,
+.premium-hud.hud--dragging .hud-mode-dropdown-btn:hover,
+.premium-hud.hud--dragging .hud-mode-dropdown-btn:active {
   transform: none;
   transition: none;
 }
@@ -481,14 +753,126 @@
 }
 
 /* ============================================
-   Responsive — button/icon/gap sizing above is fully fluid via
-   --hud-density (defined in :root); only a genuine structural toggle
-   remains here — tooltips have no room to render on narrow screens, so
-   they're dropped outright rather than shrunk.
+   Mobile Layout (<= 540px viewports)
+   Strictly integer numbers (no decimals)
    ============================================ */
-@media (max-width: 768px) {
-  .hud-btn[data-tooltip]::after,
-  .hud-attack-anchor[data-tooltip]::after {
+@media (max-width: 540px) {
+  :root {
+    --hud-icon-size: 26px;
+    --hud-btn-size: 44px;
+    --hud-btn-gap: 8px;
+    --hud-padding-v-top: 8px;
+    --hud-padding-v-bottom: 10px;
+    --hud-padding-v: 8px;
+    --hud-padding-h: 20px;
+  }
+
+  .premium-hud {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 24px);
+    padding: var(--hud-padding-v-top, var(--hud-padding-v)) var(--hud-padding-h) var(--hud-padding-v-bottom, var(--hud-padding-v)) var(--hud-padding-h);
+    gap: 8px;
+  }
+
+  .hud-drag-handle {
+    width: 16px;
+    min-width: 16px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .hud-drag-handle svg {
+    width: 16px;
+    height: 20px;
+  }
+
+  .hud-mode-group {
+    display: none !important;
+  }
+
+  .hud-divider {
+    display: none !important;
+  }
+
+  .hud-mode-dropdown-btn {
+    display: inline-flex !important;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 16px;
+    gap: 10px;
+    border-radius: 999px;
+  }
+
+  .hud-mode-dropdown__icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hud-mode-dropdown__caret {
+    width: 10px;
+    height: 8px;
+  }
+
+  .hud-mode-panel {
+    width: 228px;
+    max-width: calc(100vw - 32px);
+    padding: 8px;
+    gap: 4px;
+    border-radius: 18px;
+    box-shadow: 0px 18px 44px rgba(65, 52, 45, 0.18), 0px 2px 8px rgba(65, 52, 45, 0.08);
+  }
+
+  .hud-mode-panel__item {
+    padding: 8px 12px;
+    gap: 12px;
+    border-radius: 12px;
+  }
+
+  .hud-mode-panel__icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .hud-mode-panel__icon-badge svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .hud-mode-panel__label {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .hud-mode-panel__check {
+    font-size: 14px;
+  }
+
+  .hud-btn {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .hud-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hud-attack {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  .hud-attack svg,
+  .hud-attack .hud-attack__label {
+    height: 14px;
+  }
+
+  .hud-btn[data-tooltip]::after {
     display: none;
   }
 }
@@ -500,7 +884,9 @@
   .premium-hud,
   .hud-drag-handle,
   .hud-btn,
-  .hud-attack {
+  .hud-attack,
+  .hud-mode-dropdown-btn,
+  .hud-mode-panel {
     animation: none;
     opacity: 1;
   }
@@ -509,7 +895,9 @@
   .hud-btn:hover,
   .hud-btn:active,
   .hud-attack:hover,
-  .hud-attack:active {
+  .hud-attack:active,
+  .hud-mode-dropdown-btn:hover,
+  .hud-mode-dropdown-btn:active {
     transition: none;
   }
 
@@ -518,7 +906,9 @@
     transition: none;
   }
 
-  .hud-btn[data-tooltip]::after {
+  .hud-btn[data-tooltip]::after,
+  .hud-attack-anchor[data-tooltip]::after,
+  .hud-attack-anchor[data-tooltip]::before {
     transition: none;
   }
 }

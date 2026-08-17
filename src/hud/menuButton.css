@@ -3,10 +3,12 @@
    ============================================ */
 .hud-menu-btn {
   position: fixed;
-  top: calc(16px + var(--hud-density) * 0.03571429);
-  right: calc(16px + var(--hud-density) * 0.03571429);
-  width: var(--hud-btn-size);
-  height: var(--hud-btn-size);
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  width: 54px;
+  height: 54px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,14 +16,17 @@
   backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
-  border-radius: calc(12px + var(--hud-density) * 0.00892857);
+  border-radius: 18px;
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: transform 0.4s var(--hud-ease-spring), box-shadow 0.4s var(--hud-ease-smooth),
-    opacity 0.3s var(--hud-ease-smooth);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform 400ms var(--hud-ease-spring), box-shadow 400ms var(--hud-ease-smooth),
+    opacity 300ms var(--hud-ease-smooth);
   z-index: 1000;
 }
 
@@ -32,9 +37,10 @@
 }
 
 .hud-menu-btn svg {
-  width: calc(18px + var(--hud-density) * 0.00892857);
-  height: calc(18px + var(--hud-density) * 0.00892857);
+  width: 24px;
+  height: 24px;
   pointer-events: none;
+  display: block;
 }
 
 .hud-menu-btn:hover {
@@ -43,15 +49,28 @@
 
 .hud-menu-btn:active {
   transform: scale(0.95);
-  transition-duration: 0.15s;
+  transition-duration: 150ms;
 }
 
 .hud-menu-btn:focus-visible {
-  box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer), 0 0 0 3px rgba(97, 86, 80, 0.3);
+  box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer), 0px 0px 0px 3px rgba(97, 86, 80, 0.3);
 }
 
-/* Sizing above is fully fluid via --hud-density (defined in hud.css's
-   :root); no width breakpoints needed here. */
+@media (max-width: 540px) {
+  .hud-menu-btn {
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+  }
+
+  .hud-menu-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud-menu-btn,
   .hud-menu-btn:hover,

@@ -436,4 +436,31 @@ describe('StickerOverlay', () => {
     const hint = sticker.el.querySelector('.sticker-overlay-drag-hint');
     expect(hint?.textContent).toBe('Drag or Shake Me');
   });
+
+  it('clamps sticker within viewport bounds during drag and cannot be dragged offscreen', () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1000, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true });
+
+    const s = new StickerOverlay('/avatars/gutter.png', 100, 100);
+    document.body.appendChild(s.el);
+
+    const mockRect = { left: 100, top: 100, right: 260, bottom: 260, width: 160, height: 160, x: 100, y: 100, toJSON: () => ({}) };
+    vi.spyOn(s.el, 'getBoundingClientRect').mockReturnValue(mockRect);
+
+    s.el.dispatchEvent(new MouseEvent('mousedown', { clientX: 120, clientY: 120, bubbles: true }));
+
+    // Drag way past top-left
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: -1000, clientY: -1000, bubbles: true }));
+    expect(s.el.style.left).toBe('0px');
+    expect(s.el.style.top).toBe('0px');
+
+    // Drag way past bottom-right (1000 - 160 = 840, 800 - 160 = 640)
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 5000, clientY: 5000, bubbles: true }));
+    expect(s.el.style.left).toBe('840px');
+    expect(s.el.style.top).toBe('640px');
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    expect(s.el.style.left).toBe('840px');
+    expect(s.el.style.top).toBe('640px');
+  });
 });

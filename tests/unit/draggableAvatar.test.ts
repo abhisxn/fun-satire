@@ -34,7 +34,7 @@ describe('DraggableAvatar', () => {
       expect(avatar.el.style.width).toBe('140px');
       expect(avatar.el.style.cursor).toBe('grab');
       expect(avatar.el.style.userSelect).toBe('none');
-      expect(avatar.el.style.zIndex).toBe('500');
+      expect(avatar.el.style.zIndex).toBe('100');
     });
 
     it('sets filter and transition', () => {

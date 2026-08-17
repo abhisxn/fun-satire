@@ -82,11 +82,11 @@ describe("Hud", () => {
       expect(galleryBtn).toBeTruthy();
     });
 
-    it("creates a protest button", () => {
+    it("creates a protest button with SVG label", () => {
       const protestBtn = host.querySelector(".hud-attack");
       expect(protestBtn).toBeTruthy();
       expect(protestBtn?.getAttribute("aria-label")).toBe("Protest");
-      expect(protestBtn?.querySelector("span")?.textContent).toBe("Protest");
+      expect(protestBtn?.querySelector("svg.hud-attack__label")).toBeTruthy();
     });
   });
 
@@ -309,6 +309,13 @@ describe("Hud", () => {
     // The tooltip's data-tooltip/--show-tooltip live on the anchor, not the button
     // itself: .hud-attack clips its own content with overflow:hidden, which was
     // silently clipping a tooltip pinned to the button to nothing.
+    it("prevents default on contextmenu to stop mobile long-press callout", () => {
+      const btn = host.querySelector<HTMLButtonElement>(".hud-attack")!;
+      const event = new MouseEvent("contextmenu", { cancelable: true, bubbles: true });
+      btn.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    });
+
     it("has a 'Press and hold' tooltip on the anchor", () => {
       const anchor = host.querySelector<HTMLElement>(".hud-attack-anchor");
       expect(anchor?.dataset.tooltip).toBe("Press and hold");
@@ -334,6 +341,95 @@ describe("Hud", () => {
       btn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
       btn.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }));
       expect(anchor.classList.contains("hud-attack--show-tooltip")).toBe(false);
+    });
+  });
+
+  describe("mobile mode dropdown and options panel", () => {
+    it("creates a mode dropdown button with aria attributes and caret", () => {
+      const dropdownBtn = host.querySelector<HTMLButtonElement>(".hud-mode-dropdown-btn");
+      expect(dropdownBtn).toBeTruthy();
+      expect(dropdownBtn?.getAttribute("aria-haspopup")).toBe("listbox");
+      expect(dropdownBtn?.getAttribute("aria-expanded")).toBe("false");
+      expect(dropdownBtn?.querySelector(".hud-mode-dropdown__icon")).toBeTruthy();
+      expect(dropdownBtn?.querySelector(".hud-mode-dropdown__caret")).toBeTruthy();
+    });
+
+    it("updates dropdown button active class when active mode changes", () => {
+      const dropdownBtn = host.querySelector<HTMLButtonElement>(".hud-mode-dropdown-btn");
+      expect(dropdownBtn?.classList.contains("active-cockroach")).toBe(true);
+
+      hud.setActiveMode("eyes");
+      expect(dropdownBtn?.classList.contains("active-eyes")).toBe(true);
+
+      hud.setActiveMode("pointedFinger");
+      expect(dropdownBtn?.classList.contains("active-pointedFinger")).toBe(true);
+
+      hud.setActiveMode("placard");
+      expect(dropdownBtn?.classList.contains("active-placard")).toBe(true);
+    });
+
+    it("creates a mode options popover panel with 4 mode options", () => {
+      const panel = document.body.querySelector(".hud-mode-panel");
+      expect(panel).toBeTruthy();
+      expect(panel?.getAttribute("role")).toBe("listbox");
+
+      const items = panel?.querySelectorAll<HTMLButtonElement>(".hud-mode-panel__item");
+      expect(items?.length).toBe(4);
+
+      const labels = Array.from(items ?? []).map((i) => i.querySelector(".hud-mode-panel__label")?.textContent);
+      expect(labels).toEqual(["Eyes", "Pointed Fingers", "Cockroaches", "Placards"]);
+    });
+
+    it("toggles the options panel when dropdown button is clicked", () => {
+      const dropdownBtn = host.querySelector<HTMLButtonElement>(".hud-mode-dropdown-btn")!;
+      const panel = hud.getModePanel();
+
+      expect(hud.isModePanelOpen()).toBe(false);
+      expect(panel.classList.contains("open")).toBe(false);
+
+      dropdownBtn.click();
+      expect(hud.isModePanelOpen()).toBe(true);
+      expect(panel.classList.contains("open")).toBe(true);
+      expect(dropdownBtn.getAttribute("aria-expanded")).toBe("true");
+
+      dropdownBtn.click();
+      expect(hud.isModePanelOpen()).toBe(false);
+      expect(panel.classList.contains("open")).toBe(false);
+      expect(dropdownBtn.getAttribute("aria-expanded")).toBe("false");
+    });
+
+    it("selects a mode when an option item is clicked, fires callback and closes panel", () => {
+      let changedMode: CreatureMode | null = null;
+      hud.onModeChange((mode) => {
+        changedMode = mode;
+      });
+
+      hud.openModePanel();
+      const eyesItem = hud.getModePanel().querySelector<HTMLButtonElement>('[data-mode="eyes"]')!;
+      eyesItem.click();
+
+      expect(hud.getActiveMode()).toBe("eyes");
+      expect(changedMode).toBe("eyes");
+      expect(hud.isModePanelOpen()).toBe(false);
+      expect(hud.getModeDropdownButton().classList.contains("active-eyes")).toBe(true);
+      expect(eyesItem.classList.contains("active")).toBe(true);
+      expect(eyesItem.getAttribute("aria-selected")).toBe("true");
+    });
+
+    it("closes panel on Escape key", () => {
+      hud.openModePanel();
+      expect(hud.isModePanelOpen()).toBe(true);
+
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+      expect(hud.isModePanelOpen()).toBe(false);
+    });
+
+    it("closes panel on outside click", () => {
+      hud.openModePanel();
+      expect(hud.isModePanelOpen()).toBe(true);
+
+      document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(hud.isModePanelOpen()).toBe(false);
     });
   });
 });
