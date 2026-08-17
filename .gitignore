@@ -6,5 +6,13 @@ dist/
 
 .superpowers/
 
+# Local deployment & tool state
+.vercel/
+graphify-out/.graphify_python*
+
 # graphify regeneratable extraction cache
 graphify-out/cache/
+
+# Design reference & temporary scratch files
+public/Reference/
+public/**/temp_*
