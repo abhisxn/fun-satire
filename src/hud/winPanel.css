@@ -3,14 +3,19 @@
   --win-text-primary: #000000;
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
   z-index: 950;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(23, 18, 15, 0.45);
+  padding: 16px;
+  background: rgba(23, 18, 15, 0.52);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.35s var(--menu-ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+  box-sizing: border-box;
 }
 
 .win-panel-overlay.open {
@@ -20,33 +25,38 @@
 
 .win-panel {
   position: relative;
-  width: 440px;
-  height: 500px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
-  padding: 24px 32px;
-  background: var(--hud-glass-bg);
-  /* Deliberately overrides the shared --hud-glass-blur (14px desktop/6px mobile) —
-     this is a one-off full-screen modal, not a persistent always-on HUD surface, so
-     the extra compositing cost of a heavier blur here doesn't compound the way it
-     would if applied to the shared token used by every panel/toolbar at once. */
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 24px 24px 20px;
+  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--hud-glass-border);
-  border-radius: 16px;
-  box-shadow: 0 24px 40px rgba(97, 86, 80, 0.25);
+  border: 1px solid var(--hud-glass-border, rgba(255, 255, 255, 0.9));
+  border-radius: 18px;
+  box-shadow: 0 20px 48px rgba(42, 36, 32, 0.24), 0 2px 8px rgba(42, 36, 32, 0.08);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 24px;
-  color: var(--win-text-primary);
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 16px;
+  color: var(--win-text-primary, #000000);
   opacity: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   transform: translateY(-16px) scale(0.96);
   transition:
     opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
     transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-sizing: border-box;
+}
+
+.win-panel::-webkit-scrollbar {
+  display: none;
 }
 
 .win-panel-overlay.open .win-panel {
@@ -56,39 +66,46 @@
 
 .win-panel-close {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 42px;
-  height: 42px;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--win-text-primary);
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--win-text-primary, #000000);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+  z-index: 2;
 }
 
 .win-panel-close:hover {
-  background: rgba(0, 0, 0, 0.16);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.win-panel-close:active {
+  transform: scale(0.94);
 }
 
 .win-panel-header {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
 }
 
 .win-panel-title {
   margin: 0;
+  padding-right: 36px;
   font-family: "Fraunces", serif;
   font-weight: 400;
-  font-size: 34px;
+  font-size: clamp(22px, 5.5vw, 30px);
   line-height: 1.15;
-  color: var(--win-text-primary);
+  color: var(--win-text-primary, #000000);
   font-variation-settings: "SOFT" 0, "WONK" 1;
 }
 
@@ -96,21 +113,22 @@
   margin: 0;
   font-family: "Krub", sans-serif;
   font-weight: 500;
-  font-size: 18px;
-  line-height: 28px;
-  color: var(--win-text-primary);
+  font-size: clamp(14px, 3.6vw, 16px);
+  line-height: 1.4;
+  color: var(--win-text-primary, #000000);
 }
 
 .win-panel-next-btn {
   width: 100%;
-  height: 52px;
+  height: 48px;
+  margin-top: 2px;
   border-radius: 12px;
   border: 1px solid #a74333;
   background: linear-gradient(180deg, #de7666 0%, #e9975d 100%);
   box-shadow: 0px 4px 0px #b75040;
   color: #fff;
   font-family: "Bungee", cursive;
-  font-size: 18px;
+  font-size: 16px;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -129,15 +147,16 @@
 
 .win-panel-divider {
   height: 1px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.08);
   border: none;
   flex-shrink: 0;
+  margin: 0;
 }
 
 .win-panel-share-group {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   width: 100%;
 }
 
@@ -145,8 +164,11 @@
   margin: 0;
   font-family: "Krub", sans-serif;
   font-weight: 600;
-  font-size: 16px;
-  color: var(--win-text-primary);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--win-text-primary, #000000);
+  opacity: 0.8;
 }
 
 .win-panel-share-row {
@@ -154,41 +176,61 @@
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
+  width: 100%;
 }
 
 .win-panel-share-icon-btn {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(0, 0, 0, 0.14);
   background: #ede5e0;
   padding: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.win-panel-share-icon-btn:hover {
+  transform: scale(1.06);
+  background: #e5ded8;
+}
+
+.win-panel-share-icon-btn:active {
+  transform: scale(0.95);
 }
 
 .win-panel-copy-link-btn {
+  flex: 1 1 auto;
+  min-width: 100px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  height: 48px;
-  padding: 0 16px;
-  border-radius: 24px;
-  border: 1px solid rgba(0, 0, 0, 0.16);
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 21px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
   background: rgba(204, 191, 183, 0.28);
-  color: var(--win-text-primary);
+  color: var(--win-text-primary, #000000);
   font-family: "Krub", sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .win-panel-copy-link-btn:hover {
   background: rgba(204, 191, 183, 0.45);
+}
+
+.win-panel-copy-link-btn:active {
+  transform: scale(0.98);
 }
 
 .win-panel-copy-link-btn.copied {
@@ -203,55 +245,162 @@
 }
 
 .win-panel-footer {
-  position: absolute;
-  /* left:0/right:0 + margin:auto, not left:50%+transform: with a fit-content
-     width, left:50% makes Chromium's shrink-to-fit algorithm cap the box's
-     available width at that 50% offset itself (the transform only shifts
-     paint position, not the layout-time width calculation) — collapsing the
-     footer to roughly half its real content width and wrapping every child
-     onto its own line. Spanning the full containing-block width via left/
-     right:0 and letting margin:auto center a fit-content box inside it
-     sidesteps that entirely. */
-  left: 0;
-  right: 0;
-  bottom: 24px;
-  margin: 0 auto;
+  position: static;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
-  width: fit-content;
-  max-width: calc(100% - 32px);
+  width: 100%;
   font-family: "Krub", sans-serif;
   font-weight: 500;
-  font-size: 13px;
-  color: var(--win-text-primary);
+  font-size: 12px;
+  color: var(--win-text-primary, #000000);
   text-align: center;
 }
 
 .win-panel-footer-credit {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .win-panel-toast {
   position: absolute;
   left: 50%;
-  bottom: -34px;
+  bottom: -38px;
   transform: translateX(-50%) translateY(8px);
   background: #2a2420;
   color: #ede7dd;
   font-size: 12px;
   font-weight: 600;
-  padding: 8px 14px;
+  padding: 7px 14px;
   border-radius: 10px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
   white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .win-panel-toast.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+@media (max-width: 480px) {
+  .win-panel-overlay {
+    padding: 12px;
+  }
+
+  .win-panel {
+    padding: 20px 18px 16px;
+    gap: 12px;
+    border-radius: 16px;
+  }
+
+  .win-panel-close {
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .win-panel-header {
+    gap: 10px;
+  }
+
+  .win-panel-title {
+    padding-right: 32px;
+  }
+
+  .win-panel-next-btn {
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .win-panel-share-group {
+    gap: 8px;
+  }
+
+  .win-panel-share-icon-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .win-panel-copy-link-btn {
+    height: 38px;
+    font-size: 12px;
+    padding: 0 12px;
+  }
+
+  .win-panel-footer {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+}
+
+@media (max-height: 520px) {
+  .win-panel-overlay {
+    padding: 8px;
+  }
+
+  .win-panel {
+    padding: 14px 18px 10px;
+    gap: 8px;
+    max-height: calc(100dvh - 16px);
+  }
+
+  .win-panel-close {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .win-panel-header {
+    gap: 6px;
+  }
+
+  .win-panel-title {
+    font-size: 19px;
+    line-height: 1.1;
+    padding-right: 30px;
+  }
+
+  .win-panel-copy {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .win-panel-next-btn {
+    height: 36px;
+    font-size: 14px;
+    margin-top: 0;
+  }
+
+  .win-panel-share-group {
+    gap: 6px;
+  }
+
+  .win-panel-share-label {
+    font-size: 11px;
+  }
+
+  .win-panel-share-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .win-panel-copy-link-btn {
+    height: 34px;
+    font-size: 12px;
+    padding: 0 10px;
+  }
+
+  .win-panel-footer {
+    font-size: 11px;
+    margin-top: 0;
+  }
+}
+

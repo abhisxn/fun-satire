@@ -62,6 +62,21 @@ describe("hud/WinPanel", () => {
     expect(panel.getRoot().classList.contains("open")).toBe(false);
   });
 
+  it("clicking outside on the overlay backdrop hides the panel", () => {
+    panel.attachTo(document.body);
+    panel.show(WIN_COPY_VARIANTS[0]!);
+    panel.getRoot().dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(panel.isPanelOpen()).toBe(false);
+  });
+
+  it("clicking inside the panel does not hide it", () => {
+    panel.attachTo(document.body);
+    panel.show(WIN_COPY_VARIANTS[0]!);
+    const header = panel.getRoot().querySelector(".win-panel-header");
+    header?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(panel.isPanelOpen()).toBe(true);
+  });
+
   it("hide() is a no-op when already closed", () => {
     panel.attachTo(document.body);
     expect(() => panel.hide()).not.toThrow();
