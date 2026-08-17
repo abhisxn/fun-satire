@@ -61,19 +61,24 @@ const SVG_PROTEST = `<svg class="hud-attack__label" viewBox="0 0 4781 750" fill=
   <path d="M191 735L36 735Q0 735 0 699L0 51Q0 15 36 15L342 15Q433 15 484.5 39.5Q536 64 557 108Q578 152 578 210L578 338Q578 396 557 440Q536 484 484.5 508.5Q433 533 342 533L227 533L227 699Q227 735 191 735M315 202L225 202L225 353L315 353Q344 353 353 338Q362 323 362 304L362 251Q362 231 353 216.5Q344 202 315 202M892 735L738 735Q702 735 702 699L702 51Q702 15 738 15L1071 15Q1146 15 1189 36Q1232 57 1250 94.5Q1268 132 1268 182L1268 228Q1268 270 1256 299Q1244 328 1212 342Q1267 348 1300 386Q1333 424 1333 487L1333 699Q1333 735 1297 735L1142 735Q1106 735 1106 699L1106 546Q1106 523 1097.5 513Q1089 503 1068 503L928 503L928 699Q928 735 892 735M1003 195L928 195L928 323L1003 323Q1029 323 1038 309.5Q1047 296 1047 276L1047 242Q1047 222 1038 208.5Q1029 195 1003 195M2070 205L2070 546Q2070 592 2056.5 629.5Q2043 667 2009 694Q1975 721 1914.5 735.5Q1854 750 1760 750Q1666 750 1605.5 735.5Q1545 721 1511 694Q1477 667 1463 629.5Q1449 592 1449 546L1449 205Q1449 159 1463 121.5Q1477 84 1511 57Q1545 30 1605.5 15Q1666 0 1760 0Q1854 0 1914.5 15Q1975 30 2009 57Q2043 84 2056.5 121.5Q2070 159 2070 205M1676 241L1676 510Q1676 530 1691 543.5Q1706 557 1760 557Q1815 557 1829.5 543.5Q1844 530 1844 510L1844 241Q1844 221 1829.5 208Q1815 195 1760 195Q1706 195 1691 208Q1676 221 1676 241M2552 735L2390 735Q2354 735 2354 699L2354 208L2207 208Q2171 208 2171 172L2171 51Q2171 15 2207 15L2735 15Q2771 15 2771 51L2771 172Q2771 208 2735 208L2588 208L2588 699Q2588 735 2552 735M3388 735L2924 735Q2888 735 2888 699L2888 51Q2888 15 2924 15L3388 15Q3424 15 3424 51L3424 168Q3424 204 3388 204L3112 204L3112 281L3307 281Q3343 281 3343 317L3343 424Q3343 460 3307 460L3112 460L3112 546L3388 546Q3424 546 3424 582L3424 699Q3424 735 3388 735M3896 735L3580 735Q3544 735 3544 699L3544 582Q3544 546 3580 546L3849 546Q3862 546 3868.5 537.5Q3875 529 3875 517Q3875 500 3868.5 492Q3862 484 3849 483L3699 462Q3629 451 3586.5 415.5Q3544 380 3544 296L3544 191Q3544 105 3599 60Q3654 15 3751 15L4031 15Q4067 15 4067 51L4067 170Q4067 206 4031 206L3798 206Q3771 206 3771 236Q3771 265 3798 268L3947 288Q3994 295 4029 312.5Q4064 330 4083.5 364Q4103 398 4103 454L4103 559Q4103 644 4048 689.5Q3993 735 3896 735M4562 735L4400 735Q4364 735 4364 699L4364 208L4217 208Q4181 208 4181 172L4181 51Q4181 15 4217 15L4745 15Q4781 15 4781 51L4781 172Q4781 208 4745 208L4598 208L4598 699Q4598 735 4562 735" />
 </svg>`;
 
+const SVG_CARET_DOWN = `<svg class="hud-mode-dropdown__caret" width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M5 7L0.669873 1L9.33013 1L5 7Z" fill="#2a1f1a"/>
+</svg>`;
+
 interface ModeBtnDef {
   readonly mode: CreatureMode;
   readonly cssClass: string;
   readonly tooltip: string;
   readonly ariaLabel: string;
+  readonly title: string;
   readonly svg: string;
 }
 
 const MODE_BTNS: readonly ModeBtnDef[] = [
-  { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", svg: SVG_EYE },
-  { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", svg: SVG_HAND },
-  { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", svg: SVG_COCKROACH },
-  { mode: "placard", cssClass: "hud-btn--placard", tooltip: "Placard Mode", ariaLabel: "Placard Mode", svg: SVG_PLACARD },
+  { mode: "eyes", cssClass: "hud-btn--eye", tooltip: "Eye Mode", ariaLabel: "Eye Mode", title: "Eyes", svg: SVG_EYE },
+  { mode: "pointedFinger", cssClass: "hud-btn--hand", tooltip: "Point Mode", ariaLabel: "Point Mode", title: "Pointed Fingers", svg: SVG_HAND },
+  { mode: "cockroach", cssClass: "hud-btn--bug", tooltip: "Cockroach Mode", ariaLabel: "Cockroach Mode", title: "Cockroaches", svg: SVG_COCKROACH },
+  { mode: "placard", cssClass: "hud-btn--placard", tooltip: "Placard Mode", ariaLabel: "Placard Mode", title: "Placards", svg: SVG_PLACARD },
 ];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLElementTagNameMap[K] {
@@ -85,6 +90,12 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLEl
 export class Hud {
   private readonly root: HTMLElement;
   private readonly modeBtnEls = new Map<CreatureMode, HTMLButtonElement>();
+  private readonly modeDropdownBtn: HTMLButtonElement;
+  private readonly modePanel: HTMLElement;
+  private readonly modeOptionEls = new Map<CreatureMode, HTMLElement>();
+  private isPanelOpen = false;
+  private placardSvg: string | null = null;
+
   private settingsBtn: HTMLButtonElement | null = null;
   private galleryBtn: HTMLButtonElement | null = null;
   private protestBtn: HTMLButtonElement | null = null;
@@ -98,6 +109,9 @@ export class Hud {
   private dragOffsetY = 0;
   private boundOnPointerMove: ((e: PointerEvent) => void) | null = null;
   private boundOnPointerUp: ((e: PointerEvent) => void) | null = null;
+  private boundOnPanelDocClick: ((e: MouseEvent) => void) | null = null;
+  private boundOnPanelKeyDown: ((e: KeyboardEvent) => void) | null = null;
+  private boundOnWindowResize: (() => void) | null = null;
   private audioContext: AudioContext | null = null;
 
   constructor() {
@@ -108,11 +122,18 @@ export class Hud {
 
     root.appendChild(this.buildDragHandle());
 
+    // Mobile dropdown button (replaces the mode button strip on narrow viewports)
+    this.modeDropdownBtn = this.buildModeDropdownBtn();
+    root.appendChild(this.modeDropdownBtn);
+
+    // Desktop mode button group
+    const modeGroup = el("div", "hud-mode-group");
     for (const def of MODE_BTNS) {
       const btn = this.buildModeBtn(def);
       this.modeBtnEls.set(def.mode, btn);
-      root.appendChild(btn);
+      modeGroup.appendChild(btn);
     }
+    root.appendChild(modeGroup);
 
     root.appendChild(this.buildDivider());
 
@@ -123,6 +144,8 @@ export class Hud {
 
     this.protestAnchor = this.buildProtestBtn();
     root.appendChild(this.protestAnchor);
+
+    this.modePanel = this.buildModePanel();
 
     this.setActiveMode("cockroach");
 
@@ -135,8 +158,17 @@ export class Hud {
   private async loadPlacardIcon(): Promise<void> {
     try {
       const svg = await loadPlacardSvg();
+      this.placardSvg = svg;
       const btn = this.modeBtnEls.get("placard");
       if (btn) btn.innerHTML = svg;
+
+      const placardItem = this.modeOptionEls.get("placard");
+      const placardBadge = placardItem?.querySelector(".hud-mode-panel__icon-badge");
+      if (placardBadge) placardBadge.innerHTML = svg;
+
+      if (this.activeMode === "placard") {
+        this.updateDropdownButton();
+      }
     } catch {
       // keep the inline fallback SVG_PLACARD already rendered
     }
@@ -144,6 +176,7 @@ export class Hud {
 
   attachTo(container: HTMLElement): void {
     container.appendChild(this.root);
+    document.body.appendChild(this.modePanel);
   }
 
   setActiveMode(mode: CreatureMode): void {
@@ -152,6 +185,12 @@ export class Hud {
       btn.classList.toggle("active", m === mode);
       btn.setAttribute("aria-pressed", String(m === mode));
     }
+    for (const [m, item] of this.modeOptionEls) {
+      const isActive = m === mode;
+      item.classList.toggle("active", isActive);
+      item.setAttribute("aria-selected", String(isActive));
+    }
+    this.updateDropdownButton();
   }
 
   getActiveMode(): CreatureMode {
@@ -163,11 +202,14 @@ export class Hud {
   }
 
   destroy(): void {
+    this.closeModePanel();
     this.detachDragListeners();
+    this.modePanel.remove();
     this.root.remove();
   }
 
   hide(): void {
+    this.closeModePanel();
     this.root.classList.add("hidden");
   }
 
@@ -177,6 +219,43 @@ export class Hud {
 
   getRoot(): HTMLElement {
     return this.root;
+  }
+
+  getModeDropdownButton(): HTMLElement {
+    return this.modeDropdownBtn;
+  }
+
+  getModePanel(): HTMLElement {
+    return this.modePanel;
+  }
+
+  isModePanelOpen(): boolean {
+    return this.isPanelOpen;
+  }
+
+  openModePanel(): void {
+    if (this.isPanelOpen) return;
+    this.isPanelOpen = true;
+    this.modeDropdownBtn.setAttribute("aria-expanded", "true");
+    this.modePanel.classList.add("open");
+    this.updateModePanelPosition();
+    this.addPanelEventListeners();
+  }
+
+  closeModePanel(): void {
+    if (!this.isPanelOpen) return;
+    this.isPanelOpen = false;
+    this.modeDropdownBtn.setAttribute("aria-expanded", "false");
+    this.modePanel.classList.remove("open");
+    this.removePanelEventListeners();
+  }
+
+  toggleModePanel(): void {
+    if (this.isPanelOpen) {
+      this.closeModePanel();
+    } else {
+      this.openModePanel();
+    }
   }
 
   getSettingsButton(): HTMLElement {
@@ -220,6 +299,146 @@ export class Hud {
     });
 
     return handle;
+  }
+
+  private buildModeDropdownBtn(): HTMLButtonElement {
+    const btn = el("button", "hud-mode-dropdown-btn");
+    btn.type = "button";
+    btn.setAttribute("aria-haspopup", "listbox");
+    btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-label", "Creature mode menu");
+
+    const iconWrap = el("span", "hud-mode-dropdown__icon");
+    btn.appendChild(iconWrap);
+
+    const caretWrap = el("span", "hud-mode-dropdown__caret-wrap");
+    caretWrap.innerHTML = SVG_CARET_DOWN;
+    btn.appendChild(caretWrap);
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (this.audioContext) playHudSelectTone(this.audioContext);
+      this.toggleModePanel();
+    });
+
+    return btn;
+  }
+
+  private buildModePanel(): HTMLElement {
+    const panel = el("div", "hud-mode-panel");
+    panel.setAttribute("role", "listbox");
+    panel.setAttribute("aria-label", "Select creature mode");
+
+    for (const def of MODE_BTNS) {
+      const item = el("button", "hud-mode-panel__item");
+      item.type = "button";
+      item.setAttribute("role", "option");
+      item.dataset.mode = def.mode;
+      item.setAttribute("aria-label", def.title);
+
+      const badge = el("span", "hud-mode-panel__icon-badge");
+      badge.innerHTML = def.svg;
+      item.appendChild(badge);
+
+      const label = el("span", "hud-mode-panel__label");
+      label.textContent = def.title;
+      item.appendChild(label);
+
+      const check = el("span", "hud-mode-panel__check");
+      check.innerHTML = "✓";
+      item.appendChild(check);
+
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (this.audioContext) playHudSelectTone(this.audioContext);
+        this.setActiveMode(def.mode);
+        this.modeChangeCb?.(def.mode);
+        this.closeModePanel();
+      });
+
+      this.modeOptionEls.set(def.mode, item);
+      panel.appendChild(item);
+    }
+
+    return panel;
+  }
+
+  private updateDropdownButton(): void {
+    if (!this.modeDropdownBtn) return;
+    const def = MODE_BTNS.find((b) => b.mode === this.activeMode) ?? MODE_BTNS[0]!;
+    this.modeDropdownBtn.className = `hud-mode-dropdown-btn active-${def.mode}`;
+    this.modeDropdownBtn.setAttribute("aria-label", `Current mode: ${def.title}. Tap to change.`);
+
+    const iconWrap = this.modeDropdownBtn.querySelector(".hud-mode-dropdown__icon");
+    if (iconWrap) {
+      iconWrap.innerHTML = def.mode === "placard" && this.placardSvg ? this.placardSvg : def.svg;
+    }
+  }
+
+  private updateModePanelPosition(): void {
+    if (!this.isPanelOpen || !this.modeDropdownBtn) return;
+    const btnRect = this.modeDropdownBtn.getBoundingClientRect();
+    const panelRect = this.modePanel.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let top = btnRect.top - panelRect.height - 12;
+    let left = btnRect.left + btnRect.width / 2 - panelRect.width / 2;
+
+    if (top < 8) {
+      top = btnRect.bottom + 8;
+    }
+    if (top + panelRect.height > vh - 8) {
+      top = vh - panelRect.height - 8;
+    }
+    if (left < 8) {
+      left = 8;
+    }
+    if (left + panelRect.width > vw - 8) {
+      left = vw - panelRect.width - 8;
+    }
+
+    this.modePanel.style.top = `${top}px`;
+    this.modePanel.style.left = `${left}px`;
+  }
+
+  private addPanelEventListeners(): void {
+    this.boundOnPanelDocClick = (e: MouseEvent) => {
+      if (
+        !this.modePanel.contains(e.target as Node) &&
+        !this.modeDropdownBtn.contains(e.target as Node)
+      ) {
+        this.closeModePanel();
+      }
+    };
+    this.boundOnPanelKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        this.closeModePanel();
+      }
+    };
+    this.boundOnWindowResize = () => {
+      if (this.isPanelOpen) {
+        this.updateModePanelPosition();
+      }
+    };
+    document.addEventListener("click", this.boundOnPanelDocClick, true);
+    document.addEventListener("keydown", this.boundOnPanelKeyDown);
+    window.addEventListener("resize", this.boundOnWindowResize);
+  }
+
+  private removePanelEventListeners(): void {
+    if (this.boundOnPanelDocClick) {
+      document.removeEventListener("click", this.boundOnPanelDocClick, true);
+      this.boundOnPanelDocClick = null;
+    }
+    if (this.boundOnPanelKeyDown) {
+      document.removeEventListener("keydown", this.boundOnPanelKeyDown);
+      this.boundOnPanelKeyDown = null;
+    }
+    if (this.boundOnWindowResize) {
+      window.removeEventListener("resize", this.boundOnWindowResize);
+      this.boundOnWindowResize = null;
+    }
   }
 
   private buildModeBtn(def: ModeBtnDef): HTMLButtonElement {

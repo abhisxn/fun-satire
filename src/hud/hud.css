@@ -8,17 +8,18 @@
    (--hud-glass-bg/-border/-blur come from hudGlass.css)
    ============================================ */
 :root {
+  --hud-density: clamp(0px, calc(100vw - 320px), 448px);
   --hud-shadow-outer: 0px 24px 40px rgba(97, 86, 80, 0.25);
   --hud-shadow-inner: 0px 4px 0px rgba(255, 255, 255, 1);
   --hud-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --hud-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Fluid density budget: 0px at/below 320px viewport width, rising smoothly to 448px cap at 768px+ */
-  --hud-density: clamp(0px, calc(100vw - 320px), 448px);
-  --hud-icon-size: clamp(18px, calc(18px + var(--hud-density) * 0.01339286), 24px);
-  --hud-btn-size: clamp(34px, calc(34px + var(--hud-density) * 0.02232143), 44px);
-  --hud-btn-gap: clamp(2px, calc(2px + var(--hud-density) * 0.00892857), 6px);
-  --hud-padding-h: clamp(6px, calc(6px + var(--hud-density) * 0.01339286), 12px);
-  --hud-padding-v: clamp(4px, calc(4px + var(--hud-density) * 0.00892857), 8px);
+  --hud-icon-size: 28px;
+  --hud-btn-size: 46px;
+  --hud-btn-gap: 8px;
+  --hud-padding-v-top: 8px;
+  --hud-padding-v-bottom: 10px;
+  --hud-padding-v: 8px;
+  --hud-padding-h: 20px;
 }
 
 /* ============================================
@@ -26,17 +27,17 @@
    ============================================ */
 .premium-hud {
   position: fixed;
-  bottom: calc(clamp(12px, 2.5vh, 20px) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  max-width: min(calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 560px);
+  max-width: min(calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 600px);
   width: max-content;
   gap: var(--hud-btn-gap);
-  padding: var(--hud-padding-v) var(--hud-padding-h);
+  padding: var(--hud-padding-v-top, var(--hud-padding-v)) var(--hud-padding-h) var(--hud-padding-v-bottom, var(--hud-padding-v)) var(--hud-padding-h);
   background: var(--hud-glass-bg);
   backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
@@ -44,7 +45,7 @@
   border-radius: 999px;
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   z-index: 1000;
-  animation: hud-slide-up 0.8s var(--hud-ease-spring) forwards;
+  animation: hud-slide-up 800ms var(--hud-ease-spring) forwards;
   will-change: left, top;
 }
 
@@ -52,10 +53,10 @@
    Drag Handle — Grip Icon
    ============================================ */
 .hud-drag-handle {
-  width: clamp(14px, calc(14px + var(--hud-density) * 0.00892857), 18px);
+  width: 18px;
   height: var(--hud-btn-size);
   min-height: 44px;
-  min-width: 14px;
+  min-width: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,9 +66,9 @@
   user-select: none;
   -webkit-user-select: none;
   border-radius: 6px;
-  transition: opacity 0.3s var(--hud-ease-smooth), background 0.2s var(--hud-ease-smooth);
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
-  animation-delay: 0.05s;
+  transition: opacity 300ms var(--hud-ease-smooth), background 200ms var(--hud-ease-smooth);
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
+  animation-delay: 50ms;
   opacity: 0;
   flex-shrink: 0;
 }
@@ -84,9 +85,252 @@
 }
 
 .hud-drag-handle svg {
-  width: clamp(12px, calc(12px + var(--hud-density) * 0.00892857), 16px);
-  height: clamp(14px, calc(14px + var(--hud-density) * 0.00892857), 18px);
+  width: 16px;
+  height: 20px;
   pointer-events: none;
+}
+
+/* ============================================
+   Mode Group (Desktop strip)
+   ============================================ */
+.hud-mode-group {
+  display: flex;
+  align-items: center;
+  gap: var(--hud-btn-gap);
+}
+
+/* ============================================
+   Mode Dropdown Button (Smaller viewports)
+   ============================================ */
+.hud-mode-dropdown-btn {
+  position: relative;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: all 350ms var(--hud-ease-spring);
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
+  opacity: 0;
+  animation-delay: 150ms;
+  flex-shrink: 0;
+}
+
+.hud-mode-dropdown-btn.active-eyes {
+  background: linear-gradient(180deg, #f78d8d 0%, #e26790 100%);
+  border: 1px solid #a02b4d;
+  box-shadow: 0px 3px 0px #a02b4d;
+}
+
+.hud-mode-dropdown-btn.active-pointedFinger {
+  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
+  border: 1px solid #226591;
+  box-shadow: 0px 3px 0px #226591;
+}
+
+.hud-mode-dropdown-btn.active-cockroach {
+  background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
+  border: 1px solid #228b20;
+  box-shadow: 0px 3px 0px #228b20;
+}
+
+.hud-mode-dropdown-btn.active-placard {
+  background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
+  border: 1px solid #871e93;
+  box-shadow: 0px 3px 0px #871e93;
+}
+
+.hud-mode-dropdown-btn:hover {
+  transform: translateY(-2px);
+}
+
+.hud-mode-dropdown-btn:active {
+  transform: translateY(2px);
+  transition-duration: 100ms;
+}
+
+.hud-mode-dropdown-btn.active-eyes:active { box-shadow: 0px 1px 0px #a02b4d; }
+.hud-mode-dropdown-btn.active-pointedFinger:active { box-shadow: 0px 1px 0px #226591; }
+.hud-mode-dropdown-btn.active-cockroach:active { box-shadow: 0px 1px 0px #228b20; }
+.hud-mode-dropdown-btn.active-placard:active { box-shadow: 0px 1px 0px #871e93; }
+
+.hud-mode-dropdown__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hud-mode-dropdown__icon svg {
+  width: 26px;
+  height: 26px;
+  pointer-events: none;
+}
+
+.hud-mode-dropdown__caret-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hud-mode-dropdown__caret {
+  width: 10px;
+  height: 8px;
+  pointer-events: none;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hud-mode-dropdown-btn[aria-expanded="true"] .hud-mode-dropdown__caret {
+  transform: rotate(180deg);
+}
+
+/* ============================================
+   Mode Options Popover Panel
+   ============================================ */
+.hud-mode-panel {
+  position: fixed;
+  width: 228px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 18px;
+  box-shadow: 0px 18px 44px rgba(65, 52, 45, 0.18), 0px 2px 8px rgba(65, 52, 45, 0.08);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+  z-index: 1001;
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+.hud-mode-panel.open {
+  display: flex;
+  animation: hud-mode-panel-entrance 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes hud-mode-panel-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+.hud-mode-panel__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hud-mode-panel__item:hover {
+  background: rgba(255, 255, 255, 0.65);
+  transform: translateX(2px);
+}
+
+.hud-mode-panel__item:active {
+  transform: scale(0.98);
+}
+
+.hud-mode-panel__item.active {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(42, 36, 32, 0.1);
+  box-shadow: 0px 2px 8px rgba(65, 52, 45, 0.06);
+}
+
+.hud-mode-panel__icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(42, 31, 26, 0.08);
+  flex-shrink: 0;
+  transition: all 250ms var(--hud-ease-spring);
+}
+
+.hud-mode-panel__icon-badge svg {
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+
+.hud-mode-panel__item.active[data-mode="eyes"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #f78d8d 0%, #e26790 100%);
+  border-color: #a02b4d;
+  box-shadow: 0px 2px 4px rgba(160, 43, 77, 0.3);
+}
+
+.hud-mode-panel__item.active[data-mode="pointedFinger"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
+  border-color: #226591;
+  box-shadow: 0px 2px 4px rgba(34, 101, 145, 0.3);
+}
+
+.hud-mode-panel__item.active[data-mode="cockroach"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
+  border-color: #228b20;
+  box-shadow: 0px 2px 4px rgba(34, 139, 32, 0.3);
+}
+
+.hud-mode-panel__item.active[data-mode="placard"] .hud-mode-panel__icon-badge {
+  background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
+  border-color: #871e93;
+  box-shadow: 0px 2px 4px rgba(135, 30, 147, 0.3);
+}
+
+.hud-mode-panel__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2a2420;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.hud-mode-panel__check {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2a2420;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hud-mode-panel__item.active .hud-mode-panel__check {
+  opacity: 1;
+  transform: scale(1);
 }
 
 /* ============================================
@@ -104,15 +348,14 @@
   background: transparent;
   cursor: pointer;
   border-radius: 50%;
-  transition: all 0.4s var(--hud-ease-spring);
+  transition: all 400ms var(--hud-ease-spring);
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  /* Removes the double-tap-to-zoom gesture disambiguation delay on mobile */
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
   opacity: 0;
   flex-shrink: 0;
   padding: 0;
@@ -132,7 +375,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   opacity: 0;
-  transition: opacity 0.3s var(--hud-ease-smooth);
+  transition: opacity 300ms var(--hud-ease-smooth);
 }
 
 .hud-btn:hover::before { opacity: 1; }
@@ -144,17 +387,17 @@
 
 .hud-btn:active {
   transform: scale(0.95);
-  transition-duration: 0.15s;
+  transition-duration: 150ms;
 }
 
 .hud-btn:focus-visible {
-  box-shadow: 0 0 0 3px rgba(97, 86, 80, 0.3);
+  box-shadow: 0px 0px 0px 3px rgba(97, 86, 80, 0.3);
 }
 
 .hud-btn svg {
   width: var(--hud-icon-size);
   height: var(--hud-icon-size);
-  transition: transform 0.4s var(--hud-ease-spring);
+  transition: transform 400ms var(--hud-ease-spring);
   pointer-events: none;
   flex-shrink: 0;
 }
@@ -164,8 +407,8 @@
 }
 
 .hud-btn:active svg {
-  transform: translateY(0) scale(0.92);
-  transition-duration: 0.15s;
+  transform: translateY(0px);
+  transition-duration: 150ms;
 }
 
 /* ============================================
@@ -179,7 +422,7 @@
   border: 1px solid transparent;
   border-radius: 50%;
   box-shadow: none;
-  transition: all 0.35s var(--hud-ease-spring);
+  transition: all 350ms var(--hud-ease-spring);
 }
 
 .hud-btn--eye.active {
@@ -210,7 +453,7 @@
 .hud-btn--bug:hover,
 .hud-btn--hand:hover,
 .hud-btn--placard:hover {
-  transform: scale(1.08) translateY(-2px);
+  transform: translateY(-2px);
 }
 
 .hud-btn--eye.active:hover {
@@ -233,8 +476,8 @@
 .hud-btn--bug.active:active,
 .hud-btn--hand.active:active,
 .hud-btn--placard.active:active {
-  transform: scale(0.95) translateY(2px);
-  transition-duration: 0.1s;
+  transform: translateY(2px);
+  transition-duration: 100ms;
 }
 
 .hud-btn--eye.active:active {
@@ -258,15 +501,15 @@
    ============================================ */
 .hud-divider {
   width: 1px;
-  height: clamp(20px, calc(20px + var(--hud-density) * 0.01785714), 28px);
+  height: 28px;
   background: rgba(42, 31, 26, 0.15);
   border: none;
-  margin: 0 clamp(1px, calc(1px + var(--hud-density) * 0.00669643), 4px);
+  margin: 0 4px;
   flex-shrink: 0;
   align-self: center;
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
   opacity: 0;
-  animation-delay: 0.28s;
+  animation-delay: 280ms;
 }
 
 /* ============================================
@@ -280,7 +523,6 @@
 
 /* ============================================
    Protest Button Anchor
-   Position-only wrapper, sized to match .hud-attack.
    ============================================ */
 .hud-attack-anchor {
   position: relative;
@@ -297,22 +539,21 @@
   position: relative;
   box-sizing: border-box;
   height: var(--hud-btn-size);
-  min-height: 34px;
-  padding: 0 clamp(8px, calc(8px + var(--hud-density) * 0.01339286), 14px);
+  min-height: 38px;
+  padding: 0 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, #de7666 0%, #e9975d 100%);
   border: 1px solid #a74333;
-  border-radius: clamp(8px, calc(8px + var(--hud-density) * 0.00892857), 12px);
+  border-radius: 12px;
   box-shadow: 0px 3px 0px #b75040;
   color: white;
   font-family: "Bungee", cursive;
-  font-size: clamp(12px, calc(12px + var(--hud-density) * 0.00892857), 16px);
+  font-size: 16px;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: transform 0.15s var(--hud-ease-smooth), box-shadow 0.15s var(--hud-ease-smooth);
+  transition: transform 150ms var(--hud-ease-smooth), box-shadow 150ms var(--hud-ease-smooth);
   outline: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
@@ -320,9 +561,9 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   flex-shrink: 0;
-  animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
+  animation: hud-btn-pop 600ms var(--hud-ease-spring) forwards;
   opacity: 0;
-  animation-delay: 0.45s;
+  animation-delay: 450ms;
   overflow: hidden;
   margin-right: 0;
 }
@@ -338,13 +579,13 @@
 }
 
 .hud-attack:focus-visible {
-  box-shadow: 0px 3px 0px #b75040, 0 0 0 3px rgba(222, 118, 102, 0.4);
+  box-shadow: 0px 3px 0px #b75040, 0px 0px 0px 3px rgba(222, 118, 102, 0.4);
 }
 
 .hud-attack svg,
 .hud-attack .hud-attack__label {
   display: block;
-  height: clamp(11px, calc(11px + var(--hud-density) * 0.0067), 14px);
+  height: 14px;
   width: auto;
   pointer-events: none;
   user-select: none;
@@ -367,7 +608,7 @@
   position: absolute;
   bottom: calc(100% + 12px);
   left: 50%;
-  transform: translateX(-50%) translateY(8px) scale(0.88);
+  transform: translateX(-50%) translateY(8px);
   transform-origin: bottom center;
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.95);
@@ -379,18 +620,17 @@
   color: #2a1f1a;
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.02em;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s var(--hud-ease-smooth), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 250ms var(--hud-ease-smooth), transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   z-index: 10;
 }
 
 .hud-btn[data-tooltip]:hover::after {
   opacity: 1;
-  transform: translateX(-50%) translateY(0) scale(1);
+  transform: translateX(-50%) translateY(0px);
 }
 
 .hud-attack-anchor[data-tooltip]::after {
@@ -398,7 +638,7 @@
   position: absolute;
   bottom: calc(100% + 14px);
   left: 50%;
-  transform: translateX(-50%) translateY(8px) scale(0.85);
+  transform: translateX(-50%) translateY(8px);
   transform-origin: bottom center;
   padding: 6px 12px;
   background: rgba(20, 20, 20, 0.92);
@@ -407,11 +647,10 @@
   color: #fff;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s var(--hud-ease-smooth), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 250ms var(--hud-ease-smooth), transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   z-index: 10;
 }
@@ -421,13 +660,13 @@
   position: absolute;
   bottom: calc(100% + 4px);
   left: 50%;
-  transform: translateX(-50%) translateY(8px) scale(0.85);
+  transform: translateX(-50%) translateY(8px);
   transform-origin: bottom center;
   border: 5px solid transparent;
   border-top-color: rgba(20, 20, 20, 0.92);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s var(--hud-ease-smooth), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 250ms var(--hud-ease-smooth), transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 10;
 }
 
@@ -436,7 +675,7 @@
 .hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::after,
 .hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::before {
   opacity: 1;
-  transform: translateX(-50%) translateY(0) scale(1);
+  transform: translateX(-50%) translateY(0px);
 }
 
 /* ============================================
@@ -445,11 +684,11 @@
 @keyframes hud-slide-up {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(40px) scale(0.95);
+    transform: translateX(-50%) translateY(40px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0px);
   }
 }
 
@@ -467,20 +706,20 @@
 /* ============================================
    Staggered Entrance Delays
    ============================================ */
-.hud-btn:nth-child(2) { animation-delay: 0.1s; }
-.hud-btn:nth-child(3) { animation-delay: 0.15s; }
-.hud-btn:nth-child(4) { animation-delay: 0.2s; }
-.hud-btn:nth-child(5) { animation-delay: 0.25s; }
-.hud-divider { animation-delay: 0.28s; }
-.hud-btn:nth-child(7) { animation-delay: 0.35s; }
-.hud-btn:nth-child(8) { animation-delay: 0.4s; }
+.hud-btn:nth-child(2) { animation-delay: 100ms; }
+.hud-btn:nth-child(3) { animation-delay: 150ms; }
+.hud-btn:nth-child(4) { animation-delay: 200ms; }
+.hud-btn:nth-child(5) { animation-delay: 250ms; }
+.hud-divider { animation-delay: 280ms; }
+.hud-btn:nth-child(7) { animation-delay: 350ms; }
+.hud-btn:nth-child(8) { animation-delay: 400ms; }
 
 /* Hidden state */
 .premium-hud.hidden {
   opacity: 0;
   pointer-events: none;
   animation: none;
-  transition: opacity 0.3s var(--hud-ease-smooth);
+  transition: opacity 300ms var(--hud-ease-smooth);
 }
 
 .premium-hud.hud--dragging,
@@ -492,7 +731,8 @@
 
 .premium-hud.hud--dragging .hud-btn,
 .premium-hud.hud--dragging .hud-attack,
-.premium-hud.hud--dragging .hud-divider {
+.premium-hud.hud--dragging .hud-divider,
+.premium-hud.hud--dragging .hud-mode-dropdown-btn {
   animation: none;
   opacity: 1;
 }
@@ -500,7 +740,9 @@
 .premium-hud.hud--dragging .hud-btn:hover,
 .premium-hud.hud--dragging .hud-btn:active,
 .premium-hud.hud--dragging .hud-attack:hover,
-.premium-hud.hud--dragging .hud-attack:active {
+.premium-hud.hud--dragging .hud-attack:active,
+.premium-hud.hud--dragging .hud-mode-dropdown-btn:hover,
+.premium-hud.hud--dragging .hud-mode-dropdown-btn:active {
   transform: none;
   transition: none;
 }
@@ -511,9 +753,125 @@
 }
 
 /* ============================================
-   Responsive — Drop tooltips on mobile
+   Mobile Layout (<= 540px viewports)
+   Strictly integer numbers (no decimals)
    ============================================ */
-@media (max-width: 768px) {
+@media (max-width: 540px) {
+  :root {
+    --hud-icon-size: 26px;
+    --hud-btn-size: 44px;
+    --hud-btn-gap: 8px;
+    --hud-padding-v-top: 8px;
+    --hud-padding-v-bottom: 10px;
+    --hud-padding-v: 8px;
+    --hud-padding-h: 20px;
+  }
+
+  .premium-hud {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 24px);
+    padding: var(--hud-padding-v-top, var(--hud-padding-v)) var(--hud-padding-h) var(--hud-padding-v-bottom, var(--hud-padding-v)) var(--hud-padding-h);
+    gap: 8px;
+  }
+
+  .hud-drag-handle {
+    width: 16px;
+    min-width: 16px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .hud-drag-handle svg {
+    width: 16px;
+    height: 20px;
+  }
+
+  .hud-mode-group {
+    display: none !important;
+  }
+
+  .hud-divider {
+    display: none !important;
+  }
+
+  .hud-mode-dropdown-btn {
+    display: inline-flex !important;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 16px;
+    gap: 10px;
+    border-radius: 999px;
+  }
+
+  .hud-mode-dropdown__icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hud-mode-dropdown__caret {
+    width: 10px;
+    height: 8px;
+  }
+
+  .hud-mode-panel {
+    width: 228px;
+    max-width: calc(100vw - 32px);
+    padding: 8px;
+    gap: 4px;
+    border-radius: 18px;
+    box-shadow: 0px 18px 44px rgba(65, 52, 45, 0.18), 0px 2px 8px rgba(65, 52, 45, 0.08);
+  }
+
+  .hud-mode-panel__item {
+    padding: 8px 12px;
+    gap: 12px;
+    border-radius: 12px;
+  }
+
+  .hud-mode-panel__icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .hud-mode-panel__icon-badge svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .hud-mode-panel__label {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .hud-mode-panel__check {
+    font-size: 14px;
+  }
+
+  .hud-btn {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .hud-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hud-attack {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  .hud-attack svg,
+  .hud-attack .hud-attack__label {
+    height: 14px;
+  }
+
   .hud-btn[data-tooltip]::after {
     display: none;
   }
@@ -526,7 +884,9 @@
   .premium-hud,
   .hud-drag-handle,
   .hud-btn,
-  .hud-attack {
+  .hud-attack,
+  .hud-mode-dropdown-btn,
+  .hud-mode-panel {
     animation: none;
     opacity: 1;
   }
@@ -535,7 +895,9 @@
   .hud-btn:hover,
   .hud-btn:active,
   .hud-attack:hover,
-  .hud-attack:active {
+  .hud-attack:active,
+  .hud-mode-dropdown-btn:hover,
+  .hud-mode-dropdown-btn:active {
     transition: none;
   }
 
@@ -544,8 +906,9 @@
     transition: none;
   }
 
-  .hud-btn[data-tooltip]::after {
+  .hud-btn[data-tooltip]::after,
+  .hud-attack-anchor[data-tooltip]::after,
+  .hud-attack-anchor[data-tooltip]::before {
     transition: none;
   }
 }
-
