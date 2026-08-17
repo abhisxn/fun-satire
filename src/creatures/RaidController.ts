@@ -22,7 +22,7 @@ import {
   BACKFIRE_ESCALATE_LOW,
 } from "./raidRules";
 import { EntityPool } from "./EntityPool";
-import { QTY_MAX, QTY_MIN } from "../config/tokens";
+import { QTY_MIN } from "../config/tokens";
 
 export {
   FULL_POWER_THRESHOLD,
@@ -96,20 +96,11 @@ export function detectShake(samples: MoveSample[]): boolean {
   return reversals >= SHAKE_REVERSAL_THRESHOLD;
 }
 
-/** Repulsion radius each security unit exerts on the crowd, same model as the avatar's. */
+/** Repulsion radius each security unit exerts on the crowd at the reference avatar size
+ * (SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH) — getSecurityUnits() scales this by the sticker's
+ * current width, same as the escort band, so a bigger sticker's security detail pushes the
+ * crowd back proportionally further. */
 export const SECURITY_REPEL_RADIUS = 160;
-/** How far the avatar's own repel radius shrinks once a raid fully clears via a full-power
- * hold — the crowd can gather closer in the moment of winning, instead of still being held
- * at arm's length by the normal repel field (180px, see CreatureGrid's physicsParams). Set
- * here as a plain, unscaled baseline (for callers with no sticker, e.g. tests) — the value
- * actually applied once a sticker is involved gets rescaled by main.ts's onProtestWin
- * (against the sticker's live, POST-lockSqueeze width) right after this fires, since the
- * sticker itself shrinks to SQUEEZE_MIN_SCALE at the very same moment: a bigger sticker
- * (inflated by prior backfires) needs proportionally more room, a shrunk one needs less, and
- * only the sticker's own getWidth() — not this controller's frame-delayed avatarWidth —
- * reflects that shrink at the instant it actually happens. Reset the moment the next raid
- * starts (see spawnPulse). */
-export const AVATAR_REPEL_RADIUS_AFTER_WIN = 190;
 export const SPAWN_MIN_PER_PULSE = 2;
 export const SPAWN_MAX_PER_PULSE = 3;
 /** How often the raid drains the crowd toward the raid floor while unaddressed (ms). */
@@ -312,15 +303,13 @@ export class RaidController {
   }
 
   /** Called every frame with the avatar's current on-screen width (including its live
-   * squeeze/inflate scale, see StickerOverlay.getWidth), so the escort radius band
-   * scales correctly if the user resizes the avatar or a protest pops/inflates it
-   * mid-raid. Deliberately NOT used to scale the post-win repel radius (see
-   * AVATAR_REPEL_RADIUS_AFTER_WIN's call sites) — this field is only refreshed once
-   * per engine frame, *before* tick() runs, so at the exact moment a win fires it
-   * still holds the sticker's pre-shrink width. Scaling off it there would size the
-   * radius for a sticker that's about to shrink, not the one that's actually about to
-   * sit there — see main.ts's onProtestWin, which recomputes it from the sticker's
-   * live width immediately after lockSqueeze() has actually applied. */
+   * squeeze/inflate scale, see StickerOverlay.getWidth), so both the escort radius band
+   * and getSecurityUnits()'s repel radius scale correctly if the user resizes the avatar
+   * or a protest pops/inflates it mid-raid. The avatar-vs-*crowd* repel radius (as
+   * opposed to security-vs-crowd, scaled here) is a separate concern owned entirely by
+   * main.ts, computed directly from the sticker's own getWidth() every frame — not
+   * threaded through this field, since main.ts already has the sticker instance and
+   * doesn't need this controller as a relay. */
   setAvatarWidth(width: number): void {
     this.avatarWidth = width;
   }
@@ -347,7 +336,6 @@ export class RaidController {
       this.state = "raiding";
       this.raidStartCount = this.grid.getCreatureCount();
       this.lastAttritionAtMs = Date.now();
-      this.grid.setAvatarRepelRadius(null);
       // Reset for a genuine new raid (a shake). The standalone-charge backfire path
       // in releaseCharge() also routes through here (it calls spawnPulse() to start
       // the raid) and re-sets this right after — that assignment intentionally wins.
@@ -380,13 +368,17 @@ export class RaidController {
   /** Current security units, in the shape CreatureGrid.update() expects for repulsion/catching. */
   getSecurityUnits(): SecurityUnit[] {
     const now = Date.now();
+    // Same size-proportional scale as the escort band (currentEscortRadius in
+    // SecurityCreature.ts) — a bigger sticker's security detail pushes the crowd back
+    // proportionally further, a shrunk one lets them approach closer.
+    const sizeScale = this.avatarWidth / SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH;
     return this.units.map((u) => ({
       x: u.x,
       y: u.y,
       repelRadius:
-        u.phase === "shrinking"
+        (u.phase === "shrinking"
           ? SECURITY_REPEL_RADIUS * computeSecurityShrinkFraction(u.phaseStartMs, now)
-          : SECURITY_REPEL_RADIUS,
+          : SECURITY_REPEL_RADIUS) * sizeScale,
     }));
   }
 
@@ -434,7 +426,11 @@ export class RaidController {
     const outcome = classifyRelease(fraction, this.chargeBaselineCount);
 
     if (outcome.isWin) {
-      this.grid.setQuantity(outcome.crowdCount);
+      // A win restores the user's own chosen crowd size (see CreatureGrid.setUserQuantity),
+      // not classifyRelease's own QTY_MAX — a full-power win means "back to how you had it,"
+      // not "always maxed out," so someone who deliberately dialed the crowd down keeps that
+      // choice through a raid.
+      this.grid.setQuantity(this.grid.getUserQuantityBaseline());
       // A complete win cancels any regrouping a prior MEDIUM/LOW release already
       // queued — otherwise those respawns would still trickle in afterward.
       this.securityPool.cancelScheduledSpawns();
@@ -442,7 +438,6 @@ export class RaidController {
       this.lastBackfireBand = null;
       if (this.units.length === 0) {
         this.state = "idle";
-        this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
         this.onProtestWin?.();
         return;
       }
@@ -450,7 +445,6 @@ export class RaidController {
       // The payoff is handed to the despawn batch's onSettled rather than polled in tick():
       // it fires exactly once, the moment the last unit has actually left the screen.
       this.beginUnitsShrinkSweep(() => {
-        this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
         this.onProtestWin?.();
       });
       return;
@@ -533,7 +527,9 @@ export class RaidController {
   startRecovery(): void {
     if (this.state === "recovering" || this.state === "charging") return;
 
-    this.grid.setQuantity(QTY_MAX);
+    // Same "back to how you had it" rule as a full-power win (see releaseCharge) — this is
+    // just the direct, no-hold entry point to the same recovery.
+    this.grid.setQuantity(this.grid.getUserQuantityBaseline());
     this.securityPool.cancelScheduledSpawns();
     this.scheduledSpawnCount = 0;
 

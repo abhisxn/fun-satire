@@ -55,6 +55,51 @@ describe('StickerOverlay', () => {
     expect(s.el.style.transform).toBe('scale(0.55)');
   });
 
+  it('lockSqueeze always lands on the same absolute width, regardless of a prior manual enlarge', () => {
+    const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
+    const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
+
+    // Manually enlarge well past the default width.
+    handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 340, bubbles: true })); // +240px
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    expect(s.getWidth()).toBeGreaterThan(160);
+
+    s.lockSqueeze();
+    // Same absolute floor a never-resized sticker lands on (DEFAULT_WIDTH * 0.55).
+    expect(s.getWidth()).toBeCloseTo(88);
+  });
+
+  it('lockSqueeze always lands on the same absolute width, regardless of a prior manual shrink', () => {
+    const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
+    const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
+
+    // Manually shrink well below the default width.
+    handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 30, bubbles: true })); // -70px, clamped to MIN_WIDTH
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    expect(s.getWidth()).toBeLessThan(160);
+
+    s.lockSqueeze();
+    expect(s.getWidth()).toBeCloseTo(88);
+  });
+
+  it('lockSqueeze still animates through the wrapper transform, not a snapped width, even after a manual resize', () => {
+    const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
+    const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
+    handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 340, bubbles: true }));
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    const widthAfterResize = s.el.querySelector('img')!.style.width;
+
+    s.lockSqueeze();
+
+    // The underlying CSS width is untouched — only the wrapper's transform changes,
+    // so the existing SQUEEZE_TRANSITION still animates the visible shrink smoothly.
+    expect(s.el.querySelector('img')!.style.width).toBe(widthAfterResize);
+    expect(s.el.style.transform).not.toBe('scale(0.55)'); // not the fixed multiplier this time
+  });
+
   it('setScaleForRaidSize snaps the raid unit count onto one of 4 fixed tiers, not a continuous scale', () => {
     const s = new StickerOverlay('/avatars/a.png');
 

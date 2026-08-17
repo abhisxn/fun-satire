@@ -5,7 +5,7 @@ import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { spawnPoof } from "./creatures/poofEffect";
 import type { PoofHandle } from "./creatures/poofEffect";
-import { RaidController, SECURITY_MAX_UNITS, AVATAR_REPEL_RADIUS_AFTER_WIN } from "./creatures/RaidController";
+import { RaidController, SECURITY_MAX_UNITS } from "./creatures/RaidController";
 import { PowerMeter } from "./hud/PowerMeter";
 import { StickerOverlay, DEFAULT_WIDTH } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
@@ -28,6 +28,12 @@ import { initAnalytics } from "./analytics/ga";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
 const ONBOARDING_CARD_REPULSOR_RADIUS = 300;
+/** The avatar-vs-creature repel radius at the sticker's default (1x, un-tiered, un-resized)
+ * width — matches CreatureGrid's own internal default (see its physicsParams.repelRadius),
+ * kept here as the reference point setAvatarRepelRadius() is scaled from every frame below,
+ * so a bigger sticker always keeps the crowd proportionally further away and a smaller one
+ * lets them approach closer — continuously, not just right after a win. */
+const AVATAR_REPEL_RADIUS_BASE = 180;
 
 async function main(): Promise<void> {
   initAnalytics();
@@ -77,11 +83,10 @@ async function main(): Promise<void> {
     onProtestWin: () => {
       if (activeOverlay instanceof StickerOverlay) {
         activeOverlay.lockSqueeze();
-        // Recomputed from the sticker's live width *after* lockSqueeze has actually
-        // shrunk it — RaidController already set a plain, unscaled baseline, but only
-        // the sticker itself knows its true post-shrink footprint at this instant.
-        const ratio = activeOverlay.getWidth() / DEFAULT_WIDTH;
-        grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN * ratio);
+        // The avatar-vs-creature repel radius isn't touched here — the engine's
+        // per-frame update (see engine.onTick below) already recomputes it from the
+        // sticker's live getWidth() every frame, so the very next frame after
+        // lockSqueeze() shrinks it naturally picks up the new, smaller radius.
         // The win-lock's snap to the floor scale is always a downward step, whatever
         // tier the sticker was at before — no direction check needed, unlike the
         // tiered onCrowdSizeChanged case below.
@@ -149,6 +154,14 @@ async function main(): Promise<void> {
       raidController.setAvatarWidth(activeOverlay.getWidth());
     }
     raidController.tick(Date.now());
+    // Recomputed *after* tick(), not alongside setAvatarWidth() above — tick() is where
+    // a same-frame win's lockSqueeze() actually shrinks the sticker, and reading
+    // getWidth() only here (not the frame-delayed avatarWidth RaidController itself
+    // tracks) means the radius reflects that shrink at the instant it happens, not one
+    // frame later. No sticker (TextOverlay/onboarding) restores the physics default.
+    grid.setAvatarRepelRadius(
+      activeOverlay instanceof StickerOverlay ? AVATAR_REPEL_RADIUS_BASE * (activeOverlay.getWidth() / DEFAULT_WIDTH) : null,
+    );
     if (activeOverlay && raidController.getState() !== "idle") {
       // Keep the avatar as the last body child while security units (also
       // now z-index:100, see SecurityCreature.SECURITY_Z_INDEX) are being
@@ -241,7 +254,7 @@ async function main(): Promise<void> {
     winPanel.onOpenChange(syncMenuButtonVisibility);
 
     filterPanel.onQuantityChange((qty) => {
-      grid.setQuantity(qty);
+      grid.setUserQuantity(qty);
     });
 
     grid.onQuantityChange((count) => {

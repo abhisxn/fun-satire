@@ -4,7 +4,7 @@ import {
   detectShake,
   RaidController,
   pickPulseKinds,
-  AVATAR_REPEL_RADIUS_AFTER_WIN,
+  SECURITY_REPEL_RADIUS,
   SHAKE_PULSE_COOLDOWN_MS,
   CHARGE_SWEEP_HALF_PERIOD_MS,
   FULL_POWER_THRESHOLD,
@@ -239,6 +239,38 @@ describe('RaidController', () => {
     now.mockRestore();
   });
 
+  it("getSecurityUnits() scales repelRadius by the avatar's current width, same reference as the escort band", () => {
+    const now = vi.spyOn(Date, 'now');
+    let t = 0;
+    now.mockImplementation(() => t);
+
+    const xs = [0, 60, 0, 60, 0, 60, 0];
+    for (const x of xs) {
+      raid.onAvatarMove(x, 0);
+      t += 20;
+    }
+
+    // At the reference width, repelRadius is the plain constant.
+    raid.setAvatarWidth(SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH);
+    for (const u of raid.getSecurityUnits()) {
+      expect(u.repelRadius).toBeCloseTo(SECURITY_REPEL_RADIUS);
+    }
+
+    // Double the avatar's width -> double the repel radius.
+    raid.setAvatarWidth(SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH * 2);
+    for (const u of raid.getSecurityUnits()) {
+      expect(u.repelRadius).toBeCloseTo(SECURITY_REPEL_RADIUS * 2);
+    }
+
+    // Half the avatar's width -> half the repel radius.
+    raid.setAvatarWidth(SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH / 2);
+    for (const u of raid.getSecurityUnits()) {
+      expect(u.repelRadius).toBeCloseTo(SECURITY_REPEL_RADIUS / 2);
+    }
+
+    now.mockRestore();
+  });
+
   it('startRecovery marks every unit shrinking immediately but removes none synchronously', () => {
     const now = vi.spyOn(Date, 'now');
     let t = 0;
@@ -256,7 +288,10 @@ describe('RaidController', () => {
 
     expect(raid.getState()).toBe('recovering');
     expect(raid.getSecurityUnits().length).toBe(spawned);
-    expect(grid.getCreatureCount()).toBe(900); // QTY_MAX, applied immediately
+    // Restores the user's chosen baseline (CreatureGrid.getUserQuantityBaseline), not a
+    // hardcoded ceiling — this grid was constructed with initialQuantity: 40 and
+    // setUserQuantity() was never called, so the baseline is still 40.
+    expect(grid.getCreatureCount()).toBe(40);
 
     now.mockRestore();
   });
@@ -433,108 +468,6 @@ describe('RaidController', () => {
     now.mockRestore();
   });
 
-  it('shrinks the avatar repel radius once a peak-power release fully clears the raid', () => {
-    const now = vi.spyOn(Date, 'now');
-    let t = 0;
-    now.mockImplementation(() => t);
-
-    const xs = [0, 60, 0, 60, 0, 60, 0];
-    for (const x of xs) {
-      raid.onAvatarMove(x, 0);
-      t += 20;
-    }
-    expect(grid.getAvatarRepelRadius()).toBeNull();
-
-    const spawned = raid.getSecurityUnits().length;
-    raid.startCharging();
-    t += CHARGE_SWEEP_HALF_PERIOD_MS; // land at the peak of the sweep (fraction ~1)
-    raid.tick(t);
-    raid.releaseCharge();
-    t += SECURITY_SHRINK_MS * spawned;
-    raid.tick(t);
-
-    expect(raid.getState()).toBe('idle');
-    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
-
-    now.mockRestore();
-  });
-
-  // The post-win repel radius is deliberately NOT scaled here — RaidController sets
-  // a plain, unscaled AVATAR_REPEL_RADIUS_AFTER_WIN baseline; main.ts's onProtestWin
-  // wiring rescales it afterward from the sticker's live post-lockSqueeze width
-  // (untestable at this unit level, same as onSecurityRemoved's audio wiring).
-  it('sets the plain, unscaled AVATAR_REPEL_RADIUS_AFTER_WIN baseline regardless of avatarWidth', () => {
-    const now = vi.spyOn(Date, 'now');
-    let t = 0;
-    now.mockImplementation(() => t);
-
-    raid.setAvatarWidth(SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH * 2);
-    raid.startCharging();
-    t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak
-    raid.tick(t);
-    raid.releaseCharge();
-
-    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
-
-    now.mockRestore();
-  });
-
-  it('restores the default avatar repel radius once a new raid starts', () => {
-    const now = vi.spyOn(Date, 'now');
-    let t = 0;
-    now.mockImplementation(() => t);
-
-    const xs = [0, 60, 0, 60, 0, 60, 0];
-    for (const x of xs) {
-      raid.onAvatarMove(x, 0);
-      t += 20;
-    }
-    const spawned = raid.getSecurityUnits().length;
-    raid.startCharging();
-    t += CHARGE_SWEEP_HALF_PERIOD_MS;
-    raid.tick(t);
-    raid.releaseCharge();
-    t += SECURITY_SHRINK_MS * spawned;
-    raid.tick(t);
-    expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
-
-    // A fresh shake starts a new raid.
-    t += SHAKE_PULSE_COOLDOWN_MS;
-    for (const x of xs) {
-      raid.onAvatarMove(x, 0);
-      t += 20;
-    }
-
-    expect(raid.getState()).toBe('raiding');
-    expect(grid.getAvatarRepelRadius()).toBeNull();
-
-    now.mockRestore();
-  });
-
-  it('does not shrink the avatar repel radius via the legacy instant startRecovery() path', () => {
-    const now = vi.spyOn(Date, 'now');
-    let t = 0;
-    now.mockImplementation(() => t);
-
-    const xs = [0, 60, 0, 60, 0, 60, 0];
-    for (const x of xs) {
-      raid.onAvatarMove(x, 0);
-      t += 20;
-    }
-
-    raid.startRecovery();
-    const spawned = raid.getSecurityUnits().length;
-    for (let i = 0; i < spawned; i++) {
-      t += SECURITY_SHRINK_MS;
-      raid.tick(t);
-    }
-
-    expect(raid.getState()).toBe('idle');
-    expect(grid.getAvatarRepelRadius()).toBeNull();
-
-    now.mockRestore();
-  });
-
   describe('charge/release protest mechanic', () => {
     function triggerRaid(now: { mockImplementation: (fn: () => number) => void }, tRef: { t: number }): void {
       now.mockImplementation(() => tRef.t);
@@ -569,12 +502,11 @@ describe('RaidController', () => {
 
       expect(raid.getState()).toBe('raiding');
       expect(raid.getSecurityUnits().length).toBeGreaterThan(0);
-      expect(grid.getAvatarRepelRadius()).toBeNull();
 
       now.mockRestore();
     });
 
-    it('releasing a standalone charge at the peak of the sweep maxes out the crowd', () => {
+    it('releasing a standalone charge at the peak of the sweep restores the user\'s chosen crowd size', () => {
       const now = vi.spyOn(Date, 'now');
       let t = 0;
       now.mockImplementation(() => t);
@@ -585,8 +517,29 @@ describe('RaidController', () => {
       raid.releaseCharge();
 
       expect(raid.getState()).toBe('idle');
-      expect(grid.getCreatureCount()).toBe(900); // QTY_MAX
-      expect(grid.getAvatarRepelRadius()).toBe(AVATAR_REPEL_RADIUS_AFTER_WIN);
+      // Restores CreatureGrid.getUserQuantityBaseline(), not a hardcoded ceiling — this
+      // grid's baseline is still 40 (its initialQuantity; setUserQuantity() was never called).
+      expect(grid.getCreatureCount()).toBe(40);
+
+      now.mockRestore();
+    });
+
+    it('a win restores a manually-set crowd size, not a hardcoded ceiling', () => {
+      // The user dialed the crowd down via the Filters slider (setUserQuantity, not plain
+      // setQuantity) before ever triggering a raid — a win should return to their choice.
+      grid.setUserQuantity(150);
+
+      const now = vi.spyOn(Date, 'now');
+      let t = 0;
+      now.mockImplementation(() => t);
+
+      raid.startCharging();
+      t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak of the sweep, fraction ~1
+      raid.tick(t);
+      raid.releaseCharge();
+
+      expect(raid.getState()).toBe('idle');
+      expect(grid.getCreatureCount()).toBe(150);
 
       now.mockRestore();
     });
@@ -659,7 +612,9 @@ describe('RaidController', () => {
       raid.releaseCharge();
       expect(raid.getState()).toBe('recovering');
       expect(raid.getChargeFraction()).toBe(0);
-      expect(grid.getCreatureCount()).toBe(900); // QTY_MAX, applied immediately on the win
+      // Restores CreatureGrid.getUserQuantityBaseline() immediately on the win, not a
+      // hardcoded ceiling — this grid's baseline is still 40 (its initialQuantity).
+      expect(grid.getCreatureCount()).toBe(40);
 
       tRef.t += SECURITY_SHRINK_MS * spawned;
       raid.tick(tRef.t);

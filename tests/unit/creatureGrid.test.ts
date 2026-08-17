@@ -299,6 +299,39 @@ describe('CreatureGrid', () => {
     });
   });
 
+  describe('userQuantityBaseline', () => {
+    it('defaults to the constructor initialQuantity when setUserQuantity is never called', () => {
+      const grid = new CreatureGrid({ container, mode: 'cockroach', initialQuantity: 60 });
+      expect(grid.getUserQuantityBaseline()).toBe(60);
+    });
+
+    it('setUserQuantity updates both the live count and the baseline', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      grid.setUserQuantity(500);
+      expect(grid.getCreatureCount()).toBe(500);
+      expect(grid.getUserQuantityBaseline()).toBe(500);
+    });
+
+    it('plain setQuantity (raid-driven changes) does not move the baseline', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      grid.setUserQuantity(500);
+      grid.setQuantity(50); // e.g. raid attrition draining the crowd
+      expect(grid.getCreatureCount()).toBe(50);
+      expect(grid.getUserQuantityBaseline()).toBe(500);
+    });
+
+    it('setUserQuantity fires onQuantityChange the same as setQuantity', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setUserQuantity(300);
+      expect(cb).toHaveBeenCalledWith(300);
+    });
+  });
+
   describe('getCreatureCount', () => {
     it('returns 0 before spawn', () => {
       const grid = new CreatureGrid(config);

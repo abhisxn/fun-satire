@@ -237,6 +237,12 @@ export class CreatureGrid {
   private burstUntilMs: number = 0;
   private repulsor: Repulsor | null = null;
   private quantityChangeCb: ((count: number) => void) | null = null;
+  // The crowd size the user has explicitly chosen (Filters slider), as opposed to
+  // targetCount, which anyone (RaidController's attrition/boost/win logic included) can
+  // move transiently. Only setUserQuantity() updates this — plain setQuantity() (used by
+  // every raid-driven caller) deliberately leaves it alone, so "return to normal" after a
+  // raid means "back to what the user chose," not a hardcoded ceiling.
+  private userQuantityBaseline: number;
   private avatarRepelRadius: number | null = null;
   private audioContext: AudioContext | null = null;
   private hoverState = new WeakMap<Creature, boolean>();
@@ -248,6 +254,7 @@ export class CreatureGrid {
     this.mode = config.mode;
     const modeConfig = MODE_CONFIGS[this.mode];
     this.targetCount = config.initialQuantity ?? modeConfig.cols * modeConfig.rows;
+    this.userQuantityBaseline = this.targetCount;
   }
 
   async init(): Promise<void> {
@@ -612,6 +619,20 @@ export class CreatureGrid {
    * attrition/boost/win logic. Never fires for a no-op setQuantity() call. */
   onQuantityChange(cb: (count: number) => void): void {
     this.quantityChangeCb = cb;
+  }
+
+  /** The Filters-slider-driven entry point: does everything setQuantity() does, and also
+   * records the result as the user's chosen baseline (see userQuantityBaseline) — the value
+   * RaidController restores to once a raid fully resolves, instead of a hardcoded ceiling. */
+  setUserQuantity(quantity: number): void {
+    this.setQuantity(quantity);
+    this.userQuantityBaseline = this.targetCount;
+  }
+
+  /** The crowd size to return to once a raid fully resolves — whatever the user last set via
+   * setUserQuantity(), or the constructor's initial quantity if they never have. */
+  getUserQuantityBaseline(): number {
+    return this.userQuantityBaseline;
   }
 
   respawn(): void {

@@ -10,12 +10,19 @@ export const DEFAULT_WIDTH = 160;
 const MIN_WIDTH = 48;
 const MAX_WIDTH = 480;
 const HANDLE_SIZE = 14;
-/** Scale the sticker pops down to on a full-power protest win (lockSqueeze()) —
- * applied only once the raid's despawn sweep has actually finished on screen (see
- * RaidController's onProtestWin), never as a live preview while still holding (a held
- * charge crossing FULL_POWER_THRESHOLD must NOT visibly change the sticker — that was
- * a bug: it telegraphed the win before the player let go). */
+/** Scale factor defining the sticker's absolute floor width on a full-power protest win
+ * (lockSqueeze()), relative to DEFAULT_WIDTH — see SQUEEZE_TARGET_WIDTH_PX. Applied only
+ * once the raid's despawn sweep has actually finished on screen (see RaidController's
+ * onProtestWin), never as a live preview while still holding (a held charge crossing
+ * FULL_POWER_THRESHOLD must NOT visibly change the sticker — that was a bug: it
+ * telegraphed the win before the player let go). */
 const SQUEEZE_MIN_SCALE = 0.55;
+/** Absolute pixel width lockSqueeze() always lands on, regardless of any manual resize
+ * (corner-drag or pinch) the user made beforehand — a win should read as "definitely the
+ * smallest," not merely "smaller than it was." lockSqueeze() solves for whatever baseScale
+ * gets the *current* width to this exact target, so the change still animates through the
+ * normal smooth transform (see SQUEEZE_TRANSITION) instead of snapping `width` itself. */
+const SQUEEZE_TARGET_WIDTH_PX = DEFAULT_WIDTH * SQUEEZE_MIN_SCALE;
 /** The 4 discrete resting-scale steps setScaleForRaidSize() snaps between — small,
  * medium, large, max — replacing a continuous scale so size changes read as distinct,
  * legible "tiers" rather than a smooth drift that's hard to notice frame to frame. */
@@ -27,7 +34,7 @@ const TIER_COUNT = TIER_SCALES.length;
  * snap or a spring, since it accelerates and decelerates symmetrically instead of
  * front-loading all the motion. Long enough that growing/shrinking reads as its own
  * visible beat once a raid's spawn/respawn/despawn has actually settled (see
- * RaidController's onProtestWin / onProtestBackfireSettled — these never fire
+ * RaidController's onProtestWin / onCrowdSizeChanged — these never fire
  * immediately on button release). Applied on `el` (the wrapper), not just the image, so
  * the resize handle and the element's actual hit-tested/dragged box scale along with
  * it — see getWidth() and handleResizeStart for the other half of that. */
@@ -279,9 +286,17 @@ export class StickerOverlay {
 
   /** Called once a full-power protest release's despawn sweep has actually finished
    * on screen (RaidController's onProtestWin — never on button release itself): pops
-   * the sticker down to SQUEEZE_MIN_SCALE and, for face stickers, swaps to `dragSrc`
-   * (the "weird" expression already used mid-drag/shake — see the constructor) so the
-   * face-pull reads as part of the same "under strain" moment as the shrink. Not a
+   * the sticker down to a fixed absolute width (SQUEEZE_TARGET_WIDTH_PX) and, for face
+   * stickers, swaps to `dragSrc` (the "weird" expression already used mid-drag/shake —
+   * see the constructor) so the face-pull reads as part of the same "under strain"
+   * moment as the shrink. A win is meant to read as *definitely* the smallest the
+   * sticker gets — not merely smaller than before — so this solves for whatever
+   * baseScale lands the sticker's *current* width exactly on that target, rather than
+   * always multiplying by a fixed SQUEEZE_MIN_SCALE: a sticker the player manually
+   * enlarged (corner-drag/pinch) still ends up exactly as small as one they'd shrunk,
+   * both landing on the same pixel width. Still animates through the normal smooth
+   * transform (see SQUEEZE_TRANSITION) since only `baseScale` changes — `width` itself
+   * is left untouched, so the resize handle's own reference point doesn't jump. Not a
    * permanent lock — unlock() (called once the next raid actually starts) reverts both
    * the scale and the face via the next setScaleForRaidSize() call. Starting a fresh
    * drag right after a win will also revert the face early (onDragEnd always restores
@@ -289,12 +304,12 @@ export class StickerOverlay {
    * something worth extra state to avoid. */
   lockSqueeze(): void {
     this.locked = true;
-    this.baseScale = SQUEEZE_MIN_SCALE;
+    this.baseScale = SQUEEZE_TARGET_WIDTH_PX / this.width;
     // The win floor isn't one of the 4 tiers — clearing this makes the next
     // post-unlock setScaleForRaidSize() call report 'up' unconditionally, since
     // any tier the raid regrows into is a real inflate from this deflated state.
     this.currentTierIndex = null;
-    this.el.style.transform = `scale(${SQUEEZE_MIN_SCALE})`;
+    this.el.style.transform = `scale(${this.baseScale})`;
     if (this.dragSrc) this.img.src = this.dragSrc;
   }
 
