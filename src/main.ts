@@ -317,6 +317,15 @@ async function main(): Promise<void> {
         def.dragSrc,
       );
       void replaceOverlay(sticker);
+      // Treat this like a fresh post-onboarding session (same reset carousel.onComplete
+      // does below) — full crowd restored regardless of how much a prior raid's attrition
+      // had drained it, no leftover onboarding repulsor. Deliberately does NOT re-run
+      // mountPostOnboarding() (HUD/panels are already mounted) and does NOT touch
+      // grid.switchMode() — quantity/repulsor resets never touch the active creature
+      // mode, so whatever mode the player was in (eyes/finger/cockroach/placard) is
+      // left exactly as-is.
+      grid.clearRepulsor();
+      filterPanel.setQuantity(DEFAULT_CREATURE_QUANTITY);
     });
 
     galleryPanel.onTextSelect((font) => {
