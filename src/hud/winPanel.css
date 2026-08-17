@@ -131,12 +131,8 @@
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
   cursor: pointer;
   border: none;
-  background: transparent;
+  background: #fff;
   padding: 0;
-}
-
-.win-panel-share-icon-btn--native {
-  background: rgba(0, 0, 0, 0.08);
 }
 
 .win-panel-copy-link-btn {
