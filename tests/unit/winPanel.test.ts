@@ -195,5 +195,33 @@ describe("hud/WinPanel", () => {
       vi.advanceTimersByTime(2000);
       expect(panel.isPanelOpen()).toBe(false);
     });
+
+    it("fires the next-sticker callback when it auto-dismisses untouched", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+
+      let called = 0;
+      panel.onNextSticker(() => {
+        called += 1;
+      });
+
+      vi.advanceTimersByTime(7000);
+      expect(called).toBe(1);
+      expect(panel.isPanelOpen()).toBe(false);
+    });
+
+    it("does NOT fire the next-sticker callback when manually closed before the timer fires", () => {
+      panel.attachTo(document.body);
+      panel.show(WIN_COPY_VARIANTS[0]!);
+
+      let called = 0;
+      panel.onNextSticker(() => {
+        called += 1;
+      });
+
+      panel.hide();
+      vi.advanceTimersByTime(7000);
+      expect(called).toBe(0);
+    });
   });
 });

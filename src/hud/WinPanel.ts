@@ -197,7 +197,13 @@ export class WinPanel {
     this.isOpen = true;
     this.overlay.classList.add("open");
     this.clearAutoDismiss();
-    this.autoDismissTimeout = window.setTimeout(() => this.hide(), AUTO_DISMISS_MS);
+    // If the player ignores the panel entirely, treat that exactly like clicking
+    // "Next random sticker" — auto-refresh with a new sticker/crowd rather than
+    // just silently closing on a dead end.
+    this.autoDismissTimeout = window.setTimeout(() => {
+      this.nextStickerCb?.();
+      this.hide();
+    }, AUTO_DISMISS_MS);
     this.openChangeCb?.(true);
   }
 
