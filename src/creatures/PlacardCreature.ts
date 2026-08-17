@@ -4,6 +4,9 @@ import { playHoverTone } from "../audio/hoverTones";
 export const STICK_NAT_W = 36;
 export const STICK_NAT_H = 444;
 
+/** Scale factor applied to stick dimensions so stick serves as a proportionate handle. */
+export const STICK_SCALE_FACTOR = 0.65;
+
 /** Position of the `+` anchor mark on the stick artwork, as a fraction of STICK_NAT_W/H. */
 export const STICK_ANCHOR_PCT = { x: 0.5, y: 135 / 444 } as const;
 
@@ -35,20 +38,20 @@ export const PLACARD_POOL: PlacardAsset[] = [
   { src: '/creatures/placards/placard_19.png', w: 824, h: 432 },
 ];
 
-/** Placard display width reference, in px, at signScale = 1. Tune by eye. */
-export const PLACARD_BASE_W = 150;
+/** Placard display width reference, in px, at scale = 1, signScale = 1. */
+export const PLACARD_BASE_W = 460;
+
+/** Standard reference aspect ratio (w/h) for aspect compensation. */
+export const REF_ASPECT = 2.0;
 
 export function pickRandomPlacard(): PlacardAsset {
   const index = Math.floor(Math.random() * PLACARD_POOL.length);
-  return PLACARD_POOL[index];
+  return PLACARD_POOL[index]!;
 }
 
-/** Sign-to-stick size ratio, applied on top of the creature's own depth-scale (not an
- * absolute multiplier) — so a small/distant creature always carries a proportionally
- * small sign, and a close/big creature a proportionally big one. The 0.5 floor is below
- * 1.0 so a sign can end up visibly smaller than its own stick, not just larger. */
+/** Tight sign-to-stick variation [0.88, 1.16] ensuring organic variety without micro-sized signs. */
 function pickSignScale(): number {
-  return 0.5 + Math.random() * 0.9;
+  return 0.88 + Math.random() * 0.28;
 }
 
 export function createPlacardCreature(
@@ -56,8 +59,8 @@ export function createPlacardCreature(
   hy: number,
   scale: number,
 ): Creature {
-  const w = STICK_NAT_W * scale;
-  const h = STICK_NAT_H * scale;
+  const w = STICK_NAT_W * scale * STICK_SCALE_FACTOR;
+  const h = STICK_NAT_H * scale * STICK_SCALE_FACTOR;
 
   const el = document.createElement('div');
   el.className = 'wrap';
@@ -75,7 +78,9 @@ export function createPlacardCreature(
 
   const asset = pickRandomPlacard();
   const signScale = pickSignScale();
-  const placardW = PLACARD_BASE_W * scale * signScale;
+  const aspect = asset.w / asset.h;
+  const aspectFactor = Math.sqrt(aspect / REF_ASPECT);
+  const placardW = PLACARD_BASE_W * scale * signScale * aspectFactor;
   const placardH = placardW * (asset.h / asset.w);
   const anchorPx = {
     x: STICK_ANCHOR_PCT.x * w,
