@@ -898,7 +898,8 @@ describe('RaidController', () => {
       triggerRaidOn(r, now, tRef);
 
       expect(onCrowdSizeChanged).toHaveBeenCalledTimes(1);
-      expect(onCrowdSizeChanged).toHaveBeenCalledWith(r.getSecurityUnits().length);
+      // tierBump is 0 here: a shake-triggered spawn has no backfire behind it.
+      expect(onCrowdSizeChanged).toHaveBeenCalledWith(r.getSecurityUnits().length, 0);
 
       // Ticking forward with nothing pending (no respawns, no shrink sweep) must
       // not re-fire — the count genuinely hasn't changed.
@@ -934,7 +935,8 @@ describe('RaidController', () => {
       r.tick(tRef.t);
 
       expect(onCrowdSizeChanged.mock.calls.length).toBeGreaterThan(afterSpawnCalls);
-      expect(onCrowdSizeChanged).toHaveBeenLastCalledWith(r.getSecurityUnits().length);
+      // tierBump is 1: the backfire that triggered these respawns was MEDIUM-power.
+      expect(onCrowdSizeChanged).toHaveBeenLastCalledWith(r.getSecurityUnits().length, 1);
 
       now.mockRestore();
     });
@@ -967,6 +969,65 @@ describe('RaidController', () => {
       for (let i = 1; i < seenCounts.length; i++) {
         expect(seenCounts[i]).toBe(seenCounts[i - 1] - 1);
       }
+
+      now.mockRestore();
+    });
+
+    it('onCrowdSizeChanged reports tierBump 0 for a LOW-power backfire (vs. 1 for MEDIUM)', () => {
+      const onCrowdSizeChanged = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onCrowdSizeChanged });
+
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaidOn(r, now, tRef);
+
+      r.startCharging();
+      tRef.t += 10; // LOW power — barely off the floor
+      r.tick(tRef.t);
+      r.releaseCharge();
+
+      tRef.t += SECURITY_SHRINK_MS + BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * 10;
+      r.tick(tRef.t);
+
+      expect(onCrowdSizeChanged).toHaveBeenLastCalledWith(r.getSecurityUnits().length, 0);
+
+      now.mockRestore();
+    });
+
+    it('resets tierBump to 0 once a brand new raid starts, even if the previous raid ended on a MEDIUM backfire', () => {
+      const onCrowdSizeChanged = vi.fn();
+      const r = new RaidController({ container, grid, avatarLayer: container, onCrowdSizeChanged });
+
+      const now = vi.spyOn(Date, 'now');
+      const tRef = { t: 0 };
+      triggerRaidOn(r, now, tRef);
+
+      // A MEDIUM backfire on the first raid — tierBump should read 1 afterward.
+      r.startCharging();
+      tRef.t += Math.round(CHARGE_SWEEP_HALF_PERIOD_MS * 0.5); // MEDIUM power
+      r.tick(tRef.t);
+      r.releaseCharge();
+      tRef.t += SECURITY_SHRINK_MS + BACKFIRE_RESPAWN_DELAY_MS + BACKFIRE_RESPAWN_STAGGER_MS * 10;
+      r.tick(tRef.t);
+      expect(onCrowdSizeChanged).toHaveBeenLastCalledWith(r.getSecurityUnits().length, 1);
+
+      // Clear the raid with a full-power win, then start a genuinely new one via a
+      // fresh shake — the new raid's own spawn must report tierBump 0, not carry the
+      // prior raid's MEDIUM bump forward.
+      const spawned = r.getSecurityUnits().length;
+      tRef.t += SHAKE_PULSE_COOLDOWN_MS;
+      r.startCharging();
+      tRef.t += CHARGE_SWEEP_HALF_PERIOD_MS; // peak
+      r.tick(tRef.t);
+      r.releaseCharge();
+      tRef.t += SECURITY_SHRINK_MS * spawned;
+      r.tick(tRef.t);
+      expect(r.getState()).toBe('idle');
+
+      tRef.t += SHAKE_PULSE_COOLDOWN_MS;
+      onCrowdSizeChanged.mockClear();
+      triggerRaidOn(r, now, tRef);
+      expect(onCrowdSizeChanged).toHaveBeenLastCalledWith(r.getSecurityUnits().length, 0);
 
       now.mockRestore();
     });

@@ -55,21 +55,52 @@ describe('StickerOverlay', () => {
     expect(s.el.style.transform).toBe('scale(0.55)');
   });
 
-  it('setScaleForRaidSize maps the raid unit count linearly onto [1, MAX_SCALE]', () => {
+  it('setScaleForRaidSize snaps the raid unit count onto one of 4 fixed tiers, not a continuous scale', () => {
     const s = new StickerOverlay('/avatars/a.png');
 
-    s.setScaleForRaidSize(0, 40);
+    s.setScaleForRaidSize(0, 40); // 0% -> tier 0
     expect(s.el.style.transform).toBe('scale(1)');
 
-    s.setScaleForRaidSize(40, 40);
-    expect(s.el.style.transform).toBe('scale(2)'); // MAX_SCALE
+    s.setScaleForRaidSize(9, 40); // 22.5% -> still tier 0 (bucket boundary is 25%)
+    expect(s.el.style.transform).toBe('scale(1)');
 
-    s.setScaleForRaidSize(20, 40);
-    expect(s.el.style.transform).toBe('scale(1.5)'); // halfway
+    s.setScaleForRaidSize(10, 40); // 25% -> tier 1
+    expect(s.el.style.transform).toBe('scale(1.3)');
+
+    s.setScaleForRaidSize(20, 40); // 50% -> tier 2
+    expect(s.el.style.transform).toBe('scale(1.65)');
+
+    s.setScaleForRaidSize(30, 40); // 75% -> tier 3 (top)
+    expect(s.el.style.transform).toBe('scale(2)');
+
+    s.setScaleForRaidSize(40, 40); // 100% -> still tier 3, no 5th tier
+    expect(s.el.style.transform).toBe('scale(2)');
 
     // Out-of-range counts clamp rather than overshoot.
     s.setScaleForRaidSize(999, 40);
     expect(s.el.style.transform).toBe('scale(2)');
+  });
+
+  it('setScaleForRaidSize\'s tierBump pushes the crowd-size-derived tier up by one, clamped to the top tier', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+
+    s.setScaleForRaidSize(0, 40, 1); // tier 0 + bump -> tier 1
+    expect(s.el.style.transform).toBe('scale(1.3)');
+
+    s.setScaleForRaidSize(30, 40, 1); // tier 3 (top) + bump -> clamped, still tier 3
+    expect(s.el.style.transform).toBe('scale(2)');
+
+    s.setScaleForRaidSize(20, 40, 0); // no bump -> plain tier 2
+    expect(s.el.style.transform).toBe('scale(1.65)');
+  });
+
+  it('setScaleForRaidSize reports the tier direction it just applied, only on an actual change', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+
+    expect(s.setScaleForRaidSize(0, 40)).toBe('up'); // first call ever: up from nothing
+    expect(s.setScaleForRaidSize(5, 40)).toBe('none'); // still tier 0, no change
+    expect(s.setScaleForRaidSize(20, 40)).toBe('up'); // tier 0 -> tier 2
+    expect(s.setScaleForRaidSize(9, 40)).toBe('down'); // tier 2 -> tier 0
   });
 
   it('setScaleForRaidSize is a no-op while locked by lockSqueeze', () => {
@@ -90,8 +121,8 @@ describe('StickerOverlay', () => {
 
     s.lockSqueeze();
     s.unlock();
-    s.setScaleForRaidSize(10, 40);
-    expect(s.el.style.transform).toBe('scale(1.25)');
+    s.setScaleForRaidSize(10, 40); // tier 1
+    expect(s.el.style.transform).toBe('scale(1.3)');
   });
 
   it('lockSqueeze re-locks after an unlock', () => {
@@ -99,13 +130,19 @@ describe('StickerOverlay', () => {
 
     s.lockSqueeze();
     s.unlock();
-    s.setScaleForRaidSize(20, 40);
-    expect(s.el.style.transform).toBe('scale(1.5)');
+    s.setScaleForRaidSize(20, 40); // tier 2
+    expect(s.el.style.transform).toBe('scale(1.65)');
 
     s.lockSqueeze();
     expect(s.el.style.transform).toBe('scale(0.55)');
     s.setScaleForRaidSize(40, 40);
     expect(s.el.style.transform).toBe('scale(0.55)'); // no-op again
+  });
+
+  it('reports "down" for a multi-tier drop, not just an adjacent-tier one', () => {
+    const s = new StickerOverlay('/avatars/a.png');
+    s.setScaleForRaidSize(30, 40); // tier 3
+    expect(s.setScaleForRaidSize(0, 40, 0)).toBe('down'); // tier 3 -> tier 0
   });
 
   it('getWidth() reflects the current squeeze/inflate scale, not just the underlying CSS width', () => {

@@ -20,6 +20,8 @@ import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
 import { AudioManager } from "./audio/AudioManager";
 import { AudioWidget } from "./audio/AudioWidget";
 import { playPoofTone } from "./audio/poofTone";
+import { playInflateTone } from "./audio/inflateTone";
+import { playDeflateTone } from "./audio/deflateTone";
 import { ClickSound } from "./audio/clickSound";
 import { DragScratchSound } from "./audio/dragScratchSound";
 import { initAnalytics } from "./analytics/ga";
@@ -80,6 +82,11 @@ async function main(): Promise<void> {
         // the sticker itself knows its true post-shrink footprint at this instant.
         const ratio = activeOverlay.getWidth() / DEFAULT_WIDTH;
         grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN * ratio);
+        // The win-lock's snap to the floor scale is always a downward step, whatever
+        // tier the sticker was at before — no direction check needed, unlike the
+        // tiered onCrowdSizeChanged case below.
+        const audioContext = audioManager.getAudioContext();
+        if (audioContext) playDeflateTone(audioContext);
       }
       // Short victory beat before the panel appears, so the player sees the crowd
       // settle around the shrunk sticker first. If a new raid has already started
@@ -100,10 +107,17 @@ async function main(): Promise<void> {
     },
     // Fires continuously as the raid's live security-unit count changes (spawns,
     // backfire respawn trickle-in, despawn sweep) — a no-op on the sticker's side
-    // while a win's lock is still in effect.
-    onCrowdSizeChanged: (securityUnitCount) => {
+    // while a win's lock is still in effect. setScaleForRaidSize reports whether
+    // this call actually moved the sticker up or down a tier, so the inflate/
+    // deflate cue plays once per visible size-step rather than once per tick.
+    onCrowdSizeChanged: (securityUnitCount, tierBump) => {
       if (activeOverlay instanceof StickerOverlay) {
-        activeOverlay.setScaleForRaidSize(securityUnitCount, SECURITY_MAX_UNITS);
+        const direction = activeOverlay.setScaleForRaidSize(securityUnitCount, SECURITY_MAX_UNITS, tierBump);
+        if (direction === "none") return;
+        const audioContext = audioManager.getAudioContext();
+        if (!audioContext) return;
+        if (direction === "up") playInflateTone(audioContext);
+        else playDeflateTone(audioContext);
       }
     },
   });

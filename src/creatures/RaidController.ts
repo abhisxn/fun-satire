@@ -193,8 +193,17 @@ export interface RaidControllerConfig {
    * count, so it fires exactly once per real change, never once per frame
    * regardless of whether anything changed. A caller mapping this to a continuous
    * visual (e.g. sticker scale) should treat every call as "the raid's size right
-   * now," not accumulate or count calls. */
-  onCrowdSizeChanged?: (securityUnitCount: number) => void;
+   * now," not accumulate or count calls.
+   *
+   * `tierBump` is 1 if the most recent backfire that shaped this raid was
+   * MEDIUM-power, 0 otherwise (LOW-power, or no backfire yet this raid) — a
+   * caller quantizing crowd size into a small number of visual tiers can add
+   * this on top so a MEDIUM backfire "compounds" into a visibly bigger jump
+   * than a LOW one at the same crowd size. Reset to 0 the moment a brand new
+   * raid starts (onRaidStart) — a backfire on an *already-running* raid keeps
+   * contributing its bump until the next raid begins, but never carries over
+   * into a fresh one. */
+  onCrowdSizeChanged?: (securityUnitCount: number, tierBump: 0 | 1) => void;
 }
 
 function rand(min: number, max: number): number {
@@ -265,9 +274,14 @@ export class RaidController {
    * this.units.length once per tick() (and once after spawnPulse()'s synchronous
    * burst) so the callback fires exactly once per actual change. */
   private lastNotifiedCrowdCount = 0;
+  /** Power band of the most recent MEDIUM/LOW backfire that shaped the current raid —
+   * null before any backfire this raid (or once a new raid starts). Threaded into
+   * onCrowdSizeChanged as tierBump so a caller's tiered visual can read a MEDIUM
+   * backfire as a bigger jump than a LOW one at the same crowd size. */
+  private lastBackfireBand: "medium" | "low" | null = null;
   private readonly onProtestWin: (() => void) | null;
   private readonly onRaidStart: (() => void) | null;
-  private readonly onCrowdSizeChanged: ((securityUnitCount: number) => void) | null;
+  private readonly onCrowdSizeChanged: ((securityUnitCount: number, tierBump: 0 | 1) => void) | null;
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -334,6 +348,10 @@ export class RaidController {
       this.raidStartCount = this.grid.getCreatureCount();
       this.lastAttritionAtMs = Date.now();
       this.grid.setAvatarRepelRadius(null);
+      // Reset for a genuine new raid (a shake). The standalone-charge backfire path
+      // in releaseCharge() also routes through here (it calls spawnPulse() to start
+      // the raid) and re-sets this right after — that assignment intentionally wins.
+      this.lastBackfireBand = null;
       this.onRaidStart?.();
     }
 
@@ -421,6 +439,7 @@ export class RaidController {
       // queued — otherwise those respawns would still trickle in afterward.
       this.securityPool.cancelScheduledSpawns();
       this.scheduledSpawnCount = 0;
+      this.lastBackfireBand = null;
       if (this.units.length === 0) {
         this.state = "idle";
         this.grid.setAvatarRepelRadius(AVATAR_REPEL_RADIUS_AFTER_WIN);
@@ -448,9 +467,12 @@ export class RaidController {
       // like a shake. spawnPulse() only runs its idle->raiding initialization when
       // the prior state is 'idle', so set that explicitly first. The spawn burst is
       // near-instant (no queued delay), so spawnPulse()'s own notifyCrowdSizeChanged()
-      // call covers it — no separate notification needed here.
+      // call covers it — no separate notification needed here. lastBackfireBand is set
+      // AFTER spawnPulse() returns: spawnPulse()'s own idle->raiding transition resets
+      // it to null first (see spawnPulse), and this assignment must win over that reset.
       this.state = "idle";
       this.spawnPulse(this.lastAvatarX, this.lastAvatarY);
+      this.lastBackfireBand = outcome.band === "medium" ? "medium" : "low";
       return;
     }
 
@@ -458,6 +480,7 @@ export class RaidController {
     // up — some units poof out now, and more than that many trickle back in one at a
     // time after a beat (see poofAndEscalate()). MEDIUM escalates harder than LOW.
     this.state = "raiding";
+    this.lastBackfireBand = outcome.band === "medium" ? "medium" : "low";
     this.poofAndEscalate(outcome.band === "medium" ? BACKFIRE_ESCALATE_MEDIUM : BACKFIRE_ESCALATE_LOW);
   }
 
@@ -595,7 +618,8 @@ export class RaidController {
   private notifyCrowdSizeChanged(): void {
     if (this.units.length !== this.lastNotifiedCrowdCount) {
       this.lastNotifiedCrowdCount = this.units.length;
-      this.onCrowdSizeChanged?.(this.units.length);
+      const tierBump: 0 | 1 = this.lastBackfireBand === "medium" ? 1 : 0;
+      this.onCrowdSizeChanged?.(this.units.length, tierBump);
     }
   }
 

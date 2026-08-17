@@ -16,9 +16,13 @@ const HANDLE_SIZE = 14;
  * charge crossing FULL_POWER_THRESHOLD must NOT visibly change the sticker — that was
  * a bug: it telegraphed the win before the player let go). */
 const SQUEEZE_MIN_SCALE = 0.55;
-/** Ceiling for setScaleForRaidSize() — the sticker's resting scale maps linearly from
- * the current raid's unit count, and never grows past this even at the security cap. */
-const MAX_SCALE = 2;
+/** The 4 discrete resting-scale steps setScaleForRaidSize() snaps between — small,
+ * medium, large, max — replacing a continuous scale so size changes read as distinct,
+ * legible "tiers" rather than a smooth drift that's hard to notice frame to frame. */
+const TIER_SCALES: readonly [number, number, number, number] = [1, 1.3, 1.65, 2];
+/** Number of tiers in TIER_SCALES — kept in sync via TIER_SCALES.length rather than
+ * hand-duplicated, since every tier-index clamp below derives from this. */
+const TIER_COUNT = TIER_SCALES.length;
 /** Smooth ease-in-out — reads as a continuous "slide" between two scales rather than a
  * snap or a spring, since it accelerates and decelerates symmetrically instead of
  * front-loading all the motion. Long enough that growing/shrinking reads as its own
@@ -50,6 +54,12 @@ export class StickerOverlay {
    * a no-op, so a live crowd-size update arriving right after a win can't silently
    * overwrite the win's fixed floor scale before the next raid has actually begun. */
   private locked = false;
+  /** Index into TIER_SCALES for the last tier setScaleForRaidSize() actually applied,
+   * or null while locked (the win floor isn't one of the 4 tiers). Compared against
+   * the newly computed tier on each call so setScaleForRaidSize() can report whether
+   * the sticker just grew, shrank, or stayed put — callers use that to pick an
+   * inflate/deflate sound rather than firing one on every crowd-size tick. */
+  private currentTierIndex: number | null = null;
 
   private readonly dragSrc: string | null;
 
@@ -237,19 +247,34 @@ export class StickerOverlay {
 
   /** Called continuously as the live raid's security-unit count changes (RaidController's
    * onCrowdSizeChanged — never on button release itself, and not just at settle events).
-   * Sets the sticker's resting scale from where the raid's size currently sits within
-   * [0, maxUnits], linearly mapped to [1, MAX_SCALE] — not an incremental bump, so it
-   * reflects the raid's actual current size rather than a click count that could drift
-   * out of sync with what's on screen. Also swaps the face back to `src` (the calm/default
-   * expression) if lockSqueeze() had switched it to `dragSrc` — a new raid means the win's
-   * weird face is over. A no-op while locked (see lockSqueeze()/unlock()) — a win's fixed
-   * floor scale must not be overwritten by a live update before the next raid starts. */
-  setScaleForRaidSize(unitCount: number, maxUnits: number): void {
-    if (this.locked) return;
+   * Quantizes where the raid's size currently sits within [0, maxUnits] into one of
+   * TIER_COUNT buckets, then adds `tierBump` (0 or 1 — RaidController's memory of
+   * whether the last backfire that shaped this raid was MEDIUM-power, which "compounds"
+   * a stronger backfire into a visibly bigger jump than a LOW one at the same crowd
+   * size), clamped to the top tier. Snapping between a small, fixed set of tiers
+   * instead of a continuous scale keeps each size change legible as its own beat.
+   * Also swaps the face back to `src` (the calm/default expression) if lockSqueeze()
+   * had switched it to `dragSrc` — a new raid means the win's weird face is over.
+   * A no-op while locked (see lockSqueeze()/unlock()) — a win's fixed floor scale
+   * must not be overwritten by a live update before the next raid starts.
+   * Returns 'up'/'down'/'none' — whichever tier direction this call just applied
+   * (or 'none' while locked) — so a caller can fire an inflate/deflate sound only
+   * on an actual tier change, not once per crowd-size tick. The very first call
+   * after construction or after a lockSqueeze()/unlock() cycle has no prior tier
+   * to compare against and always reports 'up'. */
+  setScaleForRaidSize(unitCount: number, maxUnits: number, tierBump: 0 | 1 = 0): "up" | "down" | "none" {
+    if (this.locked) return "none";
     const t = maxUnits > 0 ? Math.max(0, Math.min(1, unitCount / maxUnits)) : 0;
-    this.baseScale = 1 + t * (MAX_SCALE - 1);
+    const baseTier = Math.min(TIER_COUNT - 1, Math.floor(t * TIER_COUNT));
+    const tier = Math.min(TIER_COUNT - 1, baseTier + tierBump);
+    this.baseScale = TIER_SCALES[tier];
     this.el.style.transform = `scale(${this.baseScale})`;
     if (this.dragSrc) this.img.src = this.currentSrc;
+
+    const direction: "up" | "down" | "none" =
+      this.currentTierIndex === null ? "up" : tier > this.currentTierIndex ? "up" : tier < this.currentTierIndex ? "down" : "none";
+    this.currentTierIndex = tier;
+    return direction;
   }
 
   /** Called once a full-power protest release's despawn sweep has actually finished
@@ -265,6 +290,10 @@ export class StickerOverlay {
   lockSqueeze(): void {
     this.locked = true;
     this.baseScale = SQUEEZE_MIN_SCALE;
+    // The win floor isn't one of the 4 tiers — clearing this makes the next
+    // post-unlock setScaleForRaidSize() call report 'up' unconditionally, since
+    // any tier the raid regrows into is a real inflate from this deflated state.
+    this.currentTierIndex = null;
     this.el.style.transform = `scale(${SQUEEZE_MIN_SCALE})`;
     if (this.dragSrc) this.img.src = this.dragSrc;
   }
