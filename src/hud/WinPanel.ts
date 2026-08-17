@@ -44,6 +44,11 @@ export class WinPanel {
   constructor() {
     this.overlay = document.createElement("div");
     this.overlay.className = "win-panel-overlay";
+    this.overlay.addEventListener("click", (e) => {
+      if (e.target === this.overlay) {
+        this.hide();
+      }
+    });
 
     this.panel = document.createElement("div");
     this.panel.className = "win-panel";
