@@ -13,11 +13,12 @@ import { clampToViewport } from "./creatures/snapGrid";
 import { Hud } from "./hud/Hud";
 import { MenuButton } from "./hud/MenuButton";
 import { FilterPanel } from "./hud/FilterPanel";
-import { GalleryPanel, getFaceStickerDefs } from "./hud/GalleryPanel";
+import { GalleryPanel, getStickerDefs, getFaceStickerDefs } from "./hud/GalleryPanel";
 import { MenuPanel } from "./hud/MenuPanel";
 import { WinPanel } from "./hud/WinPanel";
 import { OnboardingCarousel } from "./hud/onboarding/OnboardingCarousel";
 import { DEFAULT_CREATURE_QUANTITY } from "./config/tokens";
+import { preloadImages } from "./core/assetPreload";
 import { AudioManager } from "./audio/AudioManager";
 import { AudioWidget } from "./audio/AudioWidget";
 import { playPoofTone } from "./audio/poofTone";
@@ -38,6 +39,10 @@ const AVATAR_REPEL_RADIUS_BASE = 180;
 
 async function main(): Promise<void> {
   initAnalytics();
+
+  const faceDefs = getFaceStickerDefs();
+  const initialFaceDef = faceDefs[Math.floor(Math.random() * faceDefs.length)]!;
+  void preloadImages([initialFaceDef.src, initialFaceDef.dragSrc]);
 
   const container = document.getElementById("stage");
   if (!container) throw new Error("Missing #stage container");
@@ -321,6 +326,7 @@ async function main(): Promise<void> {
     });
 
     galleryPanel.onStickerSelect((src, dragSrc) => {
+      void preloadImages([src, dragSrc]);
       const sticker = new StickerOverlay(
         src,
         undefined,
@@ -337,6 +343,7 @@ async function main(): Promise<void> {
     winPanel.onNextSticker(() => {
       const defs = getFaceStickerDefs();
       const def = defs[Math.floor(Math.random() * defs.length)]!;
+      void preloadImages([def.src, def.dragSrc]);
       const sticker = new StickerOverlay(
         def.src,
         undefined,
@@ -420,17 +427,15 @@ async function main(): Promise<void> {
     const audioContext = audioManager.getAudioContext();
     if (audioContext) playPoofTone(audioContext);
     await spawnPoof(center.x, center.y).done;
-    const defs = getFaceStickerDefs();
-    const def = defs[Math.floor(Math.random() * defs.length)];
     const sticker = new StickerOverlay(
-      def.src,
+      initialFaceDef.src,
       center.x - 80,
       center.y - 80,
       onOverlayDragStart,
       onOverlayDragEnd,
       onOverlayDragMove,
       true,
-      def.dragSrc,
+      initialFaceDef.dragSrc,
     );
     document.body.appendChild(sticker.el);
     activeOverlay = sticker;
@@ -438,6 +443,16 @@ async function main(): Promise<void> {
     mountPostOnboarding();
     grid.clearRepulsor();
     filterPanel.setQuantity(DEFAULT_CREATURE_QUANTITY);
+
+    // Schedule background prefetch for remaining face stickers and gallery
+    const scheduleIdle = typeof window.requestIdleCallback === "function" 
+      ? (cb: () => void) => window.requestIdleCallback(cb)
+      : (cb: () => void) => window.setTimeout(cb, 1000);
+
+    scheduleIdle(() => {
+      const allUrls = getStickerDefs().flatMap((d) => [d.src, d.dragSrc, d.thumbSrc]);
+      void preloadImages(allUrls);
+    });
   });
 }
 

@@ -32,7 +32,7 @@ describe("hud/GalleryPanel", () => {
       const faceDefs = getFaceStickerDefs();
       const faceSrcs = faceDefs.map((def) => def.src);
       for (let n = 38; n <= 48; n++) {
-        expect(faceSrcs).not.toContain(`/avatars/sticker_${n}.png`);
+        expect(faceSrcs).not.toContain(`/avatars/text_stickers/sticker_${n}.webp`);
       }
     });
 
@@ -42,6 +42,9 @@ describe("hud/GalleryPanel", () => {
       expect(faceDefs.length).toBeLessThan(allDefs.length);
       for (const def of allDefs) {
         expect(typeof def.hasFace).toBe("boolean");
+        expect(def.thumbSrc).toMatch(/^\/avatars\/thumbs\//);
+        expect(def.thumbSrc).toMatch(/\.webp$/);
+        expect(def.src).toMatch(/\.webp$/);
       }
     });
   });
@@ -66,7 +69,7 @@ describe("hud/GalleryPanel", () => {
       expect(toggleBtns.length).toBe(2);
       expect(toggleBtns[0].textContent).toBe("Sticker");
       expect(toggleBtns[0].classList.contains("active")).toBe(true);
-      expect(toggleBtns[1].textContent).toBe("Text");
+      expect(toggleBtns[1].textContent).toBe("Type your own");
       expect(toggleBtns[1].classList.contains("active")).toBe(false);
 
       const gridContainer = root.querySelector(".grid-container");
@@ -86,17 +89,20 @@ describe("hud/GalleryPanel", () => {
       expect(textCards.length).toBe(8);
     });
 
-    it("creates sticker cards with PNG thumbnails", () => {
+    it("creates sticker cards with WebP thumbnails and lazy loading", () => {
       panel.attachTo(galleryButton);
       const root = panel.getRoot();
 
       const stickerCards = root.querySelectorAll(".sticker-card");
       stickerCards.forEach((card) => {
-        const img = card.querySelector("img.sticker-thumb");
+        const img = card.querySelector<HTMLImageElement>("img.sticker-thumb");
         expect(img).not.toBeNull();
-        const src = (img as HTMLImageElement).getAttribute("src");
+        const src = img?.getAttribute("src");
         expect(src).toBeTruthy();
-        expect(src).toMatch(/^\/avatars\//);
+        expect(src).toMatch(/^\/avatars\/thumbs\//);
+        expect(src).toMatch(/\.webp$/);
+        expect(img?.loading).toBe("lazy");
+        expect(img?.decoding).toBe("async");
       });
     });
 
