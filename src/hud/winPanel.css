@@ -114,6 +114,13 @@
   box-shadow: 0px 2px 0px #b75040;
 }
 
+.win-panel-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
 .win-panel-share-row {
   display: flex;
   align-items: center;

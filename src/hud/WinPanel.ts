@@ -71,6 +71,10 @@ export class WinPanel {
     });
     this.panel.appendChild(nextBtn);
 
+    const divider = document.createElement("div");
+    divider.className = "win-panel-divider";
+    this.panel.appendChild(divider);
+
     this.panel.appendChild(this.buildShareRow());
 
     this.toastEl = document.createElement("div");
