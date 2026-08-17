@@ -10,8 +10,13 @@ export function preloadImages(urls: readonly (string | undefined | null)[]): Pro
   const promises = validUrls.map((url) => {
     return new Promise<void>((resolve) => {
       const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve();
+      const onComplete = () => {
+        img.onload = null;
+        img.onerror = null;
+        resolve();
+      };
+      img.onload = onComplete;
+      img.onerror = onComplete;
       img.src = url;
     });
   });

@@ -8,7 +8,7 @@ export class DraggableAvatar {
   constructor(initialX: number, initialY: number, onMove?: (x: number, y: number) => void) {
     this.el = document.createElement('img');
     this.el.id = 'draggable';
-    this.el.src = '/avatars/tax-tai.png';
+    this.el.src = '/avatars/normal/tax-tai.webp';
     this.el.alt = 'Tax Tai';
     this.el.style.width = '140px';
     this.el.style.cursor = 'grab';
