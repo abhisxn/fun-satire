@@ -7,6 +7,8 @@
   right: calc(16px + var(--hud-density) * 0.03571429);
   width: var(--hud-btn-size);
   height: var(--hud-btn-size);
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -12,37 +12,36 @@
   --hud-shadow-inner: 0px 4px 0px rgba(255, 255, 255, 1);
   --hud-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --hud-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Fluid density budget: 0px at/below 320px viewport width, rising 1:1
-     with width up to a 448px cap at 768px+ (768 was already the point the
-     toolbar reached full size, so that ceiling is unchanged — only the
-     stepped 380/768px cliffs in between are replaced with a continuous
-     ramp, same reasoning as --menu-density in menuPanel.css). Slope per
-     property = (max - min) / 448, precomputed since calc() can't divide
-     one length by another to get a unitless ratio. */
+  /* Fluid density budget: 0px at/below 320px viewport width, rising smoothly to 448px cap at 768px+ */
   --hud-density: clamp(0px, calc(100vw - 320px), 448px);
-  --hud-icon-size: calc(24px + var(--hud-density) * 0.01785714);
-  --hud-btn-size: calc(44px + var(--hud-density) * 0.01785714);
-  --hud-btn-gap: calc(6px + var(--hud-density) * 0.01339286);
-  --hud-padding-v: calc(8px + var(--hud-density) * 0.00892857);
+  --hud-icon-size: clamp(18px, calc(18px + var(--hud-density) * 0.01339286), 24px);
+  --hud-btn-size: clamp(34px, calc(34px + var(--hud-density) * 0.02232143), 44px);
+  --hud-btn-gap: clamp(2px, calc(2px + var(--hud-density) * 0.00892857), 6px);
+  --hud-padding-h: clamp(6px, calc(6px + var(--hud-density) * 0.01339286), 12px);
+  --hud-padding-v: clamp(4px, calc(4px + var(--hud-density) * 0.00892857), 8px);
 }
 
 /* ============================================
-   HUD Container — Glassmorphism
+   HUD Container — Glassmorphism Capsule
    ============================================ */
 .premium-hud {
   position: fixed;
-  bottom: calc(16px + var(--hud-density) * 0.07142857);
+  bottom: calc(clamp(12px, 2.5vh, 20px) + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  max-width: min(calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 560px);
+  width: max-content;
   gap: var(--hud-btn-gap);
-  padding: var(--hud-padding-v);
+  padding: var(--hud-padding-v) var(--hud-padding-h);
   background: var(--hud-glass-bg);
   backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
-  border-radius: calc(60px + var(--hud-density) * 0.04910714);
+  border-radius: 999px;
   box-shadow: var(--hud-shadow-inner), var(--hud-shadow-outer);
   z-index: 1000;
   animation: hud-slide-up 0.8s var(--hud-ease-spring) forwards;
@@ -53,8 +52,10 @@
    Drag Handle — Grip Icon
    ============================================ */
 .hud-drag-handle {
-  width: calc(18px + var(--hud-density) * 0.02232143);
-  height: calc(18px + var(--hud-density) * 0.02232143);
+  width: clamp(14px, calc(14px + var(--hud-density) * 0.00892857), 18px);
+  height: var(--hud-btn-size);
+  min-height: 44px;
+  min-width: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,6 +69,7 @@
   animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
   animation-delay: 0.05s;
   opacity: 0;
+  flex-shrink: 0;
 }
 
 .hud-drag-handle:hover {
@@ -82,8 +84,8 @@
 }
 
 .hud-drag-handle svg {
-  width: calc(18px + var(--hud-density) * 0.01339286);
-  height: calc(18px + var(--hud-density) * 0.01339286);
+  width: clamp(12px, calc(12px + var(--hud-density) * 0.00892857), 16px);
+  height: clamp(14px, calc(14px + var(--hud-density) * 0.00892857), 18px);
   pointer-events: none;
 }
 
@@ -94,31 +96,39 @@
   position: relative;
   width: var(--hud-btn-size);
   height: var(--hud-btn-size);
-  display: flex;
+  min-height: 44px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
   cursor: pointer;
   border-radius: 50%;
-  transition: all 0.5s var(--hud-ease-spring);
+  transition: all 0.4s var(--hud-ease-spring);
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  /* Removes the double-tap-to-zoom gesture disambiguation delay on mobile,
-     so quick successive taps (e.g. switching modes) register immediately
-     instead of occasionally being swallowed. */
+  /* Removes the double-tap-to-zoom gesture disambiguation delay on mobile */
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
   opacity: 0;
+  flex-shrink: 0;
+  padding: 0;
 }
 
+/* Tap/click area expansion: guarantees minimum 44px x 44px touch target */
 .hud-btn::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   opacity: 0;
@@ -144,8 +154,9 @@
 .hud-btn svg {
   width: var(--hud-icon-size);
   height: var(--hud-icon-size);
-  transition: transform 0.5s var(--hud-ease-spring);
+  transition: transform 0.4s var(--hud-ease-spring);
   pointer-events: none;
+  flex-shrink: 0;
 }
 
 .hud-btn:hover svg {
@@ -166,33 +177,33 @@
 .hud-btn--placard {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 30px;
+  border-radius: 50%;
   box-shadow: none;
-  transition: all 0.4s var(--hud-ease-spring);
+  transition: all 0.35s var(--hud-ease-spring);
 }
 
 .hud-btn--eye.active {
   background: linear-gradient(180deg, #f78d8d 0%, #e26790 100%);
   border: 1px solid #a02b4d;
-  box-shadow: 0px 4px 0px #a02b4d;
+  box-shadow: 0px 3px 0px #a02b4d;
 }
 
 .hud-btn--bug.active {
   background: linear-gradient(180deg, #8be774 0%, #3cba3a 100%);
   border: 1px solid #228b20;
-  box-shadow: 0px 4px 0px #228b20;
+  box-shadow: 0px 3px 0px #228b20;
 }
 
 .hud-btn--hand.active {
   background: linear-gradient(180deg, #74d4e7 0%, #3a85ba 100%);
   border: 1px solid #226591;
-  box-shadow: 0px 4px 0px #226591;
+  box-shadow: 0px 3px 0px #226591;
 }
 
 .hud-btn--placard.active {
   background: linear-gradient(180deg, #f4a893 0%, #ba3aba 100%);
   border: 1px solid #871e93;
-  box-shadow: 0px 4px 0px #871e93;
+  box-shadow: 0px 3px 0px #871e93;
 }
 
 .hud-btn--eye:hover,
@@ -203,19 +214,19 @@
 }
 
 .hud-btn--eye.active:hover {
-  box-shadow: 0px 6px 0px #a02b4d, 0px 8px 16px rgba(160, 43, 77, 0.3);
+  box-shadow: 0px 5px 0px #a02b4d, 0px 6px 14px rgba(160, 43, 77, 0.3);
 }
 
 .hud-btn--bug.active:hover {
-  box-shadow: 0px 6px 0px #228b20, 0px 8px 16px rgba(34, 139, 32, 0.3);
+  box-shadow: 0px 5px 0px #228b20, 0px 6px 14px rgba(34, 139, 32, 0.3);
 }
 
 .hud-btn--hand.active:hover {
-  box-shadow: 0px 6px 0px #226591, 0px 8px 16px rgba(34, 101, 145, 0.3);
+  box-shadow: 0px 5px 0px #226591, 0px 6px 14px rgba(34, 101, 145, 0.3);
 }
 
 .hud-btn--placard.active:hover {
-  box-shadow: 0px 6px 0px #871e93, 0px 8px 16px rgba(135, 30, 147, 0.3);
+  box-shadow: 0px 5px 0px #871e93, 0px 6px 14px rgba(135, 30, 147, 0.3);
 }
 
 .hud-btn--eye.active:active,
@@ -227,19 +238,19 @@
 }
 
 .hud-btn--eye.active:active {
-  box-shadow: 0px 2px 0px #a02b4d;
+  box-shadow: 0px 1px 0px #a02b4d;
 }
 
 .hud-btn--bug.active:active {
-  box-shadow: 0px 2px 0px #228b20;
+  box-shadow: 0px 1px 0px #228b20;
 }
 
 .hud-btn--hand.active:active {
-  box-shadow: 0px 2px 0px #226591;
+  box-shadow: 0px 1px 0px #226591;
 }
 
 .hud-btn--placard.active:active {
-  box-shadow: 0px 2px 0px #871e93;
+  box-shadow: 0px 1px 0px #871e93;
 }
 
 /* ============================================
@@ -247,15 +258,15 @@
    ============================================ */
 .hud-divider {
   width: 1px;
-  height: 28px;
+  height: clamp(20px, calc(20px + var(--hud-density) * 0.01785714), 28px);
   background: rgba(42, 31, 26, 0.15);
   border: none;
-  margin: 0 4px;
+  margin: 0 clamp(1px, calc(1px + var(--hud-density) * 0.00669643), 4px);
   flex-shrink: 0;
   align-self: center;
   animation: hud-btn-pop 0.6s var(--hud-ease-spring) forwards;
   opacity: 0;
-  animation-delay: 0.25s;
+  animation-delay: 0.28s;
 }
 
 /* ============================================
@@ -269,47 +280,42 @@
 
 /* ============================================
    Protest Button Anchor
-   Position-only wrapper, sized to exactly match .hud-attack via shrink-to-fit
-   flex-item sizing. The power meter no longer attaches here (it's now a
-   fixed, independently-positioned element aligned with the menu button —
-   see powerMeter.css); this anchor now exists only so the tooltip below can
-   render outside .hud-attack's own overflow:hidden.
+   Position-only wrapper, sized to match .hud-attack.
    ============================================ */
 .hud-attack-anchor {
   position: relative;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   flex-shrink: 0;
 }
 
 /* ============================================
    Protest Button — Gradient CTA
-   (same gradient/shadow language as .menu-share-btn in menuPanel.css)
    ============================================ */
 .hud-attack {
   position: relative;
   box-sizing: border-box;
-  height: 39px;
-  padding: 12px;
-  display: flex;
+  height: var(--hud-btn-size);
+  min-height: 34px;
+  padding: 0 clamp(8px, calc(8px + var(--hud-density) * 0.01339286), 14px);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, #de7666 0%, #e9975d 100%);
   border: 1px solid #a74333;
-  border-radius: 12px;
-  box-shadow: 0px 4px 0px #b75040;
+  border-radius: clamp(8px, calc(8px + var(--hud-density) * 0.00892857), 12px);
+  box-shadow: 0px 3px 0px #b75040;
   color: white;
   font-family: "Bungee", cursive;
-  font-size: 16px;
+  font-size: clamp(12px, calc(12px + var(--hud-density) * 0.00892857), 16px);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   cursor: pointer;
   transition: transform 0.15s var(--hud-ease-smooth), box-shadow 0.15s var(--hud-ease-smooth);
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  /* This button's whole interaction is a long press-and-hold to charge the
-     power meter — without these, that hold gets read as a text-selection
-     gesture on mobile, popping the OS's Copy/Share callout menu mid-charge. */
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -318,37 +324,51 @@
   opacity: 0;
   animation-delay: 0.45s;
   overflow: hidden;
-  margin-right: calc(var(--hud-btn-gap) * 1.2);
+  margin-right: 0;
 }
 
 .hud-attack:hover {
   transform: translateY(-2px);
-  box-shadow: 0px 6px 0px #b75040, 0px 8px 20px rgba(183, 80, 64, 0.4);
+  box-shadow: 0px 5px 0px #b75040, 0px 6px 16px rgba(183, 80, 64, 0.4);
 }
 
 .hud-attack:active {
   transform: translateY(2px);
-  box-shadow: 0px 2px 0px #b75040;
+  box-shadow: 0px 1px 0px #b75040;
 }
 
 .hud-attack:focus-visible {
-  box-shadow: 0px 4px 0px #b75040, 0 0 0 3px rgba(222, 118, 102, 0.4);
+  box-shadow: 0px 3px 0px #b75040, 0 0 0 3px rgba(222, 118, 102, 0.4);
+}
+
+.hud-attack svg,
+.hud-attack .hud-attack__label {
+  display: block;
+  height: clamp(11px, calc(11px + var(--hud-density) * 0.0067), 14px);
+  width: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  z-index: 1;
 }
 
 .hud-attack span {
   position: relative;
   z-index: 1;
+  white-space: nowrap;
 }
 
 /* ============================================
-   Tooltips — Pseudo-element with Fade-in
+   Tooltips — Pseudo-element with Spring Pop
    ============================================ */
 .hud-btn[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 12px);
   left: 50%;
-  transform: translateX(-50%) translateY(8px);
+  transform: translateX(-50%) translateY(8px) scale(0.88);
+  transform-origin: bottom center;
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px) !important;
@@ -363,32 +383,23 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.4s var(--hud-ease-spring);
+  transition: opacity 0.25s var(--hud-ease-smooth), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  z-index: 10;
 }
 
 .hud-btn[data-tooltip]:hover::after {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0) scale(1);
 }
 
-/* Protest button's tooltip shows on hover (so it educates before the first
-   press) AND stays pinned while actively held (.hud-attack--show-tooltip,
-   toggled in Hud.ts) so touch users who never hover still see it — this one
-   stays visible on mobile (unlike .hud-btn's hover-only tooltips above,
-   which have no touch equivalent and are dropped there in the media query
-   below) precisely because it has that real press-driven trigger. Dark pill
-   + arrow, same visual language as StickerOverlay's "Drag me" hint. It's a
-   pseudo-element of .hud-attack-anchor, NOT .hud-attack — the button clips
-   its own content with overflow:hidden (see the anchor's CSS comment above),
-   which was silently clipping this tooltip to nothing regardless of which
-   side it was anchored to. */
 .hud-attack-anchor[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 14px);
   left: 50%;
-  transform: translateX(-50%) translateY(8px);
+  transform: translateX(-50%) translateY(8px) scale(0.85);
+  transform-origin: bottom center;
   padding: 6px 12px;
   background: rgba(20, 20, 20, 0.92);
   border-radius: 6px;
@@ -400,28 +411,23 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s var(--hud-ease-spring), transform 0.35s var(--hud-ease-spring);
+  transition: opacity 0.25s var(--hud-ease-smooth), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   z-index: 10;
 }
 
-/* Small arrow, pointing down at the button. Sits directly under the tooltip
-   box above (bottom: 100% + 14px) with no gap between them — the box's
-   bottom edge and the arrow's own 10px-tall border-box need to butt up
-   exactly, or the box's opaque background paints over the arrow (they're
-   both pseudo-elements of the same anchor, so the box, generated second,
-   paints on top wherever they overlap). */
 .hud-attack-anchor[data-tooltip]::before {
   content: "";
   position: absolute;
   bottom: calc(100% + 4px);
   left: 50%;
-  transform: translateX(-50%) translateY(8px);
+  transform: translateX(-50%) translateY(8px) scale(0.85);
+  transform-origin: bottom center;
   border: 5px solid transparent;
   border-top-color: rgba(20, 20, 20, 0.92);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s var(--hud-ease-spring), transform 0.35s var(--hud-ease-spring);
+  transition: opacity 0.25s var(--hud-ease-smooth), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 10;
 }
 
@@ -430,7 +436,7 @@
 .hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::after,
 .hud-attack-anchor.hud-attack--show-tooltip[data-tooltip]::before {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0) scale(1);
 }
 
 /* ============================================
@@ -469,14 +475,7 @@
 .hud-btn:nth-child(7) { animation-delay: 0.35s; }
 .hud-btn:nth-child(8) { animation-delay: 0.4s; }
 
-/* Hidden while the text editor (TextOverlay) has focus on mobile — the
-   fixed-position toolbar would otherwise sit on top of the on-screen
-   keyboard/typed text. Mirrors .hud-menu-btn.hidden in menuButton.css.
-   animation: none is required — .premium-hud's entrance animation
-   (hud-slide-up, below) uses `forwards` fill, which keeps forcibly pinning
-   opacity:1 from its final keyframe indefinitely after it completes,
-   silently overriding this rule's opacity:0 unless the animation itself is
-   cancelled. Same fix already applied to .hud--dragging below. */
+/* Hidden state */
 .premium-hud.hidden {
   opacity: 0;
   pointer-events: none;
@@ -512,13 +511,7 @@
 }
 
 /* ============================================
-   Responsive — button/icon/gap sizing above is fully fluid via
-   --hud-density (defined in :root); only a genuine structural toggle
-   remains here. .hud-btn's tooltips are hover-only with no touch
-   equivalent, so they're dropped outright on narrow screens rather than
-   shrunk. .hud-attack-anchor's tooltip is deliberately excluded from this —
-   it's driven by a real pointerdown/pointerup toggle (see Hud.ts), so it
-   still has a working trigger on touch and stays visible there.
+   Responsive — Drop tooltips on mobile
    ============================================ */
 @media (max-width: 768px) {
   .hud-btn[data-tooltip]::after {
@@ -555,3 +548,4 @@
     transition: none;
   }
 }
+

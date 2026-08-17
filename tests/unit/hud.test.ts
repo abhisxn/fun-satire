@@ -82,11 +82,11 @@ describe("Hud", () => {
       expect(galleryBtn).toBeTruthy();
     });
 
-    it("creates a protest button", () => {
+    it("creates a protest button with SVG label", () => {
       const protestBtn = host.querySelector(".hud-attack");
       expect(protestBtn).toBeTruthy();
       expect(protestBtn?.getAttribute("aria-label")).toBe("Protest");
-      expect(protestBtn?.querySelector("span")?.textContent).toBe("Protest");
+      expect(protestBtn?.querySelector("svg.hud-attack__label")).toBeTruthy();
     });
   });
 
@@ -309,6 +309,13 @@ describe("Hud", () => {
     // The tooltip's data-tooltip/--show-tooltip live on the anchor, not the button
     // itself: .hud-attack clips its own content with overflow:hidden, which was
     // silently clipping a tooltip pinned to the button to nothing.
+    it("prevents default on contextmenu to stop mobile long-press callout", () => {
+      const btn = host.querySelector<HTMLButtonElement>(".hud-attack")!;
+      const event = new MouseEvent("contextmenu", { cancelable: true, bubbles: true });
+      btn.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    });
+
     it("has a 'Press and hold' tooltip on the anchor", () => {
       const anchor = host.querySelector<HTMLElement>(".hud-attack-anchor");
       expect(anchor?.dataset.tooltip).toBe("Press and hold");
