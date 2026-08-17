@@ -446,7 +446,7 @@ async function main(): Promise<void> {
 
     // Schedule background prefetch for remaining face stickers and gallery
     const scheduleIdle = typeof window.requestIdleCallback === "function" 
-      ? window.requestIdleCallback 
+      ? (cb: () => void) => window.requestIdleCallback(cb)
       : (cb: () => void) => window.setTimeout(cb, 1000);
 
     scheduleIdle(() => {
