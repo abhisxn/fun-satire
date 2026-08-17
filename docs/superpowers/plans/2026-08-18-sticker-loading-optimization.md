@@ -20,7 +20,7 @@
   - `public/avatars/text_stickers/*.webp`
   - `public/avatars/thumbs/*.webp`
 
-- [ ] **Step 1: Write `scripts/optimize-stickers.py`**
+- [x] **Step 1: Write `scripts/optimize-stickers.py`**
 
 ```python
 import os
@@ -69,12 +69,12 @@ if __name__ == "__main__":
     optimize_images()
 ```
 
-- [ ] **Step 2: Run script to convert all avatar assets to WebP**
+- [x] **Step 2: Run script to convert all avatar assets to WebP**
 
 Run: `python3 scripts/optimize-stickers.py`
 Expected: Outputs list of converted files with ~85-90% overall file size reduction.
 
-- [ ] **Step 3: Commit WebP assets and optimization script**
+- [x] **Step 3: Commit WebP assets and optimization script**
 
 ```bash
 git add scripts/optimize-stickers.py public/avatars/
