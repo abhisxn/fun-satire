@@ -1,0 +1,257 @@
+/* src/hud/winPanel.css */
+.win-panel-overlay {
+  --win-text-primary: #000000;
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(23, 18, 15, 0.45);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s var(--menu-ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.win-panel-overlay.open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.win-panel {
+  position: relative;
+  width: 440px;
+  height: 500px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  padding: 24px 32px;
+  background: var(--hud-glass-bg);
+  /* Deliberately overrides the shared --hud-glass-blur (14px desktop/6px mobile) —
+     this is a one-off full-screen modal, not a persistent always-on HUD surface, so
+     the extra compositing cost of a heavier blur here doesn't compound the way it
+     would if applied to the shared token used by every panel/toolbar at once. */
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 16px;
+  box-shadow: 0 24px 40px rgba(97, 86, 80, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  color: var(--win-text-primary);
+  opacity: 0;
+  overflow-y: auto;
+  transform: translateY(-16px) scale(0.96);
+  transition:
+    opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+}
+
+.win-panel-overlay.open .win-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.win-panel-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--win-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.win-panel-close:hover {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.win-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.win-panel-title {
+  margin: 0;
+  font-family: "Fraunces", serif;
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1.15;
+  color: var(--win-text-primary);
+  font-variation-settings: "SOFT" 0, "WONK" 1;
+}
+
+.win-panel-copy {
+  margin: 0;
+  font-family: "Krub", sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 28px;
+  color: var(--win-text-primary);
+}
+
+.win-panel-next-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: 1px solid #a74333;
+  background: linear-gradient(180deg, #de7666 0%, #e9975d 100%);
+  box-shadow: 0px 4px 0px #b75040;
+  color: #fff;
+  font-family: "Bungee", cursive;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.win-panel-next-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 0px #b75040, 0px 8px 20px rgba(183, 80, 64, 0.4);
+}
+
+.win-panel-next-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0px 2px 0px #b75040;
+}
+
+.win-panel-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  flex-shrink: 0;
+}
+
+.win-panel-share-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.win-panel-share-label {
+  margin: 0;
+  font-family: "Krub", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--win-text-primary);
+}
+
+.win-panel-share-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.win-panel-share-icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: #ede5e0;
+  padding: 0;
+}
+
+.win-panel-copy-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: rgba(204, 191, 183, 0.28);
+  color: var(--win-text-primary);
+  font-family: "Krub", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.win-panel-copy-link-btn:hover {
+  background: rgba(204, 191, 183, 0.45);
+}
+
+.win-panel-copy-link-btn.copied {
+  background: rgba(93, 168, 121, 0.22);
+  border-color: rgba(58, 130, 89, 0.4);
+  color: #2f6b46;
+}
+
+.win-panel-copy-link-icon {
+  display: inline-flex;
+  color: #2f6b46;
+}
+
+.win-panel-footer {
+  position: absolute;
+  /* left:0/right:0 + margin:auto, not left:50%+transform: with a fit-content
+     width, left:50% makes Chromium's shrink-to-fit algorithm cap the box's
+     available width at that 50% offset itself (the transform only shifts
+     paint position, not the layout-time width calculation) — collapsing the
+     footer to roughly half its real content width and wrapping every child
+     onto its own line. Spanning the full containing-block width via left/
+     right:0 and letting margin:auto center a fit-content box inside it
+     sidesteps that entirely. */
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  font-family: "Krub", sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--win-text-primary);
+  text-align: center;
+}
+
+.win-panel-footer-credit {
+  opacity: 0.5;
+}
+
+.win-panel-toast {
+  position: absolute;
+  left: 50%;
+  bottom: -34px;
+  transform: translateX(-50%) translateY(8px);
+  background: #2a2420;
+  color: #ede7dd;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.win-panel-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

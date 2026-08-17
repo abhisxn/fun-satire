@@ -1,0 +1,53 @@
+/* ============================================
+   Power Meter — Protest strength (Figma node 447:10282)
+   Vertical bar of segments. Appended to document.body (see PowerMeter.ts
+   attachTo()) rather than nested inside .premium-hud — .premium-hud has its
+   own backdrop-filter+transform, and a nested backdrop-filter descendant
+   that paints outside that ancestor's box fails to render any blur in
+   Chromium (the ancestor's backdrop root can't supply it a real backdrop to
+   sample). Same reason FilterPanel/GalleryPanel/MenuPanel all attach to
+   document.body and position themselves via JS instead of CSS anchoring.
+   position:fixed here + top/left set in PowerMeter.ts's updatePosition(),
+   computed from the protest button anchor's getBoundingClientRect().
+   ============================================ */
+.power-meter {
+  position: fixed;
+  /* Sibling of #stage (z-index:500, see index.html) now that it's attached to
+     document.body instead of nested in .premium-hud (z-index:1000) — needs
+     its own explicit z-index above both so creatures and the HUD itself
+     don't paint over it. */
+  z-index: 1001;
+  display: flex;
+  padding: calc(4px + var(--hud-density) * 0.00446429);
+  background: var(--hud-glass-bg);
+  backdrop-filter: blur(var(--hud-glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--hud-glass-blur));
+  border: 1px solid var(--hud-glass-border);
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px #fff, 0px 14px 20px rgba(97, 86, 80, 0.25);
+  pointer-events: none;
+}
+
+.power-meter--hidden {
+  display: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .power-meter {
+    background: var(--hud-glass-bg-fallback);
+  }
+}
+
+.power-meter__track {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: calc(2px + var(--hud-density) * 0.00089286);
+}
+
+.power-meter__segment {
+  flex-shrink: 0;
+  width: calc(17px + var(--hud-density) * 0.00758929);
+  height: calc(4px + var(--hud-density) * 0.00178571);
+  border-radius: 2px;
+  transition: background 0.1s linear;
+}

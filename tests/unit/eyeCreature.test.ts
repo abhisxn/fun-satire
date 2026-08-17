@@ -4,6 +4,9 @@ import {
   createEyeCreature,
   updateEyePupil,
   updateEyeBlink,
+  darkenHexColor,
+  lightenHexColor,
+  derivePupilColor,
   EYE_NAT_W,
   EYE_NAT_H,
 } from '../../src/creatures/EyeCreature';
@@ -44,10 +47,10 @@ describe('EyeCreature', () => {
       expect(svg!.style.height).toBe('100%');
     });
 
-    it('assigns random pupil color', () => {
+    it('assigns a random iris color', () => {
       const eye = createEyeCreature(0, 0, 1, TEST_SVG, 'test3');
 
-      const fill = eye.pupil.getAttribute('fill');
+      const fill = eye.iris.getAttribute('fill');
       expect(fill).not.toBeNull();
       expect(fill).not.toBe('');
     });
@@ -88,18 +91,87 @@ describe('EyeCreature', () => {
     });
   });
 
+  describe('pupil creation', () => {
+    it('is concentric with the iris and sized as a fraction of its radius', () => {
+      const eye = createEyeCreature(0, 0, 1, TEST_SVG, 'pupilcreate1');
+
+      expect(eye.pupil.getAttribute('cx')).toBe(eye.iris.getAttribute('cx'));
+      expect(eye.pupil.getAttribute('cy')).toBe(eye.iris.getAttribute('cy'));
+
+      const irisR = parseFloat(eye.iris.getAttribute('r')!);
+      const pupilR = parseFloat(eye.pupil.getAttribute('r')!);
+      expect(pupilR).toBeCloseTo(irisR * 0.35, 5);
+    });
+
+    it('is a derived shade of the iris\'s own color, distinct from the iris', () => {
+      const eye = createEyeCreature(0, 0, 1, TEST_SVG, 'pupilcreate2');
+
+      const irisFill = eye.iris.getAttribute('fill')!;
+      const pupilFill = eye.pupil.getAttribute('fill')!;
+
+      expect(pupilFill).toBe(derivePupilColor(irisFill, 0.2));
+      expect(pupilFill).not.toBe(irisFill);
+    });
+  });
+
+  describe('darkenHexColor', () => {
+    it('scales each channel down by the given amount', () => {
+      expect(darkenHexColor('#ffffff', 0.2)).toBe('#cccccc');
+    });
+
+    it('leaves black unchanged', () => {
+      expect(darkenHexColor('#000000', 0.5)).toBe('#000000');
+    });
+
+    it('rounds and clamps correctly for an arbitrary color', () => {
+      expect(darkenHexColor('#5b7b8a', 0.2)).toBe('#49626e');
+    });
+  });
+
+  describe('lightenHexColor', () => {
+    it('scales each channel up toward white by the given amount', () => {
+      expect(lightenHexColor('#000000', 0.2)).toBe('#333333');
+    });
+
+    it('leaves white unchanged', () => {
+      expect(lightenHexColor('#ffffff', 0.5)).toBe('#ffffff');
+    });
+
+    it('rounds and clamps correctly for an arbitrary dark color', () => {
+      expect(lightenHexColor('#3d3229', 0.2)).toBe('#645b54');
+    });
+  });
+
+  describe('derivePupilColor', () => {
+    it('lightens a dark iris color (most of IRIS_COLORS is dark browns/greens)', () => {
+      expect(derivePupilColor('#3d3229', 0.2)).toBe(lightenHexColor('#3d3229', 0.2));
+      expect(derivePupilColor('#3d3229', 0.2)).not.toBe(darkenHexColor('#3d3229', 0.2));
+    });
+
+    it('darkens a light iris color', () => {
+      expect(derivePupilColor('#cccccc', 0.2)).toBe(darkenHexColor('#cccccc', 0.2));
+      expect(derivePupilColor('#cccccc', 0.2)).not.toBe(lightenHexColor('#cccccc', 0.2));
+    });
+  });
+
   describe('updateEyePupil', () => {
-    it('moves pupil toward avatar', () => {
+    it('moves the iris toward the avatar', () => {
       const eye = createEyeCreature(100, 100, 1, TEST_SVG, 'pupil1');
-      const initialCx = parseFloat(eye.pupil.getAttribute('cx')!);
-      const initialCy = parseFloat(eye.pupil.getAttribute('cy')!);
+      const initialCx = parseFloat(eye.iris.getAttribute('cx')!);
 
       updateEyePupil(eye, 200, 100);
 
-      const newCx = parseFloat(eye.pupil.getAttribute('cx')!);
-      const newCy = parseFloat(eye.pupil.getAttribute('cy')!);
-
+      const newCx = parseFloat(eye.iris.getAttribute('cx')!);
       expect(newCx).not.toBe(initialCx);
+    });
+
+    it('moves the pupil in lockstep with the iris', () => {
+      const eye = createEyeCreature(100, 100, 1, TEST_SVG, 'pupil1b');
+
+      updateEyePupil(eye, 200, 100);
+
+      expect(eye.pupil.getAttribute('cx')).toBe(eye.iris.getAttribute('cx'));
+      expect(eye.pupil.getAttribute('cy')).toBe(eye.iris.getAttribute('cy'));
     });
 
     it('handles avatar at same position', () => {
@@ -117,8 +189,8 @@ describe('EyeCreature', () => {
       updateEyePupil(eye1, 150, 100);
       updateEyePupil(eye2, 1000, 100);
 
-      const cx1 = parseFloat(eye1.pupil.getAttribute('cx')!);
-      const cx2 = parseFloat(eye2.pupil.getAttribute('cx')!);
+      const cx1 = parseFloat(eye1.iris.getAttribute('cx')!);
+      const cx2 = parseFloat(eye2.iris.getAttribute('cx')!);
 
       expect(Math.abs(cx2 - 40.25)).toBeGreaterThan(Math.abs(cx1 - 40.25));
     });

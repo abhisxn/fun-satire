@@ -368,7 +368,8 @@ describe("hud/GalleryPanel", () => {
       firstCard?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       expect(cb).toHaveBeenCalledTimes(1);
-      expect(cb).toHaveBeenCalledWith(firstCard?.dataset.stickerSrc);
+      const firstDef = getStickerDefs()[0];
+      expect(cb).toHaveBeenCalledWith(firstCard?.dataset.stickerSrc, firstDef?.dragSrc);
     });
 
     it("returns an unsubscribe function", () => {

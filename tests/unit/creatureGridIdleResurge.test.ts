@@ -2,41 +2,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   CreatureGrid,
-  idleVisibleFraction,
   dragSpeedPxPerMs,
   IDLE_GRACE_MS,
-  IDLE_DECAY_MS,
+  IDLE_HALF_LIFE_MS,
   IDLE_FLOOR_FRACTION,
+  IDLE_FLOOR_MIN_COUNT,
   MOVEMENT_NOISE_PX,
   FAST_DRAG_SPEED_PX_MS,
   BURST_DURATION_MS,
   REPOP_COUNT,
 } from '../../src/creatures/CreatureGrid';
 import type { CreatureGridConfig } from '../../src/creatures/CreatureGrid';
+import { decayTowardFloor } from '../../src/creatures/raidRules';
+import { QTY_MIN } from '../../src/config/tokens';
 
-describe('idleVisibleFraction', () => {
-  it('stays at 1 with no idle time', () => {
-    expect(idleVisibleFraction(0)).toBe(1);
-  });
-
-  it('stays at 1 through the end of the grace period', () => {
-    expect(idleVisibleFraction(IDLE_GRACE_MS)).toBe(1);
-  });
-
-  it('is partway down midway through the decay ramp', () => {
-    const midIdle = IDLE_GRACE_MS + IDLE_DECAY_MS / 2;
-    const fraction = idleVisibleFraction(midIdle);
-    expect(fraction).toBeGreaterThan(IDLE_FLOOR_FRACTION);
-    expect(fraction).toBeLessThan(1);
-    expect(fraction).toBeCloseTo(1 - 0.5 * (1 - IDLE_FLOOR_FRACTION), 5);
-  });
-
-  it('reaches the floor fraction exactly at grace + decay', () => {
-    expect(idleVisibleFraction(IDLE_GRACE_MS + IDLE_DECAY_MS)).toBeCloseTo(IDLE_FLOOR_FRACTION, 10);
-  });
-
-  it('holds at the floor fraction well past the decay window', () => {
-    expect(idleVisibleFraction(IDLE_GRACE_MS + IDLE_DECAY_MS * 10)).toBeCloseTo(IDLE_FLOOR_FRACTION, 10);
+describe('decayTowardFloor constants used by CreatureGrid', () => {
+  it('IDLE_FLOOR_FRACTION/IDLE_HALF_LIFE_MS produce the expected boundary values', () => {
+    // Confirms the two constants CreatureGrid.update() actually uses match what
+    // raidRules.test.ts already proved the curve does with them — this is a
+    // constants-sanity check, not an exercise of CreatureGrid.update() itself
+    // (see "reflects the grace-period + half-life wiring mid-decay" below for that).
+    const atGrace = decayTowardFloor(0, IDLE_FLOOR_FRACTION, IDLE_HALF_LIFE_MS);
+    expect(atGrace).toBe(1);
+    const wellPast = decayTowardFloor(IDLE_HALF_LIFE_MS * 10, IDLE_FLOOR_FRACTION, IDLE_HALF_LIFE_MS);
+    expect(wellPast).toBeCloseTo(IDLE_FLOOR_FRACTION, 2);
   });
 });
 
@@ -183,7 +172,7 @@ describe('CreatureGrid update — demand-driven re-pop (idle decay + resurge)', 
     const creatures = (grid as unknown as {
       creatures: Array<{ waitingRespawn: boolean; spawnDone: boolean }>;
     }).creatures;
-    for (let i = 0; i < creatures.length - 2; i++) {
+    for (let i = 0; i < creatures.length - 27; i++) {
       creatures[i].waitingRespawn = true;
       creatures[i].spawnDone = false;
     }
@@ -192,15 +181,99 @@ describe('CreatureGrid update — demand-driven re-pop (idle decay + resurge)', 
       lastFadePickMs: number;
       lastRepopPickMs: number;
     };
-    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_DECAY_MS + 60_000);
+    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_HALF_LIFE_MS * 8);
     state.lastFadePickMs = Date.now();
     state.lastRepopPickMs = 0;
 
     grid.update(400, 300);
 
-    // Floor for 240 creatures at IDLE_FLOOR_FRACTION (2%) is round(240*0.02) = 5,
-    // above IDLE_FLOOR_MIN_COUNT (3). Deficit is 5 - 2 = 3, all closeable in one tick.
-    expect(creatures.filter((c) => !c.waitingRespawn).length).toBe(5);
+    // Floor for 240 creatures is max(IDLE_FLOOR_MIN_COUNT=30, round(240*0.02)=5) = 30 —
+    // the absolute floor now dominates the percentage for typical crowd sizes. 27 start
+    // visible, deficit is 30 - 27 = 3, closeable in one tick (REPOP_COUNT=5).
+    expect(creatures.filter((c) => !c.waitingRespawn).length).toBe(30);
+  });
+
+  it('reflects the grace-period + half-life wiring mid-decay, one half-life past grace', () => {
+    // Exercises grid.update()'s actual call site (lastActivityMs -> idleMs ->
+    // Math.max(0, idleMs - IDLE_GRACE_MS) -> decayTowardFloor), unlike the
+    // "decayTowardFloor constants used by CreatureGrid" test above which calls
+    // decayTowardFloor directly and never touches grid.update() at all. A
+    // regression here (e.g. passing raw idleMs instead of the grace-adjusted
+    // value) would slip past every other test in this file.
+    const grid = new CreatureGrid(config);
+    grid.spawn('cockroach'); // 240 creatures for cockroach mode's 20x12 grid
+    const creatures = (grid as unknown as {
+      creatures: Array<{ waitingRespawn: boolean; spawnDone: boolean }>;
+    }).creatures;
+    const targetCount = creatures.length;
+
+    // At exactly one half-life past grace, decayTowardFloor returns
+    // floorFraction + (1 - floorFraction) * 0.5 — roughly 51% of target.
+    // With targetCount=240 that's comfortably above IDLE_FLOOR_MIN_COUNT (30),
+    // so the percentage curve is the binding constraint, not the absolute floor.
+    const decayFraction = decayTowardFloor(IDLE_HALF_LIFE_MS, IDLE_FLOOR_FRACTION, IDLE_HALF_LIFE_MS);
+    const desiredVisibleCount = Math.round(targetCount * decayFraction);
+    expect(desiredVisibleCount).toBeGreaterThan(IDLE_FLOOR_MIN_COUNT);
+
+    // Start just under the desired count, by a deficit closeable within a
+    // single un-bursted tick (REPOP_COUNT), so grid.update() can fully reach
+    // (and we can assert against) the actual desired count in one call.
+    const startVisible = desiredVisibleCount - REPOP_COUNT;
+    for (let i = 0; i < creatures.length - startVisible; i++) {
+      creatures[i].waitingRespawn = true;
+      creatures[i].spawnDone = false;
+    }
+    const state = grid as unknown as {
+      lastActivityMs: number;
+      lastFadePickMs: number;
+      lastRepopPickMs: number;
+    };
+    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_HALF_LIFE_MS);
+    state.lastFadePickMs = Date.now(); // suppress the fade tick for this frame
+    state.lastRepopPickMs = 0; // force the re-pop tick to fire
+
+    grid.update(400, 300);
+
+    const visibleAfter = creatures.filter((c) => !c.waitingRespawn).length;
+    expect(visibleAfter).toBe(desiredVisibleCount);
+    // Sanity: close to half the crowd, as expected at exactly one half-life.
+    expect(visibleAfter / targetCount).toBeCloseTo(0.5, 1);
+  });
+
+  it('never desires more visible creatures than exist for a crowd smaller than the idle floor', () => {
+    // QTY_MIN (10) is below IDLE_FLOOR_MIN_COUNT (30) — the raw floor formula
+    // (max(IDLE_FLOOR_MIN_COUNT, round(target * fraction))) would ask for 30
+    // "visible" creatures out of a pool that only has 10. desiredVisibleCount
+    // must be clamped to targetCount so it never asks the repop logic to
+    // revive more creatures than were ever spawned.
+    const smallConfig: CreatureGridConfig = { container, mode: 'cockroach', initialQuantity: QTY_MIN };
+    const grid = new CreatureGrid(smallConfig);
+    grid.spawn('cockroach'); // exactly QTY_MIN (10) creatures — the whole pool
+    const creatures = (grid as unknown as {
+      creatures: Array<{ waitingRespawn: boolean; spawnDone: boolean }>;
+    }).creatures;
+    expect(creatures.length).toBe(QTY_MIN);
+
+    for (let i = 0; i < creatures.length - 3; i++) {
+      creatures[i].waitingRespawn = true;
+      creatures[i].spawnDone = false;
+    }
+    const state = grid as unknown as {
+      lastActivityMs: number;
+      lastFadePickMs: number;
+      lastRepopPickMs: number;
+    };
+    state.lastActivityMs = Date.now() - (IDLE_GRACE_MS + IDLE_HALF_LIFE_MS * 8);
+    state.lastFadePickMs = Date.now();
+    state.lastRepopPickMs = 0;
+
+    grid.update(400, 300);
+
+    // The pool never grows beyond targetCount, and the visible subset can
+    // never exceed the pool it's drawn from — both would break if
+    // desiredVisibleCount weren't clamped to targetCount.
+    expect(grid.getCreatureCount()).toBe(QTY_MIN);
+    expect(creatures.filter((c) => !c.waitingRespawn).length).toBeLessThanOrEqual(QTY_MIN);
   });
 
   it('uses the larger burst cap while a fast-drag burst window is open', () => {

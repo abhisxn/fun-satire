@@ -432,4 +432,19 @@ describe("hud/FilterPanel", () => {
       expect(document.querySelector(".filter-panel-popover")).toBeNull();
     });
   });
+
+  describe("syncQuantity", () => {
+    it("updates the displayed quantity without firing onQuantityChange", () => {
+      const cb = vi.fn();
+      panel.onQuantityChange(cb);
+      panel.syncQuantity(150);
+      expect(panel.getQuantity()).toBe(150);
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it("clamps and rounds to the nearest step, same as setQuantity", () => {
+      panel.syncQuantity(157);
+      expect(panel.getQuantity()).toBe(160);
+    });
+  });
 });

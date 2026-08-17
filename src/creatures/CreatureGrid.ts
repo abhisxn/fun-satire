@@ -7,6 +7,7 @@ import { createFingerCreature, getFingerRotation, triggerFingerHoverTone } from 
 import { createCockroachCreature, getCockroachRotation, triggerCockroachHoverTone } from "./CockroachCreature";
 import { createPlacardCreature, getPlacardRotation, triggerPlacardHoverTone } from "./PlacardCreature";
 import { QTY_MIN, QTY_MAX } from "../config/tokens";
+import { decayTowardFloor } from "./raidRules";
 
 /** Whole batch of creatures finishes appearing within this window (ms). */
 export const SPAWN_WAVE_MS = 20000;
@@ -28,12 +29,14 @@ export const REPOP_COUNT_BURST_FRACTION = 0.15;
 export const REPOP_COUNT_BURST_MIN = 40;
 /** Grace period before an idle sticker starts draining the crowd (ms). */
 export const IDLE_GRACE_MS = 20_000;
-/** How long the decay ramp takes, from grace-end to the floor (ms). */
-export const IDLE_DECAY_MS = 300_000;
+/** Half-life (ms) of the idle-decay curve — see raidRules.decayTowardFloor. At this many ms
+ * past IDLE_GRACE_MS, the visible crowd has decayed exactly halfway from full to the idle
+ * floor. */
+export const IDLE_HALF_LIFE_MS = 150_000;
 /** Idle floor as a fraction of the current target quantity. */
 export const IDLE_FLOOR_FRACTION = 0.02;
 /** Absolute minimum visible count at the idle floor, regardless of target quantity. */
-export const IDLE_FLOOR_MIN_COUNT = 3;
+export const IDLE_FLOOR_MIN_COUNT = 30;
 /** Sub-pixel jitter below this doesn't count as sticker movement. */
 export const MOVEMENT_NOISE_PX = 1.5;
 /** Drag speed (px/ms) above which a movement counts as a "fast" resurge trigger. */
@@ -51,6 +54,12 @@ export const HOVER_PROXIMITY_PADDING = 20;
 export const HOVER_TONE_COOLDOWN_MS = 260;
 /** Peak extra scale (on top of the creature's own popScale) while hovered — the visual half of the hover feedback. */
 export const HOVER_SCALE_BUMP = 0.18;
+/** A security sprite's current position and the radius it repels the crowd within. */
+export interface SecurityUnit {
+  x: number;
+  y: number;
+  repelRadius: number;
+}
 /** Per-frame approach rate toward the hover scale target — a simple decorative ease, not physics. */
 const HOVER_BOOST_LERP = 0.25;
 
@@ -85,18 +94,6 @@ export function computeSpawnProgress(spawnPopAtMs: number, nowMs: number): Spawn
     opacity: Math.min(1, progress / 0.6),
     done: false,
   };
-}
-
-/**
- * Pure function: how much of the target crowd should be visible right now,
- * given how long the sticker has sat still. 1 while within the grace
- * period, ramping linearly down to IDLE_FLOOR_FRACTION over IDLE_DECAY_MS,
- * then holding there.
- */
-export function idleVisibleFraction(idleMs: number): number {
-  if (idleMs <= IDLE_GRACE_MS) return 1;
-  const t = Math.min(1, (idleMs - IDLE_GRACE_MS) / IDLE_DECAY_MS);
-  return 1 - t * (1 - IDLE_FLOOR_FRACTION);
 }
 
 /** Pure function: drag speed in px/ms from a frame's movement distance and elapsed time. */
@@ -239,6 +236,14 @@ export class CreatureGrid {
   private lastActivityMs: number = Date.now();
   private burstUntilMs: number = 0;
   private repulsor: Repulsor | null = null;
+  private quantityChangeCb: ((count: number) => void) | null = null;
+  // The crowd size the user has explicitly chosen (Filters slider), as opposed to
+  // targetCount, which anyone (RaidController's attrition/boost/win logic included) can
+  // move transiently. Only setUserQuantity() updates this — plain setQuantity() (used by
+  // every raid-driven caller) deliberately leaves it alone, so "return to normal" after a
+  // raid means "back to what the user chose," not a hardcoded ceiling.
+  private userQuantityBaseline: number;
+  private avatarRepelRadius: number | null = null;
   private audioContext: AudioContext | null = null;
   private hoverState = new WeakMap<Creature, boolean>();
   private hoverBoost = new WeakMap<Creature, number>();
@@ -249,6 +254,7 @@ export class CreatureGrid {
     this.mode = config.mode;
     const modeConfig = MODE_CONFIGS[this.mode];
     this.targetCount = config.initialQuantity ?? modeConfig.cols * modeConfig.rows;
+    this.userQuantityBaseline = this.targetCount;
   }
 
   async init(): Promise<void> {
@@ -265,6 +271,22 @@ export class CreatureGrid {
     const rows = Math.max(1, Math.round(Math.sqrt(count / aspect)));
     const cols = Math.max(1, Math.ceil(count / rows));
     return { cols, rows };
+  }
+
+  private createCreatureForMode(mode: CreatureMode, hx: number, hy: number, scale: number, uid: string): Creature {
+    switch (mode) {
+      case 'eyes': {
+        const eye = createEyeCreature(hx, hy, scale, this.svgMarkup, uid);
+        this.eyeCreatures.push(eye);
+        return eye;
+      }
+      case 'pointedFinger':
+        return createFingerCreature(hx, hy, scale);
+      case 'cockroach':
+        return createCockroachCreature(hx, hy, scale);
+      case 'placard':
+        return createPlacardCreature(hx, hy, scale);
+    }
   }
 
   spawn(mode: CreatureMode): void {
@@ -289,24 +311,7 @@ export class CreatureGrid {
       const scale = modeConfig.scaleFn(hx, hy, vw, vh);
       const uid = `${c}_${r}`;
 
-      let creature: Creature;
-      switch (mode) {
-        case 'eyes': {
-          const eye = createEyeCreature(hx, hy, scale, this.svgMarkup, uid);
-          this.eyeCreatures.push(eye);
-          creature = eye;
-          break;
-        }
-        case 'pointedFinger':
-          creature = createFingerCreature(hx, hy, scale);
-          break;
-        case 'cockroach':
-          creature = createCockroachCreature(hx, hy, scale);
-          break;
-        case 'placard':
-          creature = createPlacardCreature(hx, hy, scale);
-          break;
-      }
+      const creature = this.createCreatureForMode(mode, hx, hy, scale, uid);
       creature.spawnPopAtMs = batchStartMs + Math.random() * Math.max(0, SPAWN_WAVE_MS - SPAWN_POP_MS);
       creature.spawnDone = false;
       this.creatures.push(creature);
@@ -360,32 +365,22 @@ export class CreatureGrid {
       const scale = modeConfig.scaleFn(hx, hy, vw, vh);
       const uid = `extra_${i}`;
 
-      let creature: Creature;
-      switch (this.mode) {
-        case 'eyes': {
-          const eye = createEyeCreature(hx, hy, scale, this.svgMarkup, uid);
-          this.eyeCreatures.push(eye);
-          creature = eye;
-          break;
-        }
-        case 'pointedFinger':
-          creature = createFingerCreature(hx, hy, scale);
-          break;
-        case 'cockroach':
-          creature = createCockroachCreature(hx, hy, scale);
-          break;
-        case 'placard':
-          creature = createPlacardCreature(hx, hy, scale);
-          break;
-      }
+      const creature = this.createCreatureForMode(this.mode, hx, hy, scale, uid);
       creature.spawnPopAtMs = batchStartMs + Math.random() * Math.max(0, SPAWN_WAVE_MS - SPAWN_POP_MS);
       creature.spawnDone = false;
       this.creatures.push(creature);
       this.container.appendChild(creature.el);
     }
+
+    this.quantityChangeCb?.(clampedTarget);
   }
 
-  update(avatarX: number, avatarY: number): void {
+  // raidFloor is accepted for backward-compatible call sites (RaidController
+  // still computes and passes it) but is no longer consulted here — the
+  // catch mechanic that used it to cap permanent removals was removed; the
+  // raid floor is now enforced by RaidController's own attrition drain via
+  // setQuantity().
+  update(avatarX: number, avatarY: number, securityUnits: SecurityUnit[] = [], _raidFloor: number = QTY_MIN): void {
     const avatar = { x: avatarX, y: avatarY };
     const now = Date.now();
 
@@ -405,45 +400,23 @@ export class CreatureGrid {
     this.lastAvatarY = avatarY;
     this.lastFrameMs = now;
 
-    for (const c of this.creatures) {
-      updateCreature(c, avatar, this.physicsParams, this.repulsor);
+    const repulsors: Repulsor[] = this.repulsor ? [this.repulsor] : [];
+    for (const unit of securityUnits) {
+      repulsors.push({ x: unit.x, y: unit.y, radius: unit.repelRadius });
     }
-
-    // Hover-enter edge detection: fires at most one tone per cooldown
-    // window, however many creatures cross into hover this frame.
     for (const c of this.creatures) {
-      const dx = avatarX - c.x;
-      const dy = avatarY - c.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const wasHovered = this.hoverState.get(c) ?? false;
-      // The crowd actively flees the cursor (see applyRepulsion in
-      // creaturePhysics.ts), and repelRadius (180px) is well outside a
-      // creature's own tight hoverRadiusFor(c) (~half its size + 20px). If
-      // hover only used hoverRadiusFor, the cursor could almost never catch
-      // a creature close enough to register — it's already fleeing by the
-      // time it would. Using whichever radius is larger means hover fires
-      // as soon as a creature enters the repulsion field it's reacting to.
-      const radius = Math.max(hoverRadiusFor(c), this.physicsParams.repelRadius);
-      const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
-      this.hoverState.set(c, hovered);
-
-      const prevBoost = this.hoverBoost.get(c) ?? 0;
-      const targetBoost = hovered ? 1 : 0;
-      this.hoverBoost.set(c, prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP);
-
-      if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
-        this.lastHoverToneAtMs = now;
-        this.triggerHoverTone();
-      }
+      updateCreature(c, avatar, this.physicsParams, repulsors, this.avatarRepelRadius ?? undefined);
     }
 
     if (this.mode === 'eyes') {
       const vw = this.container.clientWidth || window.innerWidth;
       for (const eye of this.eyeCreatures) {
-        updateEyePupil(eye, avatarX, avatarY);
-        const scaleY = updateEyeBlink(eye);
+        const boost = this.updateHover(eye, avatarX, avatarY, now);
+
         const dx = avatarX - eye.x;
         const dy = avatarY - eye.y;
+        updateEyePupil(eye, avatarX, avatarY);
+        const scaleY = updateEyeBlink(eye);
         // Base the angle on the right-half quadrant's large-magnitude form
         // (dx pinned negative) so both left and right get the same tilt
         // range, then mirror the sign for the left half so it fans out
@@ -454,12 +427,14 @@ export class CreatureGrid {
         const rotation = fullAngle * eye.rotFactor * halfSign;
 
         const spawn = resolveSpawnState(eye, now);
-        const hoverScale = 1 + (this.hoverBoost.get(eye) ?? 0) * HOVER_SCALE_BUMP;
+        const hoverScale = 1 + boost * HOVER_SCALE_BUMP;
         eye.el.style.opacity = String(spawn.opacity);
         eye.el.style.transform = `translate(${eye.x - eye.w / 2}px,${eye.y - eye.h / 2}px) rotate(${rotation}deg) scale(${spawn.popScale * hoverScale}) scaleY(${scaleY})`;
       }
     } else {
       for (const c of this.creatures) {
+        const boost = this.updateHover(c, avatarX, avatarY, now);
+
         let angle: number;
         switch (this.mode) {
           case 'pointedFinger':
@@ -476,22 +451,32 @@ export class CreatureGrid {
         }
 
         const spawn = resolveSpawnState(c, now);
-        const hoverScale = 1 + (this.hoverBoost.get(c) ?? 0) * HOVER_SCALE_BUMP;
+        const hoverScale = 1 + boost * HOVER_SCALE_BUMP;
         c.el.style.opacity = String(spawn.opacity);
         c.el.style.transform = `translate(${c.x - c.w * 0.5}px,${c.y - c.h * 0.5}px) rotate(${angle}deg) scale(${spawn.popScale * hoverScale})`;
       }
     }
 
-    // Random disappear: settled creatures fade out independently.
-    if (now - this.lastFadePickMs >= FADE_PICK_INTERVAL_MS) {
-      const candidates = this.creatures.filter((c) => c.spawnDone && c.fadeStartMs === 0);
-      if (candidates.length > 0) {
-        this.lastFadePickMs = now;
-        const count = Math.min(FADE_PICK_COUNT, candidates.length);
-        for (let i = 0; i < count; i++) {
-          const picked = candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0];
-          picked.fadeStartMs = now;
+    // Random disappear: settled creatures fade out independently. Reservoir-
+    // samples up to FADE_PICK_COUNT eligible creatures in one pass (Algorithm
+    // R) instead of filter()-ing the whole crowd into a throwaway array every
+    // tick.
+    if (this.shouldRunThrottled(this.lastFadePickMs, FADE_PICK_INTERVAL_MS, now)) {
+      const picked: Creature[] = [];
+      let seen = 0;
+      for (const c of this.creatures) {
+        if (!c.spawnDone || c.fadeStartMs !== 0) continue;
+        seen++;
+        if (picked.length < FADE_PICK_COUNT) {
+          picked.push(c);
+        } else {
+          const j = Math.floor(Math.random() * seen);
+          if (j < FADE_PICK_COUNT) picked[j] = c;
         }
+      }
+      if (seen > 0) {
+        this.lastFadePickMs = now;
+        for (const c of picked) c.fadeStartMs = now;
       }
     }
 
@@ -500,27 +485,46 @@ export class CreatureGrid {
     // idle floor the longer the sticker sits still), capped per tick so the
     // recovery still animates rather than jumping instantly. A fast drag
     // opens a burst window that raises the cap so the crowd floods back.
-    if (now - this.lastRepopPickMs >= REPOP_INTERVAL_MS) {
+    if (this.shouldRunThrottled(this.lastRepopPickMs, REPOP_INTERVAL_MS, now)) {
       this.lastRepopPickMs = now;
       const idleMs = now - this.lastActivityMs;
-      const desiredVisibleCount = Math.max(
-        IDLE_FLOOR_MIN_COUNT,
-        Math.round(this.targetCount * idleVisibleFraction(idleMs)),
+      const decayFraction = decayTowardFloor(Math.max(0, idleMs - IDLE_GRACE_MS), IDLE_FLOOR_FRACTION, IDLE_HALF_LIFE_MS);
+      const desiredVisibleCount = Math.min(
+        this.targetCount,
+        Math.max(IDLE_FLOOR_MIN_COUNT, Math.round(this.targetCount * decayFraction)),
       );
-      const visibleCount = this.creatures.filter((c) => !c.waitingRespawn).length;
+      let visibleCount = 0;
+      let waitingCount = 0;
+      for (const c of this.creatures) {
+        if (c.waitingRespawn) waitingCount++;
+        else visibleCount++;
+      }
       const deficit = desiredVisibleCount - visibleCount;
       if (deficit > 0) {
-        const waiting = this.creatures.filter((c) => c.waitingRespawn);
         const burstCap = Math.max(
           REPOP_COUNT_BURST_MIN,
           Math.round(this.targetCount * REPOP_COUNT_BURST_FRACTION),
         );
         const cap = now < this.burstUntilMs ? burstCap : REPOP_COUNT;
-        const count = Math.min(cap, deficit, waiting.length);
-        for (let i = 0; i < count; i++) {
-          const picked = waiting.splice(Math.floor(Math.random() * waiting.length), 1)[0];
-          picked.waitingRespawn = false;
-          picked.spawnPopAtMs = now;
+        const count = Math.min(cap, deficit, waitingCount);
+        if (count > 0) {
+          // Reservoir sample (Algorithm R) over the waiting creatures.
+          const picked: Creature[] = [];
+          let seen = 0;
+          for (const c of this.creatures) {
+            if (!c.waitingRespawn) continue;
+            seen++;
+            if (picked.length < count) {
+              picked.push(c);
+            } else {
+              const j = Math.floor(Math.random() * seen);
+              if (j < count) picked[j] = c;
+            }
+          }
+          for (const c of picked) {
+            c.waitingRespawn = false;
+            c.spawnPopAtMs = now;
+          }
         }
       }
     }
@@ -533,6 +537,41 @@ export class CreatureGrid {
   /** Shared AudioContext used to fire hover tones; pass null to silence them. */
   setAudioContext(context: AudioContext | null): void {
     this.audioContext = context;
+  }
+
+  /** True once `intervalMs` has elapsed since `lastMs`. Callers own updating their own `lastMs` field on a true result — this only answers "should I run now?". */
+  private shouldRunThrottled(lastMs: number, intervalMs: number, now: number): boolean {
+    return now - lastMs >= intervalMs;
+  }
+
+  /** Hover-detection for one creature this frame: updates hoverState/hoverBoost, fires a
+   * hover-enter tone if applicable, and returns the current boost value for the caller to
+   * apply to render scale. Shared by both the eyes-mode and non-eyes-mode render branches —
+   * identical logic, just run over two different arrays (eyeCreatures vs creatures). */
+  private updateHover(c: Creature, avatarX: number, avatarY: number, now: number): number {
+    const dx = avatarX - c.x;
+    const dy = avatarY - c.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const wasHovered = this.hoverState.get(c) ?? false;
+    // The crowd actively flees the cursor (see applyRepulsion in
+    // creaturePhysics.ts), and repelRadius (180px) is well outside a
+    // creature's own tight hoverRadiusFor(c) (~half its size + 20px). If
+    // hover only used hoverRadiusFor, the cursor could almost never catch
+    // a creature close enough to register — it's already fleeing by the
+    // time it would. Using whichever radius is larger means hover fires
+    // as soon as a creature enters the repulsion field it's reacting to.
+    const radius = Math.max(hoverRadiusFor(c), this.physicsParams.repelRadius);
+    const { hovered, entered } = computeHoverEdge(distance, radius, wasHovered);
+    this.hoverState.set(c, hovered);
+    const prevBoost = this.hoverBoost.get(c) ?? 0;
+    const targetBoost = hovered ? 1 : 0;
+    const boost = prevBoost + (targetBoost - prevBoost) * HOVER_BOOST_LERP;
+    this.hoverBoost.set(c, boost);
+    if (entered && this.audioContext && canPlayHoverTone(this.lastHoverToneAtMs, now)) {
+      this.lastHoverToneAtMs = now;
+      this.triggerHoverTone();
+    }
+    return boost;
   }
 
   private triggerHoverTone(): void {
@@ -561,8 +600,39 @@ export class CreatureGrid {
     this.repulsor = null;
   }
 
+  /** Overrides the avatar-vs-creature repel radius (independent of security units' own
+   * radii). Pass null to restore the default (`physicsParams.repelRadius`). */
+  setAvatarRepelRadius(radius: number | null): void {
+    this.avatarRepelRadius = radius;
+  }
+
+  getAvatarRepelRadius(): number | null {
+    return this.avatarRepelRadius;
+  }
+
   getCreatureCount(): number {
     return this.creatures.length;
+  }
+
+  /** Fires with the new count every time setQuantity() actually changes the creature count —
+   * whether the caller was a user dragging the Filters slider or RaidController's own
+   * attrition/boost/win logic. Never fires for a no-op setQuantity() call. */
+  onQuantityChange(cb: (count: number) => void): void {
+    this.quantityChangeCb = cb;
+  }
+
+  /** The Filters-slider-driven entry point: does everything setQuantity() does, and also
+   * records the result as the user's chosen baseline (see userQuantityBaseline) — the value
+   * RaidController restores to once a raid fully resolves, instead of a hardcoded ceiling. */
+  setUserQuantity(quantity: number): void {
+    this.setQuantity(quantity);
+    this.userQuantityBaseline = this.targetCount;
+  }
+
+  /** The crowd size to return to once a raid fully resolves — whatever the user last set via
+   * setUserQuantity(), or the constructor's initial quantity if they never have. */
+  getUserQuantityBaseline(): number {
+    return this.userQuantityBaseline;
   }
 
   respawn(): void {

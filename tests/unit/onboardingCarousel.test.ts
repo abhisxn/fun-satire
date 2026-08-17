@@ -47,6 +47,7 @@ vi.mock("../../src/creatures/CreatureGrid", () => ({
     setAudioContext(): void {}
     switchMode(): void {}
     respawn(): void {}
+    setAvatarRepelRadius(): void {}
   },
 }));
 

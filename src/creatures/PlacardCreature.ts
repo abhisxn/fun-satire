@@ -14,24 +14,25 @@ export interface PlacardAsset {
 }
 
 export const PLACARD_POOL: PlacardAsset[] = [
-  { src: '/creatures/placards/placard_01.png', w: 1314, h: 684 },
-  { src: '/creatures/placards/placard_02.png', w: 1341, h: 684 },
-  { src: '/creatures/placards/placard_03.png', w: 900, h: 684 },
-  { src: '/creatures/placards/placard_04.png', w: 1665, h: 588 },
-  { src: '/creatures/placards/placard_05.png', w: 1071, h: 588 },
-  { src: '/creatures/placards/placard_06.png', w: 1089, h: 588 },
-  { src: '/creatures/placards/placard_07.png', w: 1665, h: 732 },
-  { src: '/creatures/placards/placard_08.png', w: 1419, h: 588 },
-  { src: '/creatures/placards/placard_09.png', w: 1212, h: 588 },
-  { src: '/creatures/placards/placard_10.png', w: 1071, h: 588 },
-  { src: '/creatures/placards/placard_11.png', w: 1269, h: 732 },
-  { src: '/creatures/placards/placard_12.png', w: 1071, h: 1020 },
-  { src: '/creatures/placards/placard_13.png', w: 1071, h: 1020 },
-  { src: '/creatures/placards/placard_14.png', w: 819, h: 444 },
-  { src: '/creatures/placards/placard_15.png', w: 1401, h: 588 },
-  { src: '/creatures/placards/placard_16.png', w: 1071, h: 588 },
-  { src: '/creatures/placards/placard_17.png', w: 1071, h: 732 },
-  { src: '/creatures/placards/placard_18.png', w: 1416, h: 732 },
+  { src: '/creatures/placards/placard_01.png', w: 560, h: 432 },
+  { src: '/creatures/placards/placard_02.png', w: 868, h: 432 },
+  { src: '/creatures/placards/placard_03.png', w: 808, h: 432 },
+  { src: '/creatures/placards/placard_04.png', w: 808, h: 432 },
+  { src: '/creatures/placards/placard_05.png', w: 946, h: 432 },
+  { src: '/creatures/placards/placard_06.png', w: 1242, h: 548 },
+  { src: '/creatures/placards/placard_07.png', w: 726, h: 432 },
+  { src: '/creatures/placards/placard_08.png', w: 1142, h: 548 },
+  { src: '/creatures/placards/placard_09.png', w: 902, h: 432 },
+  { src: '/creatures/placards/placard_10.png', w: 740, h: 432 },
+  { src: '/creatures/placards/placard_11.png', w: 1080, h: 432 },
+  { src: '/creatures/placards/placard_12.png', w: 1124, h: 548 },
+  { src: '/creatures/placards/placard_13.png', w: 1198, h: 432 },
+  { src: '/creatures/placards/placard_14.png', w: 1210, h: 432 },
+  { src: '/creatures/placards/placard_15.png', w: 546, h: 432 },
+  { src: '/creatures/placards/placard_16.png', w: 714, h: 432 },
+  { src: '/creatures/placards/placard_17.png', w: 714, h: 432 },
+  { src: '/creatures/placards/placard_18.png', w: 1330, h: 432 },
+  { src: '/creatures/placards/placard_19.png', w: 824, h: 432 },
 ];
 
 /** Placard display width reference, in px, at signScale = 1. Tune by eye. */
@@ -42,9 +43,12 @@ export function pickRandomPlacard(): PlacardAsset {
   return PLACARD_POOL[index];
 }
 
-/** Sign size randomized independently from the stick's scale, kept legible. */
+/** Sign-to-stick size ratio, applied on top of the creature's own depth-scale (not an
+ * absolute multiplier) — so a small/distant creature always carries a proportionally
+ * small sign, and a close/big creature a proportionally big one. The 0.5 floor is below
+ * 1.0 so a sign can end up visibly smaller than its own stick, not just larger. */
 function pickSignScale(): number {
-  return 0.3 + Math.pow(Math.random(), 1.5) * 0.5;
+  return 0.5 + Math.random() * 0.9;
 }
 
 export function createPlacardCreature(
@@ -71,7 +75,7 @@ export function createPlacardCreature(
 
   const asset = pickRandomPlacard();
   const signScale = pickSignScale();
-  const placardW = PLACARD_BASE_W * signScale;
+  const placardW = PLACARD_BASE_W * scale * signScale;
   const placardH = placardW * (asset.h / asset.w);
   const anchorPx = {
     x: STICK_ANCHOR_PCT.x * w,

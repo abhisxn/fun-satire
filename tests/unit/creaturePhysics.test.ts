@@ -85,18 +85,12 @@ describe("creaturePhysics", () => {
       expect(Math.abs(creature.vy)).toBeLessThan(10);
     });
 
-    it("rotation faces away from avatar", () => {
+    it("does not touch the DOM transform (that is CreatureGrid's job)", () => {
       const avatar: AvatarPos = { x: 50, y: 100 };
 
       updateCreature(creature, avatar, DEFAULT_PARAMS);
 
-      const transform = creature.el.style.transform;
-      const rotateMatch = transform.match(/rotate\(([-\d.]+)deg\)/);
-      expect(rotateMatch).not.toBeNull();
-
-      const angle = parseFloat(rotateMatch![1]!);
-      const expectedAngle = Math.atan2(avatar.y - creature.y, avatar.x - creature.x) * (180 / Math.PI) + 180;
-      expect(angle).toBeCloseTo(expectedAngle, 3);
+      expect(creature.el.style.transform).toBe("");
     });
 
     it("handles creature at exact avatar position without error", () => {
@@ -111,7 +105,7 @@ describe("creaturePhysics", () => {
       const repulsor = { x: 380, y: 100, radius: 300 };
       const farAvatar: AvatarPos = { x: 1000, y: 1000 };
 
-      updateCreature(creature, farAvatar, DEFAULT_PARAMS, repulsor);
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, [repulsor]);
 
       expect(creature.x).toBeLessThan(100);
     });
@@ -120,29 +114,58 @@ describe("creaturePhysics", () => {
       const repulsor = { x: 380, y: 100 };
       const farAvatar: AvatarPos = { x: 1000, y: 1000 };
 
-      updateCreature(creature, farAvatar, DEFAULT_PARAMS, repulsor);
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, [repulsor]);
 
       expect(creature.x).toBe(100);
     });
 
-    it("updates DOM transform with position, scale, and rotation", () => {
-      creature.x = 150;
-      creature.y = 200;
-      creature.scale = 1.5;
+    it("applies repulsion from multiple repulsors in the same call", () => {
+      const repulsorA = { x: 380, y: 100, radius: 300 };
+      const repulsorB = { x: 100, y: 380, radius: 300 };
+      const farAvatar: AvatarPos = { x: 1000, y: 1000 };
 
-      const avatar: AvatarPos = { x: 100, y: 100 };
+      updateCreature(creature, farAvatar, DEFAULT_PARAMS, [repulsorA, repulsorB]);
 
-      updateCreature(creature, avatar, DEFAULT_PARAMS);
-
-      const transform = creature.el.style.transform;
-      expect(transform).toMatch(/translate\(/);
-      expect(transform).toMatch(/scale\(1\.5\)/);
-      expect(transform).toMatch(/rotate\(/);
+      // Pushed away from A (leftward, x decreases) AND away from B (upward, y decreases)
+      expect(creature.x).toBeLessThan(100);
+      expect(creature.y).toBeLessThan(100);
     });
+
+    it('uses avatarRepelRadius to override the avatar-vs-creature repel radius when given', () => {
+      // Creature sits 100px from the avatar — inside the default 180px repelRadius,
+      // but outside a reduced 60px override. hx/hy are moved to match x/y and
+      // springStrength is zeroed so only the repulsion term is being observed
+      // (otherwise the spring-to-home force alone would make vx nonzero).
+      creature.x = 200;
+      creature.y = 100;
+      creature.hx = 200;
+      creature.hy = 100;
+      const avatar: AvatarPos = { x: 100, y: 100 };
+      const noSpringParams: PhysicsParams = { ...DEFAULT_PARAMS, springStrength: 0 };
+
+      updateCreature(creature, avatar, noSpringParams, [], 60);
+
+      expect(creature.vx).toBe(0);
+      expect(creature.vy).toBe(0);
+    });
+
+    it('falls back to params.repelRadius when no avatarRepelRadius override is given', () => {
+      creature.x = 200;
+      creature.y = 100;
+      creature.hx = 200;
+      creature.hy = 100;
+      const avatar: AvatarPos = { x: 100, y: 100 };
+      const noSpringParams: PhysicsParams = { ...DEFAULT_PARAMS, springStrength: 0 };
+
+      updateCreature(creature, avatar, noSpringParams);
+
+      expect(creature.vx).not.toBe(0);
+    });
+
   });
 
   describe("updateAllCreatures", () => {
-    it("updates multiple creatures", () => {
+    it("updates multiple creatures' physics without touching their transforms", () => {
       const c1 = createCreature({ x: 100, y: 100 });
       const c2 = createCreature({ x: 200, y: 200, hx: 200, hy: 200 });
       const creatures = [c1, c2];
@@ -152,8 +175,8 @@ describe("creaturePhysics", () => {
 
       expect(c1.x).not.toBe(100);
       expect(c2.x).not.toBe(200);
-      expect(c1.el.style.transform).toBeDefined();
-      expect(c2.el.style.transform).toBeDefined();
+      expect(c1.el.style.transform).toBe("");
+      expect(c2.el.style.transform).toBe("");
     });
   });
 });

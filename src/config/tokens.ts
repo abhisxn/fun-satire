@@ -47,7 +47,7 @@ export function motionScale(matchesReducedMotion: boolean): number {
 // source of truth instead of duplicating literals.
 export const QTY_MIN = 10;
 export const QTY_MAX = 900;
-export const DEFAULT_CREATURE_QUANTITY = 300;
+export const DEFAULT_CREATURE_QUANTITY = 160;
 
 // Repel radius (px) bounds and default, shared by the filter panel slider
 // and the live grid's physics params.

@@ -11,6 +11,7 @@ It's also a satirical ode to a real protest movement — why it exists, what it'
 - **v1 (shipped)**: eyes mode, laser burn power, core physics loop, DOM HUD, cross-browser matrix. Design/plan docs archived in [docs/superpowers/archive/](docs/superpowers/archive/).
 - **v2 (shipped)**: three crowd modes (eyes/bugs/pointedFinger), mode-locked power pairing (eyes→laserBurn, bugs→bugEat, pointedFinger→electricBurn), no-overlap crowd separation, look-at rotation, subject skins (figure/lotus), quantity/repel HUD controls, laserBurn beam/glow polish, electricBurn and bugEat effect test coverage.
 - **v3 (shipped)**: canvas/power system replaced with the current DOM-based `creatures/` architecture (eyes/cockroach/pointedFinger/placard, no burn/zap/eat) plus gallery, onboarding carousel, and menu panel. See [CLAUDE.md](CLAUDE.md) for current conventions and layout.
+- **v4 — security raid & protest recovery (shipped)**: shaking the avatar summons wandering security units (police/RAF) that repel and permanently thin the crowd; a hold-and-release Protest button charges a power meter and fights back — full power wins (WinPanel, sticker locks to floor size, avatar repel radius widens), medium/low power partially regrows the crowd and escalates the raid. Crowd and security lifecycles (spawn/despawn staggering, decay-toward-floor) share one `EntityPool`/`raidRules` primitive instead of duplicated bookkeeping. See ADRs 014-016 in [system-architecture.md](docs/superpowers/system-architecture.md).
 
 ## Quick start
 

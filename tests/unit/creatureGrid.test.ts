@@ -14,15 +14,21 @@ vi.mock('../../src/creatures/EyeCreature', async (importOriginal) => {
     createEyeCreature: (hx: number, hy: number, scale: number, _svgMarkup: string, _uid: string) => {
       const el = document.createElement('div');
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', '40.25');
-      circle.setAttribute('cy', '28.75');
-      circle.setAttribute('r', '10');
-      svg.appendChild(circle);
+      const iris = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      iris.setAttribute('cx', '40.25');
+      iris.setAttribute('cy', '28.75');
+      iris.setAttribute('r', '10');
+      const pupil = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      pupil.setAttribute('cx', '40.25');
+      pupil.setAttribute('cy', '28.75');
+      pupil.setAttribute('r', '3.5');
+      svg.appendChild(iris);
+      svg.appendChild(pupil);
       el.appendChild(svg);
       return {
         el,
-        pupil: circle,
+        iris,
+        pupil,
         hx,
         hy,
         x: hx,
@@ -264,6 +270,68 @@ describe('CreatureGrid', () => {
     });
   });
 
+  describe('onQuantityChange', () => {
+    it('fires with the new count when setQuantity actually changes the count', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setQuantity(250);
+      expect(cb).toHaveBeenCalledWith(250);
+    });
+
+    it('does not fire when setQuantity is called with the current count', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setQuantity(240);
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it('fires on a shrink as well as a growth', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setQuantity(200);
+      expect(cb).toHaveBeenCalledWith(200);
+    });
+  });
+
+  describe('userQuantityBaseline', () => {
+    it('defaults to the constructor initialQuantity when setUserQuantity is never called', () => {
+      const grid = new CreatureGrid({ container, mode: 'cockroach', initialQuantity: 60 });
+      expect(grid.getUserQuantityBaseline()).toBe(60);
+    });
+
+    it('setUserQuantity updates both the live count and the baseline', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      grid.setUserQuantity(500);
+      expect(grid.getCreatureCount()).toBe(500);
+      expect(grid.getUserQuantityBaseline()).toBe(500);
+    });
+
+    it('plain setQuantity (raid-driven changes) does not move the baseline', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      grid.setUserQuantity(500);
+      grid.setQuantity(50); // e.g. raid attrition draining the crowd
+      expect(grid.getCreatureCount()).toBe(50);
+      expect(grid.getUserQuantityBaseline()).toBe(500);
+    });
+
+    it('setUserQuantity fires onQuantityChange the same as setQuantity', () => {
+      const grid = new CreatureGrid(config);
+      grid.spawn('cockroach'); // 240
+      const cb = vi.fn();
+      grid.onQuantityChange(cb);
+      grid.setUserQuantity(300);
+      expect(cb).toHaveBeenCalledWith(300);
+    });
+  });
+
   describe('getCreatureCount', () => {
     it('returns 0 before spawn', () => {
       const grid = new CreatureGrid(config);
@@ -345,6 +413,97 @@ describe('CreatureGrid', () => {
 
       const hasMoved = creature.x !== initialX || creature.y !== initialY;
       expect(hasMoved).toBe(true);
+    });
+  });
+
+  describe('security units', () => {
+    it('never removes a creature, even when a security unit sits exactly on top of it', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 20 });
+      grid.spawn('cockroach');
+      const before = grid.getCreatureCount();
+
+      const target = (grid as unknown as { creatures: { x: number; y: number }[] }).creatures[0]!;
+      const securityUnits = [{ x: target.x, y: target.y, repelRadius: 160 }];
+
+      for (let i = 0; i < 10; i++) {
+        grid.update(-1000, -1000, securityUnits, 0);
+      }
+
+      expect(grid.getCreatureCount()).toBe(before);
+    });
+
+    it('repels creatures away from a security unit like it does the avatar', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 20 });
+      grid.spawn('cockroach');
+
+      const target = (grid as unknown as { creatures: { x: number; y: number; vx: number }[] }).creatures[0]!;
+      const startVx = target.vx;
+      const securityUnits = [{ x: target.x - 50, y: target.y, repelRadius: 160 }];
+
+      // Avatar far away so only the security unit's repulsion is in play.
+      grid.update(-5000, -5000, securityUnits, 20);
+
+      expect(target.vx).not.toBe(startVx);
+    });
+  });
+
+  describe('setAvatarRepelRadius', () => {
+    it('defaults to the normal repelRadius (creature 100px away is repelled)', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      // hx/hy moved to match x/y so the spring-to-home force can't also move vx —
+      // only the avatar repulsion term is being observed.
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.update(200, 100); // avatar 100px away, well inside the default 180px radius
+
+      expect(target.vx).not.toBe(0);
+    });
+
+    it('overriding to a smaller radius stops repulsion just outside it', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.setAvatarRepelRadius(60);
+      grid.update(200, 100); // avatar 100px away — inside the default radius, outside the 60px override
+
+      expect(target.vx).toBe(0);
+    });
+
+    it('passing null restores the default radius', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      grid.spawn('cockroach');
+      const target = (grid as unknown as { creatures: { x: number; y: number; hx: number; hy: number; vx: number }[] }).creatures[0]!;
+      target.x = 100;
+      target.y = 100;
+      target.hx = 100;
+      target.hy = 100;
+
+      grid.setAvatarRepelRadius(60);
+      grid.setAvatarRepelRadius(null);
+      grid.update(200, 100);
+
+      expect(target.vx).not.toBe(0);
+    });
+
+    it('getAvatarRepelRadius reflects the last value set', () => {
+      const grid = new CreatureGrid({ ...config, initialQuantity: 5 });
+      expect(grid.getAvatarRepelRadius()).toBeNull();
+
+      grid.setAvatarRepelRadius(60);
+      expect(grid.getAvatarRepelRadius()).toBe(60);
+
+      grid.setAvatarRepelRadius(null);
+      expect(grid.getAvatarRepelRadius()).toBeNull();
     });
   });
 

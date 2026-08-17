@@ -41,12 +41,15 @@ export function updateCreature(
   creature: Creature,
   avatar: AvatarPos,
   params: PhysicsParams,
-  repulsor?: Repulsor | null,
+  repulsors: Repulsor[] = [],
+  avatarRepelRadius?: number,
 ): void {
   const { springStrength, damping } = params;
 
-  applyRepulsion(creature, avatar, params);
-  if (repulsor) applyRepulsion(creature, repulsor, params, repulsor.radius);
+  applyRepulsion(creature, avatar, params, avatarRepelRadius);
+  for (const repulsor of repulsors) {
+    applyRepulsion(creature, repulsor, params, repulsor.radius);
+  }
 
   // Spring to home
   creature.vx += (creature.hx - creature.x) * springStrength;
@@ -59,12 +62,6 @@ export function updateCreature(
   // Position update (semi-implicit Euler)
   creature.x += creature.vx;
   creature.y += creature.vy;
-
-  // Rotation: face AWAY from avatar
-  const angle = Math.atan2(avatar.y - creature.y, avatar.x - creature.x) * (180 / Math.PI) + 180;
-
-  // Update DOM transform
-  creature.el.style.transform = `translate(${creature.x - creature.w * creature.scale * 0.5}px, ${creature.y - creature.h * creature.scale * 0.5}px) scale(${creature.scale}) rotate(${angle}deg)`;
 }
 
 export function updateAllCreatures(

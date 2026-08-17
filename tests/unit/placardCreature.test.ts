@@ -65,7 +65,7 @@ describe('PlacardCreature', () => {
       expect(imgs[1].draggable).toBe(false);
     });
 
-    it('placard layer is centered on the stick anchor point', () => {
+    it('placard layer is centered on the stick anchor point, sized as a scale-relative ratio', () => {
       const scale = 2;
       const placard = createPlacardCreature(0, 0, scale);
 
@@ -81,11 +81,13 @@ describe('PlacardCreature', () => {
         y: STICK_ANCHOR_PCT.y * stickH,
       };
 
-      // Sign size is randomized independently of stick scale, so bounds-check it
-      // (signScale in [0.3, 0.8]) rather than asserting an exact value.
+      // Sign width is now PLACARD_BASE_W * creature scale * a randomized
+      // ratio in [0.5, 1.4] — tied to the creature's own depth-scale instead
+      // of being a fully independent absolute size, so bounds-check the
+      // ratio range rather than asserting an exact value.
       const actualW = parseFloat(placardImg.style.width);
-      expect(actualW).toBeGreaterThanOrEqual(PLACARD_BASE_W * 0.3 - 1e-6);
-      expect(actualW).toBeLessThanOrEqual(PLACARD_BASE_W * 0.8 + 1e-6);
+      expect(actualW).toBeGreaterThanOrEqual(PLACARD_BASE_W * scale * 0.5 - 1e-6);
+      expect(actualW).toBeLessThanOrEqual(PLACARD_BASE_W * scale * 1.4 + 1e-6);
 
       const expectedH = actualW * (asset.h / asset.w);
       const expectedLeft = anchorPx.x - actualW / 2;
@@ -97,6 +99,20 @@ describe('PlacardCreature', () => {
       expect(parseFloat(placardImg.style.left)).toBeCloseTo(expectedLeft, 5);
       expect(parseFloat(placardImg.style.top)).toBeCloseTo(expectedTop, 5);
       expect(placardImg.style.position).toBe('absolute');
+    });
+
+    it('a small/distant creature (low scale) always gets a proportionally small placard', () => {
+      const scale = 0.2;
+      const placard = createPlacardCreature(0, 0, scale);
+
+      const imgs = placard.el.querySelectorAll('img');
+      const placardImg = imgs[1] as HTMLImageElement;
+      const actualW = parseFloat(placardImg.style.width);
+
+      // At the old, scale-independent sizing this could have been as large
+      // as PLACARD_BASE_W * 0.8 (120px) even at a tiny creature scale. Now
+      // it must stay proportional to scale.
+      expect(actualW).toBeLessThanOrEqual(PLACARD_BASE_W * scale * 1.4 + 1e-6);
     });
 
     it('creates element with correct styles', () => {

@@ -4,21 +4,63 @@ import { playHoverTone } from "../audio/hoverTones";
 export const EYE_NAT_W = 115;
 export const EYE_NAT_H = 57;
 
-const PUPIL_BASE_CX = 40.25;
-const PUPIL_BASE_CY = 28.75;
+const IRIS_BASE_CX = 40.25;
+const IRIS_BASE_CY = 28.75;
 const EYE_CX = 57.5;
 const EYE_CY = 26.83;
 const ELLIPSE_A = 35;
 const ELLIPSE_B = 5;
 
-const PUPIL_COLORS = ['#3D3229', '#2D2520', '#4A3528', '#5C4033', '#3D3229', '#5B7B8A', '#5B7B8A', '#4A5E4A'];
+const IRIS_COLORS = ['#3D3229', '#2D2520', '#4A3528', '#5C4033', '#3D3229', '#5B7B8A', '#5B7B8A', '#4A5E4A'];
+
+/** Pupil radius as a fraction of the iris's own radius. */
+const PUPIL_RADIUS_RATIO = 0.35;
+/** How much darker the pupil is than the iris (0-1). */
+const PUPIL_DARKEN_AMOUNT = 0.2;
 
 export interface EyeCreature extends Creature {
+  iris: SVGCircleElement;
   pupil: SVGCircleElement;
   nextBlink: number;
   blinking: boolean;
   blinkStart: number;
   rotFactor: number;
+}
+
+/** Pure: darkens a "#rrggbb" hex color by `amount` (0-1), channel-wise. */
+export function darkenHexColor(hex: string, amount: number): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  const toHex = (n: number): string =>
+    Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+  return `#${toHex(r * (1 - amount))}${toHex(g * (1 - amount))}${toHex(b * (1 - amount))}`;
+}
+
+/** Pure: lightens a "#rrggbb" hex color by `amount` (0-1), channel-wise, mixing toward white. */
+export function lightenHexColor(hex: string, amount: number): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  const toHex = (n: number): string =>
+    Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+  return `#${toHex(r + (255 - r) * amount)}${toHex(g + (255 - g) * amount)}${toHex(b + (255 - b) * amount)}`;
+}
+
+/** Pure: derives a subtle pupil shade from the iris's own color. Most of IRIS_COLORS is
+ * dark browns/greens, and darkening those further toward black leaves a pupil that's
+ * nearly invisible against its own iris — so a dark iris (luminance below mid-gray)
+ * lightens instead, while a lighter iris still darkens as before. Either way the pupil
+ * stays visibly distinct from its iris. */
+export function derivePupilColor(hex: string, amount: number): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance < 128 ? lightenHexColor(hex, amount) : darkenHexColor(hex, amount);
 }
 
 export function createEyeCreature(
@@ -46,11 +88,26 @@ export function createEyeCreature(
   svg!.style.display = 'block';
   svg!.style.width = '100%';
   svg!.style.height = '100%';
-  const pupil = svg!.querySelector('circle') as SVGCircleElement;
-  pupil.setAttribute('fill', PUPIL_COLORS[Math.floor(Math.random() * PUPIL_COLORS.length)]);
+
+  const iris = svg!.querySelector('circle') as SVGCircleElement;
+  const irisColor = IRIS_COLORS[Math.floor(Math.random() * IRIS_COLORS.length)]!;
+  iris.setAttribute('fill', irisColor);
+
+  // The pupil doesn't exist in the static SVG asset — created here, sized off
+  // the iris's own radius so it scales correctly whichever markup is passed in
+  // (the real eye.svg or a smaller test fixture), and inserted right after the
+  // iris in the same <svg> so it paints on top.
+  const irisRadius = parseFloat(iris.getAttribute('r') || '0');
+  const pupil = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  pupil.setAttribute('cx', iris.getAttribute('cx') || String(IRIS_BASE_CX));
+  pupil.setAttribute('cy', iris.getAttribute('cy') || String(IRIS_BASE_CY));
+  pupil.setAttribute('r', String(irisRadius * PUPIL_RADIUS_RATIO));
+  pupil.setAttribute('fill', derivePupilColor(irisColor, PUPIL_DARKEN_AMOUNT));
+  iris.parentNode?.appendChild(pupil);
 
   return {
     el,
+    iris,
     pupil,
     hx,
     hy,
@@ -94,17 +151,21 @@ export function updateEyePupil(
   const localDirX = dirX * cos - dirY * sin;
   const localDirY = dirX * sin + dirY * cos;
 
-  // Calculate pupil position on ellipse
+  // Calculate gaze target on ellipse
   const theta = Math.atan2(localDirY, localDirX);
   const targetX = EYE_CX + ELLIPSE_A * Math.cos(theta);
   const targetY = EYE_CY + ELLIPSE_B * Math.sin(theta);
-  const ox = targetX - PUPIL_BASE_CX;
-  const oy = targetY - PUPIL_BASE_CY;
+  const ox = targetX - IRIS_BASE_CX;
+  const oy = targetY - IRIS_BASE_CY;
 
-  // Move pupil toward avatar, with distance falloff
+  // Move iris + pupil toward avatar together (concentric), with distance falloff
   const distFactor = Math.min(1, td / 150);
-  eye.pupil.setAttribute('cx', String(PUPIL_BASE_CX + ox * distFactor));
-  eye.pupil.setAttribute('cy', String(PUPIL_BASE_CY + oy * distFactor));
+  const cx = String(IRIS_BASE_CX + ox * distFactor);
+  const cy = String(IRIS_BASE_CY + oy * distFactor);
+  eye.iris.setAttribute('cx', cx);
+  eye.iris.setAttribute('cy', cy);
+  eye.pupil.setAttribute('cx', cx);
+  eye.pupil.setAttribute('cy', cy);
 }
 
 export function updateEyeBlink(eye: EyeCreature): number {

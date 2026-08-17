@@ -86,6 +86,27 @@
 - **Decision**: A single `Hud.ts` component owns all UI state and rendering. Filter UI uses a popover pattern. Skin/creature gallery uses a slide-in panel. No OverlayLayout or separate panel components.
 - **Consequence**: All HUD logic in one file. Adding a control means editing Hud.ts, not creating a new component + wiring it into a layout. Trade-off: Hud.ts will grow larger, but it stays cohesive since all UI concerns are inherently coupled.
 
+### ADR 014: Security raid & protest-recovery as an orthogonal overlay layer
+
+- **Status**: Accepted.
+- **Context**: The app needed a cathartic "push back" mechanic (shake the avatar to summon security that thins the crowd; hold-and-release a Protest button to fight back) without forking `CreatureGrid`'s core physics/render loop or the `eyes/pointedFinger/cockroach/placard` `CreatureMode` system.
+- **Decision**: `RaidController.ts` (new) owns raid state (`idle | raiding | recovering`) as a state machine independent of `CreatureGrid`. `SecurityCreature.ts` (new) is a plain wandering `<img>` unit, modeled on `BugSwarm`'s waypoint-wander pattern but rendered outside the creature array. Security units act on the crowd only through two additive extension points: `CreatureGrid.update()` accepts a `repulsors: Repulsor[]` array (security units repel like the avatar) and an `onCreatureTerminated` callback (security "catches" splice creatures out and decrement `targetCount`, gated by a raid floor — crowd never drops below `RAID_FLOOR_FRACTION` of its size when the raid started). Both the avatar and security units share `document.body` as their stacking context (not `#stage`) so z-index comparisons between them are meaningful (see `raid-protest-v2-design.md` §A).
+- **Consequence**: `creaturePhysics.ts`/`CreatureGrid.ts` stayed additive (per project convention) — no new `CreatureMode`, no forked update loop. Raid/protest is entirely orchestrated from `main.ts` + `RaidController`, wired through the existing avatar-drag callback (shake detection) and a new HUD "Protest" button (hold-to-charge power mechanic, see ADR 015).
+
+### ADR 015: EntityPool + raidRules — one lifecycle/decay primitive for crowd and security
+
+- **Status**: Accepted.
+- **Context**: `CreatureGrid` (crowd fade/reservoir-sample repop) and `RaidController`/`SecurityCreature` (hand-rolled `pendingRespawns` timestamp arrays plus ad hoc booleans like `clearingViaProtestWin`/`regroupInFlight`) independently reinvented the same shape — staggered spawn-in, staggered despawn-out, "settle" completion callbacks, decay-toward-a-floor curves — via unrelated code, producing the same class of bug twice.
+- **Decision**: `src/creatures/EntityPool.ts` (new, generic) is one lifecycle manager parameterized per pool (`allowIdleFlicker: true` for the crowd — shrinking moves entities to a reusable waiting reserve; `false` for security — shrinking despawns permanently). `src/creatures/raidRules.ts` (new) holds pure functions only: `classifyRelease(fraction, baselineCrowdCount)` turns a charge fraction into a declarative `PowerOutcome` (`full`/`medium`/`low` band, resulting crowd count, `isWin`), and `decayTowardFloor(elapsedMs, floorFraction, halfLifeMs)` is a shared exponential half-life decay curve. `RaidController` shrinks to orchestration: it holds state, asks `raidRules` for decisions, and tells its two `EntityPool`s what count to converge toward — it no longer does array `push`/`splice`/timestamp bookkeeping itself.
+- **Consequence**: One vocabulary for "how many entities should exist right now and how do they get there," used by both the crowd and security units. Explicitly a refactor, not a behavior change (`raid-creature-lifecycle-unification-design.md`) — every constant/threshold/timing carries over. One exception left as a deliberate follow-up: raid-attrition still uses its own discrete step timer (`RAID_ATTRITION_STEP`/`RAID_ATTRITION_INTERVAL_MS`) rather than `decayTowardFloor`, because an existing test pins that timer's exact step behavior.
+
+### ADR 016: Repel control changed from a strength multiplier to a pixel radius
+
+- **Status**: Accepted.
+- **Context**: The Filters panel's "Repel" slider originally controlled `physicsParams.repelStrength` via a 0–2 multiplier (`CreatureGrid.setRepelMultiplier`) — an abstract force-strength knob with no direct visual correlate. Independently, the raid/protest work needed the avatar's own repel *radius* (not strength) to scale continuously with the sticker's live size, via a separate `setAvatarRepelRadius` override.
+- **Decision**: The Filters slider now drives `physicsParams.repelRadius` directly in pixels (`CreatureGrid.setRepelRadius`, `REPEL_RADIUS_MIN/MAX/STEP/DEFAULT_REPEL_RADIUS` in `config/tokens.ts`, 60–360px), replacing the old multiplier control outright — `setRepelMultiplier` is removed, `repelStrength` stays a fixed internal constant (120). This is unrelated to and independent from `CreatureGrid.setAvatarRepelRadius` (the avatar-only override used by the raid/win mechanic), which continues to exist alongside it — the grid supports both a global repel radius (user-controlled) and a per-avatar override (raid/win-controlled) simultaneously.
+- **Consequence**: The repel slider now has a direct, legible unit (pixels of push-away distance) instead of an abstract multiplier. Any code still calling `setRepelMultiplier` is a bug — the method no longer exists.
+
 ## 3. Core Definitions
 
 | Term | Definition |
@@ -95,6 +116,9 @@
 | **Physics** | Single update function: repulsion from avatar + spring toward home + velocity damping. |
 | **Hud** | Consolidated DOM component owning all UI: mode, skin gallery, quantity, repel controls. |
 | **Home position** | Each creature's rest position. Spring force pulls creatures back when avatar moves away. |
+| **Raid** | Triggered by shaking the avatar: `SecurityCreature` units spawn, wander/escort the avatar, repel the crowd, and permanently "catch" (remove) stragglers down to a floor fraction of the crowd's starting size. |
+| **Protest charge** | Hold-and-release power mechanic on the HUD's Protest button; the released fraction is classified by `raidRules.classifyRelease` into a `full` (win), `medium`, or `low` power band, each producing a different crowd-count outcome. |
+| **EntityPool** | Generic spawn/despawn lifecycle manager (staggered timing, settle callbacks) shared by the crowd and security-unit pools — see ADR 015. |
 
 ## 4. System Relationships (Data Flow)
 
@@ -102,8 +126,10 @@
 graph TD
   User[User Pointer] --> Drag[Avatar Drag]
   User --> HUD[Hud Component]
+  User --> Protest[Protest Button hold/release]
 
   Drag -->|Avatar position| Physics[Physics Update]
+  Drag -->|shake detection| RaidController
   HUD -->|Quantity / Repel / Skin| CreatureArray[Creature Array]
 
   Physics -->|Repulsion + Spring + Damping| CreatureArray
@@ -111,4 +137,10 @@ graph TD
   RAF -->|CSS transform| DOM[DOM Creature Elements]
 
   Avatar -->|Draggable img| DOM
+
+  RaidController -->|spawn/despawn via EntityPool| SecurityUnits[SecurityCreature units]
+  SecurityUnits -->|repulsor + catch| CreatureArray
+  Protest -->|charge fraction| RaidRules[raidRules.classifyRelease]
+  RaidRules -->|power band + crowd count| RaidController
+  RaidController -->|isWin: full power| WinPanel[WinPanel]
 ```
