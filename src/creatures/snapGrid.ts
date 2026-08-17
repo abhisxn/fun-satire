@@ -76,6 +76,39 @@ export function snapToGrid(el: HTMLElement): void {
   const snapX = findNearestSnap(x);
   const snapY = findNearestSnap(y);
 
-  if (snapX !== null) el.style.left = `${snapX.pos}px`;
-  if (snapY !== null) el.style.top = `${snapY.pos}px`;
+  const rect = el.getBoundingClientRect();
+  const styleLeft = parseFloat(el.style.left);
+  const styleTop = parseFloat(el.style.top);
+  const curLeft = isNaN(styleLeft) ? rect.left : styleLeft;
+  const curTop = isNaN(styleTop) ? rect.top : styleTop;
+  const deltaX = rect.left - curLeft;
+  const deltaY = rect.top - curTop;
+
+  if (snapX !== null) el.style.left = `${snapX.pos - deltaX}px`;
+  if (snapY !== null) el.style.top = `${snapY.pos - deltaY}px`;
+}
+
+export function clampToViewport(el: HTMLElement): void {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const rect = el.getBoundingClientRect();
+  const styleLeft = parseFloat(el.style.left);
+  const styleTop = parseFloat(el.style.top);
+  const curLeft = isNaN(styleLeft) ? rect.left : styleLeft;
+  const curTop = isNaN(styleTop) ? rect.top : styleTop;
+  const deltaX = rect.left - curLeft;
+  const deltaY = rect.top - curTop;
+  const width = rect.width || el.offsetWidth || 0;
+  const height = rect.height || el.offsetHeight || 0;
+
+  const minLeft = Math.min(0, vw - width);
+  const maxLeft = Math.max(0, vw - width);
+  const minTop = Math.min(0, vh - height);
+  const maxTop = Math.max(0, vh - height);
+
+  const clampedRectLeft = Math.max(minLeft, Math.min(maxLeft, rect.left));
+  const clampedRectTop = Math.max(minTop, Math.min(maxTop, rect.top));
+
+  el.style.left = `${clampedRectLeft - deltaX}px`;
+  el.style.top = `${clampedRectTop - deltaY}px`;
 }

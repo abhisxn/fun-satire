@@ -12,7 +12,6 @@ const GRADIENT_STOPS: ReadonlyArray<{ offset: number; rgb: readonly [number, num
 
 const SEGMENT_COUNT = 15;
 const EMPTY_SEGMENT_COLOR = "#d0c5be";
-const ANCHOR_GAP_PX = 20;
 
 function sampleGradient(t: number): string {
   let lo = GRADIENT_STOPS[0]!;
@@ -37,7 +36,6 @@ export class PowerMeter {
   private readonly segments: HTMLElement[];
   private readonly segmentColors: string[];
   private fraction = 0;
-  private anchor: HTMLElement | null = null;
 
   constructor() {
     const root = document.createElement("div");
@@ -72,23 +70,14 @@ export class PowerMeter {
     this.setFraction(0);
   }
 
-  /** anchor is the protest button's anchor (Hud.getProtestAnchor()), used only to
-   * compute position — the root itself attaches to document.body, not as a
-   * descendant of the anchor, so its backdrop-filter can actually see page
-   * content behind it (see powerMeter.css's top comment for why). */
-  attachTo(anchor: HTMLElement): void {
-    this.anchor = anchor;
-    document.body.appendChild(this.root);
-  }
-
-  private updatePosition(): void {
-    if (!this.anchor) return;
-    const anchorRect = this.anchor.getBoundingClientRect();
-    const rootRect = this.root.getBoundingClientRect();
-    const left = anchorRect.left + anchorRect.width / 2 - rootRect.width / 2;
-    const top = anchorRect.top - ANCHOR_GAP_PX - rootRect.height;
-    this.root.style.left = `${left}px`;
-    this.root.style.top = `${top}px`;
+  /** host is where the root attaches — not the protest button's anchor, since
+   * the meter's own position is independent of it now (fixed, aligned with
+   * the menu button; see powerMeter.css). Kept off the anchor for the same
+   * reason as before too: the root's backdrop-filter needs to see page
+   * content behind it, which a nested-under-.premium-hud placement would
+   * block (see powerMeter.css's top comment for why). */
+  attachTo(host: HTMLElement): void {
+    host.appendChild(this.root);
   }
 
   setFraction(fraction: number): void {
@@ -105,10 +94,9 @@ export class PowerMeter {
   }
 
   /** Shown only while the protest button is actively being pressed and held —
-   * hidden the rest of the time so it doesn't sit permanently above the button. */
+   * hidden the rest of the time so it doesn't sit permanently on screen. */
   show(): void {
     this.root.classList.remove("power-meter--hidden");
-    this.updatePosition();
   }
 
   hide(): void {

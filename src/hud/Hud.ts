@@ -1,6 +1,6 @@
 import "./hud.css";
 import type { CreatureMode } from "../creatures/creatureTypes";
-import { snapToGrid } from "../creatures/snapGrid";
+import { snapToGrid, clampToViewport } from "../creatures/snapGrid";
 import { updateSnapGuides, hideSnapGuides } from "../creatures/snapGuides";
 import { playHudSelectTone } from "../audio/hudTones";
 
@@ -192,8 +192,8 @@ export class Hud {
 
   /** Non-overflow-hidden wrapper sized to exactly match the protest button — the button
    * itself (.hud-attack) clips its own content with `overflow: hidden` for its gradient
-   * CTA look, which would silently clip anything absolutely positioned above it (e.g. the
-   * power meter) if attached directly to the button instead of this anchor. */
+   * CTA look, which would silently clip anything absolutely positioned on top of it (e.g.
+   * the "Press and hold" tooltip) if attached directly to the button instead of this anchor. */
   getProtestAnchor(): HTMLElement {
     if (!this.protestAnchor) throw new Error("Protest anchor not initialized");
     return this.protestAnchor;
@@ -314,8 +314,19 @@ export class Hud {
   private onPointerMove(e: PointerEvent): void {
     if (!this.isDragging) return;
     e.preventDefault();
-    const x = e.clientX - this.dragOffsetX;
-    const y = e.clientY - this.dragOffsetY;
+    const rawX = e.clientX - this.dragOffsetX;
+    const rawY = e.clientY - this.dragOffsetY;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const rect = this.root.getBoundingClientRect();
+    const width = rect.width || this.root.offsetWidth || 0;
+    const height = rect.height || this.root.offsetHeight || 0;
+    const minX = Math.min(0, vw - width);
+    const maxX = Math.max(0, vw - width);
+    const minY = Math.min(0, vh - height);
+    const maxY = Math.max(0, vh - height);
+    const x = Math.max(minX, Math.min(maxX, rawX));
+    const y = Math.max(minY, Math.min(maxY, rawY));
     this.root.style.left = `${x}px`;
     this.root.style.top = `${y}px`;
     updateSnapGuides(this.root);
@@ -325,6 +336,7 @@ export class Hud {
     if (!this.isDragging) return;
     this.isDragging = false;
     snapToGrid(this.root);
+    clampToViewport(this.root);
     hideSnapGuides();
     this.root.style.transition = "";
     this.root.classList.remove("hud--dragging");

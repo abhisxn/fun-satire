@@ -7,11 +7,16 @@
    Chromium (the ancestor's backdrop root can't supply it a real backdrop to
    sample). Same reason FilterPanel/GalleryPanel/MenuPanel all attach to
    document.body and position themselves via JS instead of CSS anchoring.
-   position:fixed here + top/left set in PowerMeter.ts's updatePosition(),
-   computed from the protest button anchor's getBoundingClientRect().
+   Position is pure CSS here (no JS computation needed): right-aligned with
+   the menu button (same right offset as .hud-menu-btn in menuButton.css) so
+   the two read as a pair, vertically centered in the viewport on both mobile
+   and desktop.
    ============================================ */
 .power-meter {
   position: fixed;
+  top: 50%;
+  right: calc(16px + var(--hud-density) * 0.03571429);
+  transform: translateY(-50%);
   /* Sibling of #stage (z-index:500, see index.html) now that it's attached to
      document.body instead of nested in .premium-hud (z-index:1000) — needs
      its own explicit z-index above both so creatures and the HUD itself
@@ -46,8 +51,8 @@
 
 .power-meter__segment {
   flex-shrink: 0;
-  width: calc(17px + var(--hud-density) * 0.00758929);
-  height: calc(4px + var(--hud-density) * 0.00178571);
+  width: calc(22px + var(--hud-density) * 0.00982143);
+  height: calc(5px + var(--hud-density) * 0.00232143);
   border-radius: 2px;
   transition: background 0.1s linear;
 }

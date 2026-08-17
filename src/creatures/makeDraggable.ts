@@ -1,4 +1,4 @@
-import { snapToGrid } from "./snapGrid";
+import { snapToGrid, clampToViewport } from "./snapGrid";
 import { updateSnapGuides, hideSnapGuides } from "./snapGuides";
 
 export interface DragHandle {
@@ -22,6 +22,10 @@ export function attachDrag(
   let dragging = false;
   let offsetX = 0;
   let offsetY = 0;
+  let deltaX = 0;
+  let deltaY = 0;
+  let targetWidth = 0;
+  let targetHeight = 0;
   const moveCb = onMove ?? (() => {});
   const dragStartCb = onDragStart ?? (() => {});
   const dragEndCb = onDragEnd ?? (() => {});
@@ -30,35 +34,70 @@ export function attachDrag(
   target.style.left = `${x}px`;
   target.style.top = `${y}px`;
 
-  const finalize = (): void => {
-    dragging = false;
-    target.classList.remove('dragging');
-    snapToGrid(target);
-    hideSnapGuides();
-    const rect = target.getBoundingClientRect();
-    x = rect.left;
-    y = rect.top;
-    dragEndCb();
-  };
+  const clampAndApply = (clientX: number, clientY: number): void => {
+    const rawRectLeft = clientX - offsetX;
+    const rawRectTop = clientY - offsetY;
 
-  const handleMouseDown = (e: MouseEvent): void => {
-    dragging = true;
-    target.classList.add('dragging');
-    const rect = target.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-    e.preventDefault();
-    dragStartCb();
-  };
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-  const handleMouseMove = (e: MouseEvent): void => {
-    if (!dragging) return;
-    x = e.clientX - offsetX;
-    y = e.clientY - offsetY;
+    const minLeft = Math.min(0, vw - targetWidth);
+    const maxLeft = Math.max(0, vw - targetWidth);
+    const minTop = Math.min(0, vh - targetHeight);
+    const maxTop = Math.max(0, vh - targetHeight);
+
+    const clampedRectLeft = Math.max(minLeft, Math.min(maxLeft, rawRectLeft));
+    const clampedRectTop = Math.max(minTop, Math.min(maxTop, rawRectTop));
+
+    x = clampedRectLeft - deltaX;
+    y = clampedRectTop - deltaY;
     target.style.left = `${x}px`;
     target.style.top = `${y}px`;
     updateSnapGuides(target);
     moveCb(x, y);
+  };
+
+  const finalize = (): void => {
+    dragging = false;
+    target.classList.remove('dragging');
+    snapToGrid(target);
+    clampToViewport(target);
+    hideSnapGuides();
+    const styleLeft = parseFloat(target.style.left);
+    const styleTop = parseFloat(target.style.top);
+    const rect = target.getBoundingClientRect();
+    x = isNaN(styleLeft) ? rect.left : styleLeft;
+    y = isNaN(styleTop) ? rect.top : styleTop;
+    dragEndCb();
+  };
+
+  const startDrag = (clientX: number, clientY: number): void => {
+    dragging = true;
+    target.classList.add('dragging');
+    const rect = target.getBoundingClientRect();
+    const styleLeft = parseFloat(target.style.left);
+    const styleTop = parseFloat(target.style.top);
+    const curStyleLeft = isNaN(styleLeft) ? x : styleLeft;
+    const curStyleTop = isNaN(styleTop) ? y : styleTop;
+
+    deltaX = rect.left - curStyleLeft;
+    deltaY = rect.top - curStyleTop;
+    targetWidth = rect.width || target.offsetWidth || parseFloat(target.style.width) || 0;
+    targetHeight = rect.height || target.offsetHeight || parseFloat(target.style.height) || 0;
+
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+    dragStartCb();
+  };
+
+  const handleMouseDown = (e: MouseEvent): void => {
+    e.preventDefault();
+    startDrag(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e: MouseEvent): void => {
+    if (!dragging) return;
+    clampAndApply(e.clientX, e.clientY);
   };
 
   const handleMouseUp = (): void => {
@@ -70,15 +109,10 @@ export function attachDrag(
     // A second finger means the user is pinching (see pinchZoom.ts), not
     // dragging — leave multi-touch starts alone.
     if (e.touches.length !== 1) return;
-    dragging = true;
-    target.classList.add('dragging');
-    const rect = target.getBoundingClientRect();
     const t = e.touches[0];
     if (!t) return;
-    offsetX = t.clientX - rect.left;
-    offsetY = t.clientY - rect.top;
     e.preventDefault();
-    dragStartCb();
+    startDrag(t.clientX, t.clientY);
   };
 
   const handleTouchMove = (e: TouchEvent): void => {
@@ -91,12 +125,7 @@ export function attachDrag(
     }
     const t = e.touches[0];
     if (!t) return;
-    x = t.clientX - offsetX;
-    y = t.clientY - offsetY;
-    target.style.left = `${x}px`;
-    target.style.top = `${y}px`;
-    updateSnapGuides(target);
-    moveCb(x, y);
+    clampAndApply(t.clientX, t.clientY);
   };
 
   const handleTouchEnd = (): void => {

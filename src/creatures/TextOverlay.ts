@@ -3,6 +3,7 @@ import type { DragHandle } from "./makeDraggable";
 import { attachPinchZoom } from "./pinchZoom";
 import type { PinchZoomHandle } from "./pinchZoom";
 import { isTouchDevice } from "./touchSupport";
+import { clampToViewport } from "./snapGrid";
 
 // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
 export const TEXT_Z_INDEX = 100;
@@ -145,8 +146,13 @@ export class TextOverlay {
         if (this.cornerResizing) return;
         this.pinchStartFontSize = this.fontSize;
       },
+      () => {
+        if (this.cornerResizing) return;
+        clampToViewport(this.el);
+      },
     );
     this.pinch.attach();
+    clampToViewport(this.el);
   }
 
   setFont(fontFamily: string): void {
@@ -199,6 +205,7 @@ export class TextOverlay {
     };
     const onUp = (): void => {
       this.cornerResizing = false;
+      clampToViewport(this.el);
       document.removeEventListener("mousemove", onMove as EventListener);
       document.removeEventListener("mouseup", onUp as EventListener);
       document.removeEventListener("touchmove", onMove as EventListener);

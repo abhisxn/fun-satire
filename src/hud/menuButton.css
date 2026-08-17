@@ -20,6 +20,9 @@
   outline: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   transition: transform 0.4s var(--hud-ease-spring), box-shadow 0.4s var(--hud-ease-smooth),
     opacity 0.3s var(--hud-ease-smooth);
   z-index: 1000;

@@ -101,6 +101,72 @@ describe('makeDraggable/attachDrag', () => {
       handle.detach();
     });
 
+    it('clamps drag coordinates within viewport when dragged past boundaries', () => {
+      Object.defineProperty(window, 'innerWidth', { value: 1000, configurable: true });
+      Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true });
+
+      const onMove = vi.fn();
+      const handle = attachDrag(el, { x: 100, y: 200 }, onMove);
+      handle.attach();
+
+      const mockRect = { left: 100, top: 200, right: 240, bottom: 340, width: 140, height: 140, x: 100, y: 200, toJSON: () => ({}) };
+      vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(mockRect);
+
+      el.dispatchEvent(new MouseEvent('mousedown', { clientX: 120, clientY: 220, bubbles: true }));
+
+      // Drag way beyond top-left corner
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: -500, clientY: -500, bubbles: true }));
+      expect(handle.getPosition()).toEqual({ x: 0, y: 0 });
+      expect(el.style.left).toBe('0px');
+      expect(el.style.top).toBe('0px');
+      expect(onMove).toHaveBeenCalledWith(0, 0);
+
+      // Drag way beyond bottom-right corner (1000 - 140 = 860, 800 - 140 = 660)
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 3000, clientY: 3000, bubbles: true }));
+      expect(handle.getPosition()).toEqual({ x: 860, y: 660 });
+      expect(el.style.left).toBe('860px');
+      expect(el.style.top).toBe('660px');
+      expect(onMove).toHaveBeenCalledWith(860, 660);
+
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      expect(handle.getPosition()).toEqual({ x: 860, y: 660 });
+      expect(el.style.left).toBe('860px');
+      expect(el.style.top).toBe('660px');
+
+      handle.detach();
+    });
+
+    it('clamps transformed/scaled element bounding box within viewport', () => {
+      Object.defineProperty(window, 'innerWidth', { value: 1000, configurable: true });
+      Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true });
+
+      el.style.transform = 'scale(2)';
+      // When scaled 2x, unscaled width is 140, scaled rect width is 280.
+      // Origin center: visual left is left - (280 - 140)/2 = left - 70.
+      // style.left = 100 -> rect.left = 30.
+      const handle = attachDrag(el, { x: 100, y: 100 });
+      handle.attach();
+
+      const mockRect = { left: 30, top: 30, right: 310, bottom: 310, width: 280, height: 280, x: 30, y: 30, toJSON: () => ({}) };
+      vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(mockRect);
+
+      el.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, clientY: 100, bubbles: true }));
+
+      // Drag past top-left: visual left/top should clamp to 0, which corresponds to style.left = 70px
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: -500, clientY: -500, bubbles: true }));
+      expect(el.style.left).toBe('70px');
+      expect(el.style.top).toBe('70px');
+
+      // Drag past bottom-right: visual rect right should clamp to 1000 (visual left = 720),
+      // which corresponds to style.left = 720 + 70 = 790px.
+      // visual bottom clamps to 800 (visual top = 520), style.top = 520 + 70 = 590px.
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 3000, clientY: 3000, bubbles: true }));
+      expect(el.style.left).toBe('790px');
+      expect(el.style.top).toBe('590px');
+
+      handle.detach();
+    });
+
     it('ignores mousemove while not dragging', () => {
       const onMove = vi.fn();
       const handle = attachDrag(el, { x: 100, y: 200 }, onMove);
@@ -142,6 +208,49 @@ describe('makeDraggable/attachDrag', () => {
 
       document.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
       expect(handle.isDragging()).toBe(false);
+
+      handle.detach();
+    });
+
+    it('clamps touch drag coordinates within viewport when dragged past boundaries', () => {
+      Object.defineProperty(window, 'innerWidth', { value: 1000, configurable: true });
+      Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true });
+
+      const onMove = vi.fn();
+      const handle = attachDrag(el, { x: 100, y: 200 }, onMove);
+      handle.attach();
+
+      const mockRect = { left: 100, top: 200, right: 240, bottom: 340, width: 140, height: 140, x: 100, y: 200, toJSON: () => ({}) };
+      vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(mockRect);
+
+      el.dispatchEvent(new TouchEvent('touchstart', {
+        touches: [new Touch({ identifier: 0, target: el, clientX: 120, clientY: 220 })],
+        bubbles: true,
+        cancelable: true,
+      }));
+
+      // Drag way beyond top-left corner
+      document.dispatchEvent(new TouchEvent('touchmove', {
+        touches: [new Touch({ identifier: 0, target: el, clientX: -500, clientY: -500 })],
+        bubbles: true,
+        cancelable: true,
+      }));
+      expect(handle.getPosition()).toEqual({ x: 0, y: 0 });
+      expect(el.style.left).toBe('0px');
+      expect(el.style.top).toBe('0px');
+
+      // Drag way beyond bottom-right corner
+      document.dispatchEvent(new TouchEvent('touchmove', {
+        touches: [new Touch({ identifier: 0, target: el, clientX: 3000, clientY: 3000 })],
+        bubbles: true,
+        cancelable: true,
+      }));
+      expect(handle.getPosition()).toEqual({ x: 860, y: 660 });
+      expect(el.style.left).toBe('860px');
+      expect(el.style.top).toBe('660px');
+
+      document.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
+      expect(handle.getPosition()).toEqual({ x: 860, y: 660 });
 
       handle.detach();
     });

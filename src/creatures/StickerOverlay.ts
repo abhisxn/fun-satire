@@ -3,6 +3,7 @@ import type { DragHandle } from "./makeDraggable";
 import { attachPinchZoom } from "./pinchZoom";
 import type { PinchZoomHandle } from "./pinchZoom";
 import { isTouchDevice } from "./touchSupport";
+import { clampToViewport } from "./snapGrid";
 
 // Below #stage (z-index:500) so bugs and the eye/finger/creature grid render above it.
 export const STICKER_Z_INDEX = 100;
@@ -185,8 +186,13 @@ export class StickerOverlay {
         this.hideDragHint();
         this.pinchStartWidth = this.width;
       },
+      () => {
+        if (this.cornerResizing) return;
+        clampToViewport(this.el);
+      },
     );
     this.pinch.attach();
+    clampToViewport(this.el);
   }
 
   private buildDragHint(): HTMLDivElement {
@@ -360,6 +366,7 @@ export class StickerOverlay {
     };
     const onUp = (): void => {
       this.cornerResizing = false;
+      clampToViewport(this.el);
       document.removeEventListener("mousemove", onMove as EventListener);
       document.removeEventListener("mouseup", onUp as EventListener);
       document.removeEventListener("touchmove", onMove as EventListener);

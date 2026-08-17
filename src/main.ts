@@ -9,6 +9,7 @@ import { RaidController, SECURITY_MAX_UNITS } from "./creatures/RaidController";
 import { PowerMeter } from "./hud/PowerMeter";
 import { StickerOverlay, DEFAULT_WIDTH } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
+import { clampToViewport } from "./creatures/snapGrid";
 import { Hud } from "./hud/Hud";
 import { MenuButton } from "./hud/MenuButton";
 import { FilterPanel } from "./hud/FilterPanel";
@@ -175,6 +176,9 @@ async function main(): Promise<void> {
   let resizeTimeout: number;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimeout);
+    if (activeOverlay) {
+      clampToViewport(activeOverlay.el);
+    }
     resizeTimeout = window.setTimeout(() => {
       grid.respawn();
     }, 200);
@@ -292,7 +296,7 @@ async function main(): Promise<void> {
     });
 
     const powerMeter = new PowerMeter();
-    powerMeter.attachTo(hud.getProtestAnchor());
+    powerMeter.attachTo(document.body);
 
     const protestBtn = hud.getProtestButton();
     protestBtn.addEventListener("pointerdown", () => {

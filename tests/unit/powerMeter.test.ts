@@ -9,25 +9,20 @@ describe('PowerMeter', () => {
     expect(meter.root.querySelectorAll('.power-meter__segment')).toHaveLength(15);
   });
 
-  it('attachTo appends its root to document.body, not the anchor', () => {
+  it('attachTo appends its root to the given host', () => {
     const meter = new PowerMeter();
-    const anchor = document.createElement('div');
-    document.body.appendChild(anchor);
-    meter.attachTo(anchor);
+    meter.attachTo(document.body);
     expect(document.body.contains(meter.root)).toBe(true);
-    expect(anchor.contains(meter.root)).toBe(false);
   });
 
-  it('show() positions the root above the anchor, centered on it', () => {
+  it('show() reveals the root and hide() hides it — positioning is pure CSS (powerMeter.css), not JS-computed', () => {
     const meter = new PowerMeter();
-    const anchor = document.createElement('div');
-    document.body.appendChild(anchor);
-    anchor.getBoundingClientRect = () => ({ top: 600, left: 400, bottom: 640, right: 500, width: 100, height: 40 }) as DOMRect;
-    meter.attachTo(anchor);
-    meter.root.getBoundingClientRect = () => ({ top: 0, left: 0, bottom: 116, right: 34, width: 34, height: 116 }) as DOMRect;
+    meter.attachTo(document.body);
+    expect(meter.root.classList.contains('power-meter--hidden')).toBe(true);
     meter.show();
-    expect(meter.root.style.left).toBe(`${400 + 50 - 17}px`);
-    expect(meter.root.style.top).toBe(`${600 - 20 - 116}px`);
+    expect(meter.root.classList.contains('power-meter--hidden')).toBe(false);
+    meter.hide();
+    expect(meter.root.classList.contains('power-meter--hidden')).toBe(true);
   });
 
   it('setFraction(0) leaves every segment unfilled', () => {
