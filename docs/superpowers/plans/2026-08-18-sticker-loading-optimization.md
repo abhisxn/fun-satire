@@ -89,7 +89,7 @@ git commit -m "perf: convert sticker assets to webp and generate gallery thumbna
 - Create: `src/core/assetPreload.ts`
 - Test: `tests/unit/assetPreload.test.ts`
 
-- [ ] **Step 1: Write failing unit test for `preloadImages`**
+- [x] **Step 1: Write failing unit test for `preloadImages`**
 
 ```ts
 import { describe, it, expect, vi } from "vitest";
@@ -108,12 +108,12 @@ describe("preloadImages", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/unit/assetPreload.test.ts`
 Expected: FAIL with module not found.
 
-- [ ] **Step 3: Implement `src/core/assetPreload.ts`**
+- [x] **Step 3: Implement `src/core/assetPreload.ts`**
 
 ```ts
 /**
@@ -138,12 +138,12 @@ export function preloadImages(urls: readonly (string | undefined | null)[]): Pro
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/unit/assetPreload.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/assetPreload.ts tests/unit/assetPreload.test.ts
