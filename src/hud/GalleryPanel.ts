@@ -7,38 +7,39 @@ export interface StickerDef {
   // Shown in place of `src` while the sticker is being dragged or shaken
   // (only set for `hasFace` stickers, which have a matching "weird" expression asset).
   readonly dragSrc?: string;
+  readonly thumbSrc: string;
   readonly label: string;
   readonly hasFace: boolean;
 }
 
 const STICKER_DEFS: readonly StickerDef[] = [
-  { src: "/avatars/grin/grin_adalat_sharma.png", dragSrc: "/avatars/normal/adalat_sharma.png", label: "Adalat Sharma", hasFace: true },
-  { src: "/avatars/grin/grin_chronology.png", dragSrc: "/avatars/normal/chronology.png", label: "Chronology", hasFace: true },
-  { src: "/avatars/grin/grin_DNA-tihari.png", dragSrc: "/avatars/normal/DNA-tihari.png", label: "DNA Tihari", hasFace: true },
-  { src: "/avatars/grin/grin_ethanol.png", dragSrc: "/avatars/normal/ethanol.png", label: "Ethanol", hasFace: true },
-  { src: "/avatars/grin/grin_gutter.png", dragSrc: "/avatars/normal/gutter.png", label: "Gutter", hasFace: true },
-  { src: "/avatars/grin/grin_kaleshi.png", dragSrc: "/avatars/normal/kaleshi.png", label: "Kaleshi", hasFace: true },
-  { src: "/avatars/grin/grin_leak-pradhan.png", dragSrc: "/avatars/normal/leak-pradhan.png", label: "Leak Pradhan", hasFace: true },
-  { src: "/avatars/grin/grin_mananiya-sadasya.png", dragSrc: "/avatars/normal/mananiya-sadasya.png", label: "Mananiya Sadasya", hasFace: true },
-  { src: "/avatars/grin/grin_naya_leak.png", dragSrc: "/avatars/normal/naya_leak.png", label: "Naya Leak", hasFace: true },
-  { src: "/avatars/grin/grin_petroleum.png", dragSrc: "/avatars/normal/petroleum.png", label: "Petroleum", hasFace: true },
-  { src: "/avatars/grin/grin_reel-minister.png", dragSrc: "/avatars/normal/reel-minister.png", label: "Reel Minister", hasFace: true },
-  { src: "/avatars/grin/grin_republic.png", dragSrc: "/avatars/normal/republic.png", label: "Republic", hasFace: true },
-  { src: "/avatars/grin/grin_tax-tai.png", dragSrc: "/avatars/normal/tax-tai.png", label: "Tax Tai", hasFace: true },
-  { src: "/avatars/grin/grin_vishwaguru.png", dragSrc: "/avatars/normal/vishwaguru.png", label: "Vishwaguru", hasFace: true },
+  { src: "/avatars/grin/grin_adalat_sharma.webp", dragSrc: "/avatars/normal/adalat_sharma.webp", thumbSrc: "/avatars/thumbs/grin_adalat_sharma.webp", label: "Adalat Sharma", hasFace: true },
+  { src: "/avatars/grin/grin_chronology.webp", dragSrc: "/avatars/normal/chronology.webp", thumbSrc: "/avatars/thumbs/grin_chronology.webp", label: "Chronology", hasFace: true },
+  { src: "/avatars/grin/grin_DNA-tihari.webp", dragSrc: "/avatars/normal/DNA-tihari.webp", thumbSrc: "/avatars/thumbs/grin_DNA-tihari.webp", label: "DNA Tihari", hasFace: true },
+  { src: "/avatars/grin/grin_ethanol.webp", dragSrc: "/avatars/normal/ethanol.webp", thumbSrc: "/avatars/thumbs/grin_ethanol.webp", label: "Ethanol", hasFace: true },
+  { src: "/avatars/grin/grin_gutter.webp", dragSrc: "/avatars/normal/gutter.webp", thumbSrc: "/avatars/thumbs/grin_gutter.webp", label: "Gutter", hasFace: true },
+  { src: "/avatars/grin/grin_kaleshi.webp", dragSrc: "/avatars/normal/kaleshi.webp", thumbSrc: "/avatars/thumbs/grin_kaleshi.webp", label: "Kaleshi", hasFace: true },
+  { src: "/avatars/grin/grin_leak-pradhan.webp", dragSrc: "/avatars/normal/leak-pradhan.webp", thumbSrc: "/avatars/thumbs/grin_leak-pradhan.webp", label: "Leak Pradhan", hasFace: true },
+  { src: "/avatars/grin/grin_mananiya-sadasya.webp", dragSrc: "/avatars/normal/mananiya-sadasya.webp", thumbSrc: "/avatars/thumbs/grin_mananiya-sadasya.webp", label: "Mananiya Sadasya", hasFace: true },
+  { src: "/avatars/grin/grin_naya_leak.webp", dragSrc: "/avatars/normal/naya_leak.webp", thumbSrc: "/avatars/thumbs/grin_naya_leak.webp", label: "Naya Leak", hasFace: true },
+  { src: "/avatars/grin/grin_petroleum.webp", dragSrc: "/avatars/normal/petroleum.webp", thumbSrc: "/avatars/thumbs/grin_petroleum.webp", label: "Petroleum", hasFace: true },
+  { src: "/avatars/grin/grin_reel-minister.webp", dragSrc: "/avatars/normal/reel-minister.webp", thumbSrc: "/avatars/thumbs/grin_reel-minister.webp", label: "Reel Minister", hasFace: true },
+  { src: "/avatars/grin/grin_republic.webp", dragSrc: "/avatars/normal/republic.webp", thumbSrc: "/avatars/thumbs/grin_republic.webp", label: "Republic", hasFace: true },
+  { src: "/avatars/grin/grin_tax-tai.webp", dragSrc: "/avatars/normal/tax-tai.webp", thumbSrc: "/avatars/thumbs/grin_tax-tai.webp", label: "Tax Tai", hasFace: true },
+  { src: "/avatars/grin/grin_vishwaguru.webp", dragSrc: "/avatars/normal/vishwaguru.webp", thumbSrc: "/avatars/thumbs/grin_vishwaguru.webp", label: "Vishwaguru", hasFace: true },
   // sticker_38–48: visually spot-checked — these are text-only bubble-letter
   // name badges (no portrait artwork), not faces.
-  { src: "/avatars/text_stickers/sticker_38.png", label: "Sticker 38", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_39.png", label: "Sticker 39", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_40.png", label: "Sticker 40", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_41.png", label: "Sticker 41", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_42.png", label: "Sticker 42", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_43.png", label: "Sticker 43", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_44.png", label: "Sticker 44", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_45.png", label: "Sticker 45", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_46.png", label: "Sticker 46", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_47.png", label: "Sticker 47", hasFace: false },
-  { src: "/avatars/text_stickers/sticker_48.png", label: "Sticker 48", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_38.webp", thumbSrc: "/avatars/thumbs/sticker_38.webp", label: "Sticker 38", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_39.webp", thumbSrc: "/avatars/thumbs/sticker_39.webp", label: "Sticker 39", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_40.webp", thumbSrc: "/avatars/thumbs/sticker_40.webp", label: "Sticker 40", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_41.webp", thumbSrc: "/avatars/thumbs/sticker_41.webp", label: "Sticker 41", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_42.webp", thumbSrc: "/avatars/thumbs/sticker_42.webp", label: "Sticker 42", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_43.webp", thumbSrc: "/avatars/thumbs/sticker_43.webp", label: "Sticker 43", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_44.webp", thumbSrc: "/avatars/thumbs/sticker_44.webp", label: "Sticker 44", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_45.webp", thumbSrc: "/avatars/thumbs/sticker_45.webp", label: "Sticker 45", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_46.webp", thumbSrc: "/avatars/thumbs/sticker_46.webp", label: "Sticker 46", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_47.webp", thumbSrc: "/avatars/thumbs/sticker_47.webp", label: "Sticker 47", hasFace: false },
+  { src: "/avatars/text_stickers/sticker_48.webp", thumbSrc: "/avatars/thumbs/sticker_48.webp", label: "Sticker 48", hasFace: false },
 ];
 
 interface TextDef {
@@ -242,8 +243,10 @@ export class GalleryPanel {
 
     const img = document.createElement("img");
     img.className = "sticker-thumb";
-    img.src = def.src;
+    img.src = def.thumbSrc;
     img.alt = def.label;
+    img.loading = "lazy";
+    img.decoding = "async";
     img.draggable = false;
     card.appendChild(img);
 
