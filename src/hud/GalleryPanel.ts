@@ -18,6 +18,7 @@ const STICKER_DEFS: readonly StickerDef[] = [
   { src: "/avatars/grin/grin_DNA-tihari.webp", dragSrc: "/avatars/normal/DNA-tihari.webp", thumbSrc: "/avatars/thumbs/grin_DNA-tihari.webp", label: "DNA Tihari", hasFace: true },
   { src: "/avatars/grin/grin_ethanol.webp", dragSrc: "/avatars/normal/ethanol.webp", thumbSrc: "/avatars/thumbs/grin_ethanol.webp", label: "Ethanol", hasFace: true },
   { src: "/avatars/grin/grin_gutter.webp", dragSrc: "/avatars/normal/gutter.webp", thumbSrc: "/avatars/thumbs/grin_gutter.webp", label: "Gutter", hasFace: true },
+  { src: "/avatars/grin/grin_gyanu.webp", dragSrc: "/avatars/normal/gyanu.webp", thumbSrc: "/avatars/thumbs/grin_gyanu.webp", label: "Gyanu", hasFace: true },
   { src: "/avatars/grin/grin_kaleshi.webp", dragSrc: "/avatars/normal/kaleshi.webp", thumbSrc: "/avatars/thumbs/grin_kaleshi.webp", label: "Kaleshi", hasFace: true },
   { src: "/avatars/grin/grin_leak-pradhan.webp", dragSrc: "/avatars/normal/leak-pradhan.webp", thumbSrc: "/avatars/thumbs/grin_leak-pradhan.webp", label: "Leak Pradhan", hasFace: true },
   { src: "/avatars/grin/grin_mananiya-sadasya.webp", dragSrc: "/avatars/normal/mananiya-sadasya.webp", thumbSrc: "/avatars/thumbs/grin_mananiya-sadasya.webp", label: "Mananiya Sadasya", hasFace: true },
