@@ -62,7 +62,7 @@ async function main(): Promise<void> {
 
   // --- Sound bed (isolated init: owns its own AudioManager + widget. No
   // other init block touches this one.) ---
-  const audioManager = new AudioManager({ volume: 0.16 });
+  const audioManager = new AudioManager({ volume: 0.35 });
   const audioWidget = new AudioWidget(audioManager);
   audioWidget.attachTo(document.body);
   void audioWidget.attemptAutoplay();
