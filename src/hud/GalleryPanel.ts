@@ -28,8 +28,9 @@ const STICKER_DEFS: readonly StickerDef[] = [
   { src: "/avatars/grin/grin_republic.webp", dragSrc: "/avatars/normal/republic.webp", thumbSrc: "/avatars/thumbs/grin_republic.webp", label: "Republic", hasFace: true },
   { src: "/avatars/grin/grin_tax-tai.webp", dragSrc: "/avatars/normal/tax-tai.webp", thumbSrc: "/avatars/thumbs/grin_tax-tai.webp", label: "Tax Tai", hasFace: true },
   { src: "/avatars/grin/grin_vishwaguru.webp", dragSrc: "/avatars/normal/vishwaguru.webp", thumbSrc: "/avatars/thumbs/grin_vishwaguru.webp", label: "Vishwaguru", hasFace: true },
-  // sticker_38–48: visually spot-checked — these are text-only bubble-letter
+  // sticker_36, 38–48: visually spot-checked — these are text-only bubble-letter
   // name badges (no portrait artwork), not faces.
+  { src: "/avatars/text_stickers/sticker_36.webp", thumbSrc: "/avatars/thumbs/sticker_36.webp", label: "Sticker 36", hasFace: false },
   { src: "/avatars/text_stickers/sticker_38.webp", thumbSrc: "/avatars/thumbs/sticker_38.webp", label: "Sticker 38", hasFace: false },
   { src: "/avatars/text_stickers/sticker_39.webp", thumbSrc: "/avatars/thumbs/sticker_39.webp", label: "Sticker 39", hasFace: false },
   { src: "/avatars/text_stickers/sticker_40.webp", thumbSrc: "/avatars/thumbs/sticker_40.webp", label: "Sticker 40", hasFace: false },
