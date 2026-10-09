@@ -35,6 +35,7 @@ export class PowerMeter {
   readonly root: HTMLElement;
   private readonly segments: HTMLElement[];
   private readonly segmentColors: string[];
+  private readonly markers: HTMLElement;
   private fraction = 0;
 
   constructor() {
@@ -47,9 +48,30 @@ export class PowerMeter {
     root.classList.add("power-meter--hidden");
     this.root = root;
 
+    const label = document.createElement("div");
+    label.className = "power-meter__label";
+    label.innerHTML = "Strength<br>Meter";
+    label.setAttribute("aria-hidden", "true");
+    root.appendChild(label);
+
+    const bar = document.createElement("div");
+    bar.className = "power-meter__bar";
+    root.appendChild(bar);
+
     const track = document.createElement("div");
     track.className = "power-meter__track";
-    root.appendChild(track);
+    bar.appendChild(track);
+
+    // Two dark triangles flank the track, pointing in at the top filled
+    // segment. They ride a shared translateY driven by setFraction().
+    this.markers = document.createElement("div");
+    this.markers.className = "power-meter__markers";
+    for (const side of ["left", "right"]) {
+      const tri = document.createElement("span");
+      tri.className = `power-meter__marker power-meter__marker--${side}`;
+      this.markers.appendChild(tri);
+    }
+    bar.appendChild(this.markers);
 
     // Bottom-up: segment 0 is the lowest (weakest/yellow), the last is the
     // highest (strongest/red). column-reverse on .power-meter__track (see
@@ -86,6 +108,9 @@ export class PowerMeter {
     this.segments.forEach((seg, i) => {
       seg.style.background = i < filledCount ? this.segmentColors[i]! : EMPTY_SEGMENT_COLOR;
     });
+    // Markers sit on the top filled segment (bottom one at 0%); --level is
+    // how many segment-pitches up from the bottom, scaled in powerMeter.css.
+    this.markers.style.setProperty("--level", String(Math.max(0, filledCount - 1)));
     this.root.setAttribute("aria-valuenow", String(Math.round(this.fraction * 100)));
   }
 

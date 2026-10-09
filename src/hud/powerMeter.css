@@ -1,6 +1,6 @@
 /* ============================================
    Power Meter — Protest strength (Figma node 447:10282)
-   Vertical bar of 15 rounded segments, resting above the bottom-right HUD
+   Label + vertical bar of 15 pill segments with level markers, resting above the bottom-right HUD
    ============================================ */
 .power-meter {
   position: fixed;
@@ -8,12 +8,15 @@
   right: calc(20px + env(safe-area-inset-right, 0px));
   z-index: 1001;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   padding: 4px;
   background: var(--hud-glass-bg);
   backdrop-filter: blur(var(--hud-glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--hud-glass-blur));
   border: 1px solid var(--hud-glass-border);
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: 0px 1px 0px #ffffff, 0px 14px 20px rgba(97, 86, 80, 0.25);
   pointer-events: none;
   transition: opacity 200ms ease, transform 200ms ease;
@@ -29,35 +32,73 @@
   }
 }
 
+.power-meter__label {
+  font-family: "DynaPuff", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 7px;
+  line-height: normal;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  color: #000;
+}
+
+/* 33x92 frame from the Figma: 15 pills at a 6px pitch (x 8-25, y 2-90) with a
+   triangle on each side (x 1.5-6 and 27-31.5). */
+.power-meter__bar {
+  position: relative;
+  width: 33px;
+  height: 92px;
+}
+
 .power-meter__track {
+  position: absolute;
+  left: 8px;
+  top: 2px;
   display: flex;
   flex-direction: column-reverse;
-  gap: 3px;
+  gap: 2px;
 }
 
 .power-meter__segment {
   flex-shrink: 0;
-  width: 24px;
-  height: 6px;
+  width: 17px;
+  height: 4px;
   border-radius: 2px;
   transition: background 100ms linear;
+}
+
+/* --level (set from setFraction) = segments above the bottom one. Bottom
+   segment's centre is y=88; each level is one 6px pitch up. */
+.power-meter__markers {
+  position: absolute;
+  inset: 0;
+  --level: 0;
+  transform: translateY(calc(var(--level) * -6px));
+  transition: transform 100ms linear;
+}
+
+.power-meter__marker {
+  position: absolute;
+  top: 85.4px;
+  width: 0;
+  height: 0;
+  border-top: 2.6px solid transparent;
+  border-bottom: 2.6px solid transparent;
+}
+
+.power-meter__marker--left {
+  left: 1.5px;
+  border-left: 4.5px solid #2a2522;
+}
+
+.power-meter__marker--right {
+  left: 27px;
+  border-right: 4.5px solid #2a2522;
 }
 
 @media (max-width: 540px) {
   .power-meter {
     bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     right: calc(16px + env(safe-area-inset-right, 0px));
-    padding: 4px;
-    border-radius: 6px;
-  }
-
-  .power-meter__track {
-    gap: 2px;
-  }
-
-  .power-meter__segment {
-    width: 20px;
-    height: 5px;
-    border-radius: 2px;
   }
 }
