@@ -40,6 +40,14 @@ Tasks:
 4. Convert audio to Opus/AAC where not already, and lazy-load beds that are not needed at start.
 5. Review `animejs` v3 call sites (`BugSwarm.ts` and others). Replace with the Web Animations API if the usage is simple.
 
+### Status (2026-10-10, branch `chore/asset-diet`)
+
+Done: task 1. Unreferenced originals moved out of `public/` into `assets-src/` (history kept, nothing deleted): 42 avatar PNGs (40.4 MB), `assets/stickers` (13.3 MB), `audio/music-bed.mp3` (2.5 MB) and `creatures/eye.png`. `scripts/optimize-stickers.py` now reads from `assets-src/avatars` and writes WebP and thumbnails into `public/avatars`. `dist` went from 107 MB to 29 MB. All 107 asset paths referenced in code still resolve, and a fresh load plus quantity change produced no 404s (86 requests, about 9.8 MB transferred on first load).
+
+Not moved: `public/Reference` and `public/**/temp_*` are already git-ignored (local only, never deployed from git), and `public/assets/figma/references|subjects` (1.9 MB) are written by `scripts/export-figma-assets.mjs`.
+
+Still open: tasks 2 to 5 (raster creatures and placards to display size, fonts, audio, animejs). First-load transfer is still about 9.8 MB, so the placard and creature images are the next target.
+
 Acceptance: `dist` size before and after recorded; no visual regression in a browser pass; Gallery and onboarding still load images without a visible pop.
 
 ## 3. Intro copy lint and card polish
