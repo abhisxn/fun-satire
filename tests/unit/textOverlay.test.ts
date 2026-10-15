@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TextOverlay, TEXT_Z_INDEX } from '../../src/creatures/TextOverlay';
+import { TextOverlay, TEXT_Z_INDEX, MAX_CHARS } from '../../src/creatures/TextOverlay';
 
 describe('TextOverlay', () => {
   beforeEach(() => {
@@ -73,6 +73,64 @@ describe('TextOverlay', () => {
     document.body.appendChild(t.el);
     t.destroy();
     expect(document.querySelector('.text-overlay')).toBeNull();
+  });
+
+  it('renders as a light placard tint with a stick and a character counter', () => {
+    const t = new TextOverlay('"Anton", sans-serif');
+    const editor = t.getEditor();
+    // Random light gradient on white (placard palette), dark lettering.
+    expect(editor.style.background).toContain('linear-gradient');
+    expect(editor.style.color).toMatch(/#1b1b1b|rgb\(27,\s*27,\s*27\)/);
+
+    const stick = t.el.querySelector<HTMLImageElement>('.text-overlay-stick');
+    expect(stick).not.toBeNull();
+    expect(stick?.getAttribute('src')).toContain('/creatures/placard_stick.png');
+
+    const counter = t.el.querySelector<HTMLElement>('.text-overlay-count');
+    expect(counter).not.toBeNull();
+    expect(counter?.textContent).toBe(`0/${MAX_CHARS}`);
+  });
+
+  it('clamps typed text to MAX_CHARS on input', () => {
+    const t = new TextOverlay('"Anton", sans-serif');
+    const editor = t.getEditor();
+    editor.textContent = 'x'.repeat(MAX_CHARS + 5);
+    editor.dispatchEvent(new Event('input'));
+
+    expect(t.getCharCount()).toBe(MAX_CHARS);
+    expect(t.el.querySelector<HTMLElement>('.text-overlay-count')?.textContent)
+      .toBe(`${MAX_CHARS}/${MAX_CHARS}`);
+  });
+
+  it('counts line breaks toward MAX_CHARS', () => {
+    const t = new TextOverlay('"Anton", sans-serif');
+    t.getEditor().innerHTML = 'ab<br>cd';
+    expect(t.getCharCount()).toBe(5);
+  });
+
+  it('preserves line breaks when clamping to MAX_CHARS', () => {
+    const t = new TextOverlay('"Anton", sans-serif');
+    const editor = t.getEditor();
+    editor.innerHTML = `${'a'.repeat(20)}<br>${'b'.repeat(25)}`;
+    editor.dispatchEvent(new Event('input'));
+
+    expect(t.getCharCount()).toBe(MAX_CHARS);
+    expect(editor.querySelector('br')).not.toBeNull();
+  });
+
+  it('prevents the keystroke that would exceed MAX_CHARS when already full', () => {
+    const t = new TextOverlay('"Anton", sans-serif');
+    const editor = t.getEditor();
+    editor.textContent = 'x'.repeat(MAX_CHARS);
+
+    const over = new InputEvent('beforeinput', {
+      inputType: 'insertText',
+      data: 'y',
+      bubbles: true,
+      cancelable: true,
+    });
+    editor.dispatchEvent(over);
+    expect(over.defaultPrevented).toBe(true);
   });
 
   it('scales font size via two-finger pinch, clamped within bounds', () => {
