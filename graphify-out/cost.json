@@ -41,6 +41,13 @@
       "input_tokens": 0,
       "output_tokens": 0,
       "files": 296
+    },
+    {
+      "date": "2026-10-09T19:55:16.096465+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 198,
+      "note": "--update, code+docs only; subagent token usage not reported by extractors"
     }
   ],
   "total_input_tokens": 0,
