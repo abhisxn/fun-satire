@@ -79,6 +79,7 @@ export class GalleryPanel {
   private readonly textFontByCard = new WeakMap<HTMLElement, string>();
   private readonly boundMouseMoveHandlers = new Map<HTMLElement, (e: MouseEvent) => void>();
   private stickerSelectListeners: Array<(src: string, dragSrc?: string) => void> = [];
+  private stickerIntentListeners: Array<(src: string, dragSrc?: string) => void> = [];
   private textSelectListeners: Array<(font: string) => void> = [];
   private openChangeCb: ((open: boolean) => void) | null = null;
 
@@ -198,6 +199,15 @@ export class GalleryPanel {
     };
   }
 
+  /** Fires when the pointer enters or presses a sticker card, ahead of the click, so a caller
+   * can start fetching that sticker's full-size images. May fire repeatedly for the same card. */
+  onStickerIntent(cb: (src: string, dragSrc?: string) => void): () => void {
+    this.stickerIntentListeners.push(cb);
+    return () => {
+      this.stickerIntentListeners = this.stickerIntentListeners.filter((l) => l !== cb);
+    };
+  }
+
   onTextSelect(cb: (font: string) => void): () => void {
     this.textSelectListeners.push(cb);
     return () => {
@@ -261,6 +271,12 @@ export class GalleryPanel {
     };
     card.addEventListener("mousemove", onMouseMove);
     this.boundMouseMoveHandlers.set(card, onMouseMove);
+
+    const signalIntent = (): void => {
+      for (const listener of this.stickerIntentListeners) listener(def.src, def.dragSrc);
+    };
+    card.addEventListener("pointerenter", signalIntent);
+    card.addEventListener("pointerdown", signalIntent);
 
     card.addEventListener("click", () => {
       for (const listener of this.stickerSelectListeners) listener(def.src, def.dragSrc);
