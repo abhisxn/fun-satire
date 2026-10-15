@@ -177,24 +177,6 @@ export interface RaidControllerConfig {
    * MEDIUM/LOW backfire on an already-running raid must NOT unlock it, only a brand
    * new raid should. */
   onRaidStart?: () => void;
-  /** Fired whenever the live security unit count actually changes — staggered
-   * backfire respawns trickling in, or the staggered despawn sweep (win or
-   * startRecovery()) removing units one at a time. Checked once per tick() call
-   * (and once after spawnPulse()'s synchronous burst) against the last-notified
-   * count, so it fires exactly once per real change, never once per frame
-   * regardless of whether anything changed. A caller mapping this to a continuous
-   * visual (e.g. sticker scale) should treat every call as "the raid's size right
-   * now," not accumulate or count calls.
-   *
-   * `tierBump` is 1 if the most recent backfire that shaped this raid was
-   * MEDIUM-power, 0 otherwise (LOW-power, or no backfire yet this raid) — a
-   * caller quantizing crowd size into a small number of visual tiers can add
-   * this on top so a MEDIUM backfire "compounds" into a visibly bigger jump
-   * than a LOW one at the same crowd size. Reset to 0 the moment a brand new
-   * raid starts (onRaidStart) — a backfire on an *already-running* raid keeps
-   * contributing its bump until the next raid begins, but never carries over
-   * into a fresh one. */
-  onCrowdSizeChanged?: (securityUnitCount: number, tierBump: 0 | 1) => void;
 }
 
 function rand(min: number, max: number): number {
@@ -230,12 +212,6 @@ export class RaidController {
     onDespawn: (unit) => {
       this.onSecurityRemoved?.(unit.x, unit.y, unit.w, unit.h);
       removeSecurityUnit(unit);
-      // Notified per removal, not once per tick, so a caller mapping unit count to a visual
-      // sees the count hit 0 *before* the despawn batch's onSettled fires the win payoff
-      // (main.ts's onProtestWin locks the sticker's scale, after which onCrowdSizeChanged is
-      // deliberately a no-op — so the final 0 has to land first). The once-per-tick call at
-      // the end of tick() still covers spawns and is a no-op when this already fired.
-      this.notifyCrowdSizeChanged();
     },
   });
   /** Backfire respawns handed to the pool but not yet fired — counted here so the
@@ -261,18 +237,8 @@ export class RaidController {
   private chargeStartedDuringRaid = false;
   private chargeFraction = 0;
   private lastAttritionAtMs = 0;
-  /** Last security-unit count passed to onCrowdSizeChanged — compared against
-   * this.units.length once per tick() (and once after spawnPulse()'s synchronous
-   * burst) so the callback fires exactly once per actual change. */
-  private lastNotifiedCrowdCount = 0;
-  /** Power band of the most recent MEDIUM/LOW backfire that shaped the current raid —
-   * null before any backfire this raid (or once a new raid starts). Threaded into
-   * onCrowdSizeChanged as tierBump so a caller's tiered visual can read a MEDIUM
-   * backfire as a bigger jump than a LOW one at the same crowd size. */
-  private lastBackfireBand: "medium" | "low" | null = null;
   private readonly onProtestWin: (() => void) | null;
   private readonly onRaidStart: (() => void) | null;
-  private readonly onCrowdSizeChanged: ((securityUnitCount: number, tierBump: 0 | 1) => void) | null;
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -281,7 +247,6 @@ export class RaidController {
     this.onSecurityRemoved = config.onSecurityRemoved ?? null;
     this.onProtestWin = config.onProtestWin ?? null;
     this.onRaidStart = config.onRaidStart ?? null;
-    this.onCrowdSizeChanged = config.onCrowdSizeChanged ?? null;
   }
 
   /** Feed every avatar drag-move point through here; internally detects shake and spawns raids. */
@@ -336,10 +301,6 @@ export class RaidController {
       this.state = "raiding";
       this.raidStartCount = this.grid.getCreatureCount();
       this.lastAttritionAtMs = Date.now();
-      // Reset for a genuine new raid (a shake). The standalone-charge backfire path
-      // in releaseCharge() also routes through here (it calls spawnPulse() to start
-      // the raid) and re-sets this right after — that assignment intentionally wins.
-      this.lastBackfireBand = null;
       this.onRaidStart?.();
     }
 
@@ -362,7 +323,6 @@ export class RaidController {
       }),
     );
     assignEscortFormation(this.units);
-    this.notifyCrowdSizeChanged();
   }
 
   /** Current security units, in the shape CreatureGrid.update() expects for repulsion/catching. */
@@ -435,7 +395,6 @@ export class RaidController {
       // queued — otherwise those respawns would still trickle in afterward.
       this.securityPool.cancelScheduledSpawns();
       this.scheduledSpawnCount = 0;
-      this.lastBackfireBand = null;
       if (this.units.length === 0) {
         this.state = "idle";
         this.onProtestWin?.();
@@ -460,13 +419,9 @@ export class RaidController {
       // No raid running when this charge began — starts one immediately, exactly
       // like a shake. spawnPulse() only runs its idle->raiding initialization when
       // the prior state is 'idle', so set that explicitly first. The spawn burst is
-      // near-instant (no queued delay), so spawnPulse()'s own notifyCrowdSizeChanged()
-      // call covers it — no separate notification needed here. lastBackfireBand is set
-      // AFTER spawnPulse() returns: spawnPulse()'s own idle->raiding transition resets
-      // it to null first (see spawnPulse), and this assignment must win over that reset.
+      // near-instant (no queued delay).
       this.state = "idle";
       this.spawnPulse(this.lastAvatarX, this.lastAvatarY);
-      this.lastBackfireBand = outcome.band === "medium" ? "medium" : "low";
       return;
     }
 
@@ -474,7 +429,6 @@ export class RaidController {
     // up — some units poof out now, and more than that many trickle back in one at a
     // time after a beat (see poofAndEscalate()). MEDIUM escalates harder than LOW.
     this.state = "raiding";
-    this.lastBackfireBand = outcome.band === "medium" ? "medium" : "low";
     this.poofAndEscalate(outcome.band === "medium" ? BACKFIRE_ESCALATE_MEDIUM : BACKFIRE_ESCALATE_LOW);
   }
 
@@ -577,7 +531,6 @@ export class RaidController {
       applyEscortRangeConstraint(unit, this.lastAvatarX, this.lastAvatarY, this.avatarWidth);
     }
     applySecurityCollisions(this.units);
-    this.notifyCrowdSizeChanged();
 
     if (this.state === "raiding" && nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS) {
       this.lastAttritionAtMs = nowMs;
@@ -604,19 +557,6 @@ export class RaidController {
     const period = CHARGE_SWEEP_HALF_PERIOD_MS * 2;
     const cyclePos = (elapsed % period) / CHARGE_SWEEP_HALF_PERIOD_MS;
     this.chargeFraction = cyclePos <= 1 ? cyclePos : 2 - cyclePos;
-  }
-
-  /** Compares the live unit count against the last value passed to
-   * onCrowdSizeChanged, firing the callback (and updating the stored value) only
-   * when it actually changed — called once per tick() and once after
-   * spawnPulse()'s synchronous burst, so a caller sees exactly one notification
-   * per real change, never one per frame regardless of whether anything moved. */
-  private notifyCrowdSizeChanged(): void {
-    if (this.units.length !== this.lastNotifiedCrowdCount) {
-      this.lastNotifiedCrowdCount = this.units.length;
-      const tierBump: 0 | 1 = this.lastBackfireBand === "medium" ? 1 : 0;
-      this.onCrowdSizeChanged?.(this.units.length, tierBump);
-    }
   }
 
   /** Full teardown — call when tearing this controller down: removes all remaining
