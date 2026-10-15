@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { getHoverToneParams, playHoverTone } from "../../src/audio/hoverTones";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { getHoverToneParams, getHoverToneStyle, playHoverTone, setHoverToneStyle } from "../../src/audio/hoverTones";
 import type { CreatureMode } from "../../src/creatures/creatureTypes";
 
 const MODES: CreatureMode[] = ["eyes", "pointedFinger", "cockroach", "placard"];
@@ -91,6 +91,14 @@ function createFakeAudioContext() {
 }
 
 describe("playHoverTone (oscillator wiring, mocked AudioContext)", () => {
+  // These assertions cover the oscillator-based "classic" renderer; the default style is now "pop".
+  let originalStyle = getHoverToneStyle();
+  beforeEach(() => {
+    originalStyle = getHoverToneStyle();
+    setHoverToneStyle("classic");
+  });
+  afterEach(() => setHoverToneStyle(originalStyle));
+
   it("creates and connects an oscillator through a gain node to the destination", () => {
     const { context, oscillatorNode, gainNode } = createFakeAudioContext();
 
