@@ -1,5 +1,7 @@
 # Protest Mode — Live Phone-Join Participation — Design
 
+> **Status: not implemented.** No code for this exists (as of 2026-10-10); the Protest button was later built as the hold-to-charge mechanic (ADR 014). Kept as a parked idea.
+
 ## Context
 
 This app's crowd (eyes, cockroaches, pointed fingers) is political satire: the crowd represents us, the protestors, wanting change. The HUD already has a "Protest" button (`buildAttackBtn()`, `src/hud/Hud.ts:217-240`) exposing `onAttackPress`/`onAttackRelease` callbacks — currently unwired to anything. The canvas-based power system this button historically triggered (laserBurn/bugEat/electricBurn, `EffectSystem.ts`, `Renderer.ts`, `PowerController.ts`) was removed in the July 29, 2026 DOM-first re-architecture (`docs/superpowers/plans/2026-07-29-dom-first-simplification.md:16-24`) and no longer exists.
