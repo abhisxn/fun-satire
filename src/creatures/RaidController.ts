@@ -267,10 +267,10 @@ export class RaidController {
     this.spawnPulse(x, y);
   }
 
-  /** Called every frame with the avatar's current on-screen width (including its live
-   * squeeze/inflate scale, see StickerOverlay.getWidth), so both the escort radius band
+  /** Called every frame with the avatar's current on-screen width (including its win
+   * squeeze scale, see StickerOverlay.getWidth), so both the escort radius band
    * and getSecurityUnits()'s repel radius scale correctly if the user resizes the avatar
-   * or a protest pops/inflates it mid-raid. The avatar-vs-*crowd* repel radius (as
+   * or a protest win squeezes it mid-raid. The avatar-vs-*crowd* repel radius (as
    * opposed to security-vs-crowd, scaled here) is a separate concern owned entirely by
    * main.ts, computed directly from the sticker's own getWidth() every frame — not
    * threaded through this field, since main.ts already has the sticker instance and

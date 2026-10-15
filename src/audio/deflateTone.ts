@@ -3,9 +3,8 @@ const DEFLATE_PEAK_GAIN = 0.22;
 
 /**
  * Fires one short falling-pitch "deflate" blip on the given (shared) AudioContext: a
- * sine sweeping downward in frequency — the mirror of playInflateTone — for when the
- * sticker's size tier shrinks a step, including the full-power win's snap to its
- * fixed floor scale. Fire-and-forget, like playPoofTone — the nodes disconnect
+ * sine sweeping downward in frequency, for the full-power win's snap of the sticker to
+ * its fixed floor scale. Fire-and-forget, like playPoofTone — the nodes disconnect
  * themselves once the envelope ends.
  */
 export function playDeflateTone(context: AudioContext): void {
