@@ -1,7 +1,7 @@
 # Fun Satire — System Architecture & ADRs
 
 ## 1. Syntax & Conventions
-- **Language**: TypeScript 5.x+, ES2022+ target.
+- **Language**: TypeScript 6.x, ES2022+ target.
 - **Strictness**: `erasableSyntaxOnly` (no parameter properties/enums), `verbatimModuleSyntax` (explicit `import type`), `noUnusedLocals`.
 - **Modularity**: Every module is a pure export; side effects are reserved exclusively for `src/main.ts`.
 - **Physics**: Semi-implicit Euler integration (`v += a*dt; p += v*dt`).
@@ -106,6 +106,20 @@
 - **Context**: The Filters panel's "Repel" slider originally controlled `physicsParams.repelStrength` via a 0–2 multiplier (`CreatureGrid.setRepelMultiplier`) — an abstract force-strength knob with no direct visual correlate. Independently, the raid/protest work needed the avatar's own repel *radius* (not strength) to scale continuously with the sticker's live size, via a separate `setAvatarRepelRadius` override.
 - **Decision**: The Filters slider now drives `physicsParams.repelRadius` directly in pixels (`CreatureGrid.setRepelRadius`, `REPEL_RADIUS_MIN/MAX/STEP/DEFAULT_REPEL_RADIUS` in `config/tokens.ts`, 60–360px), replacing the old multiplier control outright — `setRepelMultiplier` is removed, `repelStrength` stays a fixed internal constant (120). This is unrelated to and independent from `CreatureGrid.setAvatarRepelRadius` (the avatar-only override used by the raid/win mechanic), which continues to exist alongside it — the grid supports both a global repel radius (user-controlled) and a per-avatar override (raid/win-controlled) simultaneously.
 - **Consequence**: The repel slider now has a direct, legible unit (pixels of push-away distance) instead of an abstract multiplier. Any code still calling `setRepelMultiplier` is a bug — the method no longer exists.
+
+### ADR 017: Placard sizing — aspect-compensated sign width over a shortened stick
+
+- **Status**: Accepted.
+- **Context**: Placard signs rendered at 17–47% of stick height (`PLACARD_BASE_W` 150px, sign ratios as low as 0.5), so the stick read as an oversized pole and the satirical slogans were illegible at typical creature scales.
+- **Decision**: In `PlacardCreature.ts`, `PLACARD_BASE_W` is 460 and the stick is scaled by `STICK_SCALE_FACTOR` (0.65). Sign width is multiplied by `sqrt(assetAspect / REF_ASPECT)` (reference aspect 2.0) so wide banners and compact signs keep a consistent text height, with a random `signScale` of 0.88–1.16 for variety. Grid creature scale is `0.20 + rand^1.4 * 0.20`.
+- **Consequence**: Signs are visibly larger than their sticks and slogans stay legible across crowd depth, with no change to the physics loop or `CreatureMode` wiring. Tuning is confined to constants in `PlacardCreature.ts` and the grid `scaleFn`. (Spec: `archive/specs/2026-08-17-placard-scale-design.md`.)
+
+### ADR 018: Sticker asset pipeline — WebP + thumbnails, early selection, upfront preload
+
+- **Status**: Accepted.
+- **Context**: Avatar PNGs were 1–1.9 MB each (~38 MB total); the face was chosen only after onboarding, the drag-state image downloaded on first move, and the gallery mounted 25 full-resolution images at once.
+- **Decision**: `scripts/optimize-stickers.py` converts assets under `public/avatars/` to WebP and emits 240px thumbnails for `GalleryPanel`. `src/core/assetPreload.ts` (`preloadImages`, failure-tolerant) is called from `main.ts`: the initial random face and its drag image are picked and preloaded at launch, candidates are preloaded on "Next Sticker", and the remaining faces/gallery are prefetched in the background. Gallery images use `loading="lazy"` and `decoding="async"`.
+- **Consequence**: The first avatar and its drag state are ready by the time onboarding ends, and gallery cost drops sharply. Adding sticker art means running the optimize script and referencing `.webp` paths. Preload failures are swallowed by design, so a missing asset degrades to a normal lazy load. (Spec: `archive/specs/2026-08-18-sticker-loading-optimization-design.md`.)
 
 ## 3. Core Definitions
 

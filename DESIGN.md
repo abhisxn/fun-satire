@@ -7,9 +7,9 @@ This document catalogs Figma design files and their relationship to the codebase
 ### Subject Browser & Premium HUD
 
 - **Main Design**: [Subject Browser & Premium HUD](https://www.figma.com/design/oPAdd7oWLQVMTP1v6pJOW0/Untitled?node-id=0-1&t=uwgLA6DfJ5z6ozTR-1)
-  - Implementation: `docs/superpowers/specs/2026-07-25-subject-browser-premium-hud-design.md`
-  - Plan: `docs/superpowers/plans/2026-07-25-subject-browser-premium-hud.md`
-  - Status: In progress (Phase C)
+  - Implementation: `docs/superpowers/archive/specs/2026-07-25-subject-browser-premium-hud-design.md`
+  - Plan: `docs/superpowers/archive/plans/2026-07-25-subject-browser-premium-hud.md`
+  - Status: Shipped (specs/plans archived)
 
 - **Detailed Components**: [Component Specifications](https://www.figma.com/design/oPAdd7oWLQVMTP1v6pJOW0/Untitled?node-id=18-113&t=uwgLA6DfJ5z6ozTR-1)
   - Detailed component layouts and interactions
@@ -27,18 +27,16 @@ The project follows a **Paper-Cut Protest** design system with:
 - **Palette**: Locked to cream (`#EDE7DD`), slate (`#5B7A8C`), sage (`#6D7A5E`), ink (`#2A2420`), coral (`#E8A9A0`)
 - **Typography**: Fraunces (display) + Space Mono (mono)
 - **Visual Style**: Hand-cut paper aesthetic with torn edges, offset shadows, and tactile feedback
-- **Implementation**: `src/render/paperCut.ts` provides shared utilities for edge wobble and shadow treatment
+- **Implementation**: HUD styling lives in `src/hud/*.css` and `src/config/tokens.ts`. (The earlier canvas `src/render/paperCut.ts` helpers were removed with the DOM-first rewrite, ADR 011.)
 
 ## Design-to-Code Mapping
 
 | Design Element | Implementation |
 |---|---|
-| Torn paper edges | `src/render/paperCut.ts:paperCutEdgePath()` |
-| Offset shadows | `src/render/paperCut.ts:withPaperCutShadow()` |
 | HUD placard | `src/hud/Hud.ts` + `src/hud/hud.css` |
-| Subject browser drawer | `src/hud/SubjectDrawer.ts` + `src/hud/subjectDrawer.css` |
-| Drag interaction | `src/input/SubjectDragSource.ts` |
-| Spring easing | `src/config/tokens.ts:EASE.spring` + `src/styles/tokens.css:--ease-spring` |
+| Gallery / filters / menu | `src/hud/GalleryPanel.ts`, `FilterPanel.ts`, `MenuPanel.ts` (+ sibling .css) |
+| Drag interaction | `src/creatures/DraggableAvatar.ts` + `makeDraggable.ts` |
+| Spring easing | `src/config/tokens.ts:EASE.spring` |
 
 ## Adding New Design References
 
