@@ -84,7 +84,7 @@ describe('TextOverlay', () => {
 
     const stick = t.el.querySelector<HTMLImageElement>('.text-overlay-stick');
     expect(stick).not.toBeNull();
-    expect(stick?.getAttribute('src')).toContain('/creatures/placard_stick.png');
+    expect(stick?.getAttribute('src')).toContain('/creatures/placard_stick.webp');
 
     const counter = t.el.querySelector<HTMLElement>('.text-overlay-count');
     expect(counter).not.toBeNull();
