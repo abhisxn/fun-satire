@@ -325,6 +325,15 @@ async function main(): Promise<void> {
       powerMeter.setFraction(raidController.getChargeFraction());
     });
 
+    // Full-size sticker images are no longer prefetched up front (see the idle prefetch
+    // below). Start fetching a sticker's pair as soon as the pointer is over its card.
+    const intentRequested = new Set<string>();
+    galleryPanel.onStickerIntent((src, dragSrc) => {
+      if (intentRequested.has(src)) return;
+      intentRequested.add(src);
+      void preloadImages([src, dragSrc]);
+    });
+
     galleryPanel.onStickerSelect((src, dragSrc) => {
       void preloadImages([src, dragSrc]);
       const sticker = new StickerOverlay(
@@ -408,6 +417,7 @@ async function main(): Promise<void> {
   const dragScratchSound = new DragScratchSound();
   const onOverlayDragStart = (): void => {
     pickupClickSound.play();
+    dragScratchSound.warm();
   };
   const onOverlayDragMove = (_x: number, _y: number): void => {
     dragScratchSound.onMove();
@@ -444,14 +454,15 @@ async function main(): Promise<void> {
     grid.clearRepulsor();
     filterPanel.setQuantity(DEFAULT_CREATURE_QUANTITY);
 
-    // Schedule background prefetch for remaining face stickers and gallery
-    const scheduleIdle = typeof window.requestIdleCallback === "function" 
+    // Schedule background prefetch of the gallery thumbnails only (about 0.4 MB). Prefetching
+    // every full-size sticker pair cost about 6 MB on first load; those are now fetched on
+    // hover/press in the gallery or on selection instead.
+    const scheduleIdle = typeof window.requestIdleCallback === "function"
       ? (cb: () => void) => window.requestIdleCallback(cb)
       : (cb: () => void) => window.setTimeout(cb, 1000);
 
     scheduleIdle(() => {
-      const allUrls = getStickerDefs().flatMap((d) => [d.src, d.dragSrc, d.thumbSrc]);
-      void preloadImages(allUrls);
+      void preloadImages(getStickerDefs().map((d) => d.thumbSrc));
     });
   });
 }

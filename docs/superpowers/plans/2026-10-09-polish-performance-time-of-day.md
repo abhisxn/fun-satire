@@ -56,7 +56,12 @@ Correction to the earlier note: creature art was never part of first load (only 
 
 Decisions needed before touching these (they change behaviour, not just files): prefetch only the gallery thumbnails on idle and fetch a sticker's face images when it is selected (cuts the idle prefetch to about 0.4 MB, risk is a short wait on first click); lower sticker WebP quality from 88 (roughly a quarter smaller, slight quality loss); lazy-load the drag-scratch sound.
 
-Still open: fonts (14 `@fontsource` packages), animejs, and the decisions above. These go on a separate branch.
+Decisions made (2026-10-15, branch `perf/sticker-prefetch`):
+- Sticker prefetch: done. Idle prefetch is now the 27 gallery thumbnails only. A sticker's full-size pair is fetched when the pointer enters or presses its gallery card (`GalleryPanel.onStickerIntent`), and again on selection. First load measured in a production preview: 9.3 MB before, 2.8 MB after (2 full-size avatars, 27 thumbnails, no scratch sound). Selecting a sticker still shows it correctly. ADR 018 ("upfront preload") needs a note about this change; it lives only in the uncommitted `system-architecture.md` in the main checkout at the time of writing, so it was not edited here.
+- Sticker WebP quality: kept at 88. Tested 82, 78 and 72 on the 30 face stickers: 82 saves about 20% and 78 about 30%, with PSNR dropping from 34.5 to 33.3 and 32.4 dB on average, and no difference visible at display size. With the prefetch fix the saving is only about 40 KB per sticker, not worth regenerating 69 binary files.
+- Drag-scratch sound: done. It loads with `preload = "none"` and is fetched by `warm()` at the start of the first sticker or text drag. Verified: 0 requests at load, 2 after the first drag.
+
+Still open: fonts (14 `@fontsource` packages), animejs,. These go on a separate branch.
 
 Acceptance: `dist` size before and after recorded; no visual regression in a browser pass; Gallery and onboarding still load images without a visible pop.
 
