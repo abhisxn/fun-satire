@@ -190,7 +190,7 @@ export class TextOverlay {
 
     this.stick = document.createElement("img");
     this.stick.className = "text-overlay-stick";
-    this.stick.src = "/creatures/placard_stick.png";
+    this.stick.src = "/creatures/placard_stick.webp";
     this.stick.alt = "";
     this.stick.draggable = false;
     this.stick.style.cssText = [
