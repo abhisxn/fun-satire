@@ -17,30 +17,30 @@ export interface PlacardAsset {
 }
 
 export const PLACARD_POOL: PlacardAsset[] = [
-  { src: '/creatures/placards/placard_1.png', w: 824, h: 432 },
-  { src: '/creatures/placards/placard_2.png', w: 868, h: 432 },
-  { src: '/creatures/placards/placard_3.png', w: 560, h: 432 },
-  { src: '/creatures/placards/placard_4.png', w: 808, h: 432 },
-  { src: '/creatures/placards/placard_5.png', w: 808, h: 432 },
-  { src: '/creatures/placards/placard_6.png', w: 946, h: 432 },
-  { src: '/creatures/placards/placard_7.png', w: 1400, h: 548 },
-  { src: '/creatures/placards/placard_8.png', w: 1186, h: 432 },
-  { src: '/creatures/placards/placard_9.png', w: 1472, h: 432 },
-  { src: '/creatures/placards/placard_10.png', w: 1186, h: 432 },
-  { src: '/creatures/placards/placard_11.png', w: 726, h: 432 },
-  { src: '/creatures/placards/placard_12.png', w: 1142, h: 548 },
-  { src: '/creatures/placards/placard_13.png', w: 1366, h: 548 },
-  { src: '/creatures/placards/placard_14.png', w: 902, h: 432 },
-  { src: '/creatures/placards/placard_15.png', w: 740, h: 432 },
-  { src: '/creatures/placards/placard_16.png', w: 1080, h: 432 },
-  { src: '/creatures/placards/placard_17.png', w: 1124, h: 548 },
-  { src: '/creatures/placards/placard_18.png', w: 1254, h: 432 },
-  { src: '/creatures/placards/placard_19.png', w: 1210, h: 432 },
-  { src: '/creatures/placards/placard_20.png', w: 546, h: 432 },
-  { src: '/creatures/placards/placard_21.png', w: 714, h: 432 },
-  { src: '/creatures/placards/placard_22.png', w: 714, h: 432 },
-  { src: '/creatures/placards/placard_23.png', w: 1330, h: 432 },
-  { src: '/creatures/placards/placard_24.png', w: 824, h: 432 },
+  { src: '/creatures/placards/placard_1.webp', w: 824, h: 432 },
+  { src: '/creatures/placards/placard_2.webp', w: 868, h: 432 },
+  { src: '/creatures/placards/placard_3.webp', w: 560, h: 432 },
+  { src: '/creatures/placards/placard_4.webp', w: 808, h: 432 },
+  { src: '/creatures/placards/placard_5.webp', w: 808, h: 432 },
+  { src: '/creatures/placards/placard_6.webp', w: 946, h: 432 },
+  { src: '/creatures/placards/placard_7.webp', w: 1400, h: 548 },
+  { src: '/creatures/placards/placard_8.webp', w: 1186, h: 432 },
+  { src: '/creatures/placards/placard_9.webp', w: 1472, h: 432 },
+  { src: '/creatures/placards/placard_10.webp', w: 1186, h: 432 },
+  { src: '/creatures/placards/placard_11.webp', w: 726, h: 432 },
+  { src: '/creatures/placards/placard_12.webp', w: 1142, h: 548 },
+  { src: '/creatures/placards/placard_13.webp', w: 1366, h: 548 },
+  { src: '/creatures/placards/placard_14.webp', w: 902, h: 432 },
+  { src: '/creatures/placards/placard_15.webp', w: 740, h: 432 },
+  { src: '/creatures/placards/placard_16.webp', w: 1080, h: 432 },
+  { src: '/creatures/placards/placard_17.webp', w: 1124, h: 548 },
+  { src: '/creatures/placards/placard_18.webp', w: 1254, h: 432 },
+  { src: '/creatures/placards/placard_19.webp', w: 1210, h: 432 },
+  { src: '/creatures/placards/placard_20.webp', w: 546, h: 432 },
+  { src: '/creatures/placards/placard_21.webp', w: 714, h: 432 },
+  { src: '/creatures/placards/placard_22.webp', w: 714, h: 432 },
+  { src: '/creatures/placards/placard_23.webp', w: 1330, h: 432 },
+  { src: '/creatures/placards/placard_24.webp', w: 824, h: 432 },
 ];
 
 /** Placard display width reference, in px, at scale = 1, signScale = 1. */
@@ -73,7 +73,7 @@ export function createPlacardCreature(
   el.style.height = `${h}px`;
 
   const stickImg = document.createElement('img');
-  stickImg.src = '/creatures/placard_stick.png';
+  stickImg.src = '/creatures/placard_stick.webp';
   stickImg.style.width = '100%';
   stickImg.style.height = '100%';
   stickImg.style.objectFit = 'contain';

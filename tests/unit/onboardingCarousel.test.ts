@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { OnboardingCarousel } from "../../src/hud/onboarding/OnboardingCarousel";
 import { BEATS } from "../../src/hud/onboarding/beats";
+import { DEFAULT_CREATURE_QUANTITY } from "../../src/config/tokens";
 
 const h = vi.hoisted(() => ({
   calls: [] as string[],
@@ -37,6 +38,12 @@ vi.mock("../../src/creatures/CreatureGrid", () => ({
     setQuantity(n: number): void {
       h.calls.push(`grid:setQuantity:${n}`);
     }
+    // main.ts now routes the Filters-slider quantity through setUserQuantity; record it under
+    // the same label so the exit-sequence ordering assertions keep reading "setQuantity".
+    setUserQuantity(n: number): void {
+      h.calls.push(`grid:setQuantity:${n}`);
+    }
+    onQuantityChange(): void {}
     setRepulsor(x: number, y: number): void {
       h.calls.push(`grid:setRepulsor:${x},${y}`);
     }
@@ -96,7 +103,13 @@ vi.mock("../../src/hud/Hud", () => ({
     getGalleryButton(): HTMLElement {
       return document.createElement("button");
     }
+    getProtestButton(): HTMLElement {
+      return document.createElement("button");
+    }
+    show(): void {}
+    hide(): void {}
     onModeChange(): void {}
+    setAudioContext(): void {}
     destroy(): void {}
   },
 }));
@@ -108,7 +121,12 @@ vi.mock("../../src/hud/GalleryPanel", () => ({
     toggle(): void {}
     open(): void {}
     onStickerSelect(): void {}
+    onStickerIntent(): void {}
     onTextSelect(): void {}
+    onOpenChange(): void {}
+    isPanelOpen(): boolean {
+      return false;
+    }
     destroy(): void {}
   },
   getStickerDefs: () => [{ src: "/avatars/test.png", label: "Test", hasFace: true }],
@@ -233,7 +251,7 @@ describe("OnboardingCarousel", () => {
     it("matches the spec copy verbatim for all six beats", () => {
       expect(BEATS).toHaveLength(6);
       expect(BEATS[0].lines).toEqual([
-        "You called us cockroaches. Gutter generation.",
+        "They called us cockroaches. Gutter generation.",
         "We picked the names up. We're still wearing them.",
       ]);
       expect(BEATS[1].lines).toEqual([
@@ -246,11 +264,11 @@ describe("OnboardingCarousel", () => {
       ]);
       expect(BEATS[3].lines).toEqual([
         "Every promise. Every price. Every quiet lie.",
-        "You forgot we were watching. We didn't.",
+        "They forgot we were watching. We didn't.",
       ]);
       expect(BEATS[4].lines).toEqual([
-        "You hit hard. We laughed back \u2014 memes, reels, dance.",
-        "One of you stepped down. We didn't go home.",
+        "They hit hard. We laughed back \u2014 memes, reels, dance.",
+        "One of them stepped down. We didn't go home.",
       ]);
       expect(BEATS[5].lines).toEqual([
         "No leader to arrest. No face to blame.",
@@ -362,7 +380,7 @@ describe("main.ts onboarding wiring (mocked modules)", () => {
     const stickerIdx = h.calls.findIndex((c) => c.startsWith("sticker:"));
     const hudIdx = h.calls.indexOf("hud:attach");
     const clearRepulsorIdx = h.calls.indexOf("grid:clearRepulsor");
-    const setQuantityIdx = h.calls.indexOf("grid:setQuantity:300");
+    const setQuantityIdx = h.calls.indexOf(`grid:setQuantity:${DEFAULT_CREATURE_QUANTITY}`);
     expect(poofIdx).toBeLessThan(stickerIdx);
     expect(stickerIdx).toBeLessThan(hudIdx);
     expect(clearRepulsorIdx).toBeGreaterThan(hudIdx);

@@ -15,10 +15,24 @@ export class DragScratchSound {
   private readonly audio: HTMLAudioElement;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private warmed = false;
+
   constructor(src: string = DRAG_SCRATCH_SRC) {
-    this.audio = new Audio(src);
+    // preload "none" keeps the ~0.5 MB file off the first-load path; it is only fetched
+    // once warm() is called (at the start of the first sticker/text drag).
+    this.audio = new Audio();
+    this.audio.preload = "none";
+    this.audio.src = src;
     this.audio.loop = true;
     this.audio.volume = DRAG_SCRATCH_VOLUME;
+  }
+
+  /** Starts fetching the audio. Idempotent; call when a drag begins, before the first onMove(). */
+  warm(): void {
+    if (this.warmed) return;
+    this.warmed = true;
+    this.audio.preload = "auto";
+    this.audio.load();
   }
 
   onMove(): void {

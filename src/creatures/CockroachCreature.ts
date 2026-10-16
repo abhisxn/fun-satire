@@ -18,7 +18,7 @@ export function createCockroachCreature(
   el.style.height = `${h}px`;
 
   const img = document.createElement('img');
-  img.src = '/creatures/cockroach.png';
+  img.src = '/creatures/cockroach.webp';
   img.style.width = '100%';
   img.style.height = '100%';
   img.style.display = 'block';

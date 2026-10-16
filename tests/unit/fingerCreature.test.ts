@@ -42,7 +42,7 @@ describe('FingerCreature', () => {
 
       const img = finger.el.querySelector('img');
       expect(img).not.toBeNull();
-      expect(img!.src).toContain('/creatures/finger.png');
+      expect(img!.src).toContain('/creatures/finger.webp');
     });
 
     it('img is not draggable', () => {

@@ -19,12 +19,12 @@ export interface SecuritySprite {
 // is a separate, purely cosmetic random pick.
 export const SPRITE_VARIANTS: Record<SecurityKind, SecuritySprite[]> = {
   police: [
-    { src: "/creatures/security/police.png", aspect: 245 / 298 },
-    { src: "/creatures/security/police-2.png", aspect: 250 / 254 },
+    { src: "/creatures/security/police.webp", aspect: 245 / 298 },
+    { src: "/creatures/security/police-2.webp", aspect: 250 / 254 },
   ],
   raf: [
-    { src: "/creatures/security/raf.png", aspect: 232 / 260 },
-    { src: "/creatures/security/raf2.png", aspect: 245 / 267 },
+    { src: "/creatures/security/raf.webp", aspect: 232 / 260 },
+    { src: "/creatures/security/raf2.webp", aspect: 245 / 267 },
   ],
 };
 

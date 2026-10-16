@@ -5,7 +5,7 @@ import { BugSwarm } from "./creatures/BugSwarm";
 import { CreatureGrid } from "./creatures/CreatureGrid";
 import { spawnPoof } from "./creatures/poofEffect";
 import type { PoofHandle } from "./creatures/poofEffect";
-import { RaidController, SECURITY_MAX_UNITS } from "./creatures/RaidController";
+import { RaidController } from "./creatures/RaidController";
 import { PowerMeter } from "./hud/PowerMeter";
 import { StickerOverlay, DEFAULT_WIDTH } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
@@ -23,7 +23,6 @@ import { preloadImages } from "./core/assetPreload";
 import { AudioManager } from "./audio/AudioManager";
 import { AudioWidget } from "./audio/AudioWidget";
 import { playPoofTone } from "./audio/poofTone";
-import { playInflateTone } from "./audio/inflateTone";
 import { playDeflateTone } from "./audio/deflateTone";
 import { ClickSound } from "./audio/clickSound";
 import { DragScratchSound } from "./audio/dragScratchSound";
@@ -31,7 +30,7 @@ import { initAnalytics } from "./analytics/ga";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
 const ONBOARDING_CARD_REPULSOR_RADIUS = 300;
-/** The avatar-vs-creature repel radius at the sticker's default (1x, un-tiered, un-resized)
+/** The avatar-vs-creature repel radius at the sticker's default (1x, un-resized)
  * width — matches CreatureGrid's own internal default (see its physicsParams.repelRadius),
  * kept here as the reference point setAvatarRepelRadius() is scaled from every frame below,
  * so a bigger sticker always keeps the crowd proportionally further away and a smaller one
@@ -94,9 +93,6 @@ async function main(): Promise<void> {
         // per-frame update (see engine.onTick below) already recomputes it from the
         // sticker's live getWidth() every frame, so the very next frame after
         // lockSqueeze() shrinks it naturally picks up the new, smaller radius.
-        // The win-lock's snap to the floor scale is always a downward step, whatever
-        // tier the sticker was at before — no direction check needed, unlike the
-        // tiered onCrowdSizeChanged case below.
         const audioContext = audioManager.getAudioContext();
         if (audioContext) playDeflateTone(audioContext);
       }
@@ -115,21 +111,6 @@ async function main(): Promise<void> {
     onRaidStart: () => {
       if (activeOverlay instanceof StickerOverlay) {
         activeOverlay.unlock();
-      }
-    },
-    // Fires continuously as the raid's live security-unit count changes (spawns,
-    // backfire respawn trickle-in, despawn sweep) — a no-op on the sticker's side
-    // while a win's lock is still in effect. setScaleForRaidSize reports whether
-    // this call actually moved the sticker up or down a tier, so the inflate/
-    // deflate cue plays once per visible size-step rather than once per tick.
-    onCrowdSizeChanged: (securityUnitCount, tierBump) => {
-      if (activeOverlay instanceof StickerOverlay) {
-        const direction = activeOverlay.setScaleForRaidSize(securityUnitCount, SECURITY_MAX_UNITS, tierBump);
-        if (direction === "none") return;
-        const audioContext = audioManager.getAudioContext();
-        if (!audioContext) return;
-        if (direction === "up") playInflateTone(audioContext);
-        else playDeflateTone(audioContext);
       }
     },
   });
@@ -326,6 +307,15 @@ async function main(): Promise<void> {
       powerMeter.setFraction(raidController.getChargeFraction());
     });
 
+    // Full-size sticker images are no longer prefetched up front (see the idle prefetch
+    // below). Start fetching a sticker's pair as soon as the pointer is over its card.
+    const intentRequested = new Set<string>();
+    galleryPanel.onStickerIntent((src, dragSrc) => {
+      if (intentRequested.has(src)) return;
+      intentRequested.add(src);
+      void preloadImages([src, dragSrc]);
+    });
+
     galleryPanel.onStickerSelect((src, dragSrc) => {
       void preloadImages([src, dragSrc]);
       const sticker = new StickerOverlay(
@@ -435,6 +425,7 @@ async function main(): Promise<void> {
   const dragScratchSound = new DragScratchSound();
   const onOverlayDragStart = (): void => {
     pickupClickSound.play();
+    dragScratchSound.warm();
   };
   const onOverlayDragMove = (_x: number, _y: number): void => {
     dragScratchSound.onMove();
@@ -471,14 +462,15 @@ async function main(): Promise<void> {
     grid.clearRepulsor();
     filterPanel.setQuantity(DEFAULT_CREATURE_QUANTITY);
 
-    // Schedule background prefetch for remaining face stickers and gallery
-    const scheduleIdle = typeof window.requestIdleCallback === "function" 
+    // Schedule background prefetch of the gallery thumbnails only (about 0.4 MB). Prefetching
+    // every full-size sticker pair cost about 6 MB on first load; those are now fetched on
+    // hover/press in the gallery or on selection instead.
+    const scheduleIdle = typeof window.requestIdleCallback === "function"
       ? (cb: () => void) => window.requestIdleCallback(cb)
       : (cb: () => void) => window.setTimeout(cb, 1000);
 
     scheduleIdle(() => {
-      const allUrls = getStickerDefs().flatMap((d) => [d.src, d.dragSrc, d.thumbSrc]);
-      void preloadImages(allUrls);
+      void preloadImages(getStickerDefs().map((d) => d.thumbSrc));
     });
   });
 }

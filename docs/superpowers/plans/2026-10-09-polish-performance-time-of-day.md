@@ -40,6 +40,29 @@ Tasks:
 4. Convert audio to Opus/AAC where not already, and lazy-load beds that are not needed at start.
 5. Review `animejs` v3 call sites (`BugSwarm.ts` and others). Replace with the Web Animations API if the usage is simple.
 
+### Status (2026-10-10, branch `chore/asset-diet`)
+
+Done: task 1. Unreferenced originals moved out of `public/` into `assets-src/` (history kept, nothing deleted): 42 avatar PNGs (40.4 MB), `assets/stickers` (13.3 MB), `audio/music-bed.mp3` (2.5 MB) and `creatures/eye.png`. `scripts/optimize-stickers.py` now reads from `assets-src/avatars` and writes WebP and thumbnails into `public/avatars`. `dist` went from 107 MB to 29 MB. All 107 asset paths referenced in code still resolve, and a fresh load plus quantity change produced no 404s (86 requests, about 9.8 MB transferred on first load).
+
+Not moved: `public/Reference` and `public/**/temp_*` are already git-ignored (local only, never deployed from git), and `public/assets/figma/references|subjects` (1.9 MB) are written by `scripts/export-figma-assets.mjs`.
+
+Also done: task 2 for creature art. The 30 creature PNGs (cockroach, finger, placard stick, 23 placards, 4 security units; 7.7 MB) are now served as WebP at identical pixel size (1.1 MB, 85% smaller), because the creature modules hard-code each image's natural width and height. Originals live in `assets-src/creatures/`; `python3 scripts/optimize-creatures.py` regenerates them. Checked in a browser: every image in cockroach, finger and placard modes loads (0 broken), eyes mode uses SVG, a shaken raid shows the police and RAF units, and no request returns an error. The unit suite fails the same 16 tests as `main` before and after.
+
+Correction to the earlier note: creature art was never part of first load (only `cockroach.webp`, about 10 KB, loads by default). The conversion saves about 6.6 MB the first time placard mode is opened. First load is about 9.3 MB, made up of:
+- about 6.5 MB of idle-time prefetch of every sticker variant (normal 3.0 MB, grin 2.8 MB, text stickers 0.6 MB, thumbnails 0.4 MB), a deliberate ADR 018 choice;
+- 1.6 MB of audio (`azaadi.mp3` 1.1 MB, the drag-scratch sound 0.5 MB);
+- 0.7 MB of third-party scripts (Google Tag Manager);
+- 0.2 MB of app JS and CSS.
+
+Decisions needed before touching these (they change behaviour, not just files): prefetch only the gallery thumbnails on idle and fetch a sticker's face images when it is selected (cuts the idle prefetch to about 0.4 MB, risk is a short wait on first click); lower sticker WebP quality from 88 (roughly a quarter smaller, slight quality loss); lazy-load the drag-scratch sound.
+
+Decisions made (2026-10-15, branch `perf/sticker-prefetch`):
+- Sticker prefetch: done. Idle prefetch is now the 27 gallery thumbnails only. A sticker's full-size pair is fetched when the pointer enters or presses its gallery card (`GalleryPanel.onStickerIntent`), and again on selection. First load measured in a production preview: 9.3 MB before, 2.8 MB after (2 full-size avatars, 27 thumbnails, no scratch sound). Selecting a sticker still shows it correctly. ADR 018 ("upfront preload") needs a note about this change; it lives only in the uncommitted `system-architecture.md` in the main checkout at the time of writing, so it was not edited here.
+- Sticker WebP quality: kept at 88. Tested 82, 78 and 72 on the 30 face stickers: 82 saves about 20% and 78 about 30%, with PSNR dropping from 34.5 to 33.3 and 32.4 dB on average, and no difference visible at display size. With the prefetch fix the saving is only about 40 KB per sticker, not worth regenerating 69 binary files.
+- Drag-scratch sound: done. It loads with `preload = "none"` and is fetched by `warm()` at the start of the first sticker or text drag. Verified: 0 requests at load, 2 after the first drag.
+
+Still open: fonts (14 `@fontsource` packages), animejs,. These go on a separate branch.
+
 Acceptance: `dist` size before and after recorded; no visual regression in a browser pass; Gallery and onboarding still load images without a visible pop.
 
 ## 3. Intro copy lint and card polish
@@ -131,4 +154,23 @@ Rules:
 
 ## Appendix: baseline results
 
-_To be filled in by workstream 1._
+Recorded 2026-10-09 on `a0f3a69` with `scripts/perf-benchmark.mjs`: production build served by `vite preview`, headless Chrome for Testing, 1440x900, device scale 1, pointer circling the viewport centre to keep the repel field active, 3 s settle then 10 s measured. Creature count is set through the Filters quantity slider; the crowd mode is the default (cockroach).
+
+Run it with `PLAYWRIGHT_DIR=<dir with playwright installed> node scripts/perf-benchmark.mjs --url <preview url> --throttle <cpu slowdown>` (see the header of the script).
+
+| CPU throttle | creatures | fps | p95 frame ms | frames >33 ms | main thread busy | script | style recalc | layout |
+|---|---|---|---|---|---|---|---|---|
+| 1x | 200 | 60 | 16.7 | 0% | 7.6% | 2.2% | 0.8% | 0% |
+| 1x | 500 | 60 | 16.7 | 0% | 13.3% | 3.6% | 1.2% | 0% |
+| 1x | 900 | 60 | 16.8 | 0% | 22.3% | 6.2% | 2.2% | 0% |
+| 6x | 200 | 60 | 16.8 | 0% | 33.7% | 9.5% | 4.1% | 0% |
+| 6x | 500 | 60 | 16.7 | 0% | 65.8% | 19.4% | 6.3% | 0% |
+| 6x | 900 | 49.4 | 33.4 | 6.5% | 99.8% | 29.6% | 11.1% | 0% |
+
+A 4x throttle run held 60 fps at all three counts. Heap stayed under 10 MB throughout; DOM nodes were 715, 1315 and 2115 at the three counts. No long tasks beyond two at 500 creatures under 6x.
+
+What this says:
+- Desktop has large headroom. Under a 6x slowdown (a rough stand-in for a mid-range phone) the main thread saturates at 900 creatures and frames start dropping.
+- Layout cost is zero, so the transform-only rendering is doing its job. There is no layout thrash to fix.
+- Script is about 30% and style recalc about 11% of the saturated main thread. The remaining ~59% is in none of those buckets (paint, compositing and commit work, GC, input). That points at the number of composited DOM elements rather than at the physics code, so the next measurement should be a Chrome trace of the 900-creature case before choosing between "cheaper updates" (workstream 6) and a different renderer.
+- Limits of this benchmark: it measures main-thread frame pacing in headless Chrome. It does not capture GPU raster cost, and CPU throttling is only an approximation of a phone. Treat absolute numbers as a baseline to compare against, not as device truth.

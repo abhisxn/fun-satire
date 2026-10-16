@@ -213,7 +213,7 @@ describe("hud/FilterPanel", () => {
       panel.open();
 
       const root = panel.getRoot();
-      expect(root.style.display).toBe("block");
+      expect(root.style.display).toBe("flex");
     });
 
     it("close() hides the panel", () => {
@@ -229,7 +229,7 @@ describe("hud/FilterPanel", () => {
       panel.attachTo(settingsButton);
 
       panel.toggle();
-      expect(panel.getRoot().style.display).toBe("block");
+      expect(panel.getRoot().style.display).toBe("flex");
 
       panel.toggle();
       expect(panel.getRoot().style.display).toBe("none");
@@ -240,7 +240,7 @@ describe("hud/FilterPanel", () => {
       panel.open();
       panel.open();
 
-      expect(panel.getRoot().style.display).toBe("block");
+      expect(panel.getRoot().style.display).toBe("flex");
     });
 
     it("close() is idempotent", () => {
@@ -326,7 +326,7 @@ describe("hud/FilterPanel", () => {
       const root = panel.getRoot();
       root.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
-      expect(root.style.display).toBe("block");
+      expect(root.style.display).toBe("flex");
     });
 
     it("does not close when clicking settings button", () => {
@@ -335,7 +335,7 @@ describe("hud/FilterPanel", () => {
 
       settingsButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
-      expect(panel.getRoot().style.display).toBe("block");
+      expect(panel.getRoot().style.display).toBe("flex");
     });
   });
 
@@ -355,7 +355,7 @@ describe("hud/FilterPanel", () => {
 
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
 
-      expect(panel.getRoot().style.display).toBe("block");
+      expect(panel.getRoot().style.display).toBe("flex");
     });
   });
 
