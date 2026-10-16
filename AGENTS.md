@@ -35,7 +35,7 @@ src/
               SecurityCreature (wandering/escorting police/RAF units)
   input/      PointerTracker
   audio/      AudioManager, AudioWidget, clickSound, dragScratchSound, hoverTones, hudTones, poofTone,
-              inflateTone, deflateTone
+              deflateTone
   hud/        Hud, FilterPanel, GalleryPanel, MenuButton, MenuPanel, menuContent (protest content
               lives here, no separate ProtestPanel file), shareLinks, onboarding/ (OnboardingCarousel, beats),
               PowerMeter (charge-level pill for the Protest button), WinPanel + winCopy (full-power win overlay)

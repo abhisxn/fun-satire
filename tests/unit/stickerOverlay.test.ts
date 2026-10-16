@@ -44,7 +44,7 @@ describe('StickerOverlay', () => {
     expect(s.getImage()).toBe('/avatars/b.png');
   });
 
-  // Squeeze/inflate transform lives on the wrapper (s.el), not the image — moving it
+  // Squeeze transform lives on the wrapper (s.el), not the image — moving it
   // there keeps the resize handle and el's own hit-tested/dragged box scaling along
   // with the sticker instead of staying pinned to its pre-scale corner.
   it('lockSqueeze pops the sticker down to its minimum scale', () => {
@@ -100,74 +100,14 @@ describe('StickerOverlay', () => {
     expect(s.el.style.transform).not.toBe('scale(0.55)'); // not the fixed multiplier this time
   });
 
-  it('setScaleForRaidSize snaps the raid unit count onto one of 4 fixed tiers, not a continuous scale', () => {
-    const s = new StickerOverlay('/avatars/a.png');
-
-    s.setScaleForRaidSize(0, 40); // 0% -> tier 0
-    expect(s.el.style.transform).toBe('scale(1)');
-
-    s.setScaleForRaidSize(9, 40); // 22.5% -> still tier 0 (bucket boundary is 25%)
-    expect(s.el.style.transform).toBe('scale(1)');
-
-    s.setScaleForRaidSize(10, 40); // 25% -> tier 1
-    expect(s.el.style.transform).toBe('scale(1.3)');
-
-    s.setScaleForRaidSize(20, 40); // 50% -> tier 2
-    expect(s.el.style.transform).toBe('scale(1.65)');
-
-    s.setScaleForRaidSize(30, 40); // 75% -> tier 3 (top)
-    expect(s.el.style.transform).toBe('scale(2)');
-
-    s.setScaleForRaidSize(40, 40); // 100% -> still tier 3, no 5th tier
-    expect(s.el.style.transform).toBe('scale(2)');
-
-    // Out-of-range counts clamp rather than overshoot.
-    s.setScaleForRaidSize(999, 40);
-    expect(s.el.style.transform).toBe('scale(2)');
-  });
-
-  it('setScaleForRaidSize\'s tierBump pushes the crowd-size-derived tier up by one, clamped to the top tier', () => {
-    const s = new StickerOverlay('/avatars/a.png');
-
-    s.setScaleForRaidSize(0, 40, 1); // tier 0 + bump -> tier 1
-    expect(s.el.style.transform).toBe('scale(1.3)');
-
-    s.setScaleForRaidSize(30, 40, 1); // tier 3 (top) + bump -> clamped, still tier 3
-    expect(s.el.style.transform).toBe('scale(2)');
-
-    s.setScaleForRaidSize(20, 40, 0); // no bump -> plain tier 2
-    expect(s.el.style.transform).toBe('scale(1.65)');
-  });
-
-  it('setScaleForRaidSize reports the tier direction it just applied, only on an actual change', () => {
-    const s = new StickerOverlay('/avatars/a.png');
-
-    expect(s.setScaleForRaidSize(0, 40)).toBe('up'); // first call ever: up from nothing
-    expect(s.setScaleForRaidSize(5, 40)).toBe('none'); // still tier 0, no change
-    expect(s.setScaleForRaidSize(20, 40)).toBe('up'); // tier 0 -> tier 2
-    expect(s.setScaleForRaidSize(9, 40)).toBe('down'); // tier 2 -> tier 0
-  });
-
-  it('setScaleForRaidSize is a no-op while locked by lockSqueeze', () => {
+  it('lockSqueeze locks and unlock() restores the resting scale', () => {
     const s = new StickerOverlay('/avatars/a.png');
 
     s.lockSqueeze();
     expect(s.el.style.transform).toBe('scale(0.55)');
 
-    s.setScaleForRaidSize(10, 40);
-    expect(s.el.style.transform).toBe('scale(0.55)'); // still locked, unchanged
-
-    s.setScaleForRaidSize(40, 40);
-    expect(s.el.style.transform).toBe('scale(0.55)'); // still locked, unchanged
-  });
-
-  it('unlock() restores setScaleForRaidSize after a lockSqueeze', () => {
-    const s = new StickerOverlay('/avatars/a.png');
-
-    s.lockSqueeze();
     s.unlock();
-    s.setScaleForRaidSize(10, 40); // tier 1
-    expect(s.el.style.transform).toBe('scale(1.3)');
+    expect(s.el.style.transform).toBe('scale(1)');
   });
 
   it('lockSqueeze re-locks after an unlock', () => {
@@ -175,30 +115,19 @@ describe('StickerOverlay', () => {
 
     s.lockSqueeze();
     s.unlock();
-    s.setScaleForRaidSize(20, 40); // tier 2
-    expect(s.el.style.transform).toBe('scale(1.65)');
-
     s.lockSqueeze();
     expect(s.el.style.transform).toBe('scale(0.55)');
-    s.setScaleForRaidSize(40, 40);
-    expect(s.el.style.transform).toBe('scale(0.55)'); // no-op again
   });
 
-  it('reports "down" for a multi-tier drop, not just an adjacent-tier one', () => {
-    const s = new StickerOverlay('/avatars/a.png');
-    s.setScaleForRaidSize(30, 40); // tier 3
-    expect(s.setScaleForRaidSize(0, 40, 0)).toBe('down'); // tier 3 -> tier 0
-  });
-
-  it('getWidth() reflects the current squeeze/inflate scale, not just the underlying CSS width', () => {
+  it('getWidth() is the CSS width at rest and the floor width after lockSqueeze', () => {
     const s = new StickerOverlay('/avatars/a.png');
     expect(s.getWidth()).toBe(160); // DEFAULT_WIDTH
 
-    s.setScaleForRaidSize(40, 40); // MAX_SCALE = 2
-    expect(s.getWidth()).toBe(320);
-
     s.lockSqueeze(); // 0.55
     expect(s.getWidth()).toBe(88);
+
+    s.unlock();
+    expect(s.getWidth()).toBe(160);
   });
 
   it('resize handle updates image width without moving the element', () => {
@@ -222,16 +151,14 @@ describe('StickerOverlay', () => {
     const s = new StickerOverlay('/avatars/ethanol.png', 100, 100);
     const handle = s.el.querySelector<HTMLElement>('.sticker-overlay-resize')!;
 
-    s.setScaleForRaidSize(40, 40); // MAX_SCALE = 2 — visually twice as big
+    s.lockSqueeze(); // scale 0.55 -> underlying width 160 shown at 88px
     handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
-    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, bubbles: true })); // +100 screen px
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 144, bubbles: true })); // +44 screen px
     document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
 
-    // A 100px physical drag on a 2x-scaled sticker should only grow the underlying
-    // (pre-scale) width by 50px — otherwise the resize would visually happen twice
-    // as fast as the same drag on a normal-scale sticker.
+    // 44 physical px on a 0.55-scaled sticker is 80px of underlying width.
     const widthPx = parseFloat(s.el.querySelector('img')!.style.width);
-    expect(widthPx).toBeCloseTo(210); // 160 + 100/2
+    expect(widthPx).toBeCloseTo(240); // 160 + 44/0.55
   });
 
   it('resize handle clamps width within bounds', () => {
@@ -400,7 +327,7 @@ describe('StickerOverlay', () => {
     expect(img.src).toContain('/avatars/gutter.png');
   });
 
-  it('setScaleForRaidSize reverts the face back to src once unlocked and a new raid settles', () => {
+  it('unlock() reverts the face back to src', () => {
     const s = new StickerOverlay(
       '/avatars/grin/grin_gutter.png',
       100,
@@ -417,7 +344,6 @@ describe('StickerOverlay', () => {
     expect(img.src).toContain('/avatars/normal/gutter.png');
 
     s.unlock();
-    s.setScaleForRaidSize(10, 40);
     expect(img.src).toContain('/avatars/grin/grin_gutter.png');
   });
 

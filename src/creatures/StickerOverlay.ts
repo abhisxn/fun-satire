@@ -24,13 +24,6 @@ const SQUEEZE_MIN_SCALE = 0.55;
  * gets the *current* width to this exact target, so the change still animates through the
  * normal smooth transform (see SQUEEZE_TRANSITION) instead of snapping `width` itself. */
 const SQUEEZE_TARGET_WIDTH_PX = DEFAULT_WIDTH * SQUEEZE_MIN_SCALE;
-/** The 4 discrete resting-scale steps setScaleForRaidSize() snaps between — small,
- * medium, large, max — replacing a continuous scale so size changes read as distinct,
- * legible "tiers" rather than a smooth drift that's hard to notice frame to frame. */
-const TIER_SCALES: readonly [number, number, number, number] = [1, 1.3, 1.65, 2];
-/** Number of tiers in TIER_SCALES — kept in sync via TIER_SCALES.length rather than
- * hand-duplicated, since every tier-index clamp below derives from this. */
-const TIER_COUNT = TIER_SCALES.length;
 /** Smooth ease-in-out — reads as a continuous "slide" between two scales rather than a
  * snap or a spring, since it accelerates and decelerates symmetrically instead of
  * front-loading all the motion. Long enough that growing/shrinking reads as its own
@@ -53,22 +46,10 @@ export class StickerOverlay {
   private width: number;
   private dragHint: HTMLDivElement | null = null;
   private dragHintTimeout: number | undefined;
-  /** Resting scale — 1 by default, forced to SQUEEZE_MIN_SCALE by lockSqueeze() on a
-   * full-power win, or continuously driven by setScaleForRaidSize() as the live raid
-   * size changes. Not a permanent lock: unlock() (called once a new raid actually
-   * starts) restores setScaleForRaidSize()'s ability to update it again. */
+  /** Resting scale — 1 by default, forced to the win floor by lockSqueeze() on a
+   * full-power win. Not a permanent lock: unlock() (called once a new raid actually
+   * starts) restores it to 1. */
   private baseScale = 1;
-  /** True from lockSqueeze() until unlock() — while locked, setScaleForRaidSize() is
-   * a no-op, so a live crowd-size update arriving right after a win can't silently
-   * overwrite the win's fixed floor scale before the next raid has actually begun. */
-  private locked = false;
-  /** Index into TIER_SCALES for the last tier setScaleForRaidSize() actually applied,
-   * or null while locked (the win floor isn't one of the 4 tiers). Compared against
-   * the newly computed tier on each call so setScaleForRaidSize() can report whether
-   * the sticker just grew, shrank, or stayed put — callers use that to pick an
-   * inflate/deflate sound rather than firing one on every crowd-size tick. */
-  private currentTierIndex: number | null = null;
-
   private readonly dragSrc: string | null;
 
   constructor(
@@ -248,46 +229,13 @@ export class StickerOverlay {
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   }
 
-  /** True on-screen width, including the current squeeze/inflate scale — not just the
+  /** True on-screen width, including the current win-squeeze scale — not just the
    * underlying CSS width. Callers that care about the sticker's actual footprint (e.g.
    * RaidController's escort-radius/repel-radius math, via main.ts's per-frame
-   * `setAvatarWidth(getWidth())`) need this, not the pre-scale value: a 2x-inflated
-   * sticker should push the crowd/escort ring back proportionally further, and a
-   * shrunk one should let them approach closer. */
+   * `setAvatarWidth(getWidth())`) need this, not the pre-scale value: a won,
+   * shrunk sticker should let the crowd/escort ring approach closer. */
   getWidth(): number {
     return this.width * this.baseScale;
-  }
-
-  /** Called continuously as the live raid's security-unit count changes (RaidController's
-   * onCrowdSizeChanged — never on button release itself, and not just at settle events).
-   * Quantizes where the raid's size currently sits within [0, maxUnits] into one of
-   * TIER_COUNT buckets, then adds `tierBump` (0 or 1 — RaidController's memory of
-   * whether the last backfire that shaped this raid was MEDIUM-power, which "compounds"
-   * a stronger backfire into a visibly bigger jump than a LOW one at the same crowd
-   * size), clamped to the top tier. Snapping between a small, fixed set of tiers
-   * instead of a continuous scale keeps each size change legible as its own beat.
-   * Also swaps the face back to `src` (the calm/default expression) if lockSqueeze()
-   * had switched it to `dragSrc` — a new raid means the win's weird face is over.
-   * A no-op while locked (see lockSqueeze()/unlock()) — a win's fixed floor scale
-   * must not be overwritten by a live update before the next raid starts.
-   * Returns 'up'/'down'/'none' — whichever tier direction this call just applied
-   * (or 'none' while locked) — so a caller can fire an inflate/deflate sound only
-   * on an actual tier change, not once per crowd-size tick. The very first call
-   * after construction or after a lockSqueeze()/unlock() cycle has no prior tier
-   * to compare against and always reports 'up'. */
-  setScaleForRaidSize(unitCount: number, maxUnits: number, tierBump: 0 | 1 = 0): "up" | "down" | "none" {
-    if (this.locked) return "none";
-    const t = maxUnits > 0 ? Math.max(0, Math.min(1, unitCount / maxUnits)) : 0;
-    const baseTier = Math.min(TIER_COUNT - 1, Math.floor(t * TIER_COUNT));
-    const tier = Math.min(TIER_COUNT - 1, baseTier + tierBump);
-    this.baseScale = TIER_SCALES[tier];
-    this.el.style.transform = `scale(${this.baseScale})`;
-    if (this.dragSrc) this.img.src = this.currentSrc;
-
-    const direction: "up" | "down" | "none" =
-      this.currentTierIndex === null ? "up" : tier > this.currentTierIndex ? "up" : tier < this.currentTierIndex ? "down" : "none";
-    this.currentTierIndex = tier;
-    return direction;
   }
 
   /** Called once a full-power protest release's despawn sweep has actually finished
@@ -304,29 +252,24 @@ export class StickerOverlay {
    * transform (see SQUEEZE_TRANSITION) since only `baseScale` changes — `width` itself
    * is left untouched, so the resize handle's own reference point doesn't jump. Not a
    * permanent lock — unlock() (called once the next raid actually starts) reverts both
-   * the scale and the face via the next setScaleForRaidSize() call. Starting a fresh
+   * the scale and the face. Starting a fresh
    * drag right after a win will also revert the face early (onDragEnd always restores
    * `currentSrc`) — an acceptable overlap between the two mechanics rather than
    * something worth extra state to avoid. */
   lockSqueeze(): void {
-    this.locked = true;
     this.baseScale = SQUEEZE_TARGET_WIDTH_PX / this.width;
-    // The win floor isn't one of the 4 tiers — clearing this makes the next
-    // post-unlock setScaleForRaidSize() call report 'up' unconditionally, since
-    // any tier the raid regrows into is a real inflate from this deflated state.
-    this.currentTierIndex = null;
     this.el.style.transform = `scale(${this.baseScale})`;
     if (this.dragSrc) this.img.src = this.dragSrc;
   }
 
-  /** Releases the lock set by lockSqueeze(), letting setScaleForRaidSize() drive the
-   * scale again. Called once a new raid actually starts (RaidController's onRaidStart)
-   * — not merely once a backfire settles, since a backfire on an already-running raid
-   * must not un-clock a still-standing win. Does not itself change the scale; the next
-   * setScaleForRaidSize() call (which follows immediately once a raid starts) supplies
-   * the new value. */
+  /** Undoes lockSqueeze(): restores the resting scale (1) and the calm `src` face.
+   * Called once a new raid actually starts (RaidController's onRaidStart) — not merely
+   * once a backfire settles, since a backfire on an already-running raid must not undo
+   * a still-standing win. */
   unlock(): void {
-    this.locked = false;
+    this.baseScale = 1;
+    this.el.style.transform = "scale(1)";
+    if (this.dragSrc) this.img.src = this.currentSrc;
   }
 
   destroy(): void {
@@ -355,10 +298,10 @@ export class StickerOverlay {
       // resize mechanisms don't fight over width on the same event.
       if ("touches" in ev && ev.touches.length !== 1) return;
       const x = pointerX(ev);
-      // Divide by the current squeeze/inflate scale: dx is a physical screen-pixel
+      // Divide by the current squeeze scale: dx is a physical screen-pixel
       // delta, but `width` is a pre-transform CSS value — without this, dragging the
-      // handle the same physical distance would resize a 2x-inflated sticker twice
-      // as much on screen as a normal one, and a shrunk one barely at all.
+      // handle the same physical distance would resize a squeezed sticker far more
+      // on screen than a normal one.
       const dx = (x - startX) / this.baseScale;
       const next = clamp(startWidth + dx, MIN_WIDTH, MAX_WIDTH);
       this.width = next;
