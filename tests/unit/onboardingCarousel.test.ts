@@ -121,6 +121,7 @@ vi.mock("../../src/hud/GalleryPanel", () => ({
     toggle(): void {}
     open(): void {}
     onStickerSelect(): void {}
+    onStickerIntent(): void {}
     onTextSelect(): void {}
     onOpenChange(): void {}
     isPanelOpen(): boolean {
