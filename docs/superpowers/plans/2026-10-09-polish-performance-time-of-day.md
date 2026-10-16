@@ -40,6 +40,24 @@ Tasks:
 4. Convert audio to Opus/AAC where not already, and lazy-load beds that are not needed at start.
 5. Review `animejs` v3 call sites (`BugSwarm.ts` and others). Replace with the Web Animations API if the usage is simple.
 
+### Status (2026-10-10, branch `chore/asset-diet`)
+
+Done: task 1. Unreferenced originals moved out of `public/` into `assets-src/` (history kept, nothing deleted): 42 avatar PNGs (40.4 MB), `assets/stickers` (13.3 MB), `audio/music-bed.mp3` (2.5 MB) and `creatures/eye.png`. `scripts/optimize-stickers.py` now reads from `assets-src/avatars` and writes WebP and thumbnails into `public/avatars`. `dist` went from 107 MB to 29 MB. All 107 asset paths referenced in code still resolve, and a fresh load plus quantity change produced no 404s (86 requests, about 9.8 MB transferred on first load).
+
+Not moved: `public/Reference` and `public/**/temp_*` are already git-ignored (local only, never deployed from git), and `public/assets/figma/references|subjects` (1.9 MB) are written by `scripts/export-figma-assets.mjs`.
+
+Also done: task 2 for creature art. The 30 creature PNGs (cockroach, finger, placard stick, 23 placards, 4 security units; 7.7 MB) are now served as WebP at identical pixel size (1.1 MB, 85% smaller), because the creature modules hard-code each image's natural width and height. Originals live in `assets-src/creatures/`; `python3 scripts/optimize-creatures.py` regenerates them. Checked in a browser: every image in cockroach, finger and placard modes loads (0 broken), eyes mode uses SVG, a shaken raid shows the police and RAF units, and no request returns an error. The unit suite fails the same 16 tests as `main` before and after.
+
+Correction to the earlier note: creature art was never part of first load (only `cockroach.webp`, about 10 KB, loads by default). The conversion saves about 6.6 MB the first time placard mode is opened. First load is about 9.3 MB, made up of:
+- about 6.5 MB of idle-time prefetch of every sticker variant (normal 3.0 MB, grin 2.8 MB, text stickers 0.6 MB, thumbnails 0.4 MB), a deliberate ADR 018 choice;
+- 1.6 MB of audio (`azaadi.mp3` 1.1 MB, the drag-scratch sound 0.5 MB);
+- 0.7 MB of third-party scripts (Google Tag Manager);
+- 0.2 MB of app JS and CSS.
+
+Decisions needed before touching these (they change behaviour, not just files): prefetch only the gallery thumbnails on idle and fetch a sticker's face images when it is selected (cuts the idle prefetch to about 0.4 MB, risk is a short wait on first click); lower sticker WebP quality from 88 (roughly a quarter smaller, slight quality loss); lazy-load the drag-scratch sound.
+
+Still open: fonts (14 `@fontsource` packages), animejs, and the decisions above. These go on a separate branch.
+
 Acceptance: `dist` size before and after recorded; no visual regression in a browser pass; Gallery and onboarding still load images without a visible pop.
 
 ## 3. Intro copy lint and card polish

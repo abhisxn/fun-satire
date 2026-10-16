@@ -2,31 +2,38 @@ import os
 from pathlib import Path
 from PIL import Image
 
-AVATARS_DIR = Path(__file__).resolve().parent.parent / "public" / "avatars"
+ROOT = Path(__file__).resolve().parent.parent
+# Full-size PNG originals live outside public/ so Vite does not ship them; only the
+# generated WebP files and thumbnails below are served.
+SOURCE_DIR = ROOT / "assets-src" / "avatars"
+AVATARS_DIR = ROOT / "public" / "avatars"
 THUMBS_DIR = AVATARS_DIR / "thumbs"
 THUMBS_DIR.mkdir(parents=True, exist_ok=True)
 
 DIRS_TO_PROCESS = [
-    AVATARS_DIR / "grin",
-    AVATARS_DIR / "normal",
-    AVATARS_DIR / "text_stickers",
+    "grin",
+    "normal",
+    "text_stickers",
 ]
 
 def optimize_images():
     total_orig = 0
     total_webp = 0
 
-    for d in DIRS_TO_PROCESS:
+    for name in DIRS_TO_PROCESS:
+        d = SOURCE_DIR / name
         if not d.exists():
             continue
+        out_dir = AVATARS_DIR / name
+        out_dir.mkdir(parents=True, exist_ok=True)
         for png_file in sorted(d.glob("*.png")):
-            webp_file = png_file.with_suffix(".webp")
+            webp_file = out_dir / f"{png_file.stem}.webp"
             with Image.open(png_file) as img:
                 # Save full-res optimized WebP
                 img.save(webp_file, "WEBP", quality=88, method=6)
 
                 # Generate thumbnail if it's grin or text_stickers (used in gallery)
-                if d.name in ("grin", "text_stickers"):
+                if name in ("grin", "text_stickers"):
                     thumb_file = THUMBS_DIR / f"{png_file.stem}.webp"
                     thumb = img.copy()
                     thumb.thumbnail((240, 240), Image.Resampling.LANCZOS)

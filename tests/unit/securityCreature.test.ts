@@ -91,7 +91,7 @@ describe('SecurityCreature', () => {
 
       expect(container.children.length).toBe(1);
       expect(unit.el.tagName).toBe('IMG');
-      expect(unit.el.src).toMatch(/\/creatures\/security\/police(-2)?\.png$/);
+      expect(unit.el.src).toMatch(/\/creatures\/security\/police(-2)?\.webp$/);
       expect(unit.w).toBe(SECURITY_WIDTH);
       expect(unit.x).toBe(100);
       expect(unit.y).toBe(200);
