@@ -9,6 +9,7 @@ import { RaidController } from "./creatures/RaidController";
 import { PowerMeter } from "./hud/PowerMeter";
 import { StickerOverlay, DEFAULT_WIDTH } from "./creatures/StickerOverlay";
 import { TextOverlay } from "./creatures/TextOverlay";
+import { isTouchDevice } from "./creatures/touchSupport";
 import { clampToViewport } from "./creatures/snapGrid";
 import { Hud } from "./hud/Hud";
 import { MenuButton } from "./hud/MenuButton";
@@ -367,6 +368,7 @@ async function main(): Promise<void> {
           overlay.setFont(font);
           overlay.el.style.visibility = "visible";
         });
+        galleryPanel.close();
         return;
       }
       const text = new TextOverlay(
@@ -386,8 +388,33 @@ async function main(): Promise<void> {
         hud.show();
         syncMenuButtonVisibility();
       });
-      void replaceOverlay(text);
+      void replaceOverlay(text).then(() => {
+        // Close the gallery so the fresh black placard isn't hidden behind it.
+        galleryPanel.close();
+        // Desktop: drop straight into typing. Touch: leave focus to an explicit
+        // tap, so the on-screen keyboard opening can't shove the just-placed
+        // placard off-screen before the user sees it.
+        if (!isTouchDevice()) editor.focus();
+      });
     });
+
+    // First-run discoverability: the stickers / "Type your own" panel is the app's
+    // main creative surface, but on its own the small toolbar icon reads like the
+    // Menu button and users were missing it. Auto-open it once, right after
+    // onboarding, so it's the first thing they see; it closes like any other panel
+    // (outside click / Escape / its own button) and never re-opens on its own.
+    // Delayed so the onboarding poof + first sticker settle first, and so the
+    // click that finished onboarding can't immediately count as an outside click.
+    window.setTimeout(() => {
+      const anyPanelOpen =
+        galleryPanel.isPanelOpen() ||
+        menuPanel.isPanelOpen() ||
+        filterPanel.isPanelOpen() ||
+        winPanel.isPanelOpen();
+      if (!anyPanelOpen) {
+        galleryPanel.open();
+      }
+    }, 700);
   };
 
   // Stickers/text play a pickup click when grabbed, and a "writing" scratch

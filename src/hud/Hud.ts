@@ -139,7 +139,7 @@ export class Hud {
 
     this.settingsBtn = this.buildUtilityBtn("hud-btn--settings", "Settings", SVG_SETTINGS);
     root.appendChild(this.settingsBtn);
-    this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Grid View", SVG_GALLERY);
+    this.galleryBtn = this.buildUtilityBtn("hud-btn--gallery", "Stickers & Signs", SVG_GALLERY);
     root.appendChild(this.galleryBtn);
 
     this.protestAnchor = this.buildProtestBtn();

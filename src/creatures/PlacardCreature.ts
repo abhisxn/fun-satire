@@ -40,6 +40,7 @@ export const PLACARD_POOL: PlacardAsset[] = [
   { src: '/creatures/placards/placard_21.webp', w: 714, h: 432 },
   { src: '/creatures/placards/placard_22.webp', w: 714, h: 432 },
   { src: '/creatures/placards/placard_23.webp', w: 1330, h: 432 },
+  { src: '/creatures/placards/placard_24.webp', w: 824, h: 432 },
 ];
 
 /** Placard display width reference, in px, at scale = 1, signScale = 1. */

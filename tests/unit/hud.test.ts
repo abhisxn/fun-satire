@@ -219,7 +219,7 @@ describe("Hud", () => {
       expect(handBtn?.getAttribute("data-tooltip")).toBe("Point Mode");
       expect(placardBtn?.getAttribute("data-tooltip")).toBe("Placard Mode");
       expect(settingsBtn?.getAttribute("data-tooltip")).toBe("Settings");
-      expect(galleryBtn?.getAttribute("data-tooltip")).toBe("Grid View");
+      expect(galleryBtn?.getAttribute("data-tooltip")).toBe("Stickers & Signs");
     });
   });
 
@@ -237,7 +237,7 @@ describe("Hud", () => {
       expect(handBtn?.getAttribute("aria-label")).toBe("Point Mode");
       expect(placardBtn?.getAttribute("aria-label")).toBe("Placard Mode");
       expect(settingsBtn?.getAttribute("aria-label")).toBe("Settings");
-      expect(galleryBtn?.getAttribute("aria-label")).toBe("Grid View");
+      expect(galleryBtn?.getAttribute("aria-label")).toBe("Stickers & Signs");
     });
   });
 
