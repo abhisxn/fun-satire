@@ -154,4 +154,23 @@ Rules:
 
 ## Appendix: baseline results
 
-_To be filled in by workstream 1._
+Recorded 2026-10-09 on `a0f3a69` with `scripts/perf-benchmark.mjs`: production build served by `vite preview`, headless Chrome for Testing, 1440x900, device scale 1, pointer circling the viewport centre to keep the repel field active, 3 s settle then 10 s measured. Creature count is set through the Filters quantity slider; the crowd mode is the default (cockroach).
+
+Run it with `PLAYWRIGHT_DIR=<dir with playwright installed> node scripts/perf-benchmark.mjs --url <preview url> --throttle <cpu slowdown>` (see the header of the script).
+
+| CPU throttle | creatures | fps | p95 frame ms | frames >33 ms | main thread busy | script | style recalc | layout |
+|---|---|---|---|---|---|---|---|---|
+| 1x | 200 | 60 | 16.7 | 0% | 7.6% | 2.2% | 0.8% | 0% |
+| 1x | 500 | 60 | 16.7 | 0% | 13.3% | 3.6% | 1.2% | 0% |
+| 1x | 900 | 60 | 16.8 | 0% | 22.3% | 6.2% | 2.2% | 0% |
+| 6x | 200 | 60 | 16.8 | 0% | 33.7% | 9.5% | 4.1% | 0% |
+| 6x | 500 | 60 | 16.7 | 0% | 65.8% | 19.4% | 6.3% | 0% |
+| 6x | 900 | 49.4 | 33.4 | 6.5% | 99.8% | 29.6% | 11.1% | 0% |
+
+A 4x throttle run held 60 fps at all three counts. Heap stayed under 10 MB throughout; DOM nodes were 715, 1315 and 2115 at the three counts. No long tasks beyond two at 500 creatures under 6x.
+
+What this says:
+- Desktop has large headroom. Under a 6x slowdown (a rough stand-in for a mid-range phone) the main thread saturates at 900 creatures and frames start dropping.
+- Layout cost is zero, so the transform-only rendering is doing its job. There is no layout thrash to fix.
+- Script is about 30% and style recalc about 11% of the saturated main thread. The remaining ~59% is in none of those buckets (paint, compositing and commit work, GC, input). That points at the number of composited DOM elements rather than at the physics code, so the next measurement should be a Chrome trace of the 900-creature case before choosing between "cheaper updates" (workstream 6) and a different renderer.
+- Limits of this benchmark: it measures main-thread frame pacing in headless Chrome. It does not capture GPU raster cost, and CPU throttling is only an approximation of a phone. Treat absolute numbers as a baseline to compare against, not as device truth.
