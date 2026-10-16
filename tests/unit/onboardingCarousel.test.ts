@@ -255,24 +255,24 @@ describe("OnboardingCarousel", () => {
         "We picked the names up. We're still wearing them.",
       ]);
       expect(BEATS[1].lines).toEqual([
-        "Different states. Different faiths. Same square.",
-        "That's not a mob. That's all of us.",
+        "Different states, different faiths, one square.",
+        "At Jantar Mantar, that was all of us.",
       ]);
       expect(BEATS[2].lines).toEqual([
-        "Drop them in. Watch the crowd close in around them.",
-        "That's why we call this Gutter Generation.",
+        "Drag a face of power into the square.",
+        "The crowd closes in. That's Gutter Generation.",
       ]);
       expect(BEATS[3].lines).toEqual([
-        "Every promise. Every price. Every quiet lie.",
-        "They forgot we were watching. We didn't.",
+        "Exam papers leaked. The answers we got were thin.",
+        "So we started watching. That's what the eyes are.",
       ]);
       expect(BEATS[4].lines).toEqual([
-        "They hit hard. We laughed back \u2014 memes, reels, dance.",
-        "One of them stepped down. We didn't go home.",
+        "They met us with tear gas and lathis.",
+        "We answered with memes. Then a minister stepped down.",
       ]);
       expect(BEATS[5].lines).toEqual([
-        "No leader to arrest. No face to blame.",
-        "Just thousands of us. Move.",
+        "No single leader to arrest.",
+        "Thousands moved together. Your turn.",
       ]);
     });
   });
