@@ -183,7 +183,7 @@ export class MenuPanel {
     const quickLinks = document.createElement("div");
     quickLinks.className = "menu-quick-links";
     const links: Array<[string, MenuScreen]> = [
-      ["About Project", "about"],
+      ["About This Project", "about"],
       ["Be a More Informed Citizen", "informed"],
       ["Support Independent Media", "media"],
       ["Other Resources", "resources"],
@@ -255,7 +255,7 @@ export class MenuPanel {
 
     const paragraphs = [
       "Gutter Generation is a playful, and dead serious, take on something real: a generation that got called cockroaches and gutter generation, and wore both as badges instead of insults.",
-      "For weeks, thousands of us filled Jantar Mantar, in the capital — different states, different faiths, different castes. Turns out none of that mattered as much as we'd been told it would. One voice, one demand: show up, or step down. No single leader. No face to arrest. Just numbers, and numbers don't scare that easily.",
+      "For weeks, thousands of us filled the streets in nation-wide youth protests — different states, different faiths, different castes. Turns out none of that mattered as much as we'd been told it would. One voice, one demand: show up, or step down. No single leader. No face to arrest. Just numbers, and numbers don't scare that easily.",
       "Independent journalists stayed on the ground asking the questions officials wouldn't answer. People who couldn't make it sent food, ran errands for those who could, or just refreshed their feed for updates — living the protest through a screen instead of the square. When it turned physical, we didn't disappear. We danced. We memed. We kept showing up. Some of us got hurt doing it. One of them stepped down. Nobody went home.",
       "This app is that story, turned into a toy. Drop a sticker of anyone you want into the crowd, and watch: eyes track them, fingers point, cockroaches swarm, placards go up. Nowhere left to hide, nothing left unwatched. That's why it's called Gutter Generation — the name they used against us is now the thing surrounding you.",
       "I built it to push past what I'd normally do with AI — not a static page, something with real feel: physics, timing, a crowd that actually reacts. Started as a weekend project. The crowd had other plans.",
