@@ -13,7 +13,7 @@ describe('DraggableAvatar', () => {
   describe('constructor', () => {
     it('creates img element with correct src', () => {
       expect(avatar.el.tagName).toBe('IMG');
-      expect(avatar.el.src).toContain('/avatars/tax-tai.png');
+      expect(avatar.el.src).toContain('/avatars/normal/tax-tai.webp');
     });
 
     it('sets correct alt text', () => {
