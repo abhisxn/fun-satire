@@ -99,6 +99,8 @@ Undecided. Ideas on the table:
 
 ## 8. Avatar inflate
 
+> Update 2026-10-15: the 4-tier inflate and its tone were removed (branch `refactor/remove-sticker-inflate`). Only the win squeeze remains. Text below is history.
+
 Existing behaviour: the villain swells in 4 discrete tiers as security units grow (`StickerOverlay.setScaleForRaidSize`). A full-power release locks it to `SQUEEZE_MIN_SCALE` (0.55).
 
 Readability problem: players cannot tell what causes the swelling or the shrink. Ideas: tie each tier to a visible face tell and to the security units feeding it; show our conversion as the counterweight that squeezes it back; replace the 1 s ease-in-out tween with squash, overshoot and settle on the way up, and a slow exhale on the way down. If the lure loop wins, inflate may need to be re-derived from the villain's attention or power instead of raid size.

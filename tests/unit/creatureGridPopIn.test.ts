@@ -84,7 +84,8 @@ describe('CreatureGrid update — pop-in visuals', () => {
     creature.spawnPopAtMs = Date.now() - 10000;
     creature.spawnDone = false;
 
-    grid.update(creature.hx, creature.hy);
+    // Cursor far from the creature so the hover scale-up (hoverScale) doesn't apply.
+    grid.update(-9999, -9999);
 
     expect(creature.el.style.opacity).toBe('1');
     expect(creature.el.style.transform).toContain('scale(1)');
@@ -120,7 +121,8 @@ describe('CreatureGrid update — pop-in visuals', () => {
     creature.spawnPopAtMs = Date.now() - 10000;
     creature.spawnDone = false;
 
-    grid.update(creature.hx, creature.hy);
+    // Cursor far from the creature so the hover scale-up (hoverScale) doesn't apply.
+    grid.update(-9999, -9999);
 
     expect(creature.el.style.transform).toMatch(/scale\(1\).*scaleY\(/);
   });

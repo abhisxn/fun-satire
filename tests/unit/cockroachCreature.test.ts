@@ -42,7 +42,7 @@ describe('CockroachCreature', () => {
 
       const img = cockroach.el.querySelector('img');
       expect(img).not.toBeNull();
-      expect(img!.src).toContain('/creatures/cockroach.png');
+      expect(img!.src).toContain('/creatures/cockroach.webp');
     });
 
     it('img is not draggable', () => {

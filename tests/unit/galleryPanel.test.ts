@@ -389,6 +389,33 @@ describe("hud/GalleryPanel", () => {
     });
   });
 
+  describe("onStickerIntent", () => {
+    it("fires with the card's src and dragSrc on pointerenter and pointerdown, not on click alone", () => {
+      panel.attachTo(galleryButton);
+      const cb = vi.fn();
+      panel.onStickerIntent(cb);
+      const firstCard = panel.getRoot().querySelector<HTMLElement>(".sticker-card");
+      const firstDef = getStickerDefs()[0];
+
+      firstCard?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(cb).not.toHaveBeenCalled();
+
+      firstCard?.dispatchEvent(new Event("pointerenter"));
+      firstCard?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+      expect(cb).toHaveBeenCalledTimes(2);
+      expect(cb).toHaveBeenCalledWith(firstCard?.dataset.stickerSrc, firstDef?.dragSrc);
+    });
+
+    it("returns an unsubscribe function", () => {
+      panel.attachTo(galleryButton);
+      const cb = vi.fn();
+      const off = panel.onStickerIntent(cb);
+      off();
+      panel.getRoot().querySelector<HTMLElement>(".sticker-card")?.dispatchEvent(new Event("pointerenter"));
+      expect(cb).not.toHaveBeenCalled();
+    });
+  });
+
   describe("onTextSelect", () => {
     it("invokes callback with the clicked font", () => {
       panel.attachTo(galleryButton);

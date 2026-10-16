@@ -47,7 +47,7 @@ describe('PlacardCreature', () => {
       const placard = createPlacardCreature(0, 0, 1);
 
       const imgs = placard.el.querySelectorAll('img');
-      expect(imgs[0].src).toContain('/creatures/placard_stick.png');
+      expect(imgs[0].src).toContain('/creatures/placard_stick.webp');
     });
 
     it('placard img src is one of the pool entries', () => {
