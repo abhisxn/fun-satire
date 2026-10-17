@@ -613,6 +613,38 @@ export class CreatureGrid {
     return this.creatures.length;
   }
 
+  /** Distinct creature kinds possible at once. One until the mixed crowd ships. */
+  static readonly KIND_TOTAL = 1;
+
+  /** Distinct creature kinds currently on the canvas. Read-only, for the unity score. */
+  getKindCount(): number {
+    return this.creatures.length > 0 ? 1 : 0;
+  }
+
+  /**
+   * Read-only: writes each on-screen creature's centre into `out`, reusing its point
+   * objects and trimming its length, so the per-frame unity score allocates nothing once
+   * warm. Creatures waiting to respawn are skipped. Returns the count written.
+   */
+  collectCreatureCenters(out: Array<{ x: number; y: number }>): number {
+    let n = 0;
+    for (const c of this.creatures) {
+      if (c.waitingRespawn) continue;
+      const p = out[n];
+      const cx = c.x + c.w / 2;
+      const cy = c.y + c.h / 2;
+      if (p) {
+        p.x = cx;
+        p.y = cy;
+      } else {
+        out[n] = { x: cx, y: cy };
+      }
+      n++;
+    }
+    out.length = n;
+    return n;
+  }
+
   /** Fires with the new count every time setQuantity() actually changes the creature count —
    * whether the caller was a user dragging the Filters slider or RaidController's own
    * attrition/boost/win logic. Never fires for a no-op setQuantity() call. */
