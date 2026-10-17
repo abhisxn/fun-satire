@@ -163,6 +163,23 @@ describe('RaidController unity', () => {
     expect(r.isForceBroken()).toBe(false);
   });
 
+  it('turns security units pale while force is broken and restores them when it recovers', () => {
+    const r = makeRaid();
+    t += 100;
+    r.tick(t);
+    startRaid(r);
+    const units = () => container.querySelectorAll('.security-unit');
+    expect(units().length).toBeGreaterThan(0);
+
+    target.value = 1;
+    settle(r);
+    for (const el of Array.from(units())) expect(el.classList.contains('security-unit--faded')).toBe(true);
+
+    target.value = 0;
+    settle(r);
+    for (const el of Array.from(units())) expect(el.classList.contains('security-unit--faded')).toBe(false);
+  });
+
   describe('Protest win gate', () => {
     function holdToPeakAndRelease(r: RaidController): void {
       r.startCharging();

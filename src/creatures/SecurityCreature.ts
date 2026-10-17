@@ -145,6 +145,9 @@ export function computeSecurityShrinkFraction(phaseStartMs: number, nowMs: numbe
   return 1 - Math.max(0, Math.min(1, t));
 }
 
+/** Class toggled on a unit's element while force is broken; styled pale in unityRing.css. */
+export const SECURITY_FADED_CLASS = "security-unit--faded";
+
 export function applyTransform(state: SecurityUnitState): void {
   const tx = state.x - state.w / 2;
   const ty = state.y - state.h / 2;
@@ -331,6 +334,7 @@ export function createSecurityUnit(
   const h = securityHeightFor(sprite);
 
   const el = document.createElement("img");
+  el.className = "security-unit";
   el.src = sprite.src;
   el.alt = kind === "police" ? "Police" : "RAF";
   el.style.cssText = [

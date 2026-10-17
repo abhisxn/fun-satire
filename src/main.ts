@@ -27,6 +27,7 @@ import { playDeflateTone } from "./audio/deflateTone";
 import { ClickSound } from "./audio/clickSound";
 import { DragScratchSound } from "./audio/dragScratchSound";
 import { initAnalytics } from "./analytics/ga";
+import { UnityRing } from "./hud/UnityRing";
 
 const ONBOARDING_CREATURE_QUANTITY = 60;
 const ONBOARDING_CARD_REPULSOR_RADIUS = 300;
@@ -115,6 +116,9 @@ async function main(): Promise<void> {
     },
   });
 
+  const unityRing = new UnityRing();
+  unityRing.attachTo(document.body);
+
   const bugSwarm = new BugSwarm(container);
 
   type Attractor = { getCenter(): { x: number; y: number } };
@@ -142,6 +146,12 @@ async function main(): Promise<void> {
       raidController.setAvatarWidth(activeOverlay.getWidth());
     }
     raidController.tick(Date.now());
+    const unityResult = raidController.getUnityResult();
+    if (activeOverlay && unityResult) {
+      unityRing.update(raidController.getUnity(), unityResult.centroid, unityResult.spread, raidController.isForceBroken());
+    } else {
+      unityRing.update(0, null, 0, false);
+    }
     // Recomputed *after* tick(), not alongside setAvatarWidth() above — tick() is where
     // a same-frame win's lockSqueeze() actually shrinks the sticker, and reading
     // getWidth() only here (not the frame-delayed avatarWidth RaidController itself

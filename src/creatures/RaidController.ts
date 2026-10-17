@@ -12,6 +12,7 @@ import {
   applySecurityCollisions,
   applyEscortRangeConstraint,
   SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH,
+  SECURITY_FADED_CLASS,
 } from "./SecurityCreature";
 import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
 import {
@@ -120,6 +121,8 @@ export const RAID_ATTRITION_STEP = 1;
 /** Below this force factor the raid stops draining the crowd altogether (the crowd is united
  * enough that force has effectively failed), rather than draining at a vanishing rate. */
 export const MIN_FORCE_FACTOR = 0.02;
+/** How much wider (as a fraction) the units' escort ring grows when force has fully failed. */
+export const RETREAT_EXTRA_RADIUS = 0.8;
 /** Time (ms) for the power meter to sweep one-way across the full track while held —
  * a full back-and-forth cycle is twice this. Fast enough to read as "rapidly moves left
  * to right" rather than a steady fill, since the meter is a power-selector minigame now:
@@ -615,13 +618,17 @@ export class RaidController {
       assignEscortFormation(this.units);
     }
 
+    this.updateUnity(nowMs);
+
+    // As force fails the units back off: the escort ring they hold around the sticker widens
+    // with the loss of force, and (once broken) they turn pale.
+    const retreatWidth = this.avatarWidth * (1 + RETREAT_EXTRA_RADIUS * (1 - forceFactor(this.unity)));
     for (const unit of this.units) {
-      applyEscortStep(unit, this.lastAvatarX, this.lastAvatarY, nowMs, this.avatarWidth);
-      applyEscortRangeConstraint(unit, this.lastAvatarX, this.lastAvatarY, this.avatarWidth);
+      applyEscortStep(unit, this.lastAvatarX, this.lastAvatarY, nowMs, retreatWidth);
+      applyEscortRangeConstraint(unit, this.lastAvatarX, this.lastAvatarY, retreatWidth);
+      unit.el.classList.toggle(SECURITY_FADED_CLASS, this.forceBroken);
     }
     applySecurityCollisions(this.units);
-
-    this.updateUnity(nowMs);
 
     const force = forceFactor(this.unity);
     if (
