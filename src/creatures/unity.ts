@@ -27,6 +27,12 @@ export interface UnityResult {
   spread: number;
 }
 
+/** Creature kinds that can exist at once. One until the mixed crowd ships (step 3). */
+export const CREATURE_KIND_TOTAL = 1;
+
+/** Time constant for smoothing the unity score so it does not jitter frame to frame. */
+export const UNITY_SMOOTH_MS = 400;
+
 /** Placeholder weights, tuned in playtest. */
 export const UNITY_WEIGHT_SIZE = 0.35;
 export const UNITY_WEIGHT_CLUSTER = 0.45;
@@ -102,4 +108,14 @@ export function forceFactor(unity: number): number {
  */
 export function isForceBroken(unity: number, wasBroken: boolean): boolean {
   return wasBroken ? unity > FORCE_BREAK_UNITY - FORCE_BREAK_HYSTERESIS : unity >= FORCE_BREAK_UNITY;
+}
+
+/**
+ * Pure: one step of exponential smoothing toward `target` over `dtMs`. A non-positive
+ * `dtMs` returns `current` unchanged.
+ */
+export function smoothUnity(current: number, target: number, dtMs: number): number {
+  if (dtMs <= 0) return current;
+  const alpha = 1 - Math.exp(-dtMs / UNITY_SMOOTH_MS);
+  return current + (target - current) * alpha;
 }

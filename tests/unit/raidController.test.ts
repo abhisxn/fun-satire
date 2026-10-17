@@ -14,6 +14,7 @@ import {
   BACKFIRE_RESPAWN_STAGGER_MS,
 } from '../../src/creatures/RaidController';
 import type { MoveSample } from '../../src/creatures/RaidController';
+import type { UnityResult } from '../../src/creatures/unity';
 import { CreatureGrid } from '../../src/creatures/CreatureGrid';
 import { SECURITY_SHRINK_MS, SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH } from '../../src/creatures/SecurityCreature';
 
@@ -22,6 +23,19 @@ vi.mock('animejs', () => {
   return {
     default: (_opts: Record<string, unknown>) => makeInstance(),
   };
+});
+
+// Unity is pinned by the test, not scored from the crowd, so these rule tests do not depend on
+// where the grid happens to lay creatures out. 0 means force is at full strength. Win tests
+// set it to 1 (united) first. See raidControllerUnity.test.ts for the unity behaviour itself.
+let testUnityValue = 0;
+const testUnity = (): UnityResult => ({
+  unity: testUnityValue,
+  size: testUnityValue,
+  cluster: testUnityValue,
+  variety: 0,
+  centroid: null,
+  spread: 0,
 });
 
 function sample(x: number, y: number, t: number): MoveSample {
@@ -165,7 +179,7 @@ describe('RaidController', () => {
     grid = new CreatureGrid({ container, mode: 'cockroach', initialQuantity: 40 });
     grid.spawn('cockroach');
 
-    raid = new RaidController({ container, grid, avatarLayer: container });
+    raid = new RaidController({ container, grid, avatarLayer: container, unitySource: testUnity });
   });
 
   afterEach(() => {
@@ -507,6 +521,7 @@ describe('RaidController', () => {
     });
 
     it('releasing a standalone charge at the peak of the sweep restores the user\'s chosen crowd size', () => {
+      testUnityValue = 1;
       const now = vi.spyOn(Date, 'now');
       let t = 0;
       now.mockImplementation(() => t);
@@ -525,6 +540,7 @@ describe('RaidController', () => {
     });
 
     it('a win restores a manually-set crowd size, not a hardcoded ceiling', () => {
+      testUnityValue = 1;
       // The user dialed the crowd down via the Filters slider (setUserQuantity, not plain
       // setQuantity) before ever triggering a raid — a win should return to their choice.
       grid.setUserQuantity(150);
@@ -600,6 +616,7 @@ describe('RaidController', () => {
     });
 
     it('releaseCharge at peak power clears the whole raid (recovering, then idle once units sweep out)', () => {
+      testUnityValue = 1;
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
       triggerRaid(now, tRef);
@@ -786,8 +803,9 @@ describe('RaidController', () => {
     }
 
     it('onProtestWin fires immediately for a standalone win (nothing to despawn)', () => {
+      testUnityValue = 1;
       const onProtestWin = vi.fn();
-      const r = new RaidController({ container, grid, avatarLayer: container, onProtestWin });
+      const r = new RaidController({ container, grid, avatarLayer: container, unitySource: testUnity, onProtestWin });
 
       const now = vi.spyOn(Date, 'now');
       let t = 0;
@@ -804,8 +822,9 @@ describe('RaidController', () => {
     });
 
     it('onProtestWin does NOT fire at releaseCharge() for a raid win — only once the despawn sweep finishes', () => {
+      testUnityValue = 1;
       const onProtestWin = vi.fn();
-      const r = new RaidController({ container, grid, avatarLayer: container, onProtestWin });
+      const r = new RaidController({ container, grid, avatarLayer: container, unitySource: testUnity, onProtestWin });
 
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };
@@ -829,7 +848,7 @@ describe('RaidController', () => {
 
     it('onRaidStart fires exactly once at the idle->raiding transition, not on later pulses within the same raid', () => {
       const onRaidStart = vi.fn();
-      const r = new RaidController({ container, grid, avatarLayer: container, onRaidStart });
+      const r = new RaidController({ container, grid, avatarLayer: container, unitySource: testUnity, onRaidStart });
 
       const now = vi.spyOn(Date, 'now');
       const tRef = { t: 0 };

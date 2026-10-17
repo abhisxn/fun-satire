@@ -55,6 +55,15 @@ vi.mock("../../src/creatures/CreatureGrid", () => ({
     switchMode(): void {}
     respawn(): void {}
     setAvatarRepelRadius(): void {}
+    collectCreatureCenters(): number {
+      return 0;
+    }
+    getUserQuantityBaseline(): number {
+      return 60;
+    }
+    getKindCount(): number {
+      return 0;
+    }
   },
 }));
 

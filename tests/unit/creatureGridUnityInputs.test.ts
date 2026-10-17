@@ -61,6 +61,5 @@ describe('CreatureGrid unity inputs', () => {
     const grid = new CreatureGrid({ container, mode: 'cockroach', initialQuantity: 12 });
     grid.spawn('cockroach');
     expect(grid.getKindCount()).toBe(1);
-    expect(CreatureGrid.KIND_TOTAL).toBe(1);
   });
 });

@@ -16,12 +16,22 @@ import {
 import type { SecurityUnitState, SecurityKind } from "./SecurityCreature";
 import {
   classifyRelease,
+  FULL_POWER_THRESHOLD,
   SECURITY_MAX_UNITS,
   RAID_FLOOR_FRACTION,
   BACKFIRE_ESCALATE_MEDIUM,
   BACKFIRE_ESCALATE_LOW,
 } from "./raidRules";
 import { EntityPool } from "./EntityPool";
+import {
+  computeUnity,
+  forceFactor,
+  isForceBroken,
+  smoothUnity,
+  CREATURE_KIND_TOTAL,
+  WIN_UNITY,
+} from "./unity";
+import type { UnityResult } from "./unity";
 import { QTY_MIN } from "../config/tokens";
 
 export {
@@ -107,6 +117,9 @@ export const SPAWN_MAX_PER_PULSE = 3;
 export const RAID_ATTRITION_INTERVAL_MS = 400;
 /** How many creatures the crowd loses per attrition tick. */
 export const RAID_ATTRITION_STEP = 1;
+/** Below this force factor the raid stops draining the crowd altogether (the crowd is united
+ * enough that force has effectively failed), rather than draining at a vanishing rate. */
+export const MIN_FORCE_FACTOR = 0.02;
 /** Time (ms) for the power meter to sweep one-way across the full track while held —
  * a full back-and-forth cycle is twice this. Fast enough to read as "rapidly moves left
  * to right" rather than a steady fill, since the meter is a power-selector minigame now:
@@ -177,7 +190,19 @@ export interface RaidControllerConfig {
    * MEDIUM/LOW backfire on an already-running raid must NOT unlock it, only a brand
    * new raid should. */
   onRaidStart?: () => void;
+  /** Supplies the raw (unsmoothed) unity result each tick. Defaults to scoring the grid's
+   * live crowd. Exists so tests, and later a mixed crowd, can feed the score in directly. */
+  unitySource?: () => UnityResult;
+  /** Fired once each time force breaks (true) or recovers (false). Drives the visual and
+   * audio layers; the rules themselves read isForceBroken(). */
+  onForceBreak?: (broken: boolean) => void;
+  /** Fired on every Protest release with why it did or did not win: 'now' (it won), 'early'
+   * (the crowd was not united enough, whatever the timing) or 'close' (united enough, but
+   * mistimed). */
+  onReleaseVerdict?: (verdict: ReleaseVerdict) => void;
 }
+
+export type ReleaseVerdict = "now" | "early" | "close";
 
 function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
@@ -239,6 +264,15 @@ export class RaidController {
   private lastAttritionAtMs = 0;
   private readonly onProtestWin: (() => void) | null;
   private readonly onRaidStart: (() => void) | null;
+  private readonly unitySource: (() => UnityResult) | null;
+  private readonly onForceBreak: ((broken: boolean) => void) | null;
+  private readonly onReleaseVerdict: ((verdict: ReleaseVerdict) => void) | null;
+  /** Smoothed unity, 0 to 1. See tick(). */
+  private unity = 0;
+  private unityResult: UnityResult | null = null;
+  private lastUnityTickMs: number | null = null;
+  private forceBroken = false;
+  private readonly centerBuffer: Array<{ x: number; y: number }> = [];
 
   constructor(config: RaidControllerConfig) {
     this.container = config.container;
@@ -247,6 +281,50 @@ export class RaidController {
     this.onSecurityRemoved = config.onSecurityRemoved ?? null;
     this.onProtestWin = config.onProtestWin ?? null;
     this.onRaidStart = config.onRaidStart ?? null;
+    this.unitySource = config.unitySource ?? null;
+    this.onForceBreak = config.onForceBreak ?? null;
+    this.onReleaseVerdict = config.onReleaseVerdict ?? null;
+  }
+
+  /** Smoothed unity score, 0 to 1. */
+  getUnity(): number {
+    return this.unity;
+  }
+
+  /** Latest raw unity breakdown (centroid and spread included), or null before the first tick. */
+  getUnityResult(): UnityResult | null {
+    return this.unityResult;
+  }
+
+  /** True while the crowd is united enough that force no longer works. */
+  isForceBroken(): boolean {
+    return this.forceBroken;
+  }
+
+  private updateUnity(nowMs: number): void {
+    const result =
+      this.unitySource?.() ??
+      (() => {
+        this.grid.collectCreatureCenters(this.centerBuffer);
+        return computeUnity({
+          points: this.centerBuffer,
+          maxCount: this.grid.getUserQuantityBaseline(),
+          kindCount: this.grid.getKindCount(),
+          kindTotal: CREATURE_KIND_TOTAL,
+        });
+      })();
+    this.unityResult = result;
+    if (this.lastUnityTickMs === null) {
+      this.unity = result.unity;
+    } else {
+      this.unity = smoothUnity(this.unity, result.unity, nowMs - this.lastUnityTickMs);
+    }
+    this.lastUnityTickMs = nowMs;
+    const broken = isForceBroken(this.unity, this.forceBroken);
+    if (broken !== this.forceBroken) {
+      this.forceBroken = broken;
+      this.onForceBreak?.(broken);
+    }
   }
 
   /** Feed every avatar drag-move point through here; internally detects shake and spawns raids. */
@@ -332,13 +410,16 @@ export class RaidController {
     // SecurityCreature.ts) — a bigger sticker's security detail pushes the crowd back
     // proportionally further, a shrunk one lets them approach closer.
     const sizeScale = this.avatarWidth / SECURITY_ESCORT_REFERENCE_AVATAR_WIDTH;
+    const force = forceFactor(this.unity);
     return this.units.map((u) => ({
       x: u.x,
       y: u.y,
       repelRadius:
         (u.phase === "shrinking"
           ? SECURITY_REPEL_RADIUS * computeSecurityShrinkFraction(u.phaseStartMs, now)
-          : SECURITY_REPEL_RADIUS) * sizeScale,
+          : SECURITY_REPEL_RADIUS) *
+        sizeScale *
+        force,
     }));
   }
 
@@ -383,7 +464,15 @@ export class RaidController {
 
     const fraction = this.chargeFraction;
     this.chargeFraction = 0;
-    const outcome = classifyRelease(fraction, this.chargeBaselineCount);
+    const unitedEnough = this.unity >= WIN_UNITY;
+    // A perfectly timed release only wins if the crowd is united enough. Otherwise it is
+    // treated as the strongest backfire (MEDIUM) so the timing is not wasted but the win
+    // is withheld.
+    const outcome = classifyRelease(
+      unitedEnough ? fraction : Math.min(fraction, FULL_POWER_THRESHOLD - 1e-6),
+      this.chargeBaselineCount,
+    );
+    this.onReleaseVerdict?.(outcome.isWin ? "now" : unitedEnough ? "close" : "early");
 
     if (outcome.isWin) {
       // A win restores the user's own chosen crowd size (see CreatureGrid.setUserQuantity),
@@ -532,7 +621,14 @@ export class RaidController {
     }
     applySecurityCollisions(this.units);
 
-    if (this.state === "raiding" && nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS) {
+    this.updateUnity(nowMs);
+
+    const force = forceFactor(this.unity);
+    if (
+      this.state === "raiding" &&
+      force > MIN_FORCE_FACTOR &&
+      nowMs - this.lastAttritionAtMs >= RAID_ATTRITION_INTERVAL_MS / force
+    ) {
       this.lastAttritionAtMs = nowMs;
       const floor = this.getRaidFloor();
       const current = this.grid.getCreatureCount();

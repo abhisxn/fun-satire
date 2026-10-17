@@ -3,6 +3,7 @@ import {
   computeUnity,
   forceFactor,
   isForceBroken,
+  smoothUnity,
   FORCE_BREAK_UNITY,
   FORCE_BREAK_HYSTERESIS,
   CLUSTER_TIGHT_PX,
@@ -103,5 +104,21 @@ describe("isForceBroken", () => {
     expect(isForceBroken(FORCE_BREAK_UNITY, false)).toBe(true);
     expect(isForceBroken(FORCE_BREAK_UNITY - FORCE_BREAK_HYSTERESIS + 0.01, true)).toBe(true);
     expect(isForceBroken(FORCE_BREAK_UNITY - FORCE_BREAK_HYSTERESIS - 0.01, true)).toBe(false);
+  });
+});
+
+describe("smoothUnity", () => {
+  it("moves toward the target, never past it", () => {
+    const a = smoothUnity(0, 1, 100);
+    expect(a).toBeGreaterThan(0);
+    expect(a).toBeLessThan(1);
+    expect(smoothUnity(a, 1, 100)).toBeGreaterThan(a);
+    expect(smoothUnity(0, 1, 100000)).toBeCloseTo(1, 5);
+  });
+
+  it("is unchanged for a non-positive time step and falls as well as rises", () => {
+    expect(smoothUnity(0.5, 1, 0)).toBe(0.5);
+    expect(smoothUnity(0.5, 1, -5)).toBe(0.5);
+    expect(smoothUnity(0.8, 0, 200)).toBeLessThan(0.8);
   });
 });

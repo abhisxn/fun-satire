@@ -613,9 +613,6 @@ export class CreatureGrid {
     return this.creatures.length;
   }
 
-  /** Distinct creature kinds possible at once. One until the mixed crowd ships. */
-  static readonly KIND_TOTAL = 1;
-
   /** Distinct creature kinds currently on the canvas. Read-only, for the unity score. */
   getKindCount(): number {
     return this.creatures.length > 0 ? 1 : 0;
